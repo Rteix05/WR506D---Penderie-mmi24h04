@@ -1,0 +1,948 @@
+// ============================================================
+// PENDERIE — MDD V2 : GRAND SCHEMA GLOBAL
+// Page « Modèle de Données »
+//
+// Remplace la version « fiches par section » du 15/09 : meme TAG
+// pluginData, donc ce script SUPPRIME SA PROPRE PRODUCTION et la
+// reconstruit. Il ne cree jamais un second MDD a cote, et ne touche
+// a aucun noeud qu'il n'a pas pose lui-meme.
+//
+// Produit UNE grande frame « MDD — PENDERIE — VUE GLOBALE » :
+//   - 11 panneaux de domaine (fond + libelle)
+//   - 59 cartes : 52 entites, 5 sous-types de Share, RefreshToken
+//     (technique) et la carte des tables de liaison media
+//   - ~95 connecteurs orthogonaux avec cardinalite
+//
+// Pieges Figma encodes ici, ne pas les defaire :
+//   - createFrame() a clipsContent = true par defaut -> force a false
+//   - textAutoResize pose AVANT l'entree dans une auto-layout
+//   - les connecteurs sont des RECTANGLES : createNodeFromSvg ne gere
+//     qu'un seul <path>, et les vecteurs multi-segments sortent faux
+//   - ordre d'empilement : panneaux, puis connecteurs, puis cartes,
+//     pour qu'aucun trait ne passe PAR-DESSUS une carte
+//   - les hauteurs de carte ne sont connues qu'APRES construction :
+//     on batit tout, on mesure, puis on place (2 passes)
+// ============================================================
+
+const PAGE_CIBLE = "Modèle de Données";
+const TAG = "penderie-mdd";
+
+// ---------- TOKENS (charte Penderie) ----------
+const C = {
+  primary:      { r: 0.827451, g: 0.113725, b: 0.400000 },
+  primaryTexte: { r: 0.760784, g: 0.105882, b: 0.368627 },
+  ink:          { r: 0.101961, g: 0.117647, b: 0.141176 },
+  sub:          { r: 0.278431, g: 0.333333, b: 0.411765 },
+  bg:           { r: 0.972549, g: 0.980392, b: 0.988235 },
+  line:         { r: 0.890196, g: 0.905882, b: 0.933333 },
+  main:         { r: 0.066667, g: 0.490196, b: 0.435294 },
+  mainTexte:    { r: 0.062745, g: 0.470588, b: 0.419608 },
+  cloth:        { r: 0.513725, g: 0.070588, b: 0.592157 },
+  warn:         { r: 0.541176, g: 0.352941, b: 0.000000 },
+  white:        { r: 1, g: 1, b: 1 }
+};
+const R = { sm: 12, md: 16, lg: 24, full: 999 };
+
+const FONT_T  = { family: "Typolio", style: "Regular" };
+const FONT_L  = { family: "Luciole", style: "Regular" };
+const FONT_LB = { family: "Luciole", style: "Bold" };
+
+// ---------- GRILLE ----------
+// Pas de colonne genereux : la gouttiere sert de couloir aux connecteurs.
+const CARTE_W   = 300;
+const GOUTTIERE = 130;
+const PITCH     = CARTE_W + GOUTTIERE;   // 430
+const MARGE_G   = 120;                   // marge interne du panneau
+const BANDE_GAP = 190;                   // couloir horizontal entre domaines
+const SUBROW_GAP = 90;                   // entre deux sous-rangees d'un domaine
+const PANNEAU_PAD_H = 64;                // air sous le libelle du panneau
+const PANNEAU_PAD_B = 56;
+
+const solid = function (c, o) {
+  if (!c || typeof c !== "object" || typeof c.r !== "number") {
+    throw new Error("solid() attend une couleur RGB, recu : " + JSON.stringify(c));
+  }
+  return [{ type: "SOLID", color: c, opacity: o == null ? 1 : o }];
+};
+const SHADOW_E1 = {
+  type: "DROP_SHADOW", color: { r: 0.10, g: 0.12, b: 0.14, a: 0.06 },
+  offset: { x: 0, y: 1 }, radius: 3, spread: 0, visible: true, blendMode: "NORMAL"
+};
+
+let PAGE = null;
+
+function frame(name, o) {
+  o = o || {};
+  const f = figma.createFrame();
+  f.name = name;
+  f.clipsContent = false;
+  f.fills = o.fill ? solid(o.fill, o.fillOpacity) : [];
+  if (o.radius != null) f.cornerRadius = o.radius;
+  if (o.stroke) { f.strokes = solid(o.stroke, o.strokeOpacity); f.strokeWeight = o.strokeWeight || 1; }
+  if (o.shadow) f.effects = [SHADOW_E1];
+  if (o.dir) {
+    f.layoutMode = o.dir;
+    f.primaryAxisSizingMode = "AUTO";
+    f.counterAxisSizingMode = "AUTO";
+    f.itemSpacing = o.gap == null ? 0 : o.gap;
+    f.paddingLeft = f.paddingRight = o.px == null ? 0 : o.px;
+    f.paddingTop = f.paddingBottom = o.py == null ? 0 : o.py;
+    if (o.align) f.counterAxisAlignItems = o.align;
+  }
+  return f;
+}
+
+function text(chars, o) {
+  o = o || {};
+  const t = figma.createText();
+  t.fontName = o.font || FONT_L;
+  t.characters = String(chars);
+  t.fontSize = o.size || 12;
+  t.fills = solid(o.color || C.ink, o.opacity);
+  t.textAutoResize = "WIDTH_AND_HEIGHT";
+  if (o.lineHeight) t.lineHeight = { value: o.lineHeight, unit: "PIXELS" };
+  t.name = String(chars).slice(0, 28);
+  return t;
+}
+
+function para(chars, largeur, o) {
+  const t = text(chars, o);
+  t.textAutoResize = "HEIGHT";
+  t.resize(largeur, t.height);
+  return t;
+}
+
+function pastille(label, couleur) {
+  const p = frame("Pastille/" + label, {
+    dir: "HORIZONTAL", px: 8, py: 3, radius: R.full,
+    fill: couleur, fillOpacity: 0.12, align: "CENTER"
+  });
+  p.appendChild(text(label, { font: FONT_LB, size: 10, color: couleur }));
+  return p;
+}
+const STATUTS = {
+  MVP:     function () { return pastille("MVP", C.mainTexte); },
+  VALIDER: function () { return pastille("À valider", C.primaryTexte); },
+  V2:      function () { return pastille("V2", C.warn); },
+  TECH:    function () { return pastille("Technique", C.sub); },
+  NOUVEAU: function () { return pastille("Nouveau", C.cloth); }
+};
+
+// ---------- CONNECTEURS ----------
+// Rectangles et pas vecteurs. Un trait = 1 rectangle de 1.5 px.
+function segment(parent, x, y, w, h, couleur, opacite) {
+  const r = figma.createRectangle();
+  r.name = "Lien";
+  r.x = Math.round(x); r.y = Math.round(y);
+  r.resize(Math.max(Math.abs(w), 1.5), Math.max(Math.abs(h), 1.5));
+  r.fills = solid(couleur || C.sub, opacite == null ? 0.5 : opacite);
+  parent.appendChild(r);
+  return r;
+}
+
+function pointe(parent, x, y, sens, couleur) {
+  // Petit carre pivote : une fleche vectorielle serait fragile.
+  const p = figma.createRectangle();
+  p.name = "Pointe";
+  p.resize(7, 7);
+  p.x = Math.round(x - 3.5); p.y = Math.round(y - 3.5);
+  p.rotation = 45;
+  p.fills = solid(couleur || C.sub, 0.75);
+  parent.appendChild(p);
+  return p;
+}
+
+// ---------- CARTE D'ENTITE ----------
+// e = { nom, statut, role, attrs: [[kind, nom, type]], rels: [ "..." ], accent }
+function carteEntite(e) {
+  const accent = e.accent === "primary" ? C.primary
+               : e.accent === "cloth"   ? C.cloth
+               : e.accent === "main"    ? C.main : null;
+
+  const carte = frame("Entité/" + e.nom, {
+    dir: "VERTICAL", gap: 9, px: 16, py: 14,
+    fill: C.white, radius: R.md, shadow: true,
+    stroke: accent || C.line, strokeWeight: accent ? 2 : 1
+  });
+  carte.resize(CARTE_W, carte.height);
+  carte.counterAxisSizingMode = "FIXED";
+  carte.primaryAxisSizingMode = "AUTO";
+
+  // Bandeau titre
+  const tete = frame("Entête", { dir: "HORIZONTAL", gap: 8, align: "CENTER" });
+  tete.appendChild(text(e.nom, { font: FONT_LB, size: 15, color: accent || C.ink }));
+  if (e.statut && STATUTS[e.statut]) tete.appendChild(STATUTS[e.statut]());
+  carte.appendChild(tete);
+  tete.layoutSizingHorizontal = "FILL";
+  tete.primaryAxisAlignItems = "SPACE_BETWEEN";
+
+  if (e.role) {
+    const r = para(e.role, CARTE_W - 32, { size: 10.5, color: C.sub, lineHeight: 14 });
+    carte.appendChild(r); r.layoutSizingHorizontal = "FILL";
+  }
+
+  // Attributs
+  const f1 = frame("Filet", { fill: C.line });
+  f1.resize(CARTE_W - 32, 1); carte.appendChild(f1); f1.layoutSizingHorizontal = "FILL";
+
+  const liste = frame("Attributs", { dir: "VERTICAL", gap: 3 });
+  for (let i = 0; i < e.attrs.length; i++) {
+    const a = e.attrs[i];
+    const coul = a[0] === "pk" ? C.mainTexte : (a[0] === "fk" ? C.cloth : C.ink);
+    const l = frame("Attr", { dir: "HORIZONTAL", gap: 6, align: "CENTER" });
+    l.appendChild(text(a[1], { font: FONT_LB, size: 11, color: coul }));
+    if (a[2]) l.appendChild(text(a[2], { size: 10, color: C.sub }));
+    liste.appendChild(l); l.layoutSizingHorizontal = "FILL";
+  }
+  carte.appendChild(liste); liste.layoutSizingHorizontal = "FILL";
+
+  // Bloc RELATIONS
+  if (e.rels && e.rels.length) {
+    const f2 = frame("Filet", { fill: C.line });
+    f2.resize(CARTE_W - 32, 1); carte.appendChild(f2); f2.layoutSizingHorizontal = "FILL";
+    const bloc = frame("Relations", { dir: "VERTICAL", gap: 2 });
+    bloc.appendChild(text("RELATIONS", { font: FONT_LB, size: 9, color: C.sub }));
+    for (let i = 0; i < e.rels.length; i++) {
+      const l = para(e.rels[i], CARTE_W - 32, { size: 10.5, color: C.ink, lineHeight: 14 });
+      bloc.appendChild(l); l.layoutSizingHorizontal = "FILL";
+    }
+    carte.appendChild(bloc); bloc.layoutSizingHorizontal = "FILL";
+  }
+
+  if (e.note) {
+    const n = para(e.note, CARTE_W - 32, { size: 10, color: accent || C.sub, lineHeight: 13 });
+    carte.appendChild(n); n.layoutSizingHorizontal = "FILL";
+  }
+
+  return carte;
+}
+
+// ---------- DONNEES ----------
+// ENT : chaque entite porte sa position [colonne, sous-rangee] DANS son domaine.
+// Les colonnes sont choisies pour aligner verticalement ce qui se relie
+// (Item sous Room, Payment sous Order, Garment au-dessus de ses referentiels).
+const DOMAINES = [];
+const ENT = {};
+
+function dom(nom, couleur, entites) {
+  DOMAINES.push({ nom: nom, couleur: couleur, entites: entites });
+  for (let i = 0; i < entites.length; i++) ENT[entites[i].id] = entites[i];
+}
+
+dom("01 — IDENTITÉ & ACCÈS", C.primary, [
+  { id: "account", nom: "Account", statut: "MVP", col: 0, sub: 0,
+    role: "La connexion. Ne possède aucun contenu.",
+    attrs: [["pk","id","uuid v7"],["","email","unique"],["","password","hashé"],["","roles","json"],["","deletedAt","datetime?"]],
+    rels: ["Profile 1:N","DeviceToken 1:N","ModerationAction 1:N"],
+    note: "Ni firstName, ni lastName, ni dateOfBirth : l'identité est sur Profile." },
+  { id: "profile", nom: "Profile", statut: "MVP", col: 1, sub: 0, accent: "primary",
+    role: "L'identité Penderie. Propriétaire de TOUT le contenu.",
+    attrs: [["pk","id","uuid v7"],["fk","account","→ Account"],["fk","guardian","→ Profile ?"],
+            ["","firstName / lastName","string"],["","dateOfBirth","date"],["","username","unique"],
+            ["","type","ADULT · CHILD · RELATIVE"],["fk","avatarMedia","→ Media ?"],["","isDefault","bool"]],
+    rels: ["Place · Item · Garment 1:N","Collection · Share · Post 1:N","Loan · Listing · Order 1:N",
+           "Friendship · Follow · Block N:N","Notification 1:N"],
+    note: "CHECK type=CHILD ⇒ guardian non nul · CHECK guardian ≠ id" },
+  { id: "perm", nom: "ProfilePermission", statut: "NOUVEAU", col: 2, sub: 0,
+    role: "Une exception à la politique par défaut du type de profil.",
+    attrs: [["pk","id","uuid"],["fk","profile","→ Profile"],["","permission","12 clés"],
+            ["","mode","ALLOWED · DENIED · REQUIRES_APPROVAL"],["fk","updatedBy","→ Profile"]],
+    rels: ["Profile N:1"],
+    note: "unique (profile, permission). Seul le guardian écrit ici." },
+  { id: "approval", nom: "ApprovalRequest", statut: "NOUVEAU", col: 3, sub: 0,
+    role: "Une action soumise à l'accord du tuteur.",
+    attrs: [["pk","id","uuid"],["fk","requester","→ Profile"],["fk","approver","→ Profile"],
+            ["","permission","enum"],["","payload","jsonb"],["","status","PENDING · APPROVED · REJECTED"]],
+    rels: ["Profile N:1 (×2)","Friendship 1:1 ?","Loan 1:1 ?"],
+    note: "approver = requester.guardian, résolu côté serveur." }
+]);
+
+dom("02 — RELATIONS", C.main, [
+  { id: "friendship", nom: "Friendship", statut: "MVP", col: 0, sub: 0,
+    role: "L'amitié réciproque. Une seule ligne par paire.",
+    attrs: [["pk","id","uuid"],["fk","requester","→ Profile"],["fk","addressee","→ Profile"],
+            ["","status","PENDING · ACCEPTED · DECLINED"],["fk","approvalRequest","→ ApprovalRequest ?"]],
+    rels: ["Profile N:1 (×2)"],
+    note: "N'ouvre AUCUN accès au contenu." },
+  { id: "follow", nom: "Follow", statut: "V2", col: 1, sub: 0,
+    role: "L'abonnement, asymétrique et sans accord.",
+    attrs: [["pk","id","uuid"],["fk","follower","→ Profile"],["fk","following","→ Profile"],["","createdAt","datetime"]],
+    rels: ["Profile N:1 (×2)"],
+    note: "Le mutuel PROPOSE l'amitié, ne la crée jamais." },
+  { id: "block", nom: "Block", statut: "V2", col: 2, sub: 0,
+    role: "Coupe amitié, abonnement, partages et commentaires.",
+    attrs: [["pk","id","uuid"],["fk","blocker","→ Profile"],["fk","blocked","→ Profile"],["","reason","text?"]],
+    rels: ["Profile N:1 (×2)"],
+    note: "Aucun écran dans la maquette — à arbitrer." }
+]);
+
+dom("03 — LOGEMENTS & LOCALISATION", C.main, [
+  { id: "place", nom: "Place", statut: "MVP", col: 0, sub: 0,
+    role: "Le logement. Plusieurs par profil.",
+    attrs: [["pk","id","uuid"],["fk","owner","→ Profile"],["","name","string"],
+            ["","type","HOUSE · APARTMENT · STORAGE_UNIT"],["fk","coverMedia","→ Media ?"],["","isPrimary","bool"]],
+    rels: ["Profile N:1","Room 1:N"] },
+  { id: "room", nom: "Room", statut: "MVP", col: 1, sub: 0,
+    role: "La pièce. Ancrage obligatoire de tout objet.",
+    attrs: [["pk","id","uuid"],["fk","place","→ Place"],["","name","string"],
+            ["","type","BEDROOM · GARAGE · CELLAR…"],["fk","coverMedia","→ Media ?"]],
+    rels: ["Place N:1","Storage 1:N","Box 1:N","Item 1:N","Garment 1:N"] },
+  { id: "storage", nom: "Storage", statut: "MVP", col: 2, sub: 0,
+    role: "Le meuble : armoire, étagère, commode.",
+    attrs: [["pk","id","uuid"],["fk","room","→ Room"],["","name","string"],
+            ["","type","WARDROBE · SHELF · DRAWER…"]],
+    rels: ["Room N:1","Box 1:N","Item 1:N","Garment 1:N"] },
+  { id: "box", nom: "Box", statut: "MVP", col: 3, sub: 0,
+    role: "Le carton. Toujours dans une pièce, éventuellement sur un rangement.",
+    attrs: [["pk","id","uuid"],["fk","room","→ Room (oblig.)"],["fk","storage","→ Storage ?"],
+            ["","name / reference","string"],["","isSealed","bool"]],
+    rels: ["Room N:1","Storage N:1 ?","Item 1:N","Garment 1:N"],
+    note: "Déplacer un Box réaffecte room/storage de tout son contenu." },
+  { id: "lochist", nom: "LocationHistory", statut: "MVP", col: 4, sub: 0,
+    role: "La trace d'un déplacement. MVP, 1re migration.",
+    attrs: [["pk","id","uuid"],["fk","item / garment","un seul"],["fk","room / storage / box","quitté"],
+            ["fk","movedBy","→ Profile"],["","reason","MANUAL_MOVE · BOX_MOVED · LOAN_RETURN"]],
+    rels: ["Item N:1 ?","Garment N:1 ?","Room N:1"],
+    note: "Aucun écran d'historique pour l'instant ; alimentée dès la 1re migration." }
+]);
+
+dom("04 — INVENTAIRE", C.main, [
+  { id: "itemcat", nom: "ItemCategory", statut: "MVP", col: 0, sub: 0,
+    role: "Référentiel arborescent des catégories d'objets.",
+    attrs: [["pk","id","uuid"],["","name / icon","string"],["fk","parent","→ ItemCategory ?"],
+            ["fk","owner","→ Profile ? (null = système)"],["","isSystem","bool"]],
+    rels: ["Item 1:N","ItemCategory 1:N (auto)"] },
+  { id: "item", nom: "Item", statut: "MVP", col: 1, sub: 0, accent: "main",
+    role: "L'objet possédé. Disponibilité et état sont deux axes distincts.",
+    attrs: [["pk","id","uuid"],["fk","owner","→ Profile"],["fk","category","→ ItemCategory"],
+            ["","name","string"],["","availability","AVAILABLE · LENT · BORROWED · LOST · SOLD"],
+            ["","condition","NEW · EXCELLENT · GOOD · WORN · DAMAGED"],
+            ["fk","room","→ Room (oblig.)"],["fk","storage / box","nullables"],["","scanData","jsonb ?"]],
+    rels: ["Profile N:1","Room / Storage / Box N:1","Media N:N","Loan 1:N","Listing 1:N","Memory 1:N","CollectionEntry 1:N"],
+    note: "PAS de FOR_SALE : « en vente » = Listing PUBLISHED/RESERVED." },
+  { id: "garment", nom: "Garment", statut: "VALIDER", col: 2, sub: 0, accent: "main",
+    role: "Le vêtement. Mêmes mécanismes, attributs propres.",
+    attrs: [["pk","id","uuid"],["fk","owner","→ Profile"],["fk","category","→ GarmentCategory"],
+            ["fk","brand","→ Brand ?"],["fk","size","→ SizeValue ?"],
+            ["","availability / condition","idem Item"],["","warmth","VERY_LIGHT → VERY_WARM ?"],
+            ["","waterResistant","bool"],["fk","room / storage / box","room oblig."]],
+    rels: ["Profile N:1","GarmentCategory N:1","Brand N:1 ?","SizeValue N:1 ?","Color N:N","Style N:N",
+           "WearLog 1:N","GarmentExclusion 1:N","Loan 1:N","Listing 1:N"] },
+  { id: "garmentcat", nom: "GarmentCategory", statut: "VALIDER", col: 3, sub: 0,
+    role: "Référentiel des catégories de vêtements. Déclare l'échelle de tailles.",
+    attrs: [["pk","id","uuid"],["","name / icon","string"],["fk","parent","→ GarmentCategory ?"],
+            ["fk","sizeSystem","→ SizeSystem ?"],["fk","owner","→ Profile ?"],["","defaultWarmth","enum ?"]],
+    rels: ["Garment 1:N","SizeSystem N:1 ?","GarmentCategory 1:N (auto)","GarmentVisibilityPreference 1:N"] },
+  { id: "scan", nom: "Scan", statut: "MVP", col: 0, sub: 1,
+    role: "La trace d'un scan, réussi ou non. Mesure la fiabilité.",
+    attrs: [["pk","id","uuid"],["fk","profile","→ Profile"],["fk","media","→ Media"],
+            ["","status","SUCCESS · PARTIAL · FAILED"],["","rawData","jsonb"],
+            ["fk","resultingItem / resultingGarment","?"]],
+    rels: ["Profile N:1","Media N:1","Item 1:1 ?","Garment 1:1 ?"] },
+  { id: "memory", nom: "Memory", statut: "VALIDER", col: 1, sub: 1,
+    role: "Le souvenir daté attaché à un objet. Remplace Item.story.",
+    attrs: [["pk","id","uuid"],["fk","item / garment","un seul"],["fk","author","→ Profile"],
+            ["","title / body","string · text"],["","happenedAt","date?"]],
+    rels: ["Item N:1 ?","Garment N:1 ?","Media N:N"],
+    note: "Décalée : hors de la 1re migration, avec MemoryMedia." },
+  { id: "media", nom: "Media", statut: "NOUVEAU", col: 2, sub: 1,
+    role: "Un fichier S3 appartenant à un profil. Réutilisable sans duplication.",
+    attrs: [["pk","id","uuid"],["fk","owner","→ Profile"],["","path","clé S3"],
+            ["","mimeType / sizeBytes","string · int"],["","kind","PHOTO · SCAN_CAPTURE · INSPIRATION"],
+            ["","altText","string? (RAAM)"]],
+    rels: ["Profile N:1","Item N:N","Garment N:N","Listing N:N","Memory N:N","Post N:N","CollectionEntry 1:N"] },
+  { id: "liaisons", nom: "Tables de liaison média", statut: "NOUVEAU", col: 3, sub: 1,
+    role: "Cinq tables de 4 colonnes, indexées. Aucune clé nullable.",
+    attrs: [["","ItemMedia","item · media · position · isPrimary"],
+            ["","GarmentMedia","garment · media · position"],
+            ["","ListingMedia","listing · media · position"],
+            ["","MemoryMedia","memory · media · position"],
+            ["","PostMedia","post · media · position"]],
+    rels: ["Media N:1","cible N:1"],
+    note: "Vignette unique = clé coverMedia directe sur Place, Room, Box, Collection, Profile." }
+]);
+
+dom("05 — RÉFÉRENTIELS MODE", C.cloth, [
+  { id: "brand", nom: "Brand", statut: "VALIDER", col: 0, sub: 0,
+    role: "La marque d'un vêtement.",
+    attrs: [["pk","id","uuid"],["","name","unique"],["fk","logoMedia","→ Media ?"],["","isVerified","bool"]],
+    rels: ["Garment 1:N"],
+    note: "Aucun écran d'administration — à arbitrer." },
+  { id: "color", nom: "Color", statut: "VALIDER", col: 1, sub: 0,
+    role: "Une couleur du référentiel.",
+    attrs: [["pk","id","uuid"],["","name","string"],["","hex","string"],["","family","string"]],
+    rels: ["Garment N:N","ColorPreference 1:N","GarmentVisibilityPreference 1:N"] },
+  { id: "style", nom: "Style", statut: "VALIDER", col: 2, sub: 0,
+    role: "Un style vestimentaire : casual, sport, work, evening…",
+    attrs: [["pk","id","uuid"],["","name / slug","string"]],
+    rels: ["Garment N:N","StylePreference 1:N","GarmentVisibilityPreference 1:N"] },
+  { id: "sizesys", nom: "SizeSystem", statut: "VALIDER", col: 3, sub: 0,
+    role: "Une échelle de mesure. Sept couvrent un dressing courant.",
+    attrs: [["pk","id","uuid"],["","code","EU_SHOE · ALPHA · WAIST_LENGTH · FR_NUMERIC · COLLAR · BELT_CM · ONE_SIZE"],
+            ["","allowsFreeText","bool"]],
+    rels: ["SizeValue 1:N","GarmentCategory 1:N"] },
+  { id: "sizeval", nom: "SizeValue", statut: "VALIDER", col: 4, sub: 0,
+    role: "Une graduation de l'échelle. Jamais du texte libre.",
+    attrs: [["pk","id","uuid"],["fk","sizeSystem","→ SizeSystem"],["","label","« 42 » · « M » · « W32 L34 »"],
+            ["","sortOrder","int"]],
+    rels: ["SizeSystem N:1","Garment 1:N"],
+    note: "unique (sizeSystem, label)." }
+]);
+
+dom("06 — DRESSING & TENUES", C.cloth, [
+  { id: "outfit", nom: "Outfit", statut: "V2", col: 0, sub: 0,
+    role: "Une tenue assumée par l'utilisateur.",
+    attrs: [["pk","id","uuid"],["fk","owner","→ Profile"],["","name","string"],
+            ["","occasion","WORK · SPORT · EVENING · EVERYDAY"],["","source","MANUAL · FROM_SUGGESTION"],
+            ["fk","fromSuggestion","→ OutfitSuggestion ?"]],
+    rels: ["Profile N:1","Garment N:N (OutfitGarment)","OutfitSuggestion 1:1 ?","WearLog 1:N"] },
+  { id: "suggestion", nom: "OutfitSuggestion", statut: "NOUVEAU", col: 1, sub: 0,
+    role: "Une proposition du système, avec son contexte météo. Entité distincte d'Outfit.",
+    attrs: [["pk","id","uuid"],["fk","profile","→ Profile"],["","occasion","enum"],
+            ["","temperature","smallint ?"],["","weather","SUNNY · RAIN · SNOW · WIND ?"],
+            ["","status","PROPOSED · ACCEPTED · REJECTED · REPLACED"]],
+    rels: ["Profile N:1","Garment N:N","Outfit 1:1 ?","GarmentExclusion 1:N"],
+    note: "La météo est FIGÉE ici, jamais stockée comme entité." },
+  { id: "wearlog", nom: "WearLog", statut: "V2", col: 2, sub: 0,
+    role: "Qui a porté quoi, et quand.",
+    attrs: [["pk","id","uuid"],["fk","garment","→ Garment"],["fk","profile","→ Profile (porteur)"],
+            ["fk","outfit","→ Outfit ?"],["","wornAt","date"]],
+    rels: ["Garment N:1","Profile N:1","Outfit N:1 ?"],
+    note: "profile ajouté en V2 : sans lui, un dressing familial mélange les porteurs." },
+  { id: "exclusion", nom: "GarmentExclusion", statut: "V2", col: 0, sub: 1, accent: "cloth",
+    role: "① Exclure UNE pièce précise des SUGGESTIONS DE TENUES.",
+    attrs: [["pk","id","uuid"],["fk","profile","→ Profile"],["fk","garment","→ Garment"],
+            ["fk","fromSuggestion","→ OutfitSuggestion ?"],["","excludedAt","datetime"],
+            ["","reactivatedAt","datetime? — active tant que nul"]],
+    rels: ["Profile N:1","Garment N:1","OutfitSuggestion N:1 ?"],
+    note: "Porte sur UNE pièce. N'affecte PAS l'affichage du dressing. Unique partiel WHERE reactivatedAt IS NULL." },
+  { id: "colorpref", nom: "ColorPreference", statut: "NOUVEAU", col: 1, sub: 1, accent: "cloth",
+    role: "② Goût du profil sur une COULEUR : j'aime / je n'aime pas.",
+    attrs: [["pk","id","uuid"],["fk","profile","→ Profile"],["fk","color","→ Color"],
+            ["","sentiment","LIKE · DISLIKE"],["","context","WORK · SPORT · EVENING ?"]],
+    rels: ["Profile N:1","Color N:1"],
+    note: "Pondère les suggestions. Ne masque rien, n'exclut rien." },
+  { id: "stylepref", nom: "StylePreference", statut: "NOUVEAU", col: 2, sub: 1, accent: "cloth",
+    role: "③ Goût du profil sur un STYLE : j'aime / je n'aime pas.",
+    attrs: [["pk","id","uuid"],["fk","profile","→ Profile"],["fk","style","→ Style"],
+            ["","sentiment","LIKE · DISLIKE"],["","context","WORK · SPORT · EVENING ?"]],
+    rels: ["Profile N:1","Style N:1"],
+    note: "Pondère les suggestions. Ne masque rien, n'exclut rien." },
+  { id: "visibility", nom: "GarmentVisibilityPreference", statut: "NOUVEAU", col: 3, sub: 1, accent: "primary",
+    role: "④ Masquer PLUSIEURS vêtements du DRESSING par critères combinables.",
+    attrs: [["pk","id","uuid"],["fk","profile","→ Profile"],
+            ["fk","garmentCategory","→ GarmentCategory ?"],["fk","color","→ Color ?"],
+            ["fk","style","→ Style ?"],["","hiddenAt","datetime"],
+            ["","reactivatedAt","datetime? — active tant que nul"]],
+    rels: ["Profile N:1","GarmentCategory N:1 ?","Color N:1 ?","Style N:1 ?"],
+    note: "Les 3 critères se combinent en ET. cat=T-shirt seul → tous les T-shirts. cat=T-shirt + color=Noir → seulement les T-shirts noirs. Unique partiel (profile, category, color, style) WHERE reactivatedAt IS NULL. Ne vise AUCUN Garment en particulier : c'est un filtre, pas une liste." }
+]);
+
+dom("07 — PARTAGE & COLLECTIONS", C.cloth, [
+  { id: "share", nom: "Share", statut: "MVP", col: 0, sub: 0, accent: "cloth",
+    role: "Classe abstraite. Héritage SINGLE_TABLE : l'accès à UNE ressource précise.",
+    attrs: [["pk","id","uuid"],["","discriminator","géré par Doctrine"],["fk","owner","→ Profile"],
+            ["","audience","SPECIFIC · FRIENDS · FOLLOWERS · LINK"],
+            ["","accessLevel","VIEW · VIEW_COMMENTS · COMMENT"],["","token","unique ?"],
+            ["","expiresAt / revokedAt","datetime?"]],
+    rels: ["Profile N:1","ShareRecipient 1:N","Comment 1:N","Post 1:1 ?"],
+    note: "CHECK audience IN (FRIENDS, SPECIFIC) OR accessLevel = VIEW. Jamais supprimé, seulement révoqué." },
+  { id: "itemshare", nom: "ItemShare", statut: "MVP", col: 1, sub: 0,
+    role: "Sous-type de Share.", attrs: [["fk","item","→ Item"]], rels: ["Share hérite","Item N:1"] },
+  { id: "garmentshare", nom: "GarmentShare", statut: "MVP", col: 2, sub: 0,
+    role: "Sous-type de Share.", attrs: [["fk","garment","→ Garment"]], rels: ["Share hérite","Garment N:1"] },
+  { id: "roomshare", nom: "RoomShare", statut: "MVP", col: 3, sub: 0,
+    role: "Sous-type de Share.", attrs: [["fk","room","→ Room"]], rels: ["Share hérite","Room N:1"] },
+  { id: "boxshare", nom: "BoxShare", statut: "MVP", col: 4, sub: 0,
+    role: "Sous-type de Share.", attrs: [["fk","box","→ Box"]], rels: ["Share hérite","Box N:1"] },
+  { id: "collshare", nom: "CollectionShare", statut: "MVP", col: 5, sub: 0,
+    role: "Sous-type de Share.", attrs: [["fk","collection","→ Collection"]], rels: ["Share hérite","Collection N:1"] },
+  { id: "recipient", nom: "ShareRecipient", statut: "MVP", col: 0, sub: 1,
+    role: "Le destinataire nommé d'un partage ciblé.",
+    attrs: [["pk","id","uuid"],["fk","share","→ Share"],["fk","profile","→ Profile"],["","addedAt","datetime"]],
+    rels: ["Share N:1","Profile N:1"],
+    note: "Vide si audience = FRIENDS, FOLLOWERS ou LINK." },
+  { id: "comment", nom: "Comment", statut: "VALIDER", col: 1, sub: 1, accent: "cloth",
+    role: "Abstraite, 4 sous-types : ItemComment, GarmentComment, CollectionComment, PostComment.",
+    attrs: [["pk","id","uuid"],["fk","author","→ Profile"],["fk","share","→ Share ? (contexte)"],
+            ["fk","parent","→ Comment ?"],["","body","text"],["","deletedAt / hiddenAt","datetime?"]],
+    rels: ["Profile N:1","Share N:1 ?","Comment 1:N (réponses)"],
+    note: "share_id garde le contexte : révoquer le partage n'efface pas le commentaire." },
+  { id: "collection", nom: "Collection", statut: "VALIDER", col: 2, sub: 1,
+    role: "Un moodboard ou une liste. Référence les objets, ne les possède pas.",
+    attrs: [["pk","id","uuid"],["fk","owner","→ Profile"],["","name","string"],
+            ["","layout","LIST · MOODBOARD"],["","visibility","PRIVATE · SHARED · LINK"],
+            ["fk","coverMedia","→ Media ?"]],
+    rels: ["Profile N:1","CollectionEntry 1:N","CollectionShare 1:N","Post 1:N"] },
+  { id: "collentry", nom: "CollectionEntry", statut: "VALIDER", col: 3, sub: 1,
+    role: "Un élément posé sur la collection. Mise en page nullable.",
+    attrs: [["pk","id","uuid"],["fk","collection","→ Collection"],["","kind","ITEM · GARMENT · MEDIA · TEXT"],
+            ["fk","item / garment / media","un seul selon kind"],
+            ["","positionX / positionY","int ?"],["","width / height / rotation","int ?"],["","zIndex","int"]],
+    rels: ["Collection N:1","Item N:1 ?","Garment N:1 ?","Media N:1 ?"],
+    note: "Supprimer la collection supprime ses entrées, et RIEN d'autre." },
+  { id: "post", nom: "Post", statut: "NOUVEAU", col: 4, sub: 1,
+    role: "Une publication du fil d'actualité.",
+    attrs: [["pk","id","uuid"],["fk","author","→ Profile"],["","body","text"],
+            ["","audience","FRIENDS · FOLLOWERS · SPECIFIC"],
+            ["fk","collection / item / garment","au plus un"],["fk","share","→ Share ?"],
+            ["","commentsEnabled","bool"]],
+    rels: ["Profile N:1","Share 1:1 ?","Collection N:1 ?","Media N:N","Comment 1:N"],
+    note: "Un Post ne donne JAMAIS accès directement : il PORTE un Share de même audience." }
+]);
+
+dom("08 — PRÊTS", C.main, [
+  { id: "loan", nom: "Loan", statut: "VALIDER", col: 0, sub: 0, accent: "main",
+    role: "Un prêt, de la demande au retour.",
+    attrs: [["pk","id","uuid"],["fk","item / garment","un seul"],["fk","lender","→ Profile (propriétaire)"],
+            ["fk","borrower","→ Profile"],
+            ["","status","REQUESTED · ACCEPTED · ACTIVE · RETURNED · DECLINED · CANCELLED · LOST"],
+            ["","dueDate","date?"],["","conditionAtStart / atReturn","enum?"],
+            ["fk","approvalRequest","→ ApprovalRequest ?"]],
+    rels: ["Item N:1 ?","Garment N:1 ?","Profile N:1 (×2)","LoanEvent 1:N"],
+    note: "UNIQUE PARTIEL (item) WHERE status = ACTIVE. « En retard » = ACTIVE + dueDate dépassée, pas un statut." },
+  { id: "loanevent", nom: "LoanEvent", statut: "NOUVEAU", col: 1, sub: 0,
+    role: "Le journal du prêt, en écriture seule.",
+    attrs: [["pk","id","uuid"],["fk","loan","→ Loan"],["fk","actor","→ Profile ?"],
+            ["","type","REQUESTED · ACCEPTED · RECEIVED · RETURNED · DAMAGE_REPORTED · DECLARED_LOST…"],
+            ["","payload","jsonb"],["","occurredAt","datetime"]],
+    rels: ["Loan N:1","Profile N:1 ?"],
+    note: "Droits UPDATE et DELETE révoqués sur la table." }
+]);
+
+dom("09 — VENTE, PAIEMENT & LIVRAISON", C.warn, [
+  { id: "listing", nom: "Listing", statut: "V2", col: 0, sub: 0,
+    role: "L'annonce. Seule détentrice de l'état « en vente ».",
+    attrs: [["pk","id","uuid"],["fk","seller","→ Profile"],["fk","item / garment","un seul"],
+            ["","price / currency","decimal ≥ 0"],
+            ["","status","DRAFT · PUBLISHED · RESERVED · SOLD · WITHDRAWN · EXPIRED"],
+            ["","audience","FRIENDS_ONLY par défaut"]],
+    rels: ["Profile N:1","Item N:1 ?","Garment N:1 ?","Media N:N","Order 1:1 ?"] },
+  { id: "order", nom: "Order", statut: "V2", col: 1, sub: 0, accent: "main",
+    role: "La transaction. Expédition ou remise en main propre.",
+    attrs: [["pk","id","uuid"],["fk","listing","→ Listing"],["fk","buyer","→ Profile"],
+            ["fk","seller","→ Profile"],["","reference","unique"],["","totalAmount","decimal"],
+            ["","deliveryMethod","SHIPPING · HANDOVER"],
+            ["","status","PENDING_PAYMENT · PAID · SHIPPED · COMPLETED · REFUNDED"]],
+    rels: ["Listing 1:1","Profile N:1 (×2)","OrderAddress 1:N","Payment 1:N","Refund 1:N","Dispute 1:1 ?","Shipment 1:1 ?"],
+    note: "Exige une Friendship ACCEPTED entre acheteur et vendeur." },
+  { id: "orderaddr", nom: "OrderAddress", statut: "NOUVEAU", col: 2, sub: 0,
+    role: "L'adresse FIGÉE au moment de l'achat. Copie de valeurs.",
+    attrs: [["pk","id","uuid"],["fk","order","→ Order"],["","role","SHIPPING · BILLING"],
+            ["","fullName / phone","string"],["","line1 / postalCode / city / country","string"]],
+    rels: ["Order N:1"],
+    note: "Aucune mise à jour après création : déménager ne réécrit pas le passé." },
+  { id: "address", nom: "Address", statut: "V2", col: 3, sub: 0,
+    role: "Le carnet d'adresses du profil, librement modifiable.",
+    attrs: [["pk","id","uuid"],["fk","profile","→ Profile"],["","label","string"],
+            ["","line1 / postalCode / city / country","string"],["","isDefault","bool"]],
+    rels: ["Profile N:1"],
+    note: "Pré-remplit une commande. N'est jamais la source d'une commande passée." },
+  { id: "payment", nom: "Payment", statut: "V2", col: 1, sub: 1,
+    role: "Un mouvement d'argent. Encaissement et reversement, même table.",
+    attrs: [["pk","id","uuid"],["fk","order","→ Order"],["","direction","CHARGE · PAYOUT"],
+            ["","provider","« stripe »"],["","externalId","unique par provider"],
+            ["","status","PENDING · AUTHORIZED · CAPTURED · FAILED"],["","rawPayload","jsonb"]],
+    rels: ["Order N:1","Refund 1:N"],
+    note: "AUCUNE colonne ne nomme Stripe dans le domaine. Interface PaymentGatewayInterface." },
+  { id: "refund", nom: "Refund", statut: "V2", col: 2, sub: 1,
+    role: "Un remboursement, exécuté par le prestataire.",
+    attrs: [["pk","id","uuid"],["fk","order","→ Order"],["fk","payment","→ Payment"],
+            ["fk","requestedBy","→ Profile"],["","amount / reason","decimal · text"],
+            ["","provider / externalId","string"]],
+    rels: ["Order N:1","Payment N:1","Profile N:1"] },
+  { id: "dispute", nom: "Dispute", statut: "V2", col: 3, sub: 1,
+    role: "Le litige. Trace et escalade, n'arbitre pas.",
+    attrs: [["pk","id","uuid"],["fk","order","→ Order"],["fk","opener","→ Profile"],
+            ["","reason / description","enum · text"],["","status / resolution","enum · text?"],
+            ["fk","handledBy","→ Account ?"]],
+    rels: ["Order 1:1","Profile N:1","Account N:1 ?"] },
+  { id: "shipment", nom: "Shipment", statut: "V2", col: 4, sub: 1,
+    role: "L'expédition et son suivi.",
+    attrs: [["pk","id","uuid"],["fk","order","→ Order"],["","carrier / trackingNumber","string"],
+            ["","status","PENDING · IN_TRANSIT · DELIVERED · RETURNED"],
+            ["","shippedAt / deliveredAt","datetime?"]],
+    rels: ["Order 1:1"],
+    note: "N'existe que si deliveryMethod = SHIPPING." }
+]);
+
+dom("10 — NOTIFICATIONS & TECHNIQUE", C.sub, [
+  { id: "notif", nom: "Notification", statut: "MVP", col: 0, sub: 0,
+    role: "Une entité unique pour les 19 types d'événements.",
+    attrs: [["pk","id","uuid"],["fk","recipient","→ Profile"],["fk","actor","→ Profile ?"],
+            ["","type","LOAN_DUE_SOON · FRIEND_REQUEST · ORDER_PAID · COMMENT_ADDED · APPROVAL_REQUESTED…"],
+            ["","data","jsonb"],["","readAt","datetime?"],["","pushSentAt / emailSentAt","datetime?"]],
+    rels: ["Profile N:1 (×2)"] },
+  { id: "notifpref", nom: "NotificationPreference", statut: "MVP", col: 1, sub: 0,
+    role: "Le réglage par type et par profil.",
+    attrs: [["pk","id","uuid"],["fk","profile","→ Profile"],["","type","enum"],
+            ["","pushEnabled / emailEnabled","bool"]],
+    rels: ["Profile N:1"],
+    note: "unique (profile, type)." },
+  { id: "devicetoken", nom: "DeviceToken", statut: "TECH", col: 2, sub: 0,
+    role: "Le jeton de push Expo d'un appareil.",
+    attrs: [["pk","id","uuid"],["fk","account","→ Account"],["","token","unique"],
+            ["","platform","IOS · ANDROID"],["","lastSeenAt","datetime"]],
+    rels: ["Account N:1"],
+    note: "Appartient au COMPTE ; la notification vise un PROFIL." },
+  { id: "refreshtoken", nom: "RefreshToken", statut: "TECH", col: 3, sub: 0,
+    role: "Créée par gesdinet/jwt-refresh-token-bundle. Rien à modéliser.",
+    attrs: [["","refreshToken / username","string"],["","valid","datetime"]],
+    rels: ["Account (par username)"] }
+]);
+
+dom("11 — ADMINISTRATION & MODÉRATION", C.sub, [
+  { id: "report", nom: "Report", statut: "V2", col: 0, sub: 0,
+    role: "Un signalement. Cible en référence souple, sans FK.",
+    attrs: [["pk","id","uuid"],["fk","reporter","→ Profile"],
+            ["","targetType","PROFILE · ITEM · GARMENT · COMMENT · LISTING · COLLECTION · POST"],
+            ["","targetId","uuid (sans contrainte, volontairement)"],
+            ["","reason","SPAM · INAPPROPRIATE · COUNTERFEIT · HARASSMENT"],
+            ["","status","OPEN · UNDER_REVIEW · ACTIONED · DISMISSED"],["fk","handledBy","→ Account ?"]],
+    rels: ["Profile N:1","Account N:1 ?","ModerationAction 1:N"],
+    note: "Le contenu signalé peut être supprimé : le signalement doit lui survivre." },
+  { id: "modaction", nom: "ModerationAction", statut: "NOUVEAU", col: 1, sub: 0,
+    role: "Ce que l'administrateur a fait, et pourquoi.",
+    attrs: [["pk","id","uuid"],["fk","report","→ Report ?"],["fk","admin","→ Account"],
+            ["","actionType","HIDE_CONTENT · DELETE_CONTENT · WARN · SUSPEND_PROFILE · BAN_ACCOUNT · RESTORE"],
+            ["","targetType / targetId","enum · uuid"],["","reason","text"],["","expiresAt","datetime?"]],
+    rels: ["Report N:1 ?","Account N:1"],
+    note: "Table en écriture seule, comme LoanEvent." }
+]);
+
+// ---------- RELATIONS A TRACER ----------
+// [source, cible, cardinalite, style]
+// style : "" normal · "opt" pointille (nullable) · "herit" heritage
+const LIENS = [
+  ["account","profile","1:N",""],
+  ["account","devicetoken","1:N",""],
+  ["profile","perm","1:N",""],
+  ["profile","approval","1:N",""],
+  ["profile","friendship","1:N",""],
+  ["profile","follow","1:N",""],
+  ["profile","block","1:N",""],
+  ["profile","place","1:N",""],
+  ["profile","item","1:N",""],
+  ["profile","garment","1:N",""],
+  ["profile","media","1:N",""],
+  ["profile","collection","1:N",""],
+  ["profile","share","1:N",""],
+  ["profile","post","1:N",""],
+  ["profile","loan","1:N",""],
+  ["profile","listing","1:N",""],
+  ["profile","order","1:N",""],
+  ["profile","notif","1:N",""],
+  ["profile","notifpref","1:N",""],
+  ["profile","address","1:N",""],
+  ["profile","report","1:N",""],
+  ["profile","outfit","1:N",""],
+  ["profile","suggestion","1:N",""],
+  ["profile","wearlog","1:N",""],
+  ["profile","exclusion","1:N",""],
+  ["profile","colorpref","1:N",""],
+  ["profile","stylepref","1:N",""],
+  ["profile","visibility","1:N",""],
+  ["profile","recipient","1:N",""],
+  ["profile","comment","1:N",""],
+  ["approval","friendship","1:1","opt"],
+  ["approval","loan","1:1","opt"],
+  ["place","room","1:N",""],
+  ["room","storage","1:N",""],
+  ["storage","box","1:N",""],
+  ["room","item","1:N",""],
+  ["room","garment","1:N",""],
+  ["box","item","1:N","opt"],
+  ["box","garment","1:N","opt"],
+  ["item","lochist","1:N","opt"],
+  ["itemcat","item","1:N",""],
+  ["garmentcat","garment","1:N",""],
+  ["garmentcat","sizesys","N:1","opt"],
+  ["sizesys","sizeval","1:N",""],
+  ["sizeval","garment","1:N","opt"],
+  ["brand","garment","1:N","opt"],
+  ["color","garment","N:N",""],
+  ["style","garment","N:N",""],
+  ["media","scan","1:N",""],
+  ["item","memory","1:N","opt"],
+  ["media","liaisons","1:N",""],
+  ["garment","wearlog","1:N",""],
+  ["outfit","wearlog","1:N","opt"],
+  ["suggestion","outfit","1:1","opt"],
+  ["garment","exclusion","1:N",""],
+  ["suggestion","exclusion","1:N","opt"],
+  ["color","colorpref","1:N",""],
+  ["style","stylepref","1:N",""],
+  ["garmentcat","visibility","1:N","opt"],
+  ["color","visibility","1:N","opt"],
+  ["style","visibility","1:N","opt"],
+  ["share","itemshare","","herit"],
+  ["share","garmentshare","","herit"],
+  ["share","roomshare","","herit"],
+  ["share","boxshare","","herit"],
+  ["share","collshare","","herit"],
+  ["share","recipient","1:N",""],
+  ["share","comment","1:N","opt"],
+  ["share","post","1:1","opt"],
+  ["item","itemshare","1:N",""],
+  ["garment","garmentshare","1:N",""],
+  ["room","roomshare","1:N",""],
+  ["box","boxshare","1:N",""],
+  ["collection","collshare","1:N",""],
+  ["collection","collentry","1:N",""],
+  ["item","collentry","1:N","opt"],
+  ["garment","collentry","1:N","opt"],
+  ["media","collentry","1:N","opt"],
+  ["collection","post","1:N","opt"],
+  ["comment","comment","1:N","opt"],
+  ["item","loan","1:N","opt"],
+  ["garment","loan","1:N","opt"],
+  ["loan","loanevent","1:N",""],
+  ["item","listing","1:N","opt"],
+  ["garment","listing","1:N","opt"],
+  ["listing","order","1:1",""],
+  ["order","orderaddr","1:N",""],
+  ["order","payment","1:N",""],
+  ["order","refund","1:N",""],
+  ["payment","refund","1:N",""],
+  ["order","dispute","1:1","opt"],
+  ["order","shipment","1:1","opt"],
+  ["account","dispute","1:N","opt"],
+  ["report","modaction","1:N","opt"],
+  ["account","modaction","1:N",""],
+  ["account","report","1:N","opt"],
+  ["account","refreshtoken","par username","opt"]
+];
+
+// ---------- MISE EN PAGE ----------
+// Deux passes obligatoires : les hauteurs de carte ne sont connues
+// qu'apres construction, donc on batit tout, on mesure, puis on place.
+const CARTES = {};   // id -> node
+const BOITES = {};   // id -> { x, y, w, h } absolus dans la grande frame
+
+function placer(grandeFrame) {
+  let y = TITRE_H;
+  const panneaux = [];
+
+  for (let d = 0; d < DOMAINES.length; d++) {
+    const domaine = DOMAINES[d];
+    const yPanneau = y;
+    let yCourant = y + PANNEAU_PAD_H;
+    let colMax = 0;
+
+    // hauteur de chaque sous-rangee = la plus haute carte qu'elle contient
+    const subs = {};
+    for (let i = 0; i < domaine.entites.length; i++) {
+      const e = domaine.entites[i];
+      const c = CARTES[e.id];
+      if (!subs[e.sub]) subs[e.sub] = 0;
+      if (c.height > subs[e.sub]) subs[e.sub] = c.height;
+      if (e.col > colMax) colMax = e.col;
+    }
+
+    const clefs = Object.keys(subs).map(Number).sort(function (a, b) { return a - b; });
+    const yDeSub = {};
+    for (let s = 0; s < clefs.length; s++) {
+      yDeSub[clefs[s]] = yCourant;
+      yCourant += subs[clefs[s]] + SUBROW_GAP;
+    }
+    yCourant -= SUBROW_GAP;
+
+    for (let i = 0; i < domaine.entites.length; i++) {
+      const e = domaine.entites[i];
+      const c = CARTES[e.id];
+      c.x = MARGE_G + e.col * PITCH;
+      c.y = yDeSub[e.sub];
+      BOITES[e.id] = { x: c.x, y: c.y, w: CARTE_W, h: c.height };
+    }
+
+    panneaux.push({
+      nom: domaine.nom, couleur: domaine.couleur,
+      x: MARGE_G - 44, y: yPanneau,
+      w: (colMax + 1) * PITCH - GOUTTIERE + 88,
+      h: (yCourant + PANNEAU_PAD_B) - yPanneau
+    });
+
+    y = yCourant + PANNEAU_PAD_B + BANDE_GAP;
+  }
+  return { panneaux: panneaux, hauteur: y };
+}
+
+function dessinerPanneau(parent, p) {
+  const f = frame("Domaine/" + p.nom, {
+    fill: p.couleur, fillOpacity: 0.045, radius: R.lg,
+    stroke: p.couleur, strokeOpacity: 0.35, strokeWeight: 1.5
+  });
+  f.resize(p.w, p.h);
+  parent.insertChild(0, f);
+  f.x = p.x; f.y = p.y;
+
+  const t = text(p.nom, { font: FONT_LB, size: 19, color: p.couleur });
+  parent.insertChild(1, t);
+  t.x = p.x + 28; t.y = p.y + 22;
+  return f;
+}
+
+// ---------- TRACE DES LIENS ----------
+// Routage orthogonal. Les gouttieres (130 px) et les couloirs entre
+// domaines (190 px) servent de passage : un lien ne traverse donc pas
+// une carte, sauf croisement inevitable de deux couloirs.
+function tracerLien(parent, lien, index) {
+  const a = BOITES[lien[0]], b = BOITES[lien[1]];
+  if (!a || !b) { console.warn("Lien ignoré, entité inconnue : " + lien[0] + " → " + lien[1]); return false; }
+
+  const card = lien[2];
+  const style = lien[3] || "";
+  const opac = style === "opt" ? 0.32 : (style === "herit" ? 0.55 : 0.5);
+  const coul = style === "herit" ? C.cloth : C.sub;
+
+  // decalage pour eviter que deux liens se superposent exactement
+  const off = ((index % 7) - 3) * 13;
+
+  const aCY = a.y + a.h / 2, bCY = b.y + b.h / 2;
+  const memeBande = Math.abs(a.y - b.y) < 24;
+
+  let lx, ly;   // point ou poser l'etiquette
+  let px, py;   // point ou poser la pointe
+
+  if (memeBande && a.x !== b.x) {
+    // --- lien horizontal dans la gouttiere
+    const gauche = a.x < b.x ? a : b;
+    const droite = a.x < b.x ? b : a;
+    const y = Math.min(gauche.y + gauche.h, droite.y + droite.h) - 34 + off;
+    const x1 = gauche.x + gauche.w, x2 = droite.x;
+    segment(parent, x1, y, x2 - x1, 1.5, coul, opac);
+    lx = x1 + 12; ly = y - 17;
+    px = (a.x < b.x) ? x2 : x1; py = y;
+  } else {
+    // --- lien vertical : on descend dans le couloir entre les bandes
+    const haut = a.y < b.y ? a : b;
+    const bas  = a.y < b.y ? b : a;
+    const xh = haut.x + haut.w / 2 + off;
+    const xb = bas.x + bas.w / 2 + off;
+    const yh = haut.y + haut.h;
+    const yb = bas.y;
+    const yc = yh + Math.max(28, (yb - yh) / 2) + ((index % 5) - 2) * 11;
+
+    segment(parent, xh, yh, 1.5, yc - yh, coul, opac);
+    segment(parent, Math.min(xh, xb), yc, Math.abs(xb - xh), 1.5, coul, opac);
+    segment(parent, xb, yc, 1.5, yb - yc, coul, opac);
+    lx = Math.min(xh, xb) + Math.abs(xb - xh) / 2 - 12; ly = yc - 18;
+    px = (a.y < b.y) ? xb : xh;
+    py = (a.y < b.y) ? yb : yh;
+  }
+
+  pointe(parent, px, py, null, coul);
+
+  if (card) {
+    const e = text(card, { font: FONT_LB, size: 10, color: coul });
+    parent.appendChild(e);
+    e.x = Math.round(lx); e.y = Math.round(ly);
+  }
+  return true;
+}
+
+// ---------- CONSTRUCTION ----------
+const TITRE_H = 300;
+
+async function construire() {
+  await figma.loadAllPagesAsync();
+  await figma.loadFontAsync(FONT_T);
+  await figma.loadFontAsync(FONT_L);
+  await figma.loadFontAsync(FONT_LB);
+
+  PAGE = figma.root.children.filter(function (p) { return p.name === PAGE_CIBLE; })[0];
+  if (!PAGE) throw new Error("page « " + PAGE_CIBLE + " » introuvable");
+  await PAGE.loadAsync();
+  figma.currentPage = PAGE;
+
+  // Supprime UNIQUEMENT la production precedente de ce script
+  let supprimes = 0;
+  const racine = PAGE.children.slice();
+  for (let i = 0; i < racine.length; i++) {
+    if (racine[i].getPluginData(TAG) === "1") { racine[i].remove(); supprimes++; }
+  }
+
+  // La grande frame
+  const G = frame("MDD — PENDERIE — VUE GLOBALE", { fill: C.bg, radius: R.lg });
+  G.clipsContent = false;
+  PAGE.appendChild(G);
+  G.x = 0; G.y = 0;
+  G.setPluginData(TAG, "1");
+
+  // 1. batir toutes les cartes
+  let nb = 0;
+  for (let d = 0; d < DOMAINES.length; d++) {
+    for (let i = 0; i < DOMAINES[d].entites.length; i++) {
+      const e = DOMAINES[d].entites[i];
+      const c = carteEntite(e);
+      G.appendChild(c);
+      CARTES[e.id] = c;
+      nb++;
+    }
+  }
+
+  // 2. mesurer et placer
+  const mise = placer(G);
+
+  // 3. dimensionner la frame
+  let largeur = 0;
+  for (let i = 0; i < mise.panneaux.length; i++) {
+    const p = mise.panneaux[i];
+    if (p.x + p.w > largeur) largeur = p.x + p.w;
+  }
+  G.resize(largeur + MARGE_G, mise.hauteur + 80);
+
+  // 4. les liens, INSERES SOUS les cartes
+  let traces = 0;
+  for (let i = 0; i < LIENS.length; i++) {
+    const avant = G.children.length;
+    if (tracerLien(G, LIENS[i], i)) traces++;
+    // remonter les segments crees sous les cartes
+    const crees = G.children.length - avant;
+    for (let k = 0; k < crees; k++) {
+      const n = G.children[G.children.length - 1];
+      if (n.name === "Lien" || n.name === "Pointe") G.insertChild(0, n);
+      else break;
+    }
+  }
+
+  // 5. les panneaux, tout au fond
+  for (let i = mise.panneaux.length - 1; i >= 0; i--) dessinerPanneau(G, mise.panneaux[i]);
+
+  // 6. le bloc titre, par-dessus
+  const entete = frame("Titre", { dir: "VERTICAL", gap: 12 });
+  entete.appendChild(text("WR506D · PENDERIE", { font: FONT_LB, size: 15, color: C.primaryTexte }));
+  entete.appendChild(text("Modèle de données — vue globale", { font: FONT_T, size: 64, color: C.ink }));
+  entete.appendChild(para(
+    "52 entités en 11 domaines, plus les 5 sous-types de Share, la table technique RefreshToken et les liaisons. Nommage des entités en anglais, "
+    + "libellés d'interface en français. Aucune migration Doctrine n'est lancée : ce schéma est la matière de la review.",
+    1100, { size: 17, color: C.sub, lineHeight: 25 }));
+  G.appendChild(entete);
+  entete.x = MARGE_G; entete.y = 56;
+
+  const leg = frame("Légende", { dir: "HORIZONTAL", gap: 14, align: "CENTER" });
+  leg.appendChild(STATUTS.MVP());
+  leg.appendChild(STATUTS.VALIDER());
+  leg.appendChild(STATUTS.V2());
+  leg.appendChild(STATUTS.NOUVEAU());
+  leg.appendChild(text("clé primaire", { font: FONT_LB, size: 11, color: C.mainTexte }));
+  leg.appendChild(text("clé étrangère", { font: FONT_LB, size: 11, color: C.cloth }));
+  leg.appendChild(text("— — —  relation nullable", { size: 11, color: C.sub }));
+  leg.appendChild(text("violet = héritage", { size: 11, color: C.cloth }));
+  G.appendChild(leg);
+  leg.x = MARGE_G; leg.y = 56 + entete.height + 22;
+
+  figma.viewport.scrollAndZoomIntoView([G]);
+
+  console.log("=== MDD — VUE GLOBALE ===");
+  console.log("Supprimés     : " + supprimes + " nœud(s) de la production précédente");
+  console.log("Domaines      : " + DOMAINES.length);
+  console.log("Entités       : " + nb);
+  console.log("Liens tracés  : " + traces + " / " + LIENS.length);
+  console.log("Frame         : " + Math.round(G.width) + " × " + Math.round(G.height) + " px");
+}
+
+construire().catch(function (e) {
+  console.error("ECHEC : " + e.message);
+  console.error(e.stack || "");
+});

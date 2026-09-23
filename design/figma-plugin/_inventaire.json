@@ -1,0 +1,735 @@
+[
+ {
+  "num": "01",
+  "titre": "Authentification",
+  "frames": [
+   {
+    "id": "14:1065",
+    "nom": "Authentification — Connexion",
+    "lot": "lo"
+   },
+   {
+    "id": "14:1726",
+    "nom": "Authentification — E-mail de bienvenue",
+    "lot": "lo"
+   }
+  ]
+ },
+ {
+  "num": "02",
+  "titre": "Accueil",
+  "frames": [
+   {
+    "id": "14:1277",
+    "nom": "Accueil — Tableau de bord",
+    "lot": "01"
+   },
+   {
+    "id": "69:6831",
+    "nom": "Accueil — Menu d'ajout",
+    "lot": "lo"
+   },
+   {
+    "id": "75:7871",
+    "nom": "Accueil — Ajouter · Choix du type",
+    "lot": "lo"
+   }
+  ]
+ },
+ {
+  "num": "03",
+  "titre": "Inventaire / Objets",
+  "frames": [
+   {
+    "id": "87:8138",
+    "nom": "Objet — Scanner",
+    "lot": "lo"
+   },
+   {
+    "id": "87:8179",
+    "nom": "Objet — Résultat du scan",
+    "lot": "lo"
+   },
+   {
+    "id": "75:7646",
+    "nom": "Objet — Informations",
+    "lot": "lo"
+   },
+   {
+    "id": "75:7724",
+    "nom": "Objet — Localisation",
+    "lot": "lo"
+   },
+   {
+    "id": "75:7796",
+    "nom": "Objet — Vérification",
+    "lot": "lo"
+   },
+   {
+    "id": "75:7977",
+    "nom": "Objet — Confirmation",
+    "lot": "lo"
+   },
+   {
+    "id": "87:8216",
+    "nom": "Objet — Mes objets",
+    "lot": "lo"
+   },
+   {
+    "id": "72:7184",
+    "nom": "Objet — Fiche · Disponible",
+    "lot": "lo"
+   },
+   {
+    "id": "87:8236",
+    "nom": "Objet — Fiche · Prêté",
+    "lot": "lo"
+   },
+   {
+    "id": "87:8271",
+    "nom": "Objet — Fiche · Emprunté",
+    "lot": "lo"
+   },
+   {
+    "id": "87:8306",
+    "nom": "Objet — Statuts",
+    "lot": "lo"
+   },
+   {
+    "id": "101:9373",
+    "nom": "Objet — Déplacer",
+    "lot": "lo"
+   }
+  ]
+ },
+ {
+  "num": "04",
+  "titre": "Logements & rangements",
+  "frames": [
+   {
+    "id": "64:6195",
+    "nom": "Logement — Ajout · Type",
+    "lot": "lo"
+   },
+   {
+    "id": "64:6286",
+    "nom": "Logement — Ajout · Informations",
+    "lot": "lo"
+   },
+   {
+    "id": "64:6362",
+    "nom": "Logement — Ajout · Pièces",
+    "lot": "lo"
+   },
+   {
+    "id": "64:6435",
+    "nom": "Logement — Ajout · Vérification",
+    "lot": "lo"
+   },
+   {
+    "id": "101:9066",
+    "nom": "Logement — Mes logements",
+    "lot": "lo"
+   },
+   {
+    "id": "101:9109",
+    "nom": "Logement — Vue logement",
+    "lot": "lo"
+   },
+   {
+    "id": "101:9152",
+    "nom": "Logement — Vue pièce",
+    "lot": "lo"
+   },
+   {
+    "id": "101:9215",
+    "nom": "Rangement — Vue rangement",
+    "lot": "lo"
+   },
+   {
+    "id": "14:1767",
+    "nom": "Rangement — Mes cartons",
+    "lot": "lo"
+   },
+   {
+    "id": "75:7496",
+    "nom": "Rangement — Tous mes cartons",
+    "lot": "lo"
+   },
+   {
+    "id": "72:7282",
+    "nom": "Rangement — Fiche carton",
+    "lot": "lo"
+   },
+   {
+    "id": "101:9275",
+    "nom": "Rangement — Carton · Aperçu",
+    "lot": "lo"
+   },
+   {
+    "id": "101:9313",
+    "nom": "Rangement — Carton · Contenu",
+    "lot": "lo"
+   },
+   {
+    "id": "nouveau",
+    "nom": "Rangement — Création · Confirmation",
+    "lot": "lo"
+   },
+   {
+    "id": "nouveau",
+    "nom": "Rangement — Création · Contenu",
+    "lot": "lo"
+   },
+   {
+    "id": "nouveau",
+    "nom": "Rangement — Création · Emplacement",
+    "lot": "lo"
+   },
+   {
+    "id": "nouveau",
+    "nom": "Rangement — Création · Informations",
+    "lot": "lo"
+   },
+   {
+    "id": "nouveau",
+    "nom": "Rangement — Création · Vérification",
+    "lot": "lo"
+   }
+  ]
+ },
+ {
+  "num": "05",
+  "titre": "Dressing / Vêtements",
+  "frames": [
+   {
+    "id": "14:1594",
+    "nom": "Vêtement — Ajout · Type",
+    "lot": "lo"
+   },
+   {
+    "id": "57:4530",
+    "nom": "Vêtement — Ajout · Informations",
+    "lot": "lo"
+   },
+   {
+    "id": "57:4654",
+    "nom": "Vêtement — Ajout · Localisation",
+    "lot": "lo"
+   },
+   {
+    "id": "55:4422",
+    "nom": "Vêtement — Ajout · Vérification",
+    "lot": "lo"
+   },
+   {
+    "id": "65:6559",
+    "nom": "Vêtement — Ajout · Confirmation",
+    "lot": "lo"
+   },
+   {
+    "id": "106:9507",
+    "nom": "Vêtement — Dressing",
+    "lot": "lo"
+   },
+   {
+    "id": "108:10010",
+    "nom": "Vêtement — Catégorie · Hauts",
+    "lot": "lo"
+   },
+   {
+    "id": "106:9567",
+    "nom": "Vêtement — Filtrer",
+    "lot": "lo"
+   },
+   {
+    "id": "72:7097",
+    "nom": "Vêtement — Fiche",
+    "lot": "lo"
+   },
+   {
+    "id": "106:9650",
+    "nom": "Vêtement — Fiche complète",
+    "lot": "lo"
+   },
+   {
+    "id": "106:9685",
+    "nom": "Vêtement — Historique de port",
+    "lot": "lo"
+   },
+   {
+    "id": "106:9723",
+    "nom": "Vêtement — Modification",
+    "lot": "lo"
+   },
+   {
+    "id": "106:9806",
+    "nom": "Vêtement — Modification · Vérification",
+    "lot": "lo"
+   },
+   {
+    "id": "108:10260",
+    "nom": "Vêtement — Modification · Confirmation",
+    "lot": "lo"
+   },
+   {
+    "id": "108:10303",
+    "nom": "Vêtement — Fiche · Prêté",
+    "lot": "lo"
+   },
+   {
+    "id": "108:10346",
+    "nom": "Vêtement — Fiche · En vente",
+    "lot": "lo"
+   },
+   {
+    "id": "108:10071",
+    "nom": "Vêtement — État · Dressing vide",
+    "lot": "lo"
+   },
+   {
+    "id": "108:10132",
+    "nom": "Vêtement — État · Aucun résultat (recherche)",
+    "lot": "lo"
+   },
+   {
+    "id": "108:10193",
+    "nom": "Vêtement — État · Aucun résultat (filtre)",
+    "lot": "lo"
+   }
+  ]
+ },
+ {
+  "num": "06",
+  "titre": "Suggestions de tenues",
+  "frames": [
+   {
+    "id": "108:10558",
+    "nom": "Tenue — Ma tenue",
+    "lot": "lo"
+   },
+   {
+    "id": "108:10604",
+    "nom": "Tenue — Préférences",
+    "lot": "lo"
+   },
+   {
+    "id": "108:10687",
+    "nom": "Tenue — Suggestion",
+    "lot": "lo"
+   },
+   {
+    "id": "110:10928",
+    "nom": "Tenue — Remplacer une pièce",
+    "lot": "lo"
+   },
+   {
+    "id": "110:10977",
+    "nom": "Tenue — Tenue enregistrée",
+    "lot": "lo"
+   },
+   {
+    "id": "108:10725",
+    "nom": "Tenue — Mes tenues",
+    "lot": "lo"
+   },
+   {
+    "id": "108:10786",
+    "nom": "Tenue — État · Dressing insuffisant",
+    "lot": "lo"
+   },
+   {
+    "id": "108:10799",
+    "nom": "Tenue — État · Aucun vêtement compatible",
+    "lot": "lo"
+   },
+   {
+    "id": "108:10812",
+    "nom": "Tenue — État · Aucune tenue enregistrée",
+    "lot": "lo"
+   }
+  ]
+ },
+ {
+  "num": "07",
+  "titre": "Prêts",
+  "frames": [
+   {
+    "id": "95:8468",
+    "nom": "Prêt — Choisir un ami",
+    "lot": "lo"
+   },
+   {
+    "id": "95:8499",
+    "nom": "Prêt — Informations",
+    "lot": "lo"
+   },
+   {
+    "id": "95:8582",
+    "nom": "Prêt — Vérification",
+    "lot": "lo"
+   },
+   {
+    "id": "95:8615",
+    "nom": "Prêt — Confirmation",
+    "lot": "lo"
+   },
+   {
+    "id": "95:8785",
+    "nom": "Prêt — Mes prêts · J'ai prêté",
+    "lot": "lo"
+   },
+   {
+    "id": "95:8845",
+    "nom": "Prêt — Mes prêts · J'ai emprunté",
+    "lot": "lo"
+   },
+   {
+    "id": "95:8667",
+    "nom": "Prêt — Retour · Objet rendu ?",
+    "lot": "lo"
+   },
+   {
+    "id": "95:8750",
+    "nom": "Prêt — Retour · Confirmation",
+    "lot": "lo"
+   }
+  ]
+ },
+ {
+  "num": "08",
+  "titre": "Amis",
+  "frames": [
+   {
+    "id": "110:11158",
+    "nom": "Amis — Mes amis",
+    "lot": "lo"
+   },
+   {
+    "id": "110:11184",
+    "nom": "Amis — Ajouter un ami",
+    "lot": "lo"
+   },
+   {
+    "id": "110:11689",
+    "nom": "Amis — Demande envoyée",
+    "lot": "lo"
+   },
+   {
+    "id": "110:11210",
+    "nom": "Amis — Demande reçue",
+    "lot": "lo"
+   },
+   {
+    "id": "110:11236",
+    "nom": "Amis — Profil ami",
+    "lot": "lo"
+   },
+   {
+    "id": "110:11552",
+    "nom": "Amis — État · Aucun ami",
+    "lot": "lo"
+   }
+  ]
+ },
+ {
+  "num": "09",
+  "titre": "Partage privé",
+  "frames": [
+   {
+    "id": "110:11274",
+    "nom": "Partage — Partager",
+    "lot": "lo"
+   },
+   {
+    "id": "110:11357",
+    "nom": "Partage — Lien de partage",
+    "lot": "lo"
+   },
+   {
+    "id": "110:11741",
+    "nom": "Partage — Lien copié",
+    "lot": "lo"
+   },
+   {
+    "id": "110:11394",
+    "nom": "Partage — Accès invité",
+    "lot": "lo"
+   },
+   {
+    "id": "110:11437",
+    "nom": "Partage — Mes partages",
+    "lot": "lo"
+   },
+   {
+    "id": "110:11500",
+    "nom": "Partage — Détail d'un accès",
+    "lot": "lo"
+   },
+   {
+    "id": "110:11706",
+    "nom": "Partage — Accès révoqué",
+    "lot": "lo"
+   },
+   {
+    "id": "110:11526",
+    "nom": "Partage — Commentaires",
+    "lot": "lo"
+   },
+   {
+    "id": "110:11565",
+    "nom": "Partage — État · Aucun partage",
+    "lot": "lo"
+   }
+  ]
+ },
+ {
+  "num": "10",
+  "titre": "Vente",
+  "frames": [
+   {
+    "id": "110:11832",
+    "nom": "Vente — Informations",
+    "lot": "lo"
+   },
+   {
+    "id": "110:11915",
+    "nom": "Vente — Annonce publiée",
+    "lot": "lo"
+   },
+   {
+    "id": "110:11955",
+    "nom": "Vente — À vendre chez mes amis",
+    "lot": "lo"
+   },
+   {
+    "id": "110:12016",
+    "nom": "Vente — Fiche article",
+    "lot": "lo"
+   },
+   {
+    "id": "110:12059",
+    "nom": "Vente — Confirmation d'achat",
+    "lot": "lo"
+   },
+   {
+    "id": "110:12105",
+    "nom": "Vente — Achat confirmé",
+    "lot": "lo"
+   },
+   {
+    "id": "111:12249",
+    "nom": "Vente — État · Vendu",
+    "lot": "lo"
+   },
+   {
+    "id": "111:12288",
+    "nom": "Vente — État · Retiré",
+    "lot": "lo"
+   },
+   {
+    "id": "111:12327",
+    "nom": "Vente — État · Paiement en attente",
+    "lot": "lo"
+   },
+   {
+    "id": "111:12364",
+    "nom": "Vente — État · Commande terminée",
+    "lot": "lo"
+   },
+   {
+    "id": "111:12401",
+    "nom": "Vente — État · Paiement refusé",
+    "lot": "lo"
+   }
+  ]
+ },
+ {
+  "num": "11",
+  "titre": "Paiement / Livraison",
+  "frames": [
+   {
+    "id": "111:12473",
+    "nom": "Paiement — Récapitulatif",
+    "lot": "lo"
+   },
+   {
+    "id": "111:12512",
+    "nom": "Paiement — Paiement",
+    "lot": "lo"
+   },
+   {
+    "id": "111:12549",
+    "nom": "Paiement — Paiement confirmé",
+    "lot": "lo"
+   },
+   {
+    "id": "111:12586",
+    "nom": "Livraison — Choix de livraison",
+    "lot": "lo"
+   },
+   {
+    "id": "111:12669",
+    "nom": "Livraison — Suivi de commande",
+    "lot": "lo"
+   },
+   {
+    "id": "111:12732",
+    "nom": "Livraison — Remise en main propre",
+    "lot": "lo"
+   },
+   {
+    "id": "111:13021",
+    "nom": "Livraison — Livraison problématique",
+    "lot": "lo"
+   },
+   {
+    "id": "111:12769",
+    "nom": "Paiement — Mes achats",
+    "lot": "lo"
+   },
+   {
+    "id": "111:12808",
+    "nom": "Paiement — Mes ventes",
+    "lot": "lo"
+   },
+   {
+    "id": "111:12837",
+    "nom": "Paiement — Problème de commande",
+    "lot": "lo"
+   },
+   {
+    "id": "111:12937",
+    "nom": "Paiement — Remboursement en cours",
+    "lot": "lo"
+   },
+   {
+    "id": "111:12979",
+    "nom": "Paiement — Remboursement terminé",
+    "lot": "lo"
+   }
+  ]
+ },
+ {
+  "num": "12",
+  "titre": "Compte / Paramètres",
+  "frames": [
+   {
+    "id": "14:1730",
+    "nom": "Compte — Profil",
+    "lot": "lo"
+   },
+   {
+    "id": "111:13536",
+    "nom": "Compte — Mon compte",
+    "lot": "lo"
+   },
+   {
+    "id": "111:13364",
+    "nom": "Compte — Paramètres",
+    "lot": "lo"
+   },
+   {
+    "id": "111:13427",
+    "nom": "Compte — Confidentialité",
+    "lot": "lo"
+   },
+   {
+    "id": "111:13510",
+    "nom": "Compte — Changer de profil",
+    "lot": "lo"
+   },
+   {
+    "id": "111:13570",
+    "nom": "Compte — Profil famille",
+    "lot": "lo"
+   },
+   {
+    "id": "111:13604",
+    "nom": "Compte — Nouveau profil enfant",
+    "lot": "lo"
+   },
+   {
+    "id": "111:13687",
+    "nom": "Compte — Autorisations parentales",
+    "lot": "lo"
+   }
+  ]
+ },
+ {
+  "num": "13",
+  "titre": "Notifications / Recherche / États système",
+  "frames": [
+   {
+    "id": "111:13128",
+    "nom": "Notifications — Liste",
+    "lot": "lo"
+   },
+   {
+    "id": "111:13191",
+    "nom": "Notifications — État · Vide",
+    "lot": "lo"
+   },
+   {
+    "id": "111:13204",
+    "nom": "Recherche — Résultats",
+    "lot": "lo"
+   },
+   {
+    "id": "111:13264",
+    "nom": "Recherche — Filtres",
+    "lot": "lo"
+   },
+   {
+    "id": "111:13331",
+    "nom": "Recherche — État · Aucun résultat",
+    "lot": "lo"
+   },
+   {
+    "id": "65:6665",
+    "nom": "Système — Erreur",
+    "lot": "lo"
+   },
+   {
+    "id": "111:13854",
+    "nom": "Système — Chargement",
+    "lot": "lo"
+   },
+   {
+    "id": "111:13867",
+    "nom": "Système — Inventaire vide",
+    "lot": "lo"
+   },
+   {
+    "id": "111:13770",
+    "nom": "Système — Confirmation · Supprimer un objet",
+    "lot": "lo"
+   },
+   {
+    "id": "111:13784",
+    "nom": "Système — Confirmation · Supprimer un vêtement",
+    "lot": "lo"
+   },
+   {
+    "id": "111:13798",
+    "nom": "Système — Confirmation · Supprimer un carton",
+    "lot": "lo"
+   },
+   {
+    "id": "111:13812",
+    "nom": "Système — Confirmation · Supprimer un logement",
+    "lot": "lo"
+   },
+   {
+    "id": "111:13826",
+    "nom": "Système — Confirmation · Retirer un ami",
+    "lot": "lo"
+   },
+   {
+    "id": "111:13840",
+    "nom": "Système — Confirmation · Retirer un partage",
+    "lot": "lo"
+   }
+  ]
+ }
+]

@@ -1,0 +1,2001 @@
+<title>Modèle de données Penderie V2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Instrument+Sans:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --bg: #F8FAFC;
+    --surface: #FFFFFF;
+    --ink: #1A1E24;
+    --sub: #475569;
+    --line: #E3E7EE;
+    --primary: #D31D66;
+    --primary-text: #C21B5E;
+    --primary-tint: #FAE4ED;
+    --main: #117D6F;
+    --main-text: #10786B;
+    --main-tint: #E7F2F1;
+    --cloth: #831297;
+    --cloth-tint: #F0E3F3;
+    --warn: #8A5A00;
+    --warn-tint: #FCF1DC;
+    --tech: #475569;
+    --tech-tint: #EEF1F6;
+    --code-bg: #F1F3F7;
+    --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+    --body: "Instrument Sans", "Segoe UI", system-ui, sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #12151A; --surface: #1B1F26; --ink: #EDF1F6; --sub: #9BA7B8; --line: #2A303A;
+      --primary: #FF6098; --primary-text: #FF6098; --primary-tint: #3A1A28;
+      --main: #43BBA9; --main-text: #43BBA9; --main-tint: #16302D;
+      --cloth: #CE86DE; --cloth-tint: #2F2035;
+      --warn: #F0B952; --warn-tint: #33291A;
+      --tech: #9BA7B8; --tech-tint: #242A33;
+      --code-bg: #232833;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #12151A; --surface: #1B1F26; --ink: #EDF1F6; --sub: #9BA7B8; --line: #2A303A;
+    --primary: #FF6098; --primary-text: #FF6098; --primary-tint: #3A1A28;
+    --main: #43BBA9; --main-text: #43BBA9; --main-tint: #16302D;
+    --cloth: #CE86DE; --cloth-tint: #2F2035;
+    --warn: #F0B952; --warn-tint: #33291A;
+    --tech: #9BA7B8; --tech-tint: #242A33;
+    --code-bg: #232833;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg); color: var(--ink);
+    font: 16px/1.6 var(--body);
+    padding-inline: 20px; padding-block: 48px 80px;
+  }
+  .wrap { max-width: 880px; margin: 0 auto; display: flex; flex-direction: column; gap: 56px; }
+  h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; }
+  p { margin: 0; }
+  code { font-family: var(--mono); font-size: 0.86em; background: var(--code-bg); padding: 1px 6px; border-radius: 6px; white-space: nowrap; }
+
+  header { display: flex; flex-direction: column; gap: 16px; }
+  .eyebrow { font-size: 12px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--primary-text); }
+  h1 { font-size: clamp(36px, 6vw, 56px); font-weight: 800; line-height: 1.02; letter-spacing: -.02em; }
+  h1 span { color: var(--primary); }
+  .lede { color: var(--sub); max-width: 64ch; font-size: 18px; }
+  .meta { display: flex; flex-wrap: wrap; gap: 8px 20px; font-size: 14px; color: var(--sub); }
+  .meta b { color: var(--ink); font-weight: 600; }
+
+  .pill { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 999px; white-space: nowrap; }
+  .pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .p-mvp { background: var(--main-tint); color: var(--main-text); }
+  .p-valider { background: var(--primary-tint); color: var(--primary-text); }
+  .p-v2 { background: var(--warn-tint); color: var(--warn); }
+  .p-tech { background: var(--tech-tint); color: var(--tech); }
+  .p-new { background: var(--cloth-tint); color: var(--cloth); }
+  .legend { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; font-size: 13px; color: var(--sub); }
+  .legend span.item { display: inline-flex; gap: 8px; align-items: center; }
+
+  h2 { font-size: 28px; font-weight: 800; letter-spacing: -.01em; }
+  .section-head { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+  .section-head p { color: var(--sub); max-width: 64ch; }
+  .table-wrap { overflow-x: auto; background: var(--surface); border-radius: 16px; box-shadow: 0 1px 2px rgba(26,30,36,.06), 0 8px 24px rgba(26,30,36,.05); }
+  table { width: 100%; border-collapse: collapse; font-size: 15px; min-width: 560px; }
+  th, td { text-align: left; padding: 13px 18px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--sub); font-weight: 600; }
+  tr:last-child td { border-bottom: 0; }
+  td:first-child { font-weight: 600; }
+  td code { white-space: normal; }
+
+  .archi { background: var(--surface); border-radius: 16px; padding: 24px; overflow-x: auto; box-shadow: 0 1px 2px rgba(26,30,36,.06); }
+  .archi svg { display: block; min-width: 660px; width: 100%; height: auto; }
+  .archi .box { fill: var(--bg); stroke: var(--line); stroke-width: 1.5; }
+  .archi .box-main { fill: var(--primary-tint); stroke: var(--primary); stroke-width: 1.5; }
+  .archi .box-alt { fill: var(--main-tint); stroke: var(--main); stroke-width: 1.5; }
+  .archi .box-new { fill: var(--cloth-tint); stroke: var(--cloth); stroke-width: 1.5; }
+  .archi .t { fill: var(--ink); font: 600 14px var(--body); }
+  .archi .s { fill: var(--sub); font: 11px var(--mono); }
+  .archi .edge { stroke: var(--sub); stroke-width: 1.5; fill: none; }
+  .archi .edge.opt { stroke-dasharray: 4 4; }
+  .archi .el { fill: var(--sub); font: 11px var(--body); }
+  .diagram-title { font-family: var(--display); font-weight: 600; font-size: 15px; margin-bottom: 12px; }
+
+  .decisions { display: flex; flex-direction: column; gap: 20px; }
+  .choice { background: var(--surface); border-radius: 16px; padding: 28px; display: flex; flex-direction: column; gap: 18px; box-shadow: 0 1px 2px rgba(26,30,36,.06); }
+  .choice-top { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 8px 16px; }
+  .layer { font-size: 12px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--sub); }
+  .choice h3 { font-size: 23px; font-weight: 800; letter-spacing: -.01em; line-height: 1.15; }
+  .cols { display: grid; grid-template-columns: 1.5fr 1fr; gap: 24px; }
+  .cols h4 { margin: 0 0 8px; font-size: 13px; font-weight: 600; color: var(--sub); letter-spacing: .04em; }
+  ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; }
+  li::marker { color: var(--primary); }
+  .alt li::marker { color: var(--sub); }
+  .alt { color: var(--sub); font-size: 15px; }
+  .alt b { color: var(--ink); font-weight: 600; }
+  blockquote { margin: 0; padding: 14px 18px; background: var(--primary-tint); border-radius: 12px; font-style: italic; }
+  blockquote::before { content: "À l'oral"; display: block; font-style: normal; font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--primary-text); margin-bottom: 4px; }
+  .note { font-size: 14px; color: var(--sub); }
+
+  .changes { display: flex; flex-direction: column; gap: 12px; }
+  .change { background: var(--surface); border-radius: 12px; padding: 16px 18px; box-shadow: 0 1px 2px rgba(26,30,36,.06); display: flex; flex-direction: column; gap: 9px; }
+  .change h4 { font-family: var(--display); font-size: 17px; font-weight: 700; margin: 0; }
+  .change dl { display: grid; grid-template-columns: 64px 1fr; gap: 5px 14px; margin: 0; font-size: 14.5px; }
+  .change dt { font-size: 10.5px; text-transform: uppercase; letter-spacing: .08em; color: var(--sub); font-weight: 600; padding-top: 4px; }
+  .change dd { margin: 0; }
+  .change dd.was { color: var(--sub); }
+  .change dd.why { color: var(--sub); font-size: 14px; }
+
+  .domain { display: flex; flex-direction: column; gap: 14px; }
+  .domain + .domain { margin-top: 36px; }
+  .domain-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; border-bottom: 1px solid var(--line); padding-bottom: 10px; }
+  .domain-head h3 { font-size: 19px; font-weight: 800; }
+  .domain-head p { font-size: 14px; color: var(--sub); }
+  .entities { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; align-items: start; }
+  .entity { background: var(--surface); border-radius: 14px; padding: 18px 20px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 1px 2px rgba(26,30,36,.06); }
+  .entity.wide { grid-column: 1 / -1; }
+  .entity-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+  .entity-top h4 { margin: 0; font-family: var(--mono); font-size: 15px; font-weight: 500; color: var(--ink); }
+  .role { font-size: 14px; color: var(--sub); }
+  .attrs { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 3px; font-size: 13px; }
+  .attrs li { display: flex; gap: 8px; align-items: baseline; }
+  .attrs li b { font-family: var(--mono); font-weight: 500; font-size: 12.5px; color: var(--ink); }
+  .attrs li span { color: var(--sub); font-size: 12.5px; }
+  .attrs li.key b { color: var(--main-text); }
+  .attrs li.fk b { color: var(--cloth); }
+  .rel { font-size: 13px; color: var(--sub); border-top: 1px dashed var(--line); padding-top: 9px; }
+  .rel b { color: var(--ink); font-weight: 600; display: block; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 3px; }
+
+  .rules { display: flex; flex-direction: column; gap: 10px; counter-reset: rule; }
+  .rule { background: var(--surface); border-radius: 12px; padding: 14px 18px 14px 52px; position: relative; box-shadow: 0 1px 2px rgba(26,30,36,.06); font-size: 15px; }
+  .rule::before { counter-increment: rule; content: counter(rule, decimal-leading-zero); position: absolute; left: 18px; top: 14px; font-family: var(--mono); font-size: 12px; color: var(--primary-text); font-weight: 500; }
+  .rule b { font-weight: 600; }
+
+  .open { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .open-item { background: var(--surface); border-radius: 12px; padding: 16px 18px; display: flex; flex-direction: column; gap: 6px; box-shadow: 0 1px 2px rgba(26,30,36,.06); }
+  .open-item h3 { font-family: var(--body); font-size: 16px; font-weight: 600; }
+  .open-item p { font-size: 14px; color: var(--sub); }
+
+  footer { font-size: 13px; color: var(--sub); display: flex; flex-direction: column; gap: 6px; border-top: 1px solid var(--line); padding-top: 20px; }
+  footer a { color: var(--primary-text); }
+  a:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; border-radius: 4px; }
+
+  @media (max-width: 680px) {
+    body { padding-block: 32px 56px; }
+    .cols, .open, .entities { grid-template-columns: 1fr; }
+    .choice { padding: 20px; }
+    .change dl { grid-template-columns: 1fr; gap: 2px; }
+    .change dt { padding-top: 8px; }
+  }
+</style>
+
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">WR506D · Penderie · Modèle de données</div>
+    <h1>Modèle de données <span>V2</span></h1>
+    <p class="lede">Reprise complète du modèle après review critique. Le découpage compte / profil, le système de permissions, les collections-moodboards, la séparation statut / condition et l'abstraction du paiement sont revus en profondeur — le reste est conservé, corrigé ou fusionné, entité par entité.</p>
+    <p class="lede" style="margin-top:4px"><b>Révision du 15 septembre :</b> <code>Profile</code> porte désormais <code>firstName</code>, <code>lastName</code> et <code>dateOfBirth</code>, et toute la zone compte / profil / tutelle a été reprise — voir la section <a href="#identite">Identité d'un profil</a>.</p>
+    <p class="lede" style="margin-top:4px"><b>Révision du 18 septembre :</b> alignement sur les décisions techniques actées dans <code>PENDERIE_QUESTIONS_VALIDATION.md</code>. <code>LocationHistory</code> entre dans le MVP et dans la première migration, sans changement de rôle ni de relations ; <code>Memory</code> est décalée hors de la première migration.</p>
+    <p class="lede" style="margin-top:4px"><b>Révision du 21 septembre :</b> les huit questions client de <code>PENDERIE_QUESTIONS_VALIDATION.md</code> ont reçu une réponse. Conséquences majeures : le <b>dressing et les suggestions de tenues entrent dans le MVP</b> (sept entités basculent), le <b>scan couvre quatre modes</b> (code-barres, QR, photo, OCR d'étiquette), la vente <b>ne prélève aucun frais de plateforme</b>, les annonces <b>acceptent les commentaires</b>, et la suppression d'un profil enfant <b>rattache toutes ses données au tuteur</b>, sans question au cas par cas. <b>Et la vente entre dans le MVP</b>, détaillée sur deux parcours — paiement en ligne, ou espèces à la remise — ce qui lève la contradiction avec l'obligation Stripe du module.</p>
+    <p class="lede" style="margin-top:4px"><b>Aucune migration Doctrine n'est lancée.</b> Ce document est la matière de la review ; la V1 reste disponible pour comparaison.</p>
+    <div class="meta">
+      <span>Mis à jour le <b>21 septembre 2026</b></span>
+      <span>Auteur <b>Rafael Teixeira</b></span>
+      <span>Entités <b>53</b></span>
+      <span>Sous-types <b>9</b></span>
+      <span>Tables de liaison <b>7</b></span>
+      <span>Table technique <b>1</b></span>
+      <span>Nommage <b>anglais</b></span>
+    </div>
+    <div class="legend">
+      <span class="item"><span class="pill p-mvp">MVP</span> développé en premier</span>
+      <span class="item"><span class="pill p-valider">À valider</span> décision client ouverte</span>
+      <span class="item"><span class="pill p-v2">V2</span> modélisé, pas développé</span>
+      <span class="item"><span class="pill p-tech">Technique</span> imposé par la stack</span>
+      <span class="item"><span class="pill p-new">Nouveau</span> absent de la V1</span>
+    </div>
+  </header>
+
+  <section>
+    <div class="section-head">
+      <h2>Changements par rapport au modèle V1</h2>
+      <p>Dix-huit changements structurants. Pour chacun : ce qu'il y avait, ce qui le remplace, et pourquoi.</p>
+    </div>
+    <div class="changes">
+
+      <div class="change">
+        <h4>Le compte se scinde en Account et Profile</h4>
+        <dl>
+          <dt>Avant</dt><dd class="was">Une entité <code>User</code> unique, avec un <code>parent</code> auto-référencé et un rôle pour représenter un enfant.</dd>
+          <dt>Après</dt><dd><code>Account</code> porte l'authentification (e-mail, mot de passe, rôles de sécurité). <code>Profile</code> porte l'identité Penderie et <b>possède tout le contenu</b>. Un <code>Account</code> gère 1 à n <code>Profile</code>, et un <code>Profile</code> peut avoir un <code>guardian</code> qui est un autre <code>Profile</code>.</dd>
+          <dt>Pourquoi</dt><dd class="why">Un compte qui gère un profil enfant et un profil proche n'est pas trois utilisateurs : c'est une connexion et trois identités. Mélanger les deux obligeait à dupliquer des comptes fantômes avec des e-mails inventés, et rendait impossible de dire « ces objets sont à l'enfant, mais c'est moi qui me connecte ».</dd>
+        </dl>
+      </div>
+
+      <div class="change">
+        <h4>Profile reçoit l'identité réelle : firstName, lastName, dateOfBirth</h4>
+        <dl>
+          <dt>Avant</dt><dd class="was"><code>Profile</code> ne portait que <code>username</code>, <code>displayName</code>, <code>avatar</code> et <code>bio</code>. Le prénom et le nom étaient restés sur l'ancienne entité <code>User</code> et avaient disparu au moment de la scission ; la date de naissance n'existait nulle part.</dd>
+          <dt>Après</dt><dd><code>Profile</code> porte <code>firstName</code>, <code>lastName</code> et <code>dateOfBirth</code>, à côté de <code>username</code> et <code>displayName</code>. <b><code>Account</code> ne porte aucune de ces trois données</b> : il reste strictement l'identifiant de connexion.</dd>
+          <dt>Pourquoi</dt><dd class="why">C'est l'identité qui appartient au profil, pas au compte : dans un compte qui gère un adulte et un enfant, il y a deux prénoms, deux noms et deux dates de naissance. Les poser sur <code>Account</code> aurait rendu le profil enfant anonyme et le multi-profil inutilisable. <code>dateOfBirth</code> n'est pas décoratif non plus : c'est lui qui permet de vérifier qu'un profil <code>CHILD</code> a bien un tuteur, de proposer le passage en <code>ADULT</code> à la majorité, et de justifier le traitement des données de mineurs au titre du RGPD.</dd>
+        </dl>
+      </div>
+
+      <div class="change">
+        <h4>Le fil d'actualité entre dans le modèle : Post et PostComment</h4>
+        <dl>
+          <dt>Avant</dt><dd class="was">Rien. Aucune entité ne pouvait porter une publication : le modèle ne connaissait que le partage ciblé, pas la diffusion à une audience.</dd>
+          <dt>Après</dt><dd><code>Post</code> (auteur, texte, audience, ressource mise en avant, médias) et <code>PostComment</code>, quatrième sous-type de la hiérarchie <code>Comment</code>. <code>Report.targetType</code> accepte <code>POST</code>.</dd>
+          <dt>Pourquoi</dt><dd class="why">La section 16 de la maquette compte onze écrans — fil, publication, mes publications, signalement — qu'aucune table ne pouvait représenter. C'est le seul véritable trou trouvé pendant la passe de traçabilité, et il aurait bloqué net au moment d'écrire les entités Doctrine. Point d'architecture : un <code>Post</code> ne donne pas accès à la collection qu'il met en avant, il <b>porte un <code>Share</code></b> créé avec la même audience — sinon la publication devenait une seconde voie d'accès au contenu privé, en contradiction avec « tout est privé par défaut ».</dd>
+        </dl>
+      </div>
+
+      <div class="change">
+        <h4>Le masquage du dressing devient une entité à part entière</h4>
+        <dl>
+          <dt>Avant</dt><dd class="was">Rien. Seule <code>GarmentExclusion</code> existait, et elle ne sait écarter qu'<b>une pièce précise</b> des suggestions de tenues.</dd>
+          <dt>Après</dt><dd><code>GarmentVisibilityPreference</code> : un filtre par critères combinables — catégorie, couleur, style — qui masque des vêtements <b>du dressing</b>, réversible par <code>reactivatedAt</code>.</dd>
+          <dt>Pourquoi</dt><dd class="why">Détourner <code>GarmentExclusion</code> aurait mélangé deux fonctions qui n'ont ni la même cible (une pièce contre un critère), ni le même effet (ne plus proposer contre ne plus afficher), ni le même moment d'évaluation (à la génération d'une tenue contre à l'affichage d'une liste). Le modèle compte désormais <b>quatre</b> objets voisins et volontairement distincts : <code>GarmentExclusion</code> pour les suggestions, <code>ColorPreference</code> et <code>StylePreference</code> pour les goûts, <code>GarmentVisibilityPreference</code> pour la visibilité.</dd>
+        </dl>
+      </div>
+
+      <div class="change">
+        <h4>Un partage aux abonnés ne peut plus autoriser les commentaires</h4>
+        <dl>
+          <dt>Avant</dt><dd class="was"><code>accessLevel</code> était libre quelle que soit l'audience : rien n'empêchait <code>Share(audience=FOLLOWERS, accessLevel=COMMENT)</code>.</dd>
+          <dt>Après</dt><dd><code>CHECK (audience IN ('FRIENDS','SPECIFIC') OR access_level = 'VIEW')</code>. Les audiences <code>FOLLOWERS</code> et <code>LINK</code> sont bornées à la lecture seule, sans accès aux commentaires.</dd>
+          <dt>Pourquoi</dt><dd class="why">L'écran de partage l'annonce déjà — « Amis choisis uniquement · jamais les abonnés » — mais le modèle laissait la combinaison interdite techniquement possible. Ce genre d'écart ne se voit qu'en production, et sur une donnée de confidentialité.</dd>
+        </dl>
+      </div>
+
+      <div class="change">
+        <h4>La tutelle devient une contrainte, plus une simple clé nullable</h4>
+        <dl>
+          <dt>Avant</dt><dd class="was"><code>Profile.guardian</code> existait, nullable, sans aucune règle : rien n'empêchait un enfant sans tuteur, un adulte avec tuteur, un enfant tuteur d'un autre enfant, ou un profil son propre tuteur.</dd>
+          <dt>Après</dt><dd>Quatre garde-fous : <code>CHECK</code> en base pour « type CHILD implique guardian non nul » et « guardian ≠ id », un validateur pour « le tuteur est un profil ADULT », et le retrait de <code>guardian</code> de tout groupe de sérialisation accessible au profil lui-même.</dd>
+          <dt>Pourquoi</dt><dd class="why">Toute l'architecture de contrôle parental repose sur cette clé : c'est elle qui désigne le destinataire des <code>ApprovalRequest</code> et le seul profil autorisé à écrire des <code>ProfilePermission</code>. Une tutelle incohérente rend le contrôle parental inopérant sans qu'aucune erreur ne soit levée — c'est exactement le genre de faille qui ne se voit pas avant la mise en production.</dd>
+        </dl>
+      </div>
+
+      <div class="change">
+        <h4>Toutes les possessions et toutes les relations sociales passent de User à Profile</h4>
+        <dl>
+          <dt>Avant</dt><dd class="was"><code>Item.owner → User</code>, <code>Friendship</code> entre <code>User</code>, <code>Share.owner → User</code>…</dd>
+          <dt>Après</dt><dd>Toutes ces clés pointent vers <code>Profile</code>. <code>Account</code> n'apparaît plus que dans l'authentification, les jetons d'appareil et la modération.</dd>
+          <dt>Pourquoi</dt><dd class="why">C'est la condition pour que le profil enfant ait réellement ses propres objets, ses propres vêtements et ses propres amis. Sans ce déplacement, le multi-profil reste décoratif.</dd>
+        </dl>
+      </div>
+
+      <div class="change">
+        <h4>Les permissions deviennent des données, pas du code</h4>
+        <dl>
+          <dt>Avant</dt><dd class="was">Rien. Le contrôle parental devait se traduire par des <code>if isChild()</code> dispersés dans les services.</dd>
+          <dt>Après</dt><dd>Deux entités : <code>ProfilePermission</code> (une clé de permission, un mode <code>ALLOWED</code> / <code>DENIED</code> / <code>REQUIRES_APPROVAL</code>) et <code>ApprovalRequest</code> (la demande soumise au tuteur, sa décision, sa trace). Un seul <i>voter</i> Symfony les lit.</dd>
+          <dt>Pourquoi</dt><dd class="why">Le brief demande neuf permissions distinctes et trois issues possibles par action. En dur, cela fait vingt-sept branches à maintenir dans autant de services. En base, cela fait une ligne par exception et un point d'entrée unique.</dd>
+        </dl>
+      </div>
+
+      <div class="change">
+        <h4>Share passe de cinq colonnes nullables à un héritage single-table</h4>
+        <dl>
+          <dt>Avant</dt><dd class="was">Une table <code>Share</code> avec <code>item_id</code>, <code>garment_id</code>, <code>room_id</code>, <code>box_id</code>, <code>collection_id</code> tous nullables et un <code>CHECK</code> pour n'en autoriser qu'un.</dd>
+          <dt>Après</dt><dd>Une classe abstraite <code>Share</code> et cinq sous-classes : <code>ItemShare</code>, <code>GarmentShare</code>, <code>RoomShare</code>, <code>BoxShare</code>, <code>CollectionShare</code>, en <code>SINGLE_TABLE</code> avec un discriminant.</dd>
+          <dt>Pourquoi</dt><dd class="why">Physiquement c'est la même table, mais en PHP <code>ItemShare::getItem()</code> retourne un <code>Item</code> typé au lieu d'un accesseur qui teste cinq propriétés. Le voter d'accès fait un <code>match</code> sur la classe plutôt qu'une cascade de <code>instanceof</code>, et API&nbsp;Platform expose un <code>POST /item_shares</code> avec le bon schéma.</dd>
+        </dl>
+      </div>
+
+      <div class="change">
+        <h4>Le partage gagne une audience et trois niveaux d'accès</h4>
+        <dl>
+          <dt>Avant</dt><dd class="was"><code>Share.permission</code> valait <code>VIEW</code> ou <code>COMMENT</code>, et <code>isLink</code> distinguait le lien public.</dd>
+          <dt>Après</dt><dd><code>Share.audience</code> vaut <code>SPECIFIC</code>, <code>FRIENDS</code>, <code>FOLLOWERS</code> ou <code>LINK</code>. <code>Share.accessLevel</code> vaut <code>VIEW</code> (la ressource seule), <code>VIEW_COMMENTS</code> (la ressource et les commentaires, en lecture) ou <code>COMMENT</code> (et l'écriture).</dd>
+          <dt>Pourquoi</dt><dd class="why">Le brief décrit exactement trois situations : ami autorisé qui voit et commente, abonné autorisé qui voit en lecture seule sans voir les commentaires, abonné non autorisé qui ne voit rien. Deux valeurs ne suffisaient pas à les représenter.</dd>
+        </dl>
+      </div>
+
+      <div class="change">
+        <h4>Le commentaire mémorise le partage sous lequel il a été écrit</h4>
+        <dl>
+          <dt>Avant</dt><dd class="was"><code>Comment</code> pointait vers la ressource, sans lien avec le partage.</dd>
+          <dt>Après</dt><dd><code>Comment</code> devient lui aussi une hiérarchie single-table (<code>ItemComment</code>, <code>GarmentComment</code>, <code>CollectionComment</code>) et porte un <code>share</code> nullable : le contexte d'origine. Un <code>Share</code> n'est jamais supprimé, seulement révoqué (<code>revokedAt</code>).</dd>
+          <dt>Pourquoi</dt><dd class="why">Le brief l'exige : « partage révoqué, commentaire reste historiquement rattaché au contexte approprié ». Sans cette clé, révoquer un partage laisse des commentaires orphelins dont on ne sait plus ni d'où ils venaient ni qui avait le droit de les lire.</dd>
+        </dl>
+      </div>
+
+      <div class="change">
+        <h4>Collection devient un moodboard composable</h4>
+        <dl>
+          <dt>Avant</dt><dd class="was">Une <code>Collection</code> et une liaison n,n avec une simple <code>position</code>.</dd>
+          <dt>Après</dt><dd><code>Collection</code> gagne <code>layout</code> (<code>LIST</code> ou <code>MOODBOARD</code>) et <code>visibility</code>. <code>CollectionEntry</code> gagne <code>kind</code> (<code>ITEM</code>, <code>GARMENT</code>, <code>MEDIA</code>, <code>TEXT</code>), <code>positionX</code>, <code>positionY</code>, <code>width</code>, <code>height</code>, <code>rotation</code>, <code>zIndex</code> et <code>caption</code>.</dd>
+          <dt>Pourquoi</dt><dd class="why">Un moodboard à la Pinterest est une composition, pas une liste ordonnée. Les champs de mise en page sont nullables : une collection en mode liste ne les remplit pas, donc le cas simple ne paie pas le cas riche. Et <code>kind = MEDIA</code> permet d'épingler une photo d'inspiration qui n'est rattachée à aucun objet possédé.</dd>
+        </dl>
+      </div>
+
+      <div class="change">
+        <h4>Photo devient Media, rattaché par des tables de liaison explicites</h4>
+        <dl>
+          <dt>Avant</dt><dd class="was">Une table <code>Photo</code> avec <code>item_id</code>, <code>garment_id</code> et <code>listing_id</code> nullables — un fichier appartenait à une seule cible.</dd>
+          <dt>Après</dt><dd><code>Media</code> est une ressource autonome appartenant à un <code>Profile</code> (chemin S3, type MIME, dimensions, texte alternatif). Les galeries passent par <code>ItemMedia</code>, <code>GarmentMedia</code>, <code>ListingMedia</code> et <code>MemoryMedia</code> ; les vignettes uniques par une clé <code>coverMedia</code> directe sur <code>Place</code>, <code>Room</code>, <code>Storage</code>, <code>Box</code>, <code>Collection</code> et <code>Profile</code>.</dd>
+          <dt>Pourquoi</dt><dd class="why">Une annonce doit pouvoir réutiliser les photos de l'objet sans dupliquer le fichier sur S3 — le cadrage demande de « générer automatiquement l'annonce à partir des informations de l'objet ». Quatre tables de quatre colonnes, entièrement indexées, valent mieux qu'une table à six clés nullables.</dd>
+        </dl>
+      </div>
+
+      <div class="change">
+        <h4>status se scinde en availability et condition</h4>
+        <dl>
+          <dt>Avant</dt><dd class="was">Un seul champ <code>status</code> mélangeant <code>AVAILABLE</code>, <code>LENT</code>, <code>BORROWED</code>, <code>FOR_SALE</code>, <code>SOLD</code>, <code>LOST</code>. La condition existait sur <code>Garment</code>, pas sur <code>Item</code>.</dd>
+          <dt>Après</dt><dd><code>availability</code> : <code>AVAILABLE</code>, <code>LENT</code>, <code>BORROWED</code>, <code>LOST</code>, <code>SOLD</code>. <code>condition</code> : <code>NEW</code>, <code>EXCELLENT</code>, <code>GOOD</code>, <code>WORN</code>, <code>DAMAGED</code>. Les deux existent sur <code>Item</code> comme sur <code>Garment</code>.</dd>
+          <dt>Pourquoi</dt><dd class="why">Ce sont deux axes indépendants : une perceuse peut être prêtée et abîmée en même temps. Avec un champ unique, constater un dommage au retour d'un prêt écrasait l'information de disponibilité.</dd>
+        </dl>
+      </div>
+
+      <div class="change">
+        <h4>FOR_SALE disparaît des états de l'objet</h4>
+        <dl>
+          <dt>Avant</dt><dd class="was"><code>FOR_SALE</code> était une valeur de <code>status</code>, en double avec <code>Listing.status = PUBLISHED</code>.</dd>
+          <dt>Après</dt><dd>L'état « en vente » est <b>dérivé</b> : il existe une <code>Listing</code> au statut <code>PUBLISHED</code> ou <code>RESERVED</code> sur cet objet. Un index sur <code>listing (item_id, status)</code> rend le calcul immédiat.</dd>
+          <dt>Pourquoi</dt><dd class="why">Deux sources de vérité pour le même fait finissent toujours par diverger : retirer une annonce sans repasser l'objet en <code>AVAILABLE</code> laissait un objet invendable et impossible à prêter. La vente appartient à <code>Listing</code>, l'objet n'en sait rien.</dd>
+        </dl>
+      </div>
+
+      <div class="change">
+        <h4>MOVED n'a jamais été un statut, et ne le devient pas</h4>
+        <dl>
+          <dt>Avant</dt><dd class="was">Le cadrage listait « Déplacé » parmi les états possibles.</dd>
+          <dt>Après</dt><dd>Déplacer est une action : elle réécrit <code>room</code>, <code>storage</code> et <code>box</code>, et peut écrire une ligne dans <code>LocationHistory</code>. Aucun statut ne change.</dd>
+          <dt>Pourquoi</dt><dd class="why">Un objet déplacé est toujours disponible. En faire un statut aurait rendu invisible le fait qu'il est prêtable.</dd>
+        </dl>
+      </div>
+
+      <div class="change">
+        <h4>Le prêt gagne un cycle de vie complet et un journal</h4>
+        <dl>
+          <dt>Avant</dt><dd class="was"><code>Loan.status</code> valait <code>ACTIVE</code>, <code>RETURNED</code>, <code>OVERDUE</code>, <code>LOST</code> ou <code>CANCELLED</code>. Aucune trace des étapes.</dd>
+          <dt>Après</dt><dd><code>status</code> devient <code>REQUESTED</code> → <code>ACCEPTED</code> → <code>ACTIVE</code> → <code>RETURNED</code>, avec les sorties <code>DECLINED</code>, <code>CANCELLED</code> et <code>LOST</code>. Les dates <code>receivedAt</code>, <code>returnDeclaredAt</code> et <code>returnConfirmedAt</code> jalonnent le parcours. Une entité <code>LoanEvent</code> journalise chaque transition, avec son auteur.</dd>
+          <dt>Pourquoi</dt><dd class="why">Le brief demande dix situations distinctes et un historique fiable. Un champ de statut seul écrase le passé à chaque transition : impossible de dire qui a accepté, quand un rappel est parti, ou quand le dommage a été signalé.</dd>
+        </dl>
+      </div>
+
+      <div class="change">
+        <h4>OVERDUE cesse d'être un statut stocké</h4>
+        <dl>
+          <dt>Avant</dt><dd class="was"><code>OVERDUE</code> était une valeur de <code>Loan.status</code>, qu'une tâche planifiée devait écrire.</dd>
+          <dt>Après</dt><dd>Le retard est dérivé : <code>status = ACTIVE AND dueDate &lt; aujourd'hui</code>. Un index sur <code>(status, due_date)</code> sert les écrans de retard et le job de relance.</dd>
+          <dt>Pourquoi</dt><dd class="why">Un statut écrit par une tâche de nuit peut se désynchroniser si la tâche tombe, et surtout il ne sait pas revenir en arrière quand la date de retour est repoussée. La dérivation est toujours juste.</dd>
+        </dl>
+      </div>
+
+      <div class="change">
+        <h4>Le paiement cesse de nommer Stripe</h4>
+        <dl>
+          <dt>Avant</dt><dd class="was"><code>Payment.stripePaymentIntentId</code>, <code>Payment.stripeTransferId</code>, <code>Refund.stripeRefundId</code> — le fournisseur était gravé dans le schéma.</dd>
+          <dt>Après</dt><dd><code>Payment</code> porte <code>provider</code>, <code>externalId</code>, <code>direction</code> (<code>CHARGE</code> ou <code>PAYOUT</code>) et <code>rawPayload</code>. Côté PHP, une interface <code>PaymentGatewayInterface</code> ; Stripe n'est qu'une implémentation. <code>Payout</code> n'existe pas comme entité séparée : c'est un <code>Payment</code> de direction <code>PAYOUT</code>.</dd>
+          <dt>Pourquoi</dt><dd class="why">Stripe est imposé par le module, pas par le métier. Le jour où le client change de prestataire — ou pour écrire des tests sans appeler Stripe — le domaine ne doit pas bouger.</dd>
+        </dl>
+      </div>
+
+      <div class="change">
+        <h4>L'adresse de commande est figée au moment de l'achat</h4>
+        <dl>
+          <dt>Avant</dt><dd class="was"><code>Order.shippingAddress → Address</code>, une simple clé étrangère vers l'adresse courante de l'utilisateur.</dd>
+          <dt>Après</dt><dd>Une entité <code>OrderAddress</code> : les champs sont <b>copiés</b> dans la commande à la validation et ne sont plus jamais modifiés. <code>Address</code> reste le carnet d'adresses modifiable de l'utilisateur.</dd>
+          <dt>Pourquoi</dt><dd class="why">Si l'acheteur déménage six mois plus tard, la commande passée doit continuer à dire où le colis a été envoyé. Une clé étrangère vers une adresse mutable réécrit le passé — et rend la facture fausse.</dd>
+        </dl>
+      </div>
+
+      <div class="change">
+        <h4>GarmentRejection devient GarmentExclusion, réversible et historisée</h4>
+        <dl>
+          <dt>Avant</dt><dd class="was"><code>GarmentRejection</code> avec un <code>rejectedAt</code> : annuler un refus signifiait supprimer la ligne, donc perdre la trace.</dd>
+          <dt>Après</dt><dd><code>GarmentExclusion</code> porte <code>excludedAt</code> et <code>reactivatedAt</code> nullable. L'exclusion est active tant que <code>reactivatedAt</code> est nul ; la réactiver renseigne la date sans rien effacer. Un index unique partiel garantit une seule exclusion active par vêtement et par profil.</dd>
+          <dt>Pourquoi</dt><dd class="why">Le brief le demande explicitement : pas d'expiration à trente jours, une réactivation manuelle, et aucune perte d'historique par suppression de ligne.</dd>
+        </dl>
+      </div>
+
+      <div class="change">
+        <h4>Les préférences vestimentaires existent enfin</h4>
+        <dl>
+          <dt>Avant</dt><dd class="was">Seul le refus d'une pièce précise était modélisé. Aucun moyen de dire « je n'aime pas le rouge ».</dd>
+          <dt>Après</dt><dd>Deux petites entités, <code>ColorPreference</code> et <code>StylePreference</code>, chacune avec un <code>sentiment</code> (<code>LIKE</code> / <code>DISLIKE</code>) et un <code>context</code> optionnel (<code>WORK</code>, <code>SPORT</code>, <code>EVENING</code>, <code>EVERYDAY</code>). Le vêtement gagne <code>warmth</code> et <code>waterResistant</code> pour la météo.</dd>
+          <dt>Pourquoi</dt><dd class="why">Deux tables de quatre colonnes avec de vraies clés étrangères valent mieux qu'une table générique à <code>targetType</code> + <code>targetId</code> qui perdrait l'intégrité référentielle. Et le contexte permet d'aimer le noir en soirée sans l'imposer au sport.</dd>
+        </dl>
+      </div>
+
+      <div class="change">
+        <h4>La tenue enregistrée et la suggestion générée sont deux entités</h4>
+        <dl>
+          <dt>Avant</dt><dd class="was">Une seule entité <code>Outfit</code> servait aux deux.</dd>
+          <dt>Après</dt><dd><code>Outfit</code> est une tenue assumée par l'utilisateur. <code>OutfitSuggestion</code> est une proposition du système : elle mémorise le contexte de génération (occasion, température, météo) et son issue (<code>PROPOSED</code>, <code>ACCEPTED</code>, <code>REJECTED</code>). Accepter une suggestion crée un <code>Outfit</code> qui garde le lien vers elle.</dd>
+          <dt>Pourquoi</dt><dd class="why">Ce ne sont pas les mêmes objets métier : une suggestion a une durée de vie courte, un contexte météo et un taux d'acceptation à mesurer ; une tenue est un contenu conservé. Les confondre aurait pollué le dressing de propositions jamais retenues.</dd>
+        </dl>
+      </div>
+
+      <div class="change">
+        <h4>Le WearLog sait qui a porté le vêtement</h4>
+        <dl>
+          <dt>Avant</dt><dd class="was"><code>WearLog (garment, outfit, wornAt)</code> — le porteur était implicitement le propriétaire.</dd>
+          <dt>Après</dt><dd>Ajout de <code>profile</code> : qui a porté la pièce, ce jour-là.</dd>
+          <dt>Pourquoi</dt><dd class="why">Avec le multi-profil, un vêtement du dressing familial peut être porté par le parent ou par l'enfant. Sans cette colonne, « vêtements portés récemment » mélange les deux et les suggestions deviennent fausses.</dd>
+        </dl>
+      </div>
+
+      <div class="change">
+        <h4>La modération devient traçable</h4>
+        <dl>
+          <dt>Avant</dt><dd class="was"><code>Report</code> avec un <code>status</code>, sans savoir qui l'avait traité ni ce qui avait été décidé.</dd>
+          <dt>Après</dt><dd><code>Report</code> enregistre le signalant, la cible, le motif et l'issue ; <code>ModerationAction</code> enregistre l'administrateur, l'action prise (<code>HIDE</code>, <code>DELETE</code>, <code>WARN</code>, <code>SUSPEND_PROFILE</code>, <code>BAN_ACCOUNT</code>, <code>RESTORE</code>), sa cible et son motif.</dd>
+          <dt>Pourquoi</dt><dd class="why">Le brief demande de savoir qui a signalé quoi, pourquoi, quand, quel administrateur a traité et quelle action a été prise. Cela fait cinq informations qu'un simple champ de statut ne porte pas.</dd>
+        </dl>
+      </div>
+
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>Vue d'ensemble</h2>
+      <p>Onze domaines, cinquante-trois entités, sept tables de liaison et une table technique (<code>RefreshToken</code>). Les neuf sous-types — cinq pour <code>Share</code>, quatre pour <code>Comment</code> — partagent la table de leur parent et ne sont pas comptés à part. Trente-six cartes d'entité sont marquées MVP depuis les réponses client du 21 septembre — le dressing et ses suggestions ont fait basculer la moitié du domaine mode. Le schéma Figma en affiche davantage, car il dessine aussi les cinq sous-types de <code>Share</code> séparément.</p>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Domaine</th><th>Entités</th><th>Statut</th></tr></thead>
+        <tbody>
+          <tr><td>Identité &amp; accès</td><td><code>Account</code> <code>Profile</code> <code>ProfilePermission</code> <code>ApprovalRequest</code></td><td><span class="pill p-mvp">MVP</span> <span class="pill p-new">Nouveau</span></td></tr>
+          <tr><td>Relations</td><td><code>Friendship</code> <code>Follow</code> <code>Block</code></td><td><span class="pill p-mvp">MVP</span> <span class="pill p-v2">V2</span></td></tr>
+          <tr><td>Lieux</td><td><code>Place</code> <code>Room</code> <code>Storage</code> <code>Box</code> <code>LocationHistory</code></td><td><span class="pill p-mvp">MVP</span></td></tr>
+          <tr><td>Inventaire</td><td><code>Item</code> <code>ItemCategory</code> <code>Garment</code> <code>GarmentCategory</code> <code>Scan</code> <code>Memory</code></td><td><span class="pill p-mvp">MVP</span> <span class="pill p-valider">À valider</span></td></tr>
+          <tr><td>Tailles &amp; référentiels mode</td><td><code>SizeSystem</code> <code>SizeValue</code> <code>Brand</code> <code>Color</code> <code>Style</code></td><td><span class="pill p-mvp">MVP</span></td></tr>
+          <tr><td>Médias</td><td><code>Media</code> + 5 liaisons</td><td><span class="pill p-mvp">MVP</span> <span class="pill p-new">Nouveau</span></td></tr>
+          <tr><td>Partage &amp; collections</td><td><code>Share</code> (5 sous-types) <code>ShareRecipient</code> <code>Comment</code> (4 sous-types) <code>Collection</code> <code>CollectionEntry</code> <code>Post</code></td><td><span class="pill p-mvp">MVP</span></td></tr>
+          <tr><td>Prêt</td><td><code>Loan</code> <code>LoanEvent</code></td><td><span class="pill p-mvp">MVP</span> <span class="pill p-new">Nouveau</span></td></tr>
+          <tr><td>Vente &amp; paiement</td><td><code>Listing</code> <code>Order</code> <code>OrderAddress</code> <code>Address</code> <code>Payment</code> <code>Refund</code> <code>Dispute</code> <code>Shipment</code> <code>OrderEvent</code></td><td><span class="pill p-mvp">MVP</span> <span class="pill p-new">Nouveau</span></td></tr>
+          <tr><td>Dressing &amp; tenues</td><td><code>Outfit</code> <code>OutfitSuggestion</code> <code>WearLog</code> <code>GarmentExclusion</code> <code>ColorPreference</code> <code>StylePreference</code> <code>GarmentVisibilityPreference</code></td><td><span class="pill p-mvp">MVP</span> <span class="pill p-new">Nouveau</span></td></tr>
+          <tr><td>Notifications &amp; modération</td><td><code>Notification</code> <code>NotificationPreference</code> <code>DeviceToken</code> <code>Report</code> <code>ModerationAction</code> + <code>RefreshToken</code> (technique)</td><td><span class="pill p-mvp">MVP</span> <span class="pill p-v2">V2</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>Les schémas</h2>
+      <p>Une carte des domaines, puis cinq vues détaillées sur les zones que la review a remises en cause.</p>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:20px">
+
+      <div class="archi">
+        <p class="diagram-title">0 — Carte des domaines</p>
+        <svg viewBox="0 0 740 430" role="img" aria-label="Carte des onze domaines du modèle : identité et accès, relations, lieux, inventaire, tailles, médias, partage et collections, prêt, vente, tenues, notifications et modération.">
+          <rect class="box-main" x="10" y="16" width="228" height="86" rx="12"/>
+          <text class="t" x="24" y="42">Identité &amp; accès</text>
+          <text class="s" x="24" y="62">Account · Profile</text>
+          <text class="s" x="24" y="80">ProfilePermission</text>
+          <text class="s" x="24" y="96">ApprovalRequest</text>
+
+          <rect class="box" x="256" y="16" width="228" height="86" rx="12"/>
+          <text class="t" x="270" y="42">Relations</text>
+          <text class="s" x="270" y="62">Friendship</text>
+          <text class="s" x="270" y="80">Follow · Block</text>
+
+          <rect class="box" x="502" y="16" width="228" height="86" rx="12"/>
+          <text class="t" x="516" y="42">Lieux</text>
+          <text class="s" x="516" y="62">Place · Room</text>
+          <text class="s" x="516" y="80">Storage · Box</text>
+          <text class="s" x="516" y="96">LocationHistory</text>
+
+          <rect class="box-alt" x="10" y="122" width="228" height="86" rx="12"/>
+          <text class="t" x="24" y="148">Inventaire</text>
+          <text class="s" x="24" y="168">Item · Garment</text>
+          <text class="s" x="24" y="186">catégories · Scan</text>
+          <text class="s" x="24" y="202">Memory</text>
+
+          <rect class="box" x="256" y="122" width="228" height="86" rx="12"/>
+          <text class="t" x="270" y="148">Tailles &amp; mode</text>
+          <text class="s" x="270" y="168">SizeSystem</text>
+          <text class="s" x="270" y="186">SizeValue · Brand</text>
+          <text class="s" x="270" y="202">Color · Style</text>
+
+          <rect class="box-new" x="502" y="122" width="228" height="86" rx="12"/>
+          <text class="t" x="516" y="148">Médias</text>
+          <text class="s" x="516" y="168">Media</text>
+          <text class="s" x="516" y="186">+ 5 liaisons</text>
+
+          <rect class="box" x="10" y="228" width="228" height="86" rx="12"/>
+          <text class="t" x="24" y="254">Partage</text>
+          <text class="s" x="24" y="274">Share · Comment</text>
+          <text class="s" x="24" y="292">Collection</text>
+          <text class="s" x="24" y="308">CollectionEntry</text>
+
+          <rect class="box" x="256" y="228" width="228" height="86" rx="12"/>
+          <text class="t" x="270" y="254">Prêt</text>
+          <text class="s" x="270" y="274">Loan</text>
+          <text class="s" x="270" y="292">LoanEvent</text>
+
+          <rect class="box" x="502" y="228" width="228" height="86" rx="12"/>
+          <text class="t" x="516" y="254">Vente &amp; paiement</text>
+          <text class="s" x="516" y="274">Listing · Order</text>
+          <text class="s" x="516" y="292">Payment · Refund</text>
+          <text class="s" x="516" y="308">Dispute · Shipment</text>
+
+          <rect class="box" x="10" y="334" width="228" height="86" rx="12"/>
+          <text class="t" x="24" y="360">Dressing &amp; tenues</text>
+          <text class="s" x="24" y="380">Outfit · Suggestion</text>
+          <text class="s" x="24" y="398">WearLog · Exclusion</text>
+          <text class="s" x="24" y="414">préférences</text>
+
+          <rect class="box" x="256" y="334" width="228" height="86" rx="12"/>
+          <text class="t" x="270" y="360">Notifications</text>
+          <text class="s" x="270" y="380">Notification</text>
+          <text class="s" x="270" y="398">Preference</text>
+          <text class="s" x="270" y="414">DeviceToken · RefreshToken</text>
+
+          <rect class="box" x="502" y="334" width="228" height="86" rx="12"/>
+          <text class="t" x="516" y="360">Modération</text>
+          <text class="s" x="516" y="380">Report</text>
+          <text class="s" x="516" y="398">ModerationAction</text>
+        </svg>
+        <p class="note" style="margin-top:14px">La colonne vertébrale du modèle : <b>Profile</b> possède l'inventaire, l'inventaire est rangé dans les lieux, et tout le reste — partage, prêt, vente, tenues — se greffe sur l'inventaire. Aucun domaine ne dépend de <code>Account</code> hors authentification, notifications d'appareil et modération.</p>
+      </div>
+
+      <div class="archi">
+        <p class="diagram-title">1 — Compte, profils et permissions</p>
+        <svg viewBox="0 0 740 350" role="img" aria-label="Schéma : un Account gère plusieurs Profile. Un Profile peut avoir un guardian. Le Profile possède tout le contenu, porte ses ProfilePermission et émet des ApprovalRequest.">
+          <rect class="box" x="20" y="40" width="200" height="56" rx="10"/>
+          <text class="t" x="34" y="64">Account</text>
+          <text class="s" x="34" y="83">email · password · roles</text>
+
+          <rect class="box-main" x="290" y="40" width="200" height="56" rx="10"/>
+          <text class="t" x="304" y="64">Profile</text>
+          <text class="s" x="304" y="83">identité Penderie</text>
+
+          <rect class="box-alt" x="550" y="30" width="170" height="110" rx="10"/>
+          <text class="t" x="564" y="54">Contenu</text>
+          <text class="s" x="564" y="76">Item · Garment</text>
+          <text class="s" x="564" y="94">Place · Share</text>
+          <text class="s" x="564" y="112">Collection · Loan</text>
+          <text class="s" x="564" y="130">Listing · Comment</text>
+
+          <rect class="box-new" x="290" y="160" width="200" height="56" rx="10"/>
+          <text class="t" x="304" y="184">ProfilePermission</text>
+          <text class="s" x="304" y="203">ALLOW · DENY · ASK</text>
+
+          <rect class="box-new" x="290" y="256" width="200" height="56" rx="10"/>
+          <text class="t" x="304" y="280">ApprovalRequest</text>
+          <text class="s" x="304" y="299">demande → décision</text>
+
+          <path class="edge" d="M220 68 H290"/>
+          <text class="el" x="234" y="60">1,n</text>
+          <path class="edge" d="M330 40 C330 8 450 8 450 40"/>
+          <text class="el" x="348" y="22">guardian 0,1</text>
+          <path class="edge" d="M490 68 H550"/>
+          <text class="el" x="500" y="60">1,n</text>
+          <path class="edge" d="M390 96 V160"/>
+          <text class="el" x="398" y="132">1,n</text>
+          <path class="edge" d="M390 216 V256"/>
+          <text class="el" x="398" y="240">1,n</text>
+          <path class="edge opt" d="M290 284 C240 284 220 260 220 230 V120"/>
+          <text class="el" x="180" y="250">approbateur</text>
+
+          <text class="el" x="20" y="140">Un Account = une connexion.</text>
+          <text class="el" x="20" y="158">Un Profile = un propriétaire</text>
+          <text class="el" x="20" y="176">de contenu et de relations.</text>
+          <text class="el" x="20" y="336">Une permission en mode ASK produit une ApprovalRequest adressée au guardian du profil.</text>
+        </svg>
+      </div>
+
+      <div class="archi">
+        <p class="diagram-title">2 — Partage et commentaires</p>
+        <svg viewBox="0 0 740 330" role="img" aria-label="Schéma : Profile crée des Share, hiérarchie à cinq sous-types. Les Share portent des ShareRecipient et servent de contexte aux Comment.">
+          <rect class="box-main" x="20" y="120" width="190" height="48" rx="10"/>
+          <text class="t" x="34" y="150">Profile</text>
+
+          <rect class="box" x="270" y="20" width="190" height="56" rx="10"/>
+          <text class="t" x="284" y="44">Share</text>
+          <text class="s" x="284" y="63">abstraite · STI</text>
+
+          <rect class="box" x="520" y="10" width="200" height="150" rx="10"/>
+          <text class="t" x="534" y="34">5 sous-types</text>
+          <text class="s" x="534" y="56">ItemShare</text>
+          <text class="s" x="534" y="74">GarmentShare</text>
+          <text class="s" x="534" y="92">RoomShare</text>
+          <text class="s" x="534" y="110">BoxShare</text>
+          <text class="s" x="534" y="128">CollectionShare</text>
+
+          <rect class="box" x="270" y="120" width="190" height="48" rx="10"/>
+          <text class="t" x="284" y="150">ShareRecipient</text>
+
+          <rect class="box" x="270" y="220" width="190" height="56" rx="10"/>
+          <text class="t" x="284" y="244">Comment</text>
+          <text class="s" x="284" y="263">abstraite · share_id</text>
+
+          <path class="edge" d="M210 130 C240 130 240 48 270 48"/>
+          <text class="el" x="214" y="92">1,n owner</text>
+          <path class="edge" d="M210 148 H270"/>
+          <text class="el" x="222" y="140">n,n</text>
+          <path class="edge" d="M115 168 V248 H270"/>
+          <text class="el" x="122" y="212">1,n author</text>
+          <path class="edge" d="M460 48 H520"/>
+          <path class="edge" d="M365 76 V120"/>
+          <text class="el" x="373" y="102">1,n</text>
+          <path class="edge opt" d="M460 60 C500 60 500 248 460 248"/>
+          <text class="el" x="470" y="170">contexte</text>
+
+          <text class="el" x="20" y="306">Un commentaire garde la référence du Share sous lequel il a été écrit : révoquer le partage ne l'efface pas.</text>
+        </svg>
+      </div>
+
+      <div class="archi">
+        <p class="diagram-title">3 — Collection et moodboard</p>
+        <svg viewBox="0 0 740 250" role="img" aria-label="Schéma : une Collection contient des CollectionEntry, qui référencent un Item, un Garment ou un Media et portent leur position sur le moodboard.">
+          <rect class="box-main" x="20" y="60" width="200" height="76" rx="10"/>
+          <text class="t" x="34" y="86">Collection</text>
+          <text class="s" x="34" y="105">layout: LIST | MOODBOARD</text>
+          <text class="s" x="34" y="123">visibility · coverMedia</text>
+
+          <rect class="box-new" x="290" y="50" width="200" height="96" rx="10"/>
+          <text class="t" x="304" y="76">CollectionEntry</text>
+          <text class="s" x="304" y="95">kind · x · y</text>
+          <text class="s" x="304" y="113">width · height</text>
+          <text class="s" x="304" y="131">rotation · zIndex</text>
+
+          <rect class="box-alt" x="560" y="20" width="160" height="44" rx="10"/>
+          <text class="t" x="574" y="48">Item</text>
+          <rect class="box-alt" x="560" y="80" width="160" height="44" rx="10"/>
+          <text class="t" x="574" y="108">Garment</text>
+          <rect class="box" x="560" y="140" width="160" height="44" rx="10"/>
+          <text class="t" x="574" y="168">Media</text>
+
+          <path class="edge" d="M220 98 H290"/>
+          <text class="el" x="234" y="90">1,n</text>
+          <path class="edge opt" d="M490 98 C525 98 525 42 560 42"/>
+          <path class="edge opt" d="M490 98 H560"/>
+          <path class="edge opt" d="M490 98 C525 98 525 162 560 162"/>
+          <text class="el" x="496" y="196">0,1</text>
+
+          <text class="el" x="20" y="212">kind = ITEM · GARMENT · MEDIA · TEXT. Une entrée TEXT n'a pas de cible : elle porte seulement sa légende.</text>
+          <text class="el" x="20" y="230">Supprimer une collection supprime ses entrées, jamais les objets ni les médias référencés.</text>
+        </svg>
+      </div>
+
+      <div class="archi">
+        <p class="diagram-title">4 — Le cycle de vie d'un prêt</p>
+        <svg viewBox="0 0 740 240" role="img" aria-label="Diagramme d'états du prêt : REQUESTED vers ACCEPTED vers ACTIVE vers RETURNED, avec les sorties DECLINED, CANCELLED et LOST.">
+          <rect class="box" x="14" y="86" width="140" height="44" rx="10"/>
+          <text class="t" x="28" y="114">REQUESTED</text>
+          <rect class="box" x="204" y="86" width="140" height="44" rx="10"/>
+          <text class="t" x="218" y="114">ACCEPTED</text>
+          <rect class="box-main" x="394" y="86" width="140" height="44" rx="10"/>
+          <text class="t" x="408" y="114">ACTIVE</text>
+          <rect class="box-alt" x="584" y="86" width="140" height="44" rx="10"/>
+          <text class="t" x="598" y="114">RETURNED</text>
+
+          <rect class="box" x="204" y="176" width="140" height="40" rx="10"/>
+          <text class="t" x="218" y="202">DECLINED</text>
+          <rect class="box" x="394" y="16" width="140" height="40" rx="10"/>
+          <text class="t" x="408" y="42">CANCELLED</text>
+          <rect class="box" x="584" y="176" width="140" height="40" rx="10"/>
+          <text class="t" x="598" y="202">LOST</text>
+
+          <path class="edge" d="M154 108 H204"/>
+          <text class="el" x="156" y="100">accepte</text>
+          <path class="edge" d="M344 108 H394"/>
+          <text class="el" x="346" y="100">reçoit</text>
+          <path class="edge" d="M534 108 H584"/>
+          <text class="el" x="536" y="100">rend</text>
+          <path class="edge opt" d="M84 130 V196 H204"/>
+          <text class="el" x="92" y="168">refuse</text>
+          <path class="edge opt" d="M274 86 V56 H394"/>
+          <text class="el" x="282" y="72">annule</text>
+          <path class="edge opt" d="M464 130 V196 H584"/>
+          <text class="el" x="472" y="168">déclaré perdu</text>
+
+          <text class="el" x="14" y="234">OVERDUE n'est pas un statut : c'est status = ACTIVE et dueDate dépassée. Chaque transition écrit un LoanEvent.</text>
+        </svg>
+      </div>
+
+      <div class="archi">
+        <p class="diagram-title">5 — Vente, paiement et livraison</p>
+        <svg viewBox="0 0 740 290" role="img" aria-label="Schéma : Item ou Garment donne une Listing, qui donne une Order, laquelle porte OrderAddress, Payment, Refund, Dispute et Shipment.">
+          <rect class="box-alt" x="20" y="30" width="180" height="48" rx="10"/>
+          <text class="t" x="34" y="60">Item · Garment</text>
+
+          <rect class="box" x="250" y="30" width="180" height="48" rx="10"/>
+          <text class="t" x="264" y="60">Listing</text>
+
+          <rect class="box-main" x="250" y="120" width="180" height="48" rx="10"/>
+          <text class="t" x="264" y="150">Order</text>
+
+          <rect class="box-new" x="20" y="120" width="180" height="56" rx="10"/>
+          <text class="t" x="34" y="144">OrderAddress</text>
+          <text class="s" x="34" y="163">snapshot figé</text>
+
+          <rect class="box" x="480" y="20" width="200" height="56" rx="10"/>
+          <text class="t" x="494" y="44">Payment</text>
+          <text class="s" x="494" y="63">CHARGE | PAYOUT</text>
+
+          <rect class="box" x="480" y="100" width="200" height="44" rx="10"/>
+          <text class="t" x="494" y="128">Refund</text>
+          <rect class="box" x="480" y="168" width="200" height="44" rx="10"/>
+          <text class="t" x="494" y="196">Dispute</text>
+          <rect class="box" x="250" y="212" width="180" height="44" rx="10"/>
+          <text class="t" x="264" y="240">Shipment</text>
+
+          <path class="edge" d="M200 54 H250"/>
+          <text class="el" x="206" y="46">0,n</text>
+          <path class="edge" d="M340 78 V120"/>
+          <text class="el" x="348" y="104">0,1</text>
+          <path class="edge" d="M200 148 H250"/>
+          <text class="el" x="206" y="140">1,1</text>
+          <path class="edge" d="M430 144 C455 144 455 48 480 48"/>
+          <path class="edge" d="M430 144 C455 144 455 122 480 122"/>
+          <path class="edge" d="M430 144 C455 144 455 190 480 190"/>
+          <path class="edge opt" d="M340 168 V212"/>
+          <text class="el" x="348" y="196">0,1</text>
+
+          <text class="el" x="20" y="278">Aucune colonne ne nomme Stripe : Payment porte provider + externalId. Shipment n'existe que si deliveryMethod = SHIPPING.</text>
+        </svg>
+      </div>
+
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2 id="identite">Identité d'un profil</h2>
+      <p>Où vit l'identité réelle, comment fonctionne la tutelle, et ce qui empêche une configuration incohérente. C'est la fondation du multi-profil et du contrôle parental.</p>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Champ</th><th>Rôle</th><th>Validation</th></tr></thead>
+        <tbody>
+          <tr><td><code>id</code></td><td>Identifiant technique du profil</td><td>UUID v7, généré</td></tr>
+          <tr><td><code>account</code></td><td>Le compte de connexion qui ouvre ce profil</td><td><code>NOT NULL</code>. Un compte, un à n profils.</td></tr>
+          <tr><td><code>guardian</code></td><td>Le profil adulte responsable. Destinataire des demandes d'autorisation et seul habilité à régler les permissions.</td><td>Nullable, mais <b>obligatoire si <code>type = CHILD</code></b>. Doit viser un profil <code>ADULT</code>. Ne peut pas être le profil lui-même.</td></tr>
+          <tr><td><code>firstName</code></td><td>Le prénom réel de la personne</td><td><code>NOT NULL</code>, 1 à 80 caractères. Jamais sur <code>Account</code>.</td></tr>
+          <tr><td><code>lastName</code></td><td>Le nom réel de la personne</td><td><code>NOT NULL</code>, 1 à 80 caractères. Jamais sur <code>Account</code>.</td></tr>
+          <tr><td><code>dateOfBirth</code></td><td>Date de naissance. Sert à contrôler la cohérence de la tutelle, à proposer le passage en <code>ADULT</code> à la majorité, et à justifier le traitement de données de mineurs au titre du RGPD.</td><td><code>NOT NULL</code>, passée, âge plausible. Un profil de plus de 18 ans ne peut pas être créé en <code>CHILD</code>.</td></tr>
+          <tr><td><code>username</code></td><td>L'identifiant public, celui qu'un ami cherche</td><td><code>UNIQUE</code> sur toute la table, 3 à 30 caractères, minuscules, chiffres, tirets et points.</td></tr>
+          <tr><td><code>displayName</code></td><td>Le nom affiché dans l'interface. Par défaut le prénom, modifiable.</td><td><code>NOT NULL</code>, 1 à 60 caractères.</td></tr>
+          <tr><td><code>type</code></td><td><code>ADULT</code> : autonome. <code>CHILD</code> : sous tutelle. <code>RELATIVE</code> : un proche géré par le compte, majeur, sans restriction sociale.</td><td>Énumération fermée. Un changement de type est un acte du tuteur, pas du profil.</td></tr>
+          <tr><td><code>avatarMedia</code></td><td>La photo de profil</td><td>Nullable, → <code>Media</code></td></tr>
+          <tr><td><code>bio</code></td><td>Présentation libre, visible des amis</td><td>Nullable, 500 caractères</td></tr>
+          <tr><td><code>isDefault</code></td><td>Le profil ouvert automatiquement à la connexion du compte</td><td>Un seul profil par défaut par compte, garanti par index unique partiel.</td></tr>
+          <tr><td><code>suspendedAt</code></td><td>Suspension décidée par la modération</td><td>Nullable. Bloque la connexion à ce profil sans toucher aux autres profils du compte.</td></tr>
+          <tr><td><code>deletedAt</code></td><td>Suppression douce du profil</td><td>Nullable. Voir la procédure de suppression plus bas.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="archi" style="margin-top:20px">
+      <p class="diagram-title">Un compte, deux profils — le cas concret</p>
+      <svg viewBox="0 0 740 372" role="img" aria-label="Exemple : un Account ouvre un profil adulte Rafael et un profil enfant Léa dont le guardian est Rafael. Chaque profil possède son propre contenu.">
+        <rect class="box" x="230" y="16" width="280" height="62" rx="10"/>
+        <text class="t" x="246" y="42">Account</text>
+        <text class="s" x="246" y="63">rafael@exemple.fr · ROLE_USER</text>
+
+        <rect class="box-main" x="20" y="130" width="310" height="118" rx="12"/>
+        <text class="t" x="36" y="156">Profile — Rafael Teixeira</text>
+        <text class="s" x="36" y="180">type: ADULT · guardian: null</text>
+        <text class="s" x="36" y="198">dateOfBirth: 1998-11-05</text>
+        <text class="s" x="36" y="216">username: rafael</text>
+        <text class="s" x="36" y="234">isDefault: true</text>
+
+        <rect class="box-new" x="400" y="130" width="310" height="118" rx="12"/>
+        <text class="t" x="416" y="156">Profile — Léa Teixeira</text>
+        <text class="s" x="416" y="180">type: CHILD</text>
+        <text class="s" x="416" y="198">guardian → Rafael</text>
+        <text class="s" x="416" y="216">dateOfBirth: 2016-03-12</text>
+        <text class="s" x="416" y="234">username: lea</text>
+
+        <rect class="box-alt" x="20" y="278" width="310" height="66" rx="10"/>
+        <text class="t" x="36" y="304">Contenu de Rafael</text>
+        <text class="s" x="36" y="326">ses objets · son logement · ses amis</text>
+
+        <rect class="box-alt" x="400" y="278" width="310" height="66" rx="10"/>
+        <text class="t" x="416" y="304">Contenu de Léa</text>
+        <text class="s" x="416" y="326">ses objets · ses vêtements · ses collections</text>
+
+        <path class="edge" d="M300 78 C250 78 175 96 175 130"/>
+        <path class="edge" d="M440 78 C490 78 555 96 555 130"/>
+        <text class="el" x="196" y="110">1,n</text>
+        <text class="el" x="500" y="110">1,n</text>
+        <path class="edge" d="M400 198 H330"/>
+        <text class="el" x="338" y="190">guardian</text>
+        <path class="edge" d="M175 248 V278"/>
+        <path class="edge" d="M555 248 V278"/>
+
+        <text class="el" x="20" y="366">Le même Account ouvre les deux profils. Le contenu de Léa n'appartient pas à Rafael : seul owner_id fait foi.</text>
+      </svg>
+    </div>
+
+    <div class="section-head" style="margin-top:36px;margin-bottom:14px">
+      <h3 style="font-size:19px;font-weight:800">Les sept règles de tutelle</h3>
+    </div>
+    <div class="rules">
+      <div class="rule"><b>Un profil CHILD a obligatoirement un tuteur.</b> <span class="pill p-mvp" style="margin-left:4px">en base</span> — <code>CHECK (type &lt;&gt; 'CHILD' OR guardian_id IS NOT NULL)</code>.</div>
+      <div class="rule"><b>Un profil ADULT n'a pas de tuteur</b> en fonctionnement normal. Le validateur le refuse à la création ; la colonne reste nullable pour absorber un passage de <code>CHILD</code> à <code>ADULT</code> sans migration de données.</div>
+      <div class="rule"><b>Le tuteur est un profil ADULT.</b> Vérifié par un validateur Symfony à chaque écriture — une contrainte <code>CHECK</code> ne peut pas interroger une autre ligne, et un déclencheur serait une logique métier cachée en base.</div>
+      <div class="rule"><b>Un profil ne peut pas être son propre tuteur.</b> <span class="pill p-mvp" style="margin-left:4px">en base</span> — <code>CHECK (guardian_id IS NULL OR guardian_id &lt;&gt; id)</code>. Aucune chaîne de tutelle non plus : le tuteur étant <code>ADULT</code>, il n'a lui-même pas de tuteur.</div>
+      <div class="rule"><b>Un enfant ne peut ni modifier ni supprimer sa tutelle.</b> <code>guardian</code> et <code>type</code> sont hors de tout groupe de sérialisation en écriture accessible au profil lui-même : l'API n'expose simplement pas ces champs à l'enfant, et le voter refuse l'opération même par appel direct.</div>
+      <div class="rule"><b>Seul le tuteur configure les permissions de l'enfant.</b> L'écriture d'une <code>ProfilePermission</code> exige que l'auteur soit le <code>guardian</code> du profil visé. <code>ProfilePermission.updatedBy</code> garde la trace de qui a réglé quoi.</div>
+      <div class="rule"><b>Une permission en mode REQUIRES_APPROVAL crée une ApprovalRequest adressée au tuteur.</b> <code>ApprovalRequest.approver</code> est résolu automatiquement depuis <code>requester.guardian</code> : il n'est jamais choisi par l'appelant.</div>
+    </div>
+
+    <div class="section-head" style="margin-top:36px;margin-bottom:14px">
+      <h3 style="font-size:19px;font-weight:800">La politique de permissions par défaut</h3>
+      <p>Cette matrice vit dans un <i>backed enum</i> PHP, pas en base. <code>ProfilePermission</code> ne stocke que les écarts décidés par le tuteur — la table reste donc vide pour un compte qui ne touche à rien.</p>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Permission</th><th>ADULT</th><th>CHILD</th><th>RELATIVE</th></tr></thead>
+        <tbody>
+          <tr><td><code>ITEM_CREATE</code></td><td>Autorisé</td><td>Autorisé</td><td>Autorisé</td></tr>
+          <tr><td><code>GARMENT_MANAGE</code></td><td>Autorisé</td><td>Autorisé</td><td>Autorisé</td></tr>
+          <tr><td><code>COLLECTION_CREATE</code></td><td>Autorisé</td><td>Autorisé</td><td>Autorisé</td></tr>
+          <tr><td><code>MEDIA_UPLOAD</code></td><td>Autorisé</td><td>Autorisé</td><td>Autorisé</td></tr>
+          <tr><td><code>LOAN_BORROW</code></td><td>Autorisé</td><td>Sur accord</td><td>Autorisé</td></tr>
+          <tr><td><code>LOAN_LEND</code></td><td>Autorisé</td><td>Sur accord</td><td>Autorisé</td></tr>
+          <tr><td><code>SHARE_CREATE</code></td><td>Autorisé</td><td>Sur accord</td><td>Autorisé</td></tr>
+          <tr><td><code>FRIEND_ADD</code></td><td>Autorisé</td><td>Sur accord</td><td>Autorisé</td></tr>
+          <tr><td><code>COMMENT_WRITE</code></td><td>Autorisé</td><td>Sur accord</td><td>Autorisé</td></tr>
+          <tr><td><code>FOLLOW</code></td><td>Autorisé</td><td><b>Interdit</b></td><td>Autorisé</td></tr>
+          <tr><td><code>PURCHASE</code></td><td>Autorisé</td><td><b>Interdit</b></td><td>Autorisé</td></tr>
+          <tr><td><code>SELL</code></td><td>Autorisé</td><td><b>Interdit</b></td><td>Autorisé</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note" style="margin-top:12px">Un profil enfant est donc utilisable seul dès l'inscription : il range ses objets, gère ses vêtements et compose ses collections sans rien demander. Ce sont les interactions sortantes — ami, partage, prêt, commentaire — qui passent par le tuteur, et l'argent qui est fermé. Le tuteur peut assouplir ou durcir chaque ligne : poser <code>SHARE_CREATE = ALLOWED</code> pour un adolescent, ou <code>COMMENT_WRITE = DENIED</code> pour couper la fonctionnalité.</p>
+
+    <div class="section-head" style="margin-top:36px;margin-bottom:14px">
+      <h3 style="font-size:19px;font-weight:800">Supprimer un profil enfant</h3>
+      <p>Le tuteur supprime le profil : la suppression est douce (<code>deletedAt</code>) et s'accompagne d'un transfert. Rien n'est détruit par défaut, parce que rien ici n'appartient qu'à l'enfant — les prêts et les commandes impliquent des tiers.</p>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Ce que possède l'enfant</th><th>Devient</th><th>Pourquoi</th></tr></thead>
+        <tbody>
+          <tr><td><code>Item</code> · <code>Garment</code> · <code>Media</code></td><td><code>owner_id</code> réécrit vers le tuteur</td><td>Ce sont des biens du foyer. Les détruire ferait disparaître des objets réellement possédés de l'inventaire familial.</td></tr>
+          <tr><td><code>Place</code> · <code>Room</code> · <code>Storage</code> · <code>Box</code></td><td><code>owner_id</code> réécrit vers le tuteur</td><td>Le logement est celui du foyer ; sa structure ne disparaît pas avec un profil.</td></tr>
+          <tr><td><code>Collection</code> · <code>Outfit</code> · <code>Memory</code></td><td>Transférées au tuteur</td><td>Contenu plus personnel, mais le client a tranché le 21 septembre : <b>toutes les données de l'enfant sont rattachées au compte du tuteur</b>. Le parcours de suppression informe, il ne demande plus quoi faire de chaque catégorie.</td></tr>
+          <tr><td><code>Loan</code> actif</td><td><b>Bloque la suppression</b></td><td>Un objet est chez quelqu'un d'autre, ou quelqu'un attend son retour. Le prêt doit être clos avant.</td></tr>
+          <tr><td><code>Loan</code> terminé · <code>LoanEvent</code></td><td>Conservés, profil anonymisé</td><td>L'autre partie a le droit de garder son historique de prêt.</td></tr>
+          <tr><td><code>Order</code> · <code>Payment</code> · <code>Refund</code></td><td>Conservés, profil anonymisé</td><td>Conservation comptable. Ne devrait pas exister pour un <code>CHILD</code>, dont <code>PURCHASE</code> et <code>SELL</code> sont interdits par défaut.</td></tr>
+          <tr><td><code>Share</code> · <code>ShareRecipient</code></td><td>Révoqués (<code>revokedAt</code>)</td><td>Couper l'accès immédiatement, sans effacer le contexte des commentaires déjà écrits.</td></tr>
+          <tr><td><code>Comment</code></td><td>Conservés, auteur anonymisé</td><td>Les supprimer casserait les fils de réponses d'autres personnes.</td></tr>
+          <tr><td><code>Friendship</code> · <code>Follow</code> · <code>Block</code></td><td>Supprimés</td><td>Une relation sociale sans profil vivant n'a aucun sens, et personne d'autre n'en dépend.</td></tr>
+          <tr><td><code>ProfilePermission</code> · <code>ApprovalRequest</code> en attente</td><td>Supprimées</td><td>Sans objet une fois le profil clos.</td></tr>
+          <tr><td><code>WearLog</code> · <code>GarmentExclusion</code> · préférences</td><td>Supprimés</td><td>Données de suggestion propres au profil, sans valeur pour le tuteur et sans tiers concerné.</td></tr>
+          <tr><td><code>Notification</code></td><td>Supprimées</td><td>Aucun destinataire.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note" style="margin-top:12px">Le profil lui-même n'est jamais effacé physiquement : <code>deletedAt</code> est renseigné, <code>firstName</code>, <code>lastName</code>, <code>dateOfBirth</code>, <code>bio</code> et <code>avatarMedia</code> sont vidés, et <code>username</code> est remplacé par une valeur neutre qui libère l'identifiant public. Les lignes qui doivent survivre pointent donc toujours vers une ligne existante, sans plus contenir de donnée personnelle — c'est ce qui permet de concilier le droit à l'effacement et l'intégrité référentielle.</p>
+
+    <div class="section-head" style="margin-top:36px;margin-bottom:14px">
+      <h3 style="font-size:19px;font-weight:800">Les contraintes à poser</h3>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Contrainte</th><th>Où</th><th>Ce qu'elle empêche</th></tr></thead>
+        <tbody>
+          <tr><td><code>CHECK (type &lt;&gt; 'CHILD' OR guardian_id IS NOT NULL)</code></td><td>Base</td><td>Un enfant sans tuteur, donc sans contrôle parental possible</td></tr>
+          <tr><td><code>CHECK (guardian_id IS NULL OR guardian_id &lt;&gt; id)</code></td><td>Base</td><td>Un profil son propre tuteur, et la boucle qu'il créerait dans la résolution des approbations</td></tr>
+          <tr><td><code>CHECK (date_of_birth &lt; CURRENT_DATE)</code></td><td>Base</td><td>Une date de naissance dans le futur</td></tr>
+          <tr><td><code>UNIQUE (username)</code></td><td>Base</td><td>Deux identités publiques homonymes</td></tr>
+          <tr><td>Unique partiel <code>(account_id) WHERE is_default</code></td><td>Base</td><td>Deux profils par défaut sur un même compte</td></tr>
+          <tr><td><code>FOREIGN KEY guardian_id ON DELETE RESTRICT</code></td><td>Base</td><td>La suppression d'un tuteur qui laisserait un enfant orphelin de tutelle</td></tr>
+          <tr><td>Le tuteur est de type <code>ADULT</code></td><td>Validateur</td><td>Un enfant tuteur d'un autre enfant. Une contrainte <code>CHECK</code> ne peut pas lire une autre ligne.</td></tr>
+          <tr><td>Le tuteur appartient au même <code>Account</code></td><td>Validateur</td><td>Une tutelle croisée entre deux comptes sans lien, impossible à administrer</td></tr>
+          <tr><td>Un profil de plus de 18 ans n'est pas créé en <code>CHILD</code></td><td>Validateur</td><td>Une restriction appliquée à un majeur</td></tr>
+          <tr><td><code>guardian</code> et <code>type</code> hors des groupes d'écriture du profil</td><td>API Platform</td><td>Qu'un enfant se libère lui-même de sa tutelle</td></tr>
+          <tr><td>L'auteur d'une <code>ProfilePermission</code> est le <code>guardian</code> de la cible</td><td>Voter</td><td>Qu'un profil s'accorde des permissions à lui-même</td></tr>
+          <tr><td><code>ApprovalRequest.approver</code> = <code>requester.guardian</code></td><td>Service</td><td>Qu'une demande soit adressée à un complaisant plutôt qu'au tuteur</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>Les entités en détail</h2>
+      <p>Attributs principaux, relations et cardinalités. Clés primaires en vert, clés étrangères en violet. Les horodatages <code>createdAt</code> et <code>updatedAt</code> sont implicites partout.</p>
+    </div>
+
+    <div class="domain">
+      <div class="domain-head"><h3>Identité &amp; accès</h3><p>Le découpage qui conditionne tout le reste.</p></div>
+      <div class="entities">
+
+        <article class="entity">
+          <div class="entity-top"><h4>Account</h4><span class="pill p-mvp">MVP</span></div>
+          <p class="role">L'identifiant de connexion. Ne possède aucun contenu : il donne accès à des profils.</p>
+          <ul class="attrs">
+            <li class="key"><b>id</b> <span>uuid v7</span></li>
+            <li><b>email</b> <span>string, unique</span></li>
+            <li><b>password</b> <span>string, hashé</span></li>
+            <li><b>roles</b> <span>json — ROLE_USER, ROLE_ADMIN</span></li>
+            <li><b>emailVerifiedAt</b> <span>datetime nullable</span></li>
+            <li><b>locale</b> <span>string</span></li>
+            <li><b>deletedAt</b> <span>datetime nullable — anonymisation RGPD</span></li>
+          </ul>
+          <p class="rel"><b>Relations</b> 1,n <code>Profile</code> · 1,n <code>DeviceToken</code> · 1,n <code>ModerationAction</code> (si admin)<br><b style="display:inline">Ne contient pas</b> ni <code>firstName</code>, ni <code>lastName</code>, ni <code>dateOfBirth</code> : l'identité réelle vit sur <code>Profile</code>, parce qu'un compte peut en porter plusieurs.</p>
+        </article>
+
+        <article class="entity">
+          <div class="entity-top"><h4>Profile</h4><span class="pill p-mvp">MVP</span></div>
+          <p class="role">L'identité Penderie. Propriétaire de tout le contenu et sujet de toutes les relations sociales.</p>
+          <ul class="attrs">
+            <li class="key"><b>id</b> <span>uuid v7</span></li>
+            <li class="fk"><b>account</b> <span>→ Account — le compte qui s'y connecte</span></li>
+            <li class="fk"><b>guardian</b> <span>→ Profile, nullable — obligatoire si type = CHILD</span></li>
+            <li><b>firstName</b> <span>string — le prénom réel</span></li>
+            <li><b>lastName</b> <span>string — le nom réel</span></li>
+            <li><b>dateOfBirth</b> <span>date — âge, majorité, cohérence de la tutelle</span></li>
+            <li><b>username</b> <span>string, unique — l'identifiant public</span></li>
+            <li><b>displayName</b> <span>string — le nom affiché, par défaut le prénom</span></li>
+            <li><b>type</b> <span>ADULT · CHILD · RELATIVE</span></li>
+            <li class="fk"><b>avatarMedia</b> <span>→ Media, nullable</span></li>
+            <li><b>bio</b> <span>text nullable</span></li>
+            <li><b>isDefault</b> <span>bool — le profil ouvert à la connexion</span></li>
+            <li><b>suspendedAt · deletedAt</b> <span>datetime nullables</span></li>
+          </ul>
+          <p class="rel"><b>Relations</b> 1,n <code>Place</code> · 1,n <code>Item</code> · 1,n <code>Garment</code> · 1,n <code>Share</code> · 1,n <code>Collection</code> · 1,n <code>ProfilePermission</code> · n,n <code>Profile</code> via <code>Friendship</code> et <code>Follow</code></p>
+        </article>
+
+        <article class="entity">
+          <div class="entity-top"><h4>ProfilePermission</h4><span class="pill p-new">Nouveau</span></div>
+          <p class="role">Une exception à la politique par défaut du type de profil. Aucune ligne signifie « comportement par défaut » : on ne stocke que ce qui dévie.</p>
+          <ul class="attrs">
+            <li class="key"><b>id</b> <span>uuid</span></li>
+            <li class="fk"><b>profile</b> <span>→ Profile</span></li>
+            <li><b>permission</b> <span>ITEM_CREATE · GARMENT_MANAGE · LOAN_LEND · LOAN_BORROW · SHARE_CREATE · COMMENT_WRITE · FRIEND_ADD · FOLLOW · PURCHASE · SELL · COLLECTION_CREATE · MEDIA_UPLOAD</span></li>
+            <li><b>mode</b> <span>ALLOWED · DENIED · REQUIRES_APPROVAL</span></li>
+            <li class="fk"><b>updatedBy</b> <span>→ Profile — qui a réglé la permission</span></li>
+          </ul>
+          <p class="rel"><b>Contraintes</b> unique (profile, permission) · seul le <code>guardian</code> du profil, ou un profil <code>ADULT</code> du même compte, peut écrire ici</p>
+        </article>
+
+        <article class="entity">
+          <div class="entity-top"><h4>ApprovalRequest</h4><span class="pill p-new">Nouveau</span></div>
+          <p class="role">Une action tentée par un profil dont la permission est en mode <code>REQUIRES_APPROVAL</code>. Le tuteur accepte ou refuse ; l'action n'est exécutée qu'après accord.</p>
+          <ul class="attrs">
+            <li class="key"><b>id</b> <span>uuid</span></li>
+            <li class="fk"><b>requester</b> <span>→ Profile — l'enfant</span></li>
+            <li class="fk"><b>approver</b> <span>→ Profile — résolu depuis <code>requester.guardian</code>, jamais choisi par l'appelant</span></li>
+            <li><b>permission</b> <span>même énumération que ProfilePermission</span></li>
+            <li><b>subjectType · subjectId</b> <span>enum · uuid, nullables — la cible de l'action</span></li>
+            <li><b>payload</b> <span>jsonb — de quoi rejouer l'action à l'acceptation</span></li>
+            <li><b>status</b> <span>PENDING · APPROVED · REJECTED · EXPIRED · WITHDRAWN</span></li>
+            <li><b>decidedAt · decisionNote</b> <span>datetime · text, nullables</span></li>
+          </ul>
+          <p class="rel"><b>Couvre</b> demande d'ami en attente d'accord parental, achat interdit, vente interdite, partage interdit, premier commentaire — sans une seule condition codée en dur dans les services</p>
+        </article>
+
+      </div>
+    </div>
+
+    <div class="domain">
+      <div class="domain-head"><h3>Relations</h3><p>Trois notions distinctes qui ne se déduisent jamais l'une de l'autre.</p></div>
+      <div class="entities">
+
+        <article class="entity">
+          <div class="entity-top"><h4>Friendship</h4><span class="pill p-mvp">MVP</span></div>
+          <p class="role">L'amitié réciproque, avec son cycle de demande. Une seule ligne par paire, quel que soit le sens.</p>
+          <ul class="attrs">
+            <li class="key"><b>id</b> <span>uuid</span></li>
+            <li class="fk"><b>requester · addressee</b> <span>→ Profile</span></li>
+            <li><b>status</b> <span>PENDING · ACCEPTED · DECLINED</span></li>
+            <li class="fk"><b>approvalRequest</b> <span>→ ApprovalRequest, nullable</span></li>
+            <li><b>requestedAt · respondedAt</b> <span>datetime</span></li>
+          </ul>
+          <p class="rel"><b>Contraintes</b> unique sur la paire ordonnée (least, greatest) · requester ≠ addressee · <b>ne donne aucun accès au contenu par elle-même</b></p>
+        </article>
+
+        <article class="entity">
+          <div class="entity-top"><h4>Follow</h4><span class="pill p-v2">V2</span></div>
+          <p class="role">L'abonnement, asymétrique et sans accord. Suivre quelqu'un ne donne jamais accès à un contenu privé.</p>
+          <ul class="attrs">
+            <li class="key"><b>id</b> <span>uuid</span></li>
+            <li class="fk"><b>follower · following</b> <span>→ Profile</span></li>
+            <li><b>createdAt</b> <span>datetime</span></li>
+          </ul>
+          <p class="rel"><b>Contraintes</b> unique (follower, following) · follower ≠ following. L'abonnement mutuel <b>propose</b> l'amitié, ne la crée jamais.</p>
+        </article>
+
+        <article class="entity">
+          <div class="entity-top"><h4>Block</h4><span class="pill p-v2">V2</span></div>
+          <p class="role">Le blocage. Coupe amitié, abonnement, partages et commentaires entre deux profils.</p>
+          <ul class="attrs">
+            <li class="key"><b>id</b> <span>uuid</span></li>
+            <li class="fk"><b>blocker · blocked</b> <span>→ Profile</span></li>
+            <li><b>reason</b> <span>text nullable</span></li>
+          </ul>
+          <p class="rel"><b>Contraintes</b> unique (blocker, blocked)</p>
+        </article>
+
+      </div>
+    </div>
+
+    <div class="domain">
+      <div class="domain-head"><h3>Lieux</h3><p>La cascade conservée telle quelle : Place ▸ Room ▸ Storage ▸ Box.</p></div>
+      <div class="entities">
+
+        <article class="entity">
+          <div class="entity-top"><h4>Place</h4><span class="pill p-mvp">MVP</span></div>
+          <p class="role">Le logement. Un profil peut en avoir plusieurs — résidence principale, second domicile, box de stockage.</p>
+          <ul class="attrs">
+            <li class="key"><b>id</b> <span>uuid</span></li>
+            <li class="fk"><b>owner</b> <span>→ Profile</span></li>
+            <li><b>name · type</b> <span>string · HOUSE · APARTMENT · STORAGE_UNIT · OTHER</span></li>
+            <li><b>address · description</b> <span>string · text, nullables</span></li>
+            <li class="fk"><b>coverMedia</b> <span>→ Media, nullable</span></li>
+            <li><b>isPrimary</b> <span>bool</span></li>
+          </ul>
+          <p class="rel"><b>Relations</b> 1,n <code>Room</code></p>
+        </article>
+
+        <article class="entity">
+          <div class="entity-top"><h4>Room</h4><span class="pill p-mvp">MVP</span></div>
+          <p class="role">La pièce. Niveau d'ancrage : tout objet et tout vêtement en a une, obligatoirement.</p>
+          <ul class="attrs">
+            <li class="key"><b>id</b> <span>uuid</span></li>
+            <li class="fk"><b>place</b> <span>→ Place</span></li>
+            <li><b>name · type</b> <span>string · BEDROOM · KITCHEN · GARAGE · CELLAR · ATTIC · OFFICE…</span></li>
+            <li class="fk"><b>coverMedia</b> <span>→ Media, nullable</span></li>
+            <li><b>position</b> <span>int</span></li>
+          </ul>
+          <p class="rel"><b>Relations</b> 1,n <code>Storage</code> · 1,n <code>Box</code> · 1,n <code>Item</code> · 1,n <code>Garment</code></p>
+        </article>
+
+        <article class="entity">
+          <div class="entity-top"><h4>Storage</h4><span class="pill p-mvp">MVP</span></div>
+          <p class="role">Le meuble ou le rangement : armoire, étagère, commode, penderie.</p>
+          <ul class="attrs">
+            <li class="key"><b>id</b> <span>uuid</span></li>
+            <li class="fk"><b>room</b> <span>→ Room</span></li>
+            <li><b>name · type</b> <span>string · WARDROBE · SHELF · CABINET · DRAWER · RACK…</span></li>
+            <li class="fk"><b>coverMedia</b> <span>→ Media, nullable</span></li>
+            <li><b>position</b> <span>int</span></li>
+          </ul>
+          <p class="rel"><b>Relations</b> 1,n <code>Box</code> · 1,n <code>Item</code> · 1,n <code>Garment</code></p>
+        </article>
+
+        <article class="entity">
+          <div class="entity-top"><h4>Box</h4><span class="pill p-mvp">MVP</span></div>
+          <p class="role">Le carton. Toujours dans une pièce, éventuellement posé sur un rangement.</p>
+          <ul class="attrs">
+            <li class="key"><b>id</b> <span>uuid</span></li>
+            <li class="fk"><b>room</b> <span>→ Room, obligatoire</span></li>
+            <li class="fk"><b>storage</b> <span>→ Storage, nullable</span></li>
+            <li><b>name · reference</b> <span>string · string nullable (étiquette, QR)</span></li>
+            <li class="fk"><b>coverMedia</b> <span>→ Media, nullable</span></li>
+            <li><b>isSealed</b> <span>bool</span></li>
+          </ul>
+          <p class="rel"><b>Relations</b> 1,n <code>Item</code> · 1,n <code>Garment</code></p>
+        </article>
+
+        <article class="entity wide">
+          <div class="entity-top"><h4>LocationHistory</h4><span class="pill p-mvp">MVP</span></div>
+          <p class="role">La trace d'un déplacement. L'emplacement courant vit sur l'objet ; cette table garde les emplacements quittés, pour répondre à « où était-ce avant le déménagement ? ». Incluse dans le MVP et dans la première migration (décision du 18 septembre).</p>
+          <ul class="attrs">
+            <li class="key"><b>id</b> <span>uuid</span></li>
+            <li class="fk"><b>item · garment</b> <span>nullables, exactement un renseigné</span></li>
+            <li class="fk"><b>room · storage · box</b> <span>→ l'emplacement quitté ; room obligatoire</span></li>
+            <li class="fk"><b>movedBy</b> <span>→ Profile</span></li>
+            <li><b>reason</b> <span>MANUAL_MOVE · BOX_MOVED · LOAN_RETURN · INITIAL</span></li>
+            <li><b>movedAt</b> <span>datetime</span></li>
+          </ul>
+          <p class="rel"><b>Note</b> Changer de logement ne demande aucun champ supplémentaire : il suffit de pointer une <code>Room</code> d'une autre <code>Place</code>. Le déplacement reste une action, jamais un statut.</p>
+        </article>
+
+      </div>
+    </div>
+
+    <div class="domain">
+      <div class="domain-head"><h3>Inventaire</h3><p>Objets et vêtements restent deux entités séparées, comme décidé en V1.</p></div>
+      <div class="entities">
+
+        <article class="entity wide">
+          <div class="entity-top"><h4>Item</h4><span class="pill p-mvp">MVP</span></div>
+          <p class="role">L'objet possédé. Deux axes désormais indépendants : sa disponibilité et son état physique.</p>
+          <ul class="attrs">
+            <li class="key"><b>id</b> <span>uuid</span></li>
+            <li class="fk"><b>owner</b> <span>→ Profile</span></li>
+            <li class="fk"><b>category</b> <span>→ ItemCategory</span></li>
+            <li><b>name</b> <span>string — seul champ obligatoire à la saisie</span></li>
+            <li><b>description · notes</b> <span>text nullables — la description publique, les notes privées</span></li>
+            <li><b>availability</b> <span>AVAILABLE · LENT · BORROWED · LOST · SOLD</span></li>
+            <li><b>condition</b> <span>NEW · EXCELLENT · GOOD · WORN · DAMAGED</span></li>
+            <li class="fk"><b>room</b> <span>→ Room, obligatoire</span></li>
+            <li class="fk"><b>storage · box</b> <span>→ Storage · → Box, nullables</span></li>
+            <li><b>purchaseDate · estimatedValue</b> <span>date · decimal(10,2), nullables</span></li>
+            <li><b>source · scanData</b> <span>MANUAL · SCAN · jsonb nullable</span></li>
+          </ul>
+          <p class="rel"><b>Relations</b> n,n <code>Media</code> via <code>ItemMedia</code> · 1,n <code>Loan</code> · 1,n <code>Listing</code> · 1,n <code>Memory</code> · n,n <code>Collection</code> via <code>CollectionEntry</code><br><b style="display:inline">Dérivé</b> « en vente » = il existe une <code>Listing</code> au statut <code>PUBLISHED</code> ou <code>RESERVED</code>. « Chez Thomas » = il existe un <code>Loan</code> au statut <code>ACTIVE</code>.</p>
+        </article>
+
+        <article class="entity wide">
+          <div class="entity-top"><h4>Garment</h4><span class="pill p-mvp">MVP</span></div>
+          <p class="role">Le vêtement. Mêmes mécanismes de rangement, de prêt et de vente qu'un objet, mais ses attributs propres — et ce qu'il faut pour habiller quelqu'un.</p>
+          <ul class="attrs">
+            <li class="key"><b>id</b> <span>uuid</span></li>
+            <li class="fk"><b>owner</b> <span>→ Profile</span></li>
+            <li class="fk"><b>category</b> <span>→ GarmentCategory — porte le système de tailles</span></li>
+            <li class="fk"><b>brand</b> <span>→ Brand, nullable</span></li>
+            <li class="fk"><b>size</b> <span>→ SizeValue, nullable</span></li>
+            <li><b>sizeLabel</b> <span>string nullable — repli si la catégorie l'autorise</span></li>
+            <li><b>availability · condition</b> <span>mêmes énumérations que Item</span></li>
+            <li><b>usage</b> <span>EVERYDAY · WORK · SPORT · EVENING</span></li>
+            <li><b>warmth</b> <span>VERY_LIGHT · LIGHT · MID · WARM · VERY_WARM, nullable — hérite de la catégorie</span></li>
+            <li><b>waterResistant</b> <span>bool</span></li>
+            <li class="fk"><b>room · storage · box</b> <span>room obligatoire, les deux autres nullables</span></li>
+          </ul>
+          <p class="rel"><b>Relations</b> n,n <code>Color</code> · n,n <code>Style</code> · n,n <code>Media</code> via <code>GarmentMedia</code> · 1,n <code>WearLog</code> · 1,n <code>Loan</code> · 1,n <code>GarmentExclusion</code></p>
+        </article>
+
+        <article class="entity">
+          <div class="entity-top"><h4>ItemCategory · GarmentCategory</h4><span class="pill p-mvp">MVP</span></div>
+          <p class="role">Deux référentiels arborescents distincts, jamais mélangés. <code>owner</code> nul = catégorie fournie par l'application ; renseigné = catégorie créée par un profil.</p>
+          <ul class="attrs">
+            <li class="key"><b>id</b> <span>uuid</span></li>
+            <li><b>name · icon · slug</b> <span>string</span></li>
+            <li class="fk"><b>parent</b> <span>→ même entité, nullable</span></li>
+            <li class="fk"><b>owner</b> <span>→ Profile, nullable</span></li>
+            <li><b>isSystem</b> <span>bool</span></li>
+            <li class="fk"><b>sizeSystem</b> <span>→ SizeSystem, nullable — GarmentCategory seulement</span></li>
+            <li><b>defaultWarmth</b> <span>enum nullable — GarmentCategory seulement</span></li>
+          </ul>
+        </article>
+
+        <article class="entity">
+          <div class="entity-top"><h4>Scan</h4><span class="pill p-mvp">MVP</span></div>
+          <p class="role">La trace d'un scan, réussi ou non. Conservée pour mesurer la fiabilité, que le cadrage pose comme critère de validation de la fonctionnalité. <b>Quatre modes retenus le 21 septembre :</b> code-barres, QR code, reconnaissance photo et OCR d'étiquette textile. La technologie reste imposée par le module et n'a pas encore été communiquée ; <code>provider</code> et <code>rawData</code> existent précisément pour ne pas la figer dans le schéma.</p>
+          <ul class="attrs">
+            <li class="key"><b>id</b> <span>uuid</span></li>
+            <li class="fk"><b>profile</b> <span>→ Profile</span></li>
+            <li class="fk"><b>media</b> <span>→ Media — l'image scannée</span></li>
+            <li><b>kind</b> <span>BARCODE · QRCODE · PHOTO · LABEL_OCR</span></li>
+            <li><b>code</b> <span>string nullable — la valeur lue (EAN, contenu du QR)</span></li>
+            <li><b>status</b> <span>SUCCESS · PARTIAL · FAILED</span></li>
+            <li><b>provider · rawData</b> <span>string · jsonb</span></li>
+            <li class="fk"><b>resultingItem · resultingGarment</b> <span>nullables</span></li>
+          </ul>
+        </article>
+
+        <article class="entity">
+          <div class="entity-top"><h4>Memory</h4><span class="pill p-valider">À valider</span></div>
+          <p class="role">Le souvenir attaché à un objet : « acheté à Lisbonne en 2019 ». Remplace le champ <code>story</code> de la V1, qui ne pouvait ni être daté ni porter de photos. <b>Décalée :</b> hors de la première migration, avec <code>MemoryMedia</code>.</p>
+          <ul class="attrs">
+            <li class="key"><b>id</b> <span>uuid</span></li>
+            <li class="fk"><b>item · garment</b> <span>nullables, exactement un renseigné</span></li>
+            <li class="fk"><b>author</b> <span>→ Profile</span></li>
+            <li><b>title · body</b> <span>string · text</span></li>
+            <li><b>happenedAt</b> <span>date nullable</span></li>
+          </ul>
+          <p class="rel"><b>Relations</b> n,n <code>Media</code> via <code>MemoryMedia</code>. Si la fonctionnalité est écartée, un champ texte sur <code>Item</code> suffit et les deux tables disparaissent.</p>
+        </article>
+
+      </div>
+    </div>
+
+    <div class="domain">
+      <div class="domain-head"><h3>Tailles &amp; référentiels mode</h3><p>Inchangé depuis la V1 : c'est la catégorie qui déclare l'échelle de mesure.</p></div>
+      <div class="entities">
+
+        <article class="entity">
+          <div class="entity-top"><h4>SizeSystem</h4><span class="pill p-mvp">MVP</span></div>
+          <p class="role">Une échelle de mesure. Sept suffisent à couvrir un dressing courant.</p>
+          <ul class="attrs">
+            <li class="key"><b>id</b> <span>uuid</span></li>
+            <li><b>code</b> <span>EU_SHOE · ALPHA · WAIST_LENGTH · FR_NUMERIC · COLLAR · BELT_CM · ONE_SIZE</span></li>
+            <li><b>name · unit</b> <span>string · string nullable</span></li>
+            <li><b>allowsFreeText</b> <span>bool</span></li>
+          </ul>
+          <p class="rel"><b>Relations</b> 1,n <code>SizeValue</code> · 1,n <code>GarmentCategory</code></p>
+        </article>
+
+        <article class="entity">
+          <div class="entity-top"><h4>SizeValue</h4><span class="pill p-mvp">MVP</span></div>
+          <p class="role">Une graduation de l'échelle. C'est ce que le vêtement référence, jamais du texte libre.</p>
+          <ul class="attrs">
+            <li class="key"><b>id</b> <span>uuid</span></li>
+            <li class="fk"><b>sizeSystem</b> <span>→ SizeSystem</span></li>
+            <li><b>label</b> <span>string — « 42 », « M », « W32 L34 »</span></li>
+            <li><b>sortOrder</b> <span>int — pour trier M avant L</span></li>
+          </ul>
+          <p class="rel"><b>Contraintes</b> unique (sizeSystem, label)</p>
+        </article>
+
+        <article class="entity wide">
+          <div class="entity-top"><h4>Brand · Color · Style</h4><span class="pill p-mvp">MVP</span></div>
+          <p class="role">Trois référentiels partagés. <code>Color</code> et <code>Style</code> sont en n,n avec le vêtement — un jean peut être bleu et noir, casual et work — et servent aussi de cibles aux préférences de l'utilisateur.</p>
+          <ul class="attrs">
+            <li><b>Brand</b> <span>name unique · logoMedia nullable · isVerified</span></li>
+            <li><b>Color</b> <span>name · hex · family (pour regrouper les nuances)</span></li>
+            <li><b>Style</b> <span>name · slug — casual, sport, work, evening, chic, streetwear</span></li>
+          </ul>
+        </article>
+
+      </div>
+    </div>
+
+    <div class="domain">
+      <div class="domain-head"><h3>Médias</h3><p>Une ressource autonome, réutilisable, rattachée par des liaisons explicites.</p></div>
+      <div class="entities">
+
+        <article class="entity">
+          <div class="entity-top"><h4>Media</h4><span class="pill p-new">Nouveau</span></div>
+          <p class="role">Un fichier stocké sur S3, appartenant à un profil. Le même média peut servir à un objet et à son annonce sans être dupliqué.</p>
+          <ul class="attrs">
+            <li class="key"><b>id</b> <span>uuid</span></li>
+            <li class="fk"><b>owner</b> <span>→ Profile</span></li>
+            <li><b>path</b> <span>string — clé S3</span></li>
+            <li><b>mimeType · sizeBytes</b> <span>string · int</span></li>
+            <li><b>width · height</b> <span>int nullables</span></li>
+            <li><b>kind</b> <span>PHOTO · SCAN_CAPTURE · INSPIRATION</span></li>
+            <li><b>altText</b> <span>string nullable — accessibilité RAAM</span></li>
+          </ul>
+        </article>
+
+        <article class="entity">
+          <div class="entity-top"><h4>Les cinq liaisons</h4><span class="pill p-new">Nouveau</span></div>
+          <p class="role">Cinq tables de trois ou quatre colonnes, entièrement indexées. Aucune clé nullable, aucune contrainte <code>CHECK</code> nécessaire.</p>
+          <ul class="attrs">
+            <li><b>ItemMedia</b> <span>item · media · position · isPrimary</span></li>
+            <li><b>GarmentMedia</b> <span>garment · media · position · isPrimary</span></li>
+            <li><b>ListingMedia</b> <span>listing · media · position</span></li>
+            <li><b>MemoryMedia</b> <span>memory · media · position</span></li>
+            <li><b>PostMedia</b> <span>post · media · position</span></li>
+          </ul>
+          <p class="rel"><b>Vignettes uniques</b> <code>Place</code>, <code>Room</code>, <code>Storage</code>, <code>Box</code>, <code>Collection</code>, <code>Profile</code> et <code>Brand</code> portent une clé <code>coverMedia</code> directe : une seule image, pas de galerie, pas de table.</p>
+        </article>
+
+      </div>
+    </div>
+
+    <div class="domain">
+      <div class="domain-head"><h3>Partage &amp; collections</h3><p>Le propriétaire contrôle explicitement les accès. Ni l'amitié ni l'abonnement n'ouvrent quoi que ce soit.</p></div>
+      <div class="entities">
+
+        <article class="entity wide">
+          <div class="entity-top"><h4>Share <span style="font-family:var(--body);font-size:12px;color:var(--sub)">— abstraite, 5 sous-types</span></h4><span class="pill p-mvp">MVP</span></div>
+          <p class="role">L'autorisation d'accès à une ressource précise. Héritage <code>SINGLE_TABLE</code> : <code>ItemShare</code>, <code>GarmentShare</code>, <code>RoomShare</code>, <code>BoxShare</code>, <code>CollectionShare</code>, chacune typée sur sa cible.</p>
+          <ul class="attrs">
+            <li class="key"><b>id</b> <span>uuid</span></li>
+            <li><b>discriminator</b> <span>string — géré par Doctrine</span></li>
+            <li class="fk"><b>owner</b> <span>→ Profile</span></li>
+            <li><b>audience</b> <span>SPECIFIC · FRIENDS · FOLLOWERS · LINK</span></li>
+            <li><b>accessLevel</b> <span>VIEW · VIEW_COMMENTS · COMMENT — <b>bridé par l'audience</b>, voir ci-dessous</span></li>
+            <li><b>token</b> <span>string unique nullable — consultable sans compte si audience = LINK</span></li>
+            <li><b>expiresAt · revokedAt</b> <span>datetime nullables</span></li>
+            <li><b>viewCount</b> <span>int</span></li>
+          </ul>
+          <p class="rel"><b>Relations</b> 1,n <code>ShareRecipient</code> si <code>audience = SPECIFIC</code> · 0,n <code>Comment</code> écrits sous ce partage<br><b style="display:inline">Jamais supprimé</b> révoquer renseigne <code>revokedAt</code>. La ligne survit pour que les commentaires gardent leur contexte.<br><b style="display:inline">Audience × niveau d'accès</b> <code>FOLLOWERS</code> et <code>LINK</code> sont <b>bornés à <code>VIEW</code></b> : un abonné ou un visiteur anonyme ne voit jamais les commentaires et n'en écrit jamais. Seuls <code>FRIENDS</code> et <code>SPECIFIC</code> ouvrent <code>VIEW_COMMENTS</code> et <code>COMMENT</code>. Garanti par un <code>CHECK</code> en base, pas seulement par l'interface.</p>
+        </article>
+
+        <article class="entity">
+          <div class="entity-top"><h4>ShareRecipient</h4><span class="pill p-mvp">MVP</span></div>
+          <p class="role">Le destinataire nommé d'un partage ciblé. Vide quand l'audience est <code>FRIENDS</code>, <code>FOLLOWERS</code> ou <code>LINK</code>.</p>
+          <ul class="attrs">
+            <li class="key"><b>id</b> <span>uuid</span></li>
+            <li class="fk"><b>share</b> <span>→ Share</span></li>
+            <li class="fk"><b>profile</b> <span>→ Profile</span></li>
+            <li><b>addedAt · lastViewedAt</b> <span>datetime</span></li>
+          </ul>
+          <p class="rel"><b>Contraintes</b> unique (share, profile)</p>
+        </article>
+
+        <article class="entity">
+          <div class="entity-top"><h4>Comment <span style="font-family:var(--body);font-size:12px;color:var(--sub)">— abstraite, 4 sous-types</span></h4><span class="pill p-mvp">MVP</span></div>
+          <p class="role">Un commentaire sur un contenu partagé. <code>ItemComment</code>, <code>GarmentComment</code>, <code>CollectionComment</code> et <code>PostComment</code>, ajouté pour le fil d'actualité.</p>
+          <ul class="attrs">
+            <li class="key"><b>id</b> <span>uuid</span></li>
+            <li class="fk"><b>author</b> <span>→ Profile</span></li>
+            <li class="fk"><b>share</b> <span>→ Share, nullable — nul si l'auteur est le propriétaire</span></li>
+            <li class="fk"><b>parent</b> <span>→ Comment, nullable — les réponses</span></li>
+            <li><b>body</b> <span>text</span></li>
+            <li><b>deletedAt · hiddenAt</b> <span>datetime nullables — suppression douce, masquage modération</span></li>
+          </ul>
+          <p class="rel"><b>Visibilité</b> le propriétaire voit tout ; un tiers voit les commentaires si son <code>Share</code> actif a <code>accessLevel</code> ≥ <code>VIEW_COMMENTS</code> ; il peut écrire si <code>accessLevel = COMMENT</code></p>
+        </article>
+
+        <article class="entity wide">
+          <div class="entity-top"><h4>Post</h4><span class="pill p-new">Nouveau · manquant</span></div>
+          <p class="role">Une publication du fil d'actualité. <b>Découverte pendant la passe de traçabilité :</b> la section 16 de la maquette compte onze écrans qu'aucune entité du modèle ne pouvait représenter.</p>
+          <ul class="attrs">
+            <li class="key"><b>id</b> <span>uuid</span></li>
+            <li class="fk"><b>author</b> <span>→ Profile</span></li>
+            <li><b>body</b> <span>text — « Ma collection pour cet été est prête. Vos avis ? »</span></li>
+            <li><b>audience</b> <span>FRIENDS · FOLLOWERS · SPECIFIC — la pastille « Amis autorisés » de l'écran</span></li>
+            <li class="fk"><b>collection · item · garment</b> <span>nullables, au plus un — la ressource mise en avant</span></li>
+            <li class="fk"><b>share</b> <span>→ Share, nullable — <b>l'accès à la ressource attachée</b></span></li>
+            <li><b>publishedAt · deletedAt</b> <span>datetime · datetime nullable</span></li>
+            <li><b>commentsEnabled</b> <span>bool</span></li>
+          </ul>
+          <p class="rel"><b>Relations</b> n,n <code>Media</code> via <code>PostMedia</code> · 0,n <code>PostComment</code><br><b style="display:inline">Le point clé</b> publier une collection ne la rend pas publique. Le <code>Post</code> <b>porte un <code>Share</code></b> créé à la publication, avec la même audience : « Voir la collection › » passe donc par le mécanisme d'accès habituel. Il n'y a pas de seconde voie d'accès au contenu privé, et révoquer le partage suffit à fermer la porte sans supprimer la publication.</p>
+        </article>
+
+        <article class="entity">
+          <div class="entity-top"><h4>Collection</h4><span class="pill p-valider">À valider</span></div>
+          <p class="role">Un regroupement libre, en liste ou en moodboard. Elle <b>référence</b> des objets, elle ne les possède pas.</p>
+          <ul class="attrs">
+            <li class="key"><b>id</b> <span>uuid</span></li>
+            <li class="fk"><b>owner</b> <span>→ Profile</span></li>
+            <li><b>name · description</b> <span>string · text nullable</span></li>
+            <li><b>layout</b> <span>LIST · MOODBOARD</span></li>
+            <li><b>visibility</b> <span>PRIVATE · SHARED · LINK</span></li>
+            <li class="fk"><b>coverMedia</b> <span>→ Media, nullable</span></li>
+            <li><b>backgroundColor</b> <span>string nullable — le fond du moodboard</span></li>
+          </ul>
+          <p class="rel"><b>Relations</b> 1,n <code>CollectionEntry</code> · 0,n <code>CollectionShare</code> · 0,n <code>CollectionComment</code></p>
+        </article>
+
+        <article class="entity wide">
+          <div class="entity-top"><h4>CollectionEntry</h4><span class="pill p-valider">À valider</span></div>
+          <p class="role">Un élément posé sur la collection. Les champs de mise en page sont nullables : une collection en mode liste n'en remplit aucun, donc le cas simple ne paie pas le cas riche.</p>
+          <ul class="attrs">
+            <li class="key"><b>id</b> <span>uuid</span></li>
+            <li class="fk"><b>collection</b> <span>→ Collection</span></li>
+            <li><b>kind</b> <span>ITEM · GARMENT · MEDIA · TEXT</span></li>
+            <li class="fk"><b>item · garment · media</b> <span>nullables — exactement un selon <code>kind</code>, aucun si TEXT</span></li>
+            <li><b>caption</b> <span>text nullable — la légende, ou le texte si kind = TEXT</span></li>
+            <li><b>positionX · positionY</b> <span>int nullables — coordonnées sur le moodboard</span></li>
+            <li><b>width · height</b> <span>int nullables</span></li>
+            <li><b>rotation</b> <span>smallint nullable — en degrés</span></li>
+            <li><b>zIndex · position</b> <span>int — superposition · ordre en mode liste</span></li>
+          </ul>
+          <p class="rel"><b>Suppression</b> supprimer une collection supprime ses entrées (<code>CASCADE</code>) et rien d'autre. Supprimer un objet supprime ses entrées de collection, jamais la collection.</p>
+        </article>
+
+      </div>
+    </div>
+
+    <div class="domain">
+      <div class="domain-head"><h3>Prêt</h3><p>Deux entités : l'état courant et son journal.</p></div>
+      <div class="entities">
+
+        <article class="entity wide">
+          <div class="entity-top"><h4>Loan</h4><span class="pill p-mvp">MVP</span></div>
+          <p class="role">Un prêt, de la demande au retour. L'historique est conservé : un objet accumule ses prêts successifs.</p>
+          <ul class="attrs">
+            <li class="key"><b>id</b> <span>uuid</span></li>
+            <li class="fk"><b>item · garment</b> <span>nullables, exactement un renseigné</span></li>
+            <li class="fk"><b>lender · borrower</b> <span>→ Profile — lender est toujours le propriétaire</span></li>
+            <li><b>status</b> <span>REQUESTED · ACCEPTED · ACTIVE · RETURNED · DECLINED · CANCELLED · LOST</span></li>
+            <li><b>requestedAt · acceptedAt · receivedAt</b> <span>datetime nullables</span></li>
+            <li><b>dueDate</b> <span>date nullable — obligatoire ou non : décision client</span></li>
+            <li><b>returnDeclaredAt · returnConfirmedAt</b> <span>datetime nullables</span></li>
+            <li><b>note · returnNote</b> <span>text nullables</span></li>
+            <li><b>conditionAtStart · conditionAtReturn</b> <span>enum nullables — pour constater un dommage</span></li>
+            <li class="fk"><b>approvalRequest</b> <span>→ ApprovalRequest, nullable — si l'emprunteur est un profil sous tutelle</span></li>
+          </ul>
+          <p class="rel"><b>Contraintes</b> un seul prêt au statut <code>ACTIVE</code> par objet (index unique partiel) · <code>lender</code> = propriétaire · <code>lender</code> ≠ <code>borrower</code><br><b style="display:inline">Dérivé</b> en retard = <code>status = ACTIVE</code> et <code>dueDate &lt; aujourd'hui</code>. Endommagé = <code>conditionAtReturn</code> pire que <code>conditionAtStart</code>.</p>
+        </article>
+
+        <article class="entity wide">
+          <div class="entity-top"><h4>LoanEvent</h4><span class="pill p-mvp">MVP</span><span class="pill p-new">Nouveau</span></div>
+          <p class="role">Le journal du prêt, en écriture seule. Chaque transition et chaque geste laisse une ligne horodatée avec son auteur — c'est ce qui rend l'historique fiable.</p>
+          <ul class="attrs">
+            <li class="key"><b>id</b> <span>uuid</span></li>
+            <li class="fk"><b>loan</b> <span>→ Loan</span></li>
+            <li class="fk"><b>actor</b> <span>→ Profile, nullable — nul si l'événement est automatique</span></li>
+            <li><b>type</b> <span>REQUESTED · ACCEPTED · DECLINED · RECEIVED · REMINDER_SENT · DUE_DATE_CHANGED · RETURN_DECLARED · RETURNED · DAMAGE_REPORTED · DECLARED_LOST · CANCELLED</span></li>
+            <li><b>payload</b> <span>jsonb — ancienne et nouvelle valeur, identifiants de médias du constat</span></li>
+            <li><b>occurredAt</b> <span>datetime</span></li>
+          </ul>
+          <p class="rel"><b>Contraintes</b> aucune modification ni suppression après écriture — garanti par une révocation des droits <code>UPDATE</code> et <code>DELETE</code> sur la table, pas seulement par convention</p>
+        </article>
+
+      </div>
+    </div>
+
+    <div class="domain">
+      <div class="domain-head"><h3>Vente, paiement &amp; livraison</h3><p>Le domaine métier ne connaît aucun prestataire. Stripe est une implémentation, pas une colonne. <b>Arbitrage du 21 septembre :</b> la vente entre dans le MVP, détaillée, avec <b>deux parcours</b> — paiement en ligne, ou paiement en espèces à la remise. Le second ne fait transiter aucun argent par la plateforme, et c'est ce qui change tout dans le modèle.</p>
+    <div class="table-wrap" style="margin-bottom:22px">
+      <table>
+        <thead><tr><th>Étape</th><th>Parcours A — paiement en ligne</th><th>Parcours B — espèces en main propre</th></tr></thead>
+        <tbody>
+          <tr><td>Commande</td><td><code>paymentMethod = ONLINE</code>, <code>deliveryMethod = SHIPPING</code> ou <code>HANDOVER</code></td><td><code>paymentMethod = CASH</code>, <code>deliveryMethod = HANDOVER</code> obligatoirement</td></tr>
+          <tr><td>Argent</td><td><code>Payment</code> <code>CHARGE</code> autorisé puis capturé chez le prestataire</td><td><b>aucun <code>Payment</code></b> — la plateforme ne voit jamais les espèces</td></tr>
+          <tr><td>Statut atteint</td><td><code>PAID</code></td><td><code>AWAITING_HANDOVER</code></td></tr>
+          <tr><td>Remise</td><td>expédition : <code>Shipment</code>, <code>SHIPPED</code> puis <code>DELIVERED</code> · main propre : rendez-vous</td><td>rendez-vous uniquement</td></tr>
+          <tr><td>Preuve</td><td>l'acheteur confirme la réception</td><td><b>double confirmation</b> : le vendeur déclare avoir été payé, l'acheteur avoir reçu l'objet</td></tr>
+          <tr><td>Clôture</td><td><code>COMPLETED</code>, puis <code>Payment</code> <code>PAYOUT</code> vers le vendeur</td><td><code>COMPLETED</code>, sans aucun mouvement d'argent</td></tr>
+          <tr><td>Remboursement</td><td><code>Refund</code> possible, exécuté par le prestataire</td><td><b>impossible</b> : rien à rembourser côté plateforme. Seul un <code>Dispute</code> peut être ouvert, et il ne déplace pas d'argent</td></tr>
+        </tbody>
+      </table>
+    </div></div>
+      <div class="entities">
+
+        <article class="entity">
+          <div class="entity-top"><h4>Listing</h4><span class="pill p-mvp">MVP</span></div>
+          <p class="role">L'annonce. Seule détentrice de l'état « en vente » : on peut publier, retirer, puis republier le même objet.</p>
+          <ul class="attrs">
+            <li class="key"><b>id</b> <span>uuid</span></li>
+            <li class="fk"><b>seller</b> <span>→ Profile</span></li>
+            <li class="fk"><b>item · garment</b> <span>nullables, exactement un renseigné</span></li>
+            <li><b>price · currency</b> <span>decimal(10,2) ≥ 0 · string</span></li>
+            <li><b>description</b> <span>text — pré-remplie depuis l'objet</span></li>
+            <li><b>status</b> <span>DRAFT · PUBLISHED · RESERVED · SOLD · WITHDRAWN · EXPIRED</span></li>
+            <li><b>audience</b> <span>FRIENDS_ONLY par défaut</span></li>
+            <li><b>publishedAt · closedAt</b> <span>datetime nullables</span></li>
+          </ul>
+          <p class="rel"><b>Relations</b> n,n <code>Media</code> via <code>ListingMedia</code> · 0,1 <code>Order</code></p>
+        </article>
+
+        <article class="entity">
+          <div class="entity-top"><h4>Order</h4><span class="pill p-mvp">MVP</span></div>
+          <p class="role">La transaction. Porte <b>deux axes indépendants</b>, tous deux décidés à l'achat : comment on paie, et comment on se transmet l'objet. Les confondre en un seul champ aurait interdit le cas « je paie en ligne mais je viens chercher », qui existe déjà dans la maquette.</p>
+          <ul class="attrs">
+            <li class="key"><b>id</b> <span>uuid</span></li>
+            <li class="fk"><b>listing</b> <span>→ Listing</span></li>
+            <li class="fk"><b>buyer · seller</b> <span>→ Profile</span></li>
+            <li><b>reference</b> <span>string unique — le numéro lisible</span></li>
+            <li><b>itemAmount · totalAmount</b> <span>decimal — égaux : aucun frais de plateforme (décision client du 21 septembre)</span></li>
+            <li><b>paymentMethod</b> <span>ONLINE · CASH</span></li>
+            <li><b>deliveryMethod</b> <span>SHIPPING · HANDOVER</span></li>
+            <li><b>status</b> <span>PENDING_PAYMENT · AWAITING_HANDOVER · PAID · SHIPPED · DELIVERED · COMPLETED · CANCELLED · REFUNDED</span></li>
+            <li><b>handoverConfirmedBySellerAt</b> <span>datetime nullable — « j'ai été payé »</span></li>
+            <li><b>handoverConfirmedByBuyerAt</b> <span>datetime nullable — « j'ai l'objet »</span></li>
+          </ul>
+          <p class="rel"><b>Relations</b> 0,n <code>OrderAddress</code> · <b>0,n</b> <code>Payment</code> · 1,n <code>OrderEvent</code> · 0,n <code>Refund</code> · 0,1 <code>Dispute</code> · 0,1 <code>Shipment</code><br><b style="display:inline">Contraintes</b> <code>CHECK</code> : <code>paymentMethod = CASH</code> impose <code>deliveryMethod = HANDOVER</code> — on ne paie pas un colis en espèces. Une commande en espèces n'a <b>aucun</b> <code>Payment</code> : la cardinalité passe de 1,n à 0,n, et c'est le seul changement que le parcours B impose au reste du domaine.<br><b style="display:inline">Frais</b> la plateforme ne prélève rien. <code>totalAmount</code> reste distinct de <code>itemAmount</code> pour absorber une livraison facturée, jamais une commission. Les frais de traitement de Stripe sont retenus par Stripe sur le versement au vendeur : ils n'apparaissent pas dans notre modèle.</p>
+        </article>
+
+        <article class="entity">
+          <div class="entity-top"><h4>OrderEvent</h4><span class="pill p-mvp">MVP</span><span class="pill p-new">Nouveau</span></div>
+          <p class="role">Le fil d'une commande, événement par événement — exactement ce que <code>LoanEvent</code> fait pour le prêt. Un champ <code>status</code> seul ne dirait ni qui a confirmé, ni quand, ni dans quel ordre : c'est pourtant tout ce qui reste comme preuve quand l'argent est passé de la main à la main.</p>
+          <ul class="attrs">
+            <li class="key"><b>id</b> <span>uuid</span></li>
+            <li class="fk"><b>order</b> <span>→ Order</span></li>
+            <li class="fk"><b>actor</b> <span>→ Profile, nullable — nul si l'événement vient du prestataire ou du système</span></li>
+            <li><b>type</b> <span>CREATED · PAYMENT_AUTHORIZED · PAYMENT_CAPTURED · PAYMENT_FAILED · HANDOVER_SCHEDULED · HANDOVER_CONFIRMED_BY_SELLER · HANDOVER_CONFIRMED_BY_BUYER · SHIPPED · DELIVERED · RECEIVED · COMPLETED · CANCELLED · REFUND_REQUESTED · REFUND_ISSUED · DISPUTE_OPENED</span></li>
+            <li><b>note</b> <span>text nullable</span></li>
+            <li><b>occurredAt</b> <span>datetime</span></li>
+          </ul>
+          <p class="rel"><b>Pourquoi</b> en espèces, la plateforme n'a aucune trace bancaire. Les deux confirmations horodatées, chacune attribuée à un profil, sont la seule chose qu'un litige pourra examiner. Le parcours en ligne y gagne aussi : rejouer un webhook devient consultable au lieu d'être enfoui dans <code>Payment.rawPayload</code>.</p>
+        </article>
+
+        <article class="entity">
+          <div class="entity-top"><h4>OrderAddress</h4><span class="pill p-mvp">MVP</span><span class="pill p-new">Nouveau</span></div>
+          <p class="role">L'adresse figée au moment de l'achat. Copie de valeurs, pas une clé étrangère : modifier son carnet d'adresses ne réécrit jamais une commande passée.</p>
+          <ul class="attrs">
+            <li class="key"><b>id</b> <span>uuid</span></li>
+            <li class="fk"><b>order</b> <span>→ Order</span></li>
+            <li><b>role</b> <span>SHIPPING · BILLING</span></li>
+            <li><b>fullName · phone</b> <span>string</span></li>
+            <li><b>line1 · line2</b> <span>string</span></li>
+            <li><b>postalCode · city · country</b> <span>string</span></li>
+          </ul>
+          <p class="rel"><b>Contraintes</b> unique (order, role) · aucune mise à jour après création de la commande</p>
+        </article>
+
+        <article class="entity">
+          <div class="entity-top"><h4>Address</h4><span class="pill p-mvp">MVP</span></div>
+          <p class="role">Le carnet d'adresses du profil, librement modifiable. Sert à pré-remplir une commande, jamais à la décrire après coup.</p>
+          <ul class="attrs">
+            <li class="key"><b>id</b> <span>uuid</span></li>
+            <li class="fk"><b>profile</b> <span>→ Profile</span></li>
+            <li><b>label</b> <span>string — « Domicile »</span></li>
+            <li><b>line1 · line2 · postalCode · city · country</b> <span>string</span></li>
+            <li><b>isDefault</b> <span>bool</span></li>
+          </ul>
+        </article>
+
+        <article class="entity wide">
+          <div class="entity-top"><h4>Payment</h4><span class="pill p-mvp">MVP</span></div>
+          <p class="role">Un mouvement d'argent <b>qui transite par la plateforme</b>. L'encaissement chez l'acheteur et le reversement au vendeur sont deux lignes de la même table, distinguées par <code>direction</code> — pas deux entités. <b>Une vente en espèces n'en crée aucune</b> : inventer une ligne <code>provider = "cash"</code> ferait croire à un flux que nous n'avons ni vu, ni encaissé, ni capable de rembourser. Le parcours B se lit dans <code>OrderEvent</code>, pas ici.</p>
+          <ul class="attrs">
+            <li class="key"><b>id</b> <span>uuid</span></li>
+            <li class="fk"><b>order</b> <span>→ Order</span></li>
+            <li><b>direction</b> <span>CHARGE (acheteur → plateforme) · PAYOUT (plateforme → vendeur)</span></li>
+            <li><b>provider</b> <span>string — « stripe », et rien d'autre dans le schéma</span></li>
+            <li><b>externalId</b> <span>string, unique par provider — l'identifiant chez le prestataire</span></li>
+            <li><b>amount · currency</b> <span>decimal · string</span></li>
+            <li><b>status</b> <span>PENDING · AUTHORIZED · CAPTURED · FAILED · CANCELLED</span></li>
+            <li><b>rawPayload</b> <span>jsonb — la réponse du prestataire, pour audit et rejeu de webhook</span></li>
+            <li><b>settledAt</b> <span>datetime nullable</span></li>
+          </ul>
+          <p class="rel"><b>Côté Symfony</b> une interface <code>PaymentGatewayInterface</code> (autoriser, capturer, rembourser, reverser). <code>StripeGateway</code> en est la seule implémentation aujourd'hui ; un double de test en est une autre. Le domaine n'importe jamais le SDK Stripe.</p>
+        </article>
+
+        <article class="entity">
+          <div class="entity-top"><h4>Refund</h4><span class="pill p-mvp">MVP</span></div>
+          <p class="role">Un remboursement, déclenché dans l'application et exécuté par le prestataire. <b>Réservé au parcours en ligne :</b> une commande <code>paymentMethod = CASH</code> ne peut pas en porter, faute de <code>Payment</code> à rembourser. L'interface doit le dire avant la transaction, pas après.</p>
+          <ul class="attrs">
+            <li class="key"><b>id</b> <span>uuid</span></li>
+            <li class="fk"><b>order · payment</b> <span>→ Order · → Payment</span></li>
+            <li class="fk"><b>requestedBy</b> <span>→ Profile</span></li>
+            <li><b>amount · reason</b> <span>decimal · text</span></li>
+            <li><b>provider · externalId</b> <span>string</span></li>
+            <li><b>status · processedAt</b> <span>enum · datetime nullable</span></li>
+          </ul>
+        </article>
+
+        <article class="entity">
+          <div class="entity-top"><h4>Dispute · Shipment</h4><span class="pill p-mvp">MVP</span></div>
+          <p class="role">Le litige et l'expédition. Le cadrage veut déléguer les deux au maximum : ces entités tracent et escaladent, elles n'arbitrent pas.</p>
+          <ul class="attrs">
+            <li><b>Dispute</b> <span>order · opener → Profile · reason · description · status · resolution · handledBy → Account</span></li>
+            <li><b>Shipment</b> <span>order · carrier · trackingNumber · status · shippedAt · deliveredAt</span></li>
+          </ul>
+          <p class="rel"><b>Note</b> <code>Shipment</code> n'existe que si <code>Order.deliveryMethod = SHIPPING</code>. La remise en main propre se lit dans les deux dates de confirmation de <code>Order</code> et dans <code>OrderEvent</code>, sans entité dédiée. Un <code>Dispute</code> peut naître des deux parcours, mais sur une vente en espèces la plateforme ne peut que trancher et modérer : elle n'a aucun argent à rendre.</p>
+        </article>
+
+      </div>
+    </div>
+
+    <div class="domain">
+      <div class="domain-head"><h3>Dressing &amp; tenues</h3><p>Ce qu'il faut pour que l'application habille quelqu'un : contexte, préférences, mémoire.</p></div>
+      <div class="entities">
+
+        <article class="entity">
+          <div class="entity-top"><h4>Outfit</h4><span class="pill p-mvp">MVP</span></div>
+          <p class="role">Une tenue assumée par l'utilisateur, créée de zéro ou acceptée depuis une suggestion.</p>
+          <ul class="attrs">
+            <li class="key"><b>id</b> <span>uuid</span></li>
+            <li class="fk"><b>owner</b> <span>→ Profile</span></li>
+            <li><b>name</b> <span>string</span></li>
+            <li><b>occasion</b> <span>WORK · SPORT · EVENING · EVERYDAY</span></li>
+            <li><b>season</b> <span>enum nullable</span></li>
+            <li><b>source</b> <span>MANUAL · FROM_SUGGESTION</span></li>
+            <li class="fk"><b>fromSuggestion</b> <span>→ OutfitSuggestion, nullable</span></li>
+          </ul>
+          <p class="rel"><b>Relations</b> n,n <code>Garment</code> via <code>OutfitGarment</code> (position)</p>
+        </article>
+
+        <article class="entity">
+          <div class="entity-top"><h4>OutfitSuggestion</h4><span class="pill p-mvp">MVP</span><span class="pill p-new">Nouveau</span></div>
+          <p class="role">Une proposition du système, avec le contexte qui l'a produite. Permet de mesurer le taux d'acceptation sans polluer le dressing.</p>
+          <ul class="attrs">
+            <li class="key"><b>id</b> <span>uuid</span></li>
+            <li class="fk"><b>profile</b> <span>→ Profile</span></li>
+            <li><b>occasion</b> <span>enum — le contexte demandé</span></li>
+            <li><b>temperature</b> <span>smallint nullable — en degrés, au moment de la génération</span></li>
+            <li><b>weather</b> <span>SUNNY · CLOUDY · RAIN · SNOW · WIND, nullable</span></li>
+            <li><b>status</b> <span>PROPOSED · ACCEPTED · REJECTED · REPLACED</span></li>
+            <li><b>generatedAt · decidedAt</b> <span>datetime</span></li>
+          </ul>
+          <p class="rel"><b>Relations</b> n,n <code>Garment</code> via <code>OutfitSuggestionGarment</code> (position, wasReplaced) · 0,1 <code>Outfit</code> si acceptée<br><b style="display:inline">Note</b> la météo est appelée à la génération et <b>figée ici</b> : on ne stocke jamais un bulletin météo comme entité.</p>
+        </article>
+
+        <article class="entity">
+          <div class="entity-top"><h4>WearLog</h4><span class="pill p-mvp">MVP</span></div>
+          <p class="role">Qui a porté quoi, et quand. La colonne <code>profile</code> est ce qui rend l'historique juste dans un dressing familial.</p>
+          <ul class="attrs">
+            <li class="key"><b>id</b> <span>uuid</span></li>
+            <li class="fk"><b>garment</b> <span>→ Garment</span></li>
+            <li class="fk"><b>profile</b> <span>→ Profile — le porteur</span></li>
+            <li class="fk"><b>outfit</b> <span>→ Outfit, nullable</span></li>
+            <li><b>wornAt</b> <span>date</span></li>
+          </ul>
+        </article>
+
+        <article class="entity wide">
+          <div class="entity-top"><h4>GarmentVisibilityPreference</h4><span class="pill p-mvp">MVP</span><span class="pill p-new">Nouveau</span></div>
+          <p class="role">Masquer <b>plusieurs</b> vêtements du dressing par critères combinables : toutes les chemises, tout ce qui est noir, ou seulement les t-shirts noirs.</p>
+          <ul class="attrs">
+            <li class="key"><b>id</b> <span>uuid</span></li>
+            <li class="fk"><b>profile</b> <span>→ Profile</span></li>
+            <li class="fk"><b>garmentCategory</b> <span>→ GarmentCategory, nullable</span></li>
+            <li class="fk"><b>color</b> <span>→ Color, nullable</span></li>
+            <li class="fk"><b>style</b> <span>→ Style, nullable</span></li>
+            <li><b>hiddenAt</b> <span>datetime</span></li>
+            <li><b>reactivatedAt</b> <span>datetime nullable — active tant que nul</span></li>
+          </ul>
+          <p class="rel"><b>Comment ça marche</b> les trois critères se combinent en <b>ET</b>. <code>category = T-shirt</code> seul masque tous les t-shirts ; <code>category = T-shirt</code> + <code>color = Noir</code> ne masque que les t-shirts noirs ; <code>color = Noir</code> seul masque tout ce qui est noir.<br><b style="display:inline">Contraintes</b> au moins un des trois critères renseigné (<code>CHECK</code>) · index unique partiel sur (profile, garmentCategory, color, style) <code>WHERE reactivated_at IS NULL</code> : pas deux fois la même règle active, et l'historique des masquages levés reste en base.<br><b style="display:inline">Ce que ce n'est pas</b> cette entité ne vise <b>aucun <code>Garment</code> en particulier</b> : c'est un filtre évalué à l'affichage, pas une liste de pièces. Un vêtement ajouté demain qui correspond aux critères sera masqué sans rien écrire.</p>
+        </article>
+
+        <article class="entity">
+          <div class="entity-top"><h4>GarmentExclusion</h4><span class="pill p-mvp">MVP</span></div>
+          <p class="role">Une pièce écartée des suggestions, jusqu'à réactivation explicite. Aucune expiration automatique, aucune perte d'historique.</p>
+          <ul class="attrs">
+            <li class="key"><b>id</b> <span>uuid</span></li>
+            <li class="fk"><b>profile · garment</b> <span>→ Profile · → Garment</span></li>
+            <li class="fk"><b>fromSuggestion</b> <span>→ OutfitSuggestion, nullable — d'où venait le refus</span></li>
+            <li><b>reason</b> <span>text nullable</span></li>
+            <li><b>excludedAt</b> <span>datetime</span></li>
+            <li><b>reactivatedAt</b> <span>datetime nullable — active tant que nul</span></li>
+          </ul>
+          <p class="rel"><b>Contraintes</b> index unique partiel sur (profile, garment) <code>WHERE reactivated_at IS NULL</code> : une seule exclusion active à la fois, les anciennes restent en base</p>
+        </article>
+
+        <article class="entity wide">
+          <div class="entity-top"><h4>ColorPreference · StylePreference</h4><span class="pill p-mvp">MVP</span><span class="pill p-new">Nouveau</span></div>
+          <p class="role">Ce que le profil aime et n'aime pas, éventuellement selon le contexte. Deux petites tables avec de vraies clés étrangères plutôt qu'une table générique qui perdrait l'intégrité référentielle.</p>
+          <ul class="attrs">
+            <li class="key"><b>id</b> <span>uuid</span></li>
+            <li class="fk"><b>profile</b> <span>→ Profile</span></li>
+            <li class="fk"><b>color</b> <span>→ Color — ColorPreference</span></li>
+            <li class="fk"><b>style</b> <span>→ Style — StylePreference</span></li>
+            <li><b>sentiment</b> <span>LIKE · DISLIKE</span></li>
+            <li><b>context</b> <span>WORK · SPORT · EVENING · EVERYDAY, nullable — nul = toujours</span></li>
+          </ul>
+          <p class="rel"><b>Contraintes</b> unique (profile, color, context) et (profile, style, context). Changer d'avis = mettre à jour <code>sentiment</code> ; annuler = supprimer la ligne. Une troisième table de même forme suffirait pour des préférences de marque ou de catégorie, si le besoin apparaît.</p>
+        </article>
+
+      </div>
+    </div>
+
+    <div class="domain">
+      <div class="domain-head"><h3>Notifications &amp; modération</h3><p>Une seule entité de notification, et une trace complète des actions d'administration.</p></div>
+      <div class="entities">
+
+        <article class="entity wide">
+          <div class="entity-top"><h4>Notification</h4><span class="pill p-mvp">MVP</span></div>
+          <p class="role">Une entité unique pour tous les événements. Le <code>type</code> pilote l'icône, le texte et l'écran d'arrivée ; <code>data</code> porte ce qu'il faut pour ouvrir le bon contenu.</p>
+          <ul class="attrs">
+            <li class="key"><b>id</b> <span>uuid</span></li>
+            <li class="fk"><b>recipient</b> <span>→ Profile</span></li>
+            <li class="fk"><b>actor</b> <span>→ Profile, nullable — qui a déclenché</span></li>
+            <li><b>type</b> <span>FOLLOW_NEW · FOLLOW_MUTUAL · FRIEND_REQUEST · FRIEND_ACCEPTED · LOAN_REQUESTED · LOAN_ACCEPTED · LOAN_DUE_SOON · LOAN_OVERDUE · LOAN_RETURNED · ITEM_LOST · LISTING_SOLD · ORDER_PAID · ORDER_SHIPPED · REFUND_ISSUED · COMMENT_ADDED · SHARE_RECEIVED · APPROVAL_REQUESTED · APPROVAL_DECIDED · MODERATION_ACTION</span></li>
+            <li><b>title · body</b> <span>string · text</span></li>
+            <li><b>data</b> <span>jsonb — type et identifiant de la cible</span></li>
+            <li><b>readAt</b> <span>datetime nullable</span></li>
+            <li><b>pushSentAt · emailSentAt</b> <span>datetime nullables</span></li>
+          </ul>
+          <p class="rel"><b>Couvre</b> les dix-sept situations listées au brief, sans une entité par cas. Ajouter un événement = ajouter une valeur à l'énumération et un gabarit de rendu.<br><b style="display:inline">MVP</b> les notifications de <b>vente</b> (<code>LISTING_SOLD</code>, <code>ORDER_PAID</code>, <code>ORDER_SHIPPED</code>, <code>REFUND_ISSUED</code>) sont obligatoires — décision client du 21 septembre. Les autres types sont livrés si le temps le permet : l'entité et l'énumération ne changent pas, seuls les gabarits de rendu et les déclencheurs s'ajoutent.</p>
+        </article>
+
+        <article class="entity">
+          <div class="entity-top"><h4>NotificationPreference · DeviceToken</h4><span class="pill p-mvp">MVP</span></div>
+          <p class="role">Le réglage par type et par profil, et les appareils à joindre. Le jeton appartient au <b>compte</b> — c'est l'appareil qui se connecte — alors que la notification vise un <b>profil</b>.</p>
+          <ul class="attrs">
+            <li><b>NotificationPreference</b> <span>profile · type · pushEnabled · emailEnabled</span></li>
+            <li><b>DeviceToken</b> <span>account · token unique · platform IOS|ANDROID · lastSeenAt</span></li>
+          </ul>
+          <p class="rel"><b>Contraintes</b> unique (profile, type) · unique (token). L'envoi résout : profil destinataire → son compte → les jetons de ce compte, en indiquant le profil visé dans la charge utile.</p>
+        </article>
+
+        <article class="entity">
+          <div class="entity-top"><h4>RefreshToken</h4><span class="pill p-tech">Technique</span></div>
+          <p class="role">Le jeton de rafraîchissement de l'authentification JWT. Table créée et gérée par <code>gesdinet/jwt-refresh-token-bundle</code> : rien à modéliser de notre côté, elle figure ici pour que le schéma soit complet.</p>
+          <ul class="attrs">
+            <li><b>refreshToken · username</b> <span>string</span></li>
+            <li><b>valid</b> <span>datetime — date d'expiration</span></li>
+          </ul>
+          <p class="rel"><b>Relations</b> rattachée à <code>Account</code> par <code>username</code>, sans clé étrangère. Côté téléphone, le jeton est rangé par <code>expo-secure-store</code> ; le jeton d'accès (15 minutes) n'est jamais stocké en base.</p>
+        </article>
+
+        <article class="entity">
+          <div class="entity-top"><h4>Report</h4><span class="pill p-v2">V2</span></div>
+          <p class="role">Un signalement. La cible est une référence souple (<code>targetType</code> + <code>targetId</code>, sans clé étrangère) : le contenu signalé peut être supprimé, le signalement doit survivre.</p>
+          <ul class="attrs">
+            <li class="key"><b>id</b> <span>uuid</span></li>
+            <li class="fk"><b>reporter</b> <span>→ Profile</span></li>
+            <li><b>targetType</b> <span>PROFILE · ITEM · GARMENT · COMMENT · LISTING · COLLECTION · <b>POST</b></span></li>
+            <li><b>targetId</b> <span>uuid — sans contrainte référentielle, volontairement</span></li>
+            <li><b>reason</b> <span>SPAM · INAPPROPRIATE · COUNTERFEIT · HARASSMENT · OTHER</span></li>
+            <li><b>description</b> <span>text nullable</span></li>
+            <li><b>status</b> <span>OPEN · UNDER_REVIEW · ACTIONED · DISMISSED</span></li>
+            <li class="fk"><b>handledBy</b> <span>→ Account, nullable</span></li>
+            <li><b>handledAt · resolution</b> <span>datetime · text, nullables</span></li>
+          </ul>
+        </article>
+
+        <article class="entity">
+          <div class="entity-top"><h4>ModerationAction</h4><span class="pill p-new">Nouveau</span></div>
+          <p class="role">Ce que l'administrateur a fait, et pourquoi. Existe aussi sans signalement préalable, pour une action spontanée.</p>
+          <ul class="attrs">
+            <li class="key"><b>id</b> <span>uuid</span></li>
+            <li class="fk"><b>report</b> <span>→ Report, nullable</span></li>
+            <li class="fk"><b>admin</b> <span>→ Account</span></li>
+            <li><b>actionType</b> <span>HIDE_CONTENT · DELETE_CONTENT · WARN · SUSPEND_PROFILE · BAN_ACCOUNT · RESTORE</span></li>
+            <li><b>targetType · targetId</b> <span>enum · uuid</span></li>
+            <li><b>reason</b> <span>text</span></li>
+            <li><b>expiresAt</b> <span>datetime nullable — pour une suspension temporaire</span></li>
+          </ul>
+          <p class="rel"><b>Contraintes</b> table en écriture seule, comme <code>LoanEvent</code></p>
+        </article>
+
+      </div>
+    </div>
+
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>Contraintes d'unicité</h2>
+      <p>Ce que la base refuse par construction, y compris si un service se trompe.</p>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Table</th><th>Contrainte</th><th>Ce qu'elle empêche</th></tr></thead>
+        <tbody>
+          <tr><td><code>account</code></td><td>unique (email)</td><td>Deux comptes sur la même adresse</td></tr>
+          <tr><td><code>profile</code></td><td>unique (username)</td><td>Deux identités publiques homonymes</td></tr>
+          <tr><td><code>profile</code></td><td>unique partiel (account) <code>WHERE is_default</code></td><td>Deux profils par défaut sur le même compte</td></tr>
+          <tr><td><code>profile</code></td><td><code>CHECK</code> type CHILD ⇒ guardian non nul<br><code>CHECK</code> guardian ≠ id</td><td><b>Un enfant sans tuteur</b>, donc sans contrôle parental possible, et un profil son propre tuteur</td></tr>
+          <tr><td><code>profile_permission</code></td><td>unique (profile, permission)</td><td>Deux réglages contradictoires pour la même permission</td></tr>
+          <tr><td><code>friendship</code></td><td>unique (least(a,b), greatest(a,b))</td><td>Deux lignes pour la même paire, une dans chaque sens</td></tr>
+          <tr><td><code>follow</code></td><td>unique (follower, following)</td><td>Un abonnement en double</td></tr>
+          <tr><td><code>block</code></td><td>unique (blocker, blocked)</td><td>Un blocage en double</td></tr>
+          <tr><td><code>loan</code></td><td>unique partiel (item) <code>WHERE status = 'ACTIVE'</code><br>unique partiel (garment) <code>WHERE status = 'ACTIVE'</code></td><td><b>Deux prêts actifs sur le même objet</b> — la règle métier la plus importante, garantie en base et pas seulement dans le service</td></tr>
+          <tr><td><code>garment_exclusion</code></td><td>unique partiel (profile, garment) <code>WHERE reactivated_at IS NULL</code></td><td>Deux exclusions actives simultanées, tout en gardant l'historique des anciennes</td></tr>
+          <tr><td><code>share</code></td><td>unique (token)</td><td>Deux liens de partage identiques</td></tr>
+          <tr><td><code>share</code></td><td><code>CHECK (audience IN ('FRIENDS','SPECIFIC') OR access_level = 'VIEW')</code></td><td><b>Un partage aux abonnés ou par lien qui autoriserait les commentaires.</b> Sans cette contrainte, rien n'empêcherait un développeur de créer <code>Share(audience=FOLLOWERS, accessLevel=COMMENT)</code> — l'erreur ne se verrait qu'en production</td></tr>
+          <tr><td><code>share_recipient</code></td><td>unique (share, profile)</td><td>Un destinataire ajouté deux fois</td></tr>
+          <tr><td><code>size_value</code></td><td>unique (size_system, label)</td><td>Deux « M » dans la même échelle</td></tr>
+          <tr><td><code>item_media</code> · <code>garment_media</code></td><td>unique (item, media) · unique (garment, media)</td><td>La même photo deux fois dans une galerie</td></tr>
+          <tr><td><code>order</code></td><td>unique (reference) · unique (listing)</td><td>Deux commandes sur la même annonce</td></tr>
+          <tr><td><code>order_address</code></td><td>unique (order, role)</td><td>Deux adresses de livraison sur une commande</td></tr>
+          <tr><td><code>payment</code></td><td>unique (provider, external_id)</td><td>Un webhook rejoué qui créerait un double encaissement</td></tr>
+          <tr><td><code>notification_preference</code></td><td>unique (profile, type)</td><td>Deux réglages pour le même type d'alerte</td></tr>
+          <tr><td><code>device_token</code></td><td>unique (token)</td><td>Un même appareil enregistré plusieurs fois</td></tr>
+          <tr><td><code>color_preference</code> · <code>style_preference</code></td><td>unique (profile, cible, context)</td><td>Aimer et détester la même couleur dans le même contexte</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>Index importants</h2>
+      <p>Chacun sert un écran précis de la maquette v2. PostgreSQL ayant été retenu, les index partiels et <code>pg_trgm</code> sont disponibles.</p>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Index</th><th>Sert</th></tr></thead>
+        <tbody>
+          <tr><td><code>item (owner_id, availability)</code></td><td>L'écran « Mes objets » et ses filtres de statut</td></tr>
+          <tr><td><code>item (room_id)</code> · <code>item (box_id)</code></td><td>« Vue pièce Garage » et « Contenu du carton »</td></tr>
+          <tr><td>GIN <code>pg_trgm</code> sur <code>item (name)</code> et <code>garment (name)</code></td><td>La recherche tolérante aux fautes : « perseuse » trouve « Perceuse Bosch »</td></tr>
+          <tr><td>GIN sur <code>to_tsvector(name, description)</code></td><td>La recherche plein texte, accents ignorés via <code>unaccent</code></td></tr>
+          <tr><td><code>garment (owner_id, category_id, size_id)</code></td><td>Les filtres du dressing : « toutes mes chaussures en 42 »</td></tr>
+          <tr><td><code>loan (status, due_date)</code></td><td>L'écran des retards et le job de relance quotidien</td></tr>
+          <tr><td><code>loan (borrower_id, status)</code></td><td>« J'ai emprunté »</td></tr>
+          <tr><td><code>loan_event (loan_id, occurred_at)</code></td><td>Le fil d'historique d'un prêt</td></tr>
+          <tr><td><code>listing (item_id, status)</code> · <code>listing (garment_id, status)</code></td><td>Le calcul dérivé de « en vente », sur chaque carte de liste</td></tr>
+          <tr><td><code>listing (status, published_at DESC)</code></td><td>Le fil des annonces</td></tr>
+          <tr><td><code>share (owner_id, revoked_at)</code></td><td>« Mes partages » et la révocation en masse</td></tr>
+          <tr><td><code>share_recipient (profile_id)</code></td><td>« Contenus partagés avec moi » — le chemin d'accès le plus chaud du contrôle d'accès</td></tr>
+          <tr><td><code>comment (share_id)</code></td><td>Les commentaires d'un contexte de partage</td></tr>
+          <tr><td><code>collection_entry (collection_id, z_index)</code></td><td>Le rendu ordonné d'un moodboard</td></tr>
+          <tr><td><code>wear_log (garment_id, worn_at DESC)</code></td><td>« Porté récemment » dans les suggestions</td></tr>
+          <tr><td><code>notification (recipient_id, read_at, created_at DESC)</code></td><td>L'écran Notifications et le compteur de non-lues</td></tr>
+          <tr><td><code>approval_request (approver_id, status)</code></td><td>Le tableau des demandes en attente côté parent</td></tr>
+          <tr><td><code>media (owner_id, created_at DESC)</code></td><td>Le sélecteur de médias au moment de composer un moodboard</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>Garanti en base, garanti dans le code</h2>
+      <p>La règle : tout ce qui peut être posé en base y est posé. Ce qui dépend d'un contexte applicatif vit dans un service ou un validateur — jamais dispersé.</p>
+    </div>
+    <div class="cols" style="align-items:start">
+      <div class="entity" style="gap:12px">
+        <div class="entity-top"><h4 style="font-family:var(--display);font-weight:700;font-size:17px">En base</h4><span class="pill p-mvp">PostgreSQL</span></div>
+        <ul style="font-size:14.5px">
+          <li>Toutes les clés étrangères, avec une politique <code>ON DELETE</code> explicite pour chacune.</li>
+          <li><code>NOT NULL</code> sur <code>item.room_id</code>, <code>garment.room_id</code>, <code>box.room_id</code> — l'ancrage en pièce est structurel.</li>
+          <li>Les dix-huit contraintes d'unicité listées ci-dessus, dont deux index partiels qui portent de vraies règles métier.</li>
+          <li><code>CHECK</code> « exactement une clé sur deux » partout où la cible est <code>Item</code> ou <code>Garment</code> : <code>loan</code>, <code>listing</code>, <code>scan</code>, <code>memory</code>, <code>location_history</code>, <code>collection_entry</code>.</li>
+          <li><code>CHECK</code> sur les montants : <code>price >= 0</code>, <code>amount > 0</code>.</li>
+          <li><code>CHECK</code> sur le couple paiement / livraison : <code>payment_method = 'CASH'</code> impose <code>delivery_method = 'HANDOVER'</code>.</li>
+          <li><code>CHECK</code> anti-réflexivité : <code>requester &lt;&gt; addressee</code>, <code>follower &lt;&gt; following</code>, <code>lender &lt;&gt; borrower</code>, <code>blocker &lt;&gt; blocked</code>.</li>
+          <li>Révocation des droits <code>UPDATE</code> et <code>DELETE</code> sur <code>loan_event</code> et <code>moderation_action</code> : les journaux sont en écriture seule pour de bon.</li>
+        </ul>
+      </div>
+      <div class="entity" style="gap:12px">
+        <div class="entity-top"><h4 style="font-family:var(--display);font-weight:700;font-size:17px">Dans Symfony</h4><span class="pill p-tech">Services &amp; validateurs</span></div>
+        <ul style="font-size:14.5px">
+          <li><b>Un seul voter</b> <code>ProfileVoter</code> lit <code>ProfilePermission</code> et la politique par défaut du type de profil. Aucun <code>if isChild()</code> ailleurs.</li>
+          <li><b>Un seul voter</b> <code>ResourceAccessVoter</code> résout l'accès : propriétaire, <code>Share</code> actif, audience, <code>accessLevel</code>, blocage.</li>
+          <li>Pas de sous-prêt : <code>lender</code> doit être le propriétaire et l'objet ne doit pas être <code>BORROWED</code>.</li>
+          <li>Vente et prêt exclusifs : refus de publier une annonce sur un objet prêté, refus de prêter un objet vendu.</li>
+          <li>Mise à jour de <code>availability</code> aux transitions de <code>Loan</code> et d'<code>Order</code>, dans la même transaction que l'événement.</li>
+          <li>Cohérence taille / catégorie : <code>garment.size.sizeSystem</code> = <code>garment.category.sizeSystem</code>.</li>
+          <li>Déplacement d'un carton : réaffectation transactionnelle de <code>room</code> et <code>storage</code> sur tout son contenu.</li>
+          <li>Refus de supprimer une <code>Room</code>, un <code>Storage</code> ou un <code>Box</code> non vide sans destination choisie.</li>
+          <li>Copie de l'adresse dans <code>OrderAddress</code> à la validation de la commande.</li>
+          <li>Anonymisation RGPD, avec conservation des pièces comptables.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="table-wrap" style="margin-top:20px">
+      <table>
+        <thead><tr><th>Quand on supprime…</th><th>Politique</th><th>Raison</th></tr></thead>
+        <tbody>
+          <tr><td><code>Profile</code></td><td>Soft delete + transfert au tuteur</td><td>On anonymise et on transfère, on ne détruit pas : les biens sont ceux du foyer, les prêts et commandes impliquent des tiers. Bloqué tant qu'un prêt est actif.</td></tr>
+          <tr><td><code>Profile.guardian</code></td><td><code>RESTRICT</code></td><td>Supprimer un tuteur laisserait un profil enfant sans contrôle parental</td></tr>
+          <tr><td><code>Item</code> · <code>Garment</code></td><td>Soft delete (<code>deletedAt</code>)</td><td>Un objet vendu ou prêté reste référencé par une commande et un historique</td></tr>
+          <tr><td><code>Room</code> · <code>Storage</code> · <code>Box</code></td><td><code>RESTRICT</code> si non vide</td><td>Perdre l'emplacement de cent objets d'un clic n'est pas une suppression, c'est un accident</td></tr>
+          <tr><td><code>Collection</code></td><td><code>CASCADE</code> sur <code>CollectionEntry</code></td><td>Une entrée n'a pas de sens hors de sa collection — les objets référencés ne bougent pas</td></tr>
+          <tr><td><code>Media</code></td><td><code>RESTRICT</code> si référencé</td><td>Supprimer un fichier encore affiché sur une annonce casserait la page</td></tr>
+          <tr><td><code>Share</code></td><td>Jamais supprimé, <code>revokedAt</code></td><td>Les commentaires écrits sous ce partage gardent leur contexte</td></tr>
+          <tr><td><code>Comment</code></td><td>Soft delete (<code>deletedAt</code>)</td><td>Supprimer un commentaire parent casserait le fil de réponses</td></tr>
+          <tr><td><code>Order</code> · <code>Payment</code> · <code>Refund</code></td><td>Jamais supprimé</td><td>Conservation comptable, qui prime sur le droit à l'effacement</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>Les règles métier</h2>
+      <p>Dix-neuf règles. Celles qui portent une mention « en base » sont garanties par une contrainte, pas seulement par du code.</p>
+    </div>
+    <div class="rules">
+      <div class="rule"><b>Un seul prêt actif par objet.</b> <span class="pill p-mvp" style="margin-left:4px">en base</span> — index unique partiel sur <code>loan (item) WHERE status = 'ACTIVE'</code>.</div>
+      <div class="rule"><b>Pas de sous-prêt.</b> Le prêteur doit être le propriétaire, et un objet <code>BORROWED</code> ne peut pas faire l'objet d'un nouveau prêt. Bloqué techniquement, pas seulement masqué dans l'interface.</div>
+      <div class="rule"><b>Le propriétaire reste propriétaire pendant le prêt.</b> <code>Item.owner</code> ne change jamais au cours d'un <code>Loan</code>. Seule une <code>Order</code> complétée transfère la propriété.</div>
+      <div class="rule"><b>Espèces implique main propre.</b> <span class="pill p-mvp" style="margin-left:4px">en base</span> — <code>CHECK (payment_method &lt;&gt; 'CASH' OR delivery_method = 'HANDOVER')</code>. Payer un colis en espèces n'a pas de sens, et aucun écran ne doit pouvoir y mener.</div>
+      <div class="rule"><b>Une vente en espèces se clôt à deux voix.</b> <code>COMPLETED</code> exige <code>handoverConfirmedBySellerAt</code> <b>et</b> <code>handoverConfirmedByBuyerAt</code>. Une seule confirmation laisse la commande en <code>AWAITING_HANDOVER</code> : c'est la seule protection possible quand l'argent ne passe pas par nous.</div>
+      <div class="rule"><b>Pas de remboursement sans encaissement.</b> <span class="pill p-mvp" style="margin-left:4px">en base</span> — un <code>Refund</code> référence toujours un <code>Payment</code>, donc une commande en espèces ne peut pas en porter.</div>
+      <div class="rule"><b>Vente et prêt s'excluent.</b> Publier une annonce sur un objet <code>LENT</code> est refusé ; prêter un objet <code>SOLD</code> aussi.</div>
+      <div class="rule"><b>« En vente » n'est pas un statut.</b> C'est l'existence d'une <code>Listing</code> au statut <code>PUBLISHED</code> ou <code>RESERVED</code>. Une seule source de vérité.</div>
+      <div class="rule"><b>« En retard » n'est pas un statut.</b> C'est <code>status = ACTIVE</code> et <code>dueDate</code> dépassée. Repousser la date suffit à annuler le retard.</div>
+      <div class="rule"><b>Disponibilité et condition sont indépendantes.</b> Constater un dommage au retour d'un prêt écrit <code>condition</code>, jamais <code>availability</code>.</div>
+      <div class="rule"><b>L'emplacement habituel survit au prêt.</b> <code>room</code>, <code>storage</code> et <code>box</code> ne bougent pas ; « Chez Thomas » est dérivé du <code>Loan</code> actif. Au retour, il n'y a rien à restaurer.</div>
+      <div class="rule"><b>Déplacer est une action, pas un état.</b> Un objet déplacé reste <code>AVAILABLE</code>. Changer de logement consiste à pointer une <code>Room</code> d'une autre <code>Place</code>.</div>
+      <div class="rule"><b>Tout est privé par défaut.</b> Aucun accès à un contenu qui ne vous appartient pas sans un <code>Share</code> actif, non expiré et non révoqué — ou un lien dont le token correspond.</div>
+      <div class="rule"><b>Une amitié n'ouvre rien.</b> Être ami ne donne accès à aucun contenu. Un <code>Share</code> d'audience <code>FRIENDS</code> reste un partage explicite, posé sur une ressource précise par son propriétaire.</div>
+      <div class="rule"><b>Un abonnement n'ouvre rien non plus,</b> et l'abonnement mutuel <b>propose</b> l'amitié sans jamais la créer.</div>
+      <div class="rule"><b>Les commentaires suivent le niveau d'accès.</b> <code>VIEW</code> ne les montre pas, <code>VIEW_COMMENTS</code> les montre en lecture, <code>COMMENT</code> autorise l'écriture. Révoquer le partage retire l'accès sans effacer les commentaires.</div>
+      <div class="rule"><b>Un abonné ne commente jamais, et ne voit jamais les commentaires.</b> <span class="pill p-mvp" style="margin-left:4px">en base</span> — les audiences <code>FOLLOWERS</code> et <code>LINK</code> sont bornées à <code>accessLevel = VIEW</code>. Les commentaires restent entre amis choisis, comme l'annonce l'écran de partage.</div>
+      <div class="rule"><b>Toutes les actions sensibles d'un profil enfant passent par le même chemin.</b> Ami, abonnement, partage, commentaire, prêt donné, prêt reçu, achat, vente : chacune est une clé de <code>ProfilePermission</code>, et chacune produit une <code>ApprovalRequest</code> quand son mode vaut <code>REQUIRES_APPROVAL</code>. Aucune n'est traitée à part, et aucune n'échappe au contrôle parce qu'elle aurait été oubliée.</div>
+      <div class="rule"><b>Une collection ne possède rien.</b> La supprimer n'efface aucun objet, aucun vêtement, aucun média ; en retirer un élément non plus.</div>
+      <div class="rule"><b>Seuls les amis achètent.</b> Une <code>Order</code> exige une <code>Friendship</code> au statut <code>ACCEPTED</code>. Décision déjà prise par le client, à ne pas rediscuter.</div>
+      <div class="rule"><b>Une permission en mode ASK bloque l'action et crée une demande.</b> L'action n'est rejouée qu'après <code>APPROVED</code>. C'est le seul mécanisme de contrôle parental : il n'y a pas de branche <code>isChild()</code> ailleurs dans le code.</div>
+      <div class="rule"><b>L'identité vit sur le profil, jamais sur le compte.</b> <code>firstName</code>, <code>lastName</code> et <code>dateOfBirth</code> sont sur <code>Profile</code>. Un compte qui gère un adulte et un enfant porte deux identités distinctes, et <code>Account</code> n'en connaît aucune.</div>
+      <div class="rule"><b>Un profil CHILD a toujours un tuteur, qui est un profil ADULT du même compte,</b> et qui n'est jamais lui-même. <span class="pill p-mvp" style="margin-left:4px">partiellement en base</span> — deux <code>CHECK</code> pour l'existence et la non-réflexivité, un validateur pour le type et l'appartenance au compte.</div>
+      <div class="rule"><b>Un enfant ne touche ni à sa tutelle ni à son type.</b> Les deux champs sont hors des groupes d'écriture que l'API expose au profil lui-même, et le voter refuse l'opération même par appel direct.</div>
+      <div class="rule"><b>Le contenu appartient au profil, pas au compte.</b> Partager un <code>Account</code> ne donne aucun droit sur les objets d'un autre profil : seul <code>owner_id</code> fait foi, et le voter ne remonte jamais au compte pour accorder un accès.</div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>Traçabilité modèle ↔ maquette</h2>
+      <p>Passe de cohérence menée sur le fichier Figma réel, pas de mémoire : <b>16 sections, 227 frames</b> relevées le 15 septembre 2026 sur la page <code>Maquette v2</code>. Chaque entité est rattachée aux écrans qui l'utilisent ; ce qui n'est rattaché à rien est signalé.</p>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Section</th><th>Frames</th><th>Entités mobilisées</th></tr></thead>
+        <tbody>
+          <tr><td>01 — Authentification</td><td>2</td><td><code>Account</code> <code>Profile</code></td></tr>
+          <tr><td>02 — Accueil</td><td>8</td><td><code>Profile</code> <code>Item</code> <code>Garment</code> <code>Loan</code> <code>Notification</code></td></tr>
+          <tr><td>03 — Inventaire / objets</td><td>21</td><td><code>Item</code> <code>ItemCategory</code> <code>Media</code> <code>Scan</code> <code>Memory</code> <code>Loan</code> <code>LoanEvent</code> <code>LocationHistory</code> <code>Room</code> <code>Storage</code> <code>Box</code></td></tr>
+          <tr><td>04 — Logements &amp; rangements</td><td>18</td><td><code>Place</code> <code>Room</code> <code>Storage</code> <code>Box</code> <code>Item</code> <code>Media</code></td></tr>
+          <tr><td>05 — Dressing / vêtements</td><td>20</td><td><code>Garment</code> <code>GarmentCategory</code> <code>SizeSystem</code> <code>SizeValue</code> <code>Brand</code> <code>Color</code> <code>Style</code> <code>WearLog</code> <code>Listing</code> <code>Loan</code></td></tr>
+          <tr><td>06 — Suggestions de tenues</td><td>13</td><td><code>Outfit</code> <code>OutfitSuggestion</code> <code>GarmentExclusion</code> <code>ColorPreference</code> <code>StylePreference</code> <code>WearLog</code></td></tr>
+          <tr><td>07 — Prêts</td><td>12</td><td><code>Loan</code> <code>LoanEvent</code> <code>Friendship</code> <code>Item</code> <code>Notification</code></td></tr>
+          <tr><td>08 — Amis &amp; abonnés</td><td>17</td><td><code>Friendship</code> <code>Follow</code> <code>Profile</code> <code>ApprovalRequest</code> <code>Notification</code></td></tr>
+          <tr><td>09 — Partage privé</td><td>14</td><td><code>Share</code> (5 sous-types) <code>ShareRecipient</code> <code>Comment</code></td></tr>
+          <tr><td>10 — Vente</td><td>11</td><td><code>Listing</code> <code>ListingMedia</code> <code>Order</code> <code>Payment</code> <code>Friendship</code></td></tr>
+          <tr><td>11 — Paiement / livraison</td><td>12</td><td><code>Order</code> <code>OrderAddress</code> <code>Address</code> <code>Payment</code> <code>Refund</code> <code>Dispute</code> <code>Shipment</code></td></tr>
+          <tr><td>12 — Compte / paramètres</td><td>15</td><td><code>Account</code> <code>Profile</code> <code>ProfilePermission</code> <code>ApprovalRequest</code> <code>NotificationPreference</code></td></tr>
+          <tr><td>13 — Notifications / recherche / états système</td><td>15</td><td><code>Notification</code> <code>DeviceToken</code> + toutes les suppressions</td></tr>
+          <tr><td>14 — Back-office</td><td>11</td><td><code>Account</code> <code>Report</code> <code>ModerationAction</code> <code>Order</code> <code>Dispute</code> <code>Refund</code> <code>ItemCategory</code> <code>GarmentCategory</code></td></tr>
+          <tr><td>15 — Collections</td><td>27</td><td><code>Collection</code> <code>CollectionEntry</code> <code>Media</code> <code>CollectionShare</code> <code>Comment</code></td></tr>
+          <tr><td>16 — Fil d'actualité</td><td>11</td><td><code>Post</code> <code>PostComment</code> <code>PostMedia</code> <code>Share</code> <code>Report</code> — <span class="pill p-new">ajoutées par cette passe</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section-head" style="margin-top:36px;margin-bottom:14px">
+      <h3 style="font-size:19px;font-weight:800">Les écrans qui prouvent chaque règle</h3>
+      <p>Les frames les plus spécifiques, celles qui ne pourraient pas exister si le modèle était faux.</p>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Écran</th><th>Ce qu'il prouve</th></tr></thead>
+        <tbody>
+          <tr><td><code>Objet — Fiche · Endommagé</code> et <code>Objet — Fiche · Prêté</code></td><td>La séparation <code>availability</code> / <code>condition</code>. Ces deux fiches ne pourraient pas coexister avec un champ unique.</td></tr>
+          <tr><td><code>Objet — Fiche · À ranger</code></td><td><code>storage</code> et <code>box</code> nuls, <code>room</code> renseignée. Confirme que l'ancrage en pièce est le seul obligatoire.</td></tr>
+          <tr><td><code>Objet — Déplacé · Confirmation</code></td><td>« État inchangé : Disponible ». Déplacer est une action, jamais un statut.</td></tr>
+          <tr><td><code>Objet — Historique des prêts</code></td><td><code>LoanEvent</code>. Un champ de statut seul ne pourrait pas reconstituer ce fil.</td></tr>
+          <tr><td><code>Objet — Scan · Échec</code></td><td><code>Scan.status = FAILED</code> sans <code>resultingItem</code>. Justifie que <code>Scan</code> soit une entité et pas un champ sur <code>Item</code>.</td></tr>
+          <tr><td><code>Objet — Notes et souvenir</code></td><td><code>Memory</code>, daté et illustré — ce qu'un champ texte <code>story</code> ne portait pas.</td></tr>
+          <tr><td><code>Partage — Accès abonné · Lecture seule</code></td><td><code>audience = FOLLOWERS</code> borné à <code>accessLevel = VIEW</code>. L'écran dit « te suivre ne lui donne accès à rien de privé ».</td></tr>
+          <tr><td><code>Partage — Invité · Lien révoqué ou expiré</code></td><td><code>revokedAt</code> et <code>expiresAt</code>, et le fait que le <code>Share</code> survive à sa révocation.</td></tr>
+          <tr><td><code>Collection — Commentaires · Désactivés</code></td><td><code>Collection</code> sans <code>Share</code> de niveau <code>COMMENT</code>. Le propriétaire contrôle, pas le statut d'ami.</td></tr>
+          <tr><td><code>Collection — Créer · Moodboard</code></td><td><code>CollectionEntry</code> et ses champs de mise en page. Une liaison n,n simple ne suffirait pas.</td></tr>
+          <tr><td><code>Compte — Autorisations parentales</code></td><td><code>ProfilePermission</code> et ses trois modes, lisibles tels quels dans l'écran.</td></tr>
+          <tr><td><code>Compte — Demande pour Noé · Décision</code></td><td><code>ApprovalRequest</code> avec <code>approver</code> résolu depuis le tuteur.</td></tr>
+          <tr><td><code>Compte — Profil famille</code> et <code>Changer de profil</code></td><td>Un <code>Account</code>, plusieurs <code>Profile</code>, chacun sa penderie.</td></tr>
+          <tr><td><code>Tenue — Préférence réactivée</code></td><td><code>GarmentExclusion.reactivatedAt</code>. Supprimer la ligne perdrait cet écran.</td></tr>
+          <tr><td><code>Fil — Publication</code></td><td><code>Post</code> + <code>PostComment</code> + le <code>Share</code> porté par la publication : « Seuls Rafael et ses amis autorisés voient ces commentaires ».</td></tr>
+          <tr><td><code>Admin — Détail d'un signalement</code></td><td><code>Report</code> et <code>ModerationAction</code> : qui a signalé, qui a traité, quelle décision.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section-head" style="margin-top:36px;margin-bottom:14px">
+      <h3 style="font-size:19px;font-weight:800">Ce qui n'est encore représenté nulle part</h3>
+    </div>
+    <div class="open">
+      <div class="open-item"><span class="pill p-new" style="align-self:flex-start">Corrigé</span><h3>Le fil d'actualité</h3><p>Onze écrans sans entité. <code>Post</code>, <code>PostComment</code> et <code>PostMedia</code> ajoutés par cette passe, avec le <code>Share</code> porté par la publication. <b>Seul trou structurel trouvé.</b></p></div>
+      <div class="open-item"><span class="pill p-new" style="align-self:flex-start">Lot 29 livré</span><h3>Le paiement en espèces</h3><p>Décidé le 21 septembre, <b>absent de la maquette</b>. Le lot 09 ne connaît que la carte bancaire : l'écran <code>Livraison — Remise en main propre</code> affiche « Thomas est payé à ce moment-là », donc un paiement en ligne suivi d'un retrait. Il manque au minimum le choix du mode de paiement à la commande, et l'écran de double confirmation à la remise. Le <b>lot 29</b> ajoute les trois écrans manquants — <code>Paiement — Mode de paiement</code>, <code>Livraison — Remise · Paiement en espèces</code>, <code>Paiement — Remise confirmée · Espèces</code> — et le prototype les relie. <b>Écrit et validé au banc de test, pas encore exécuté dans Figma.</b></p></div>
+      <div class="open-item"><span class="pill p-valider" style="align-self:flex-start">Sans écran</span><h3><code>LocationHistory</code></h3><p>Aucun écran ne l'affiche : <code>Objet — Déplacé · Confirmation</code> montre le déplacement, jamais l'historique. La table est pourtant dans le MVP depuis le 18 septembre : elle est alimentée dès la première migration, et l'écran d'historique reste à ajouter à la maquette si on veut l'exposer.</p></div>
+      <div class="open-item"><span class="pill p-valider" style="align-self:flex-start">Sans écran</span><h3><code>Block</code></h3><p>Le blocage est modélisé mais n'apparaît sur aucune frame — ni action de blocage, ni liste de comptes bloqués. Soit un écran manque, soit la fonctionnalité sort du périmètre.</p></div>
+      <div class="open-item"><span class="pill p-valider" style="align-self:flex-start">Sans écran</span><h3>Le second logement</h3><p><code>Place.isPrimary</code> et le multi-logement sont modélisés ; <code>Logement — Mes logements</code> les liste, mais aucun écran ne montre un objet déplacé d'un logement à l'autre. Le déplacement inter-<code>Place</code> reste à vérifier côté parcours.</p></div>
+      <div class="open-item"><span class="pill p-tech" style="align-self:flex-start">Sans écran</span><h3><code>Memory</code> et <code>Brand</code></h3><p><code>Objet — Notes et souvenir</code> couvre <code>Memory</code>. En revanche aucun écran ne gère les marques : <code>Brand</code> est alimenté en référentiel, sans administration — à confirmer côté back-office.</p></div>
+      <div class="open-item"><span class="pill p-valider" style="align-self:flex-start">À reformuler</span><h3>« Paiements traités par Stripe »</h3><p>Libellé du back-office à remplacer par « Prestataire de paiement : Stripe ». Seule modification demandée dans la maquette — voir la table ci-dessous.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>L'écran et la base ne disent pas la même chose</h2>
+      <p>Plusieurs libellés de la maquette sont des <b>états calculés</b>, pas des colonnes. C'est volontaire : l'interface parle la langue de l'utilisateur, la base garde une seule source de vérité par fait. Cette table est le contrat entre les deux — c'est elle qu'il faut relire avant d'écrire une entité Doctrine.</p>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>L'écran affiche</th><th>La base stocke</th><th>Pourquoi pas une colonne</th></tr></thead>
+        <tbody>
+          <tr><td><b>À vendre</b></td><td><code>Item.availability = AVAILABLE</code><br>+ une <code>Listing</code> au statut <code>PUBLISHED</code> ou <code>RESERVED</code></td><td><b>Ne jamais remettre <code>FOR_SALE</code> dans <code>availability</code>.</b> Deux sources pour le même fait divergent : retirer une annonce sans repasser l'objet en disponible le rendrait invendable et improuvable.</td></tr>
+          <tr><td><b>Vendu</b></td><td><code>Item.availability = SOLD</code> — là c'est bien une colonne</td><td>C'est un état terminal de l'objet, pas de l'annonce : il survit à la suppression de la <code>Listing</code>.</td></tr>
+          <tr><td><b>En retard</b></td><td><code>Loan.status = ACTIVE</code> et <code>dueDate</code> dépassée</td><td>Repousser la date de retour doit annuler le retard immédiatement. Un statut écrit par une tâche de nuit ne sait pas revenir en arrière.</td></tr>
+          <tr><td><b>Chez Thomas</b></td><td><code>room</code>, <code>storage</code> et <code>box</code> inchangés<br>+ le <code>Loan</code> actif et son <code>borrower</code></td><td>L'emplacement habituel ne doit pas être écrasé, sinon il n'y a rien à retrouver au retour.</td></tr>
+          <tr><td><b>Endommagé</b></td><td><code>condition = DAMAGED</code>, indépendamment de <code>availability</code></td><td>Un objet peut être prêté <i>et</i> abîmé. Ce sont deux axes, pas deux valeurs du même champ.</td></tr>
+          <tr><td><b>À ranger</b></td><td>Un objet dont <code>storage</code> et <code>box</code> sont nuls</td><td>C'est l'absence de précision d'emplacement, pas un statut. L'objet reste disponible.</td></tr>
+          <tr><td><b>Lien expiré</b> · <b>Accès révoqué</b></td><td><code>Share.expiresAt</code> dépassée · <code>Share.revokedAt</code> renseignée</td><td>Le partage n'est jamais supprimé : les commentaires écrits sous son autorité gardent leur contexte.</td></tr>
+          <tr><td><b>Abonnement mutuel</b></td><td>Deux lignes <code>Follow</code> croisées</td><td>Aucune entité « relation mutuelle » : c'est une lecture, et elle <i>propose</i> l'amitié sans jamais la créer.</td></tr>
+          <tr><td><b>En attente de l'accord de Mathis</b></td><td><code>ApprovalRequest.status = PENDING</code>, <code>approver</code> = le tuteur</td><td>L'attente est un fait de la demande, pas de l'objet sur lequel elle porte.</td></tr>
+          <tr><td><b>Paiements traités par Stripe</b> <span class="pill p-valider">à reformuler</span></td><td><code>Payment.provider = 'stripe'</code>, <code>externalId</code></td><td><b>Le libellé du back-office contredit le modèle.</b> Écrire « Prestataire de paiement : Stripe » plutôt que « traités par Stripe » : le prestataire est une valeur de colonne remplaçable, pas une dépendance du domaine. Seul changement à faire dans la maquette.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>Décisions client — tranchées le 21 septembre</h2>
+      <p>Les huit questions posées dans <code>PENDERIE_QUESTIONS_VALIDATION.md</code> ont toutes reçu une réponse. Ce qui reste ouvert ne dépend plus du client : la technologie de scan imposée par le module, et les trois validations de l'encadrant.</p>
+    </div>
+    <div class="open">
+      <div class="open-item"><span class="pill p-mvp" style="align-self:flex-start">Tranché</span><h3>Le dressing ET les suggestions entrent dans le MVP</h3><p>Réponse la plus lourde de conséquences : sept entités basculent en MVP — <code>Outfit</code>, <code>OutfitSuggestion</code>, <code>WearLog</code>, <code>GarmentExclusion</code>, <code>ColorPreference</code>, <code>StylePreference</code>, <code>GarmentVisibilityPreference</code> — et avec elles <code>Garment</code>, les systèmes de tailles et les référentiels mode. « L'app m'habille » n'est plus une promesse de V2 : c'est le différenciant à livrer, avec son moteur (météo, historique de port, exclusions, goûts).</p></div>
+      <div class="open-item"><span class="pill p-mvp" style="align-self:flex-start">Tranché</span><h3>Le prêt est dans le MVP, sans date de retour obligatoire</h3><p><code>Loan.dueDate</code> reste <code>NULL</code>able : l'interface affiche « Retour prévu : non défini ». Le cycle complet est conservé — demande, acceptation, réception, prêt actif, retour, confirmation — donc <code>LoanEvent</code>, <code>receivedAt</code> et <code>returnDeclaredAt</code> restent. Le client n'a pas contesté la confirmation de réception : elle est maintenue.</p></div>
+      <div class="open-item"><span class="pill p-mvp" style="align-self:flex-start">Tranché</span><h3>Supprimer un profil enfant rattache tout au tuteur</h3><p>Pas de choix au cas par cas, pas de suppression : objets, vêtements, lieux, collections, tenues et souvenirs sont réécrits vers le tuteur. Le reste du tableau ne bouge pas — un prêt actif bloque toujours la suppression, les traces sociales sont anonymisées plutôt qu'effacées.</p></div>
+      <div class="open-item"><span class="pill p-mvp" style="align-self:flex-start">Tranché</span><h3>À la majorité, c'est le tuteur qui valide le détachement</h3><p>Rien n'est automatique au 18<sup>e</sup> anniversaire. Le tuteur décide si le profil se détache : s'il valide, le profil passe en <code>ADULT</code>, la tutelle se clôt (<code>Guardianship.endedAt</code>) et les <code>ProfilePermission</code> deviennent sans objet. S'il ne valide pas, la tutelle continue. Le parcours reste post-MVP ; le schéma, lui, le permet déjà.</p></div>
+      <div class="open-item"><span class="pill p-mvp" style="align-self:flex-start">Tranché</span><h3>Commentaires oui, frais non</h3><p>Les annonces de vente acceptent les commentaires : le sous-type <code>ListingComment</code> est confirmé, et le niveau <code>VIEW_COMMENTS</code> le gouverne comme ailleurs. Aucune commission n'est prélevée : <code>Order.feeAmount</code> disparaît, <code>totalAmount</code> égale <code>itemAmount</code> et le versement au vendeur est intégral, déduction faite des seuls frais Stripe.</p></div>
+      <div class="open-item"><span class="pill p-mvp" style="align-self:flex-start">Tranché</span><h3>Notifications : la vente est obligatoire, le reste suit</h3><p>Les quatre types liés à la vente doivent être livrés. <code>Notification</code>, <code>NotificationPreference</code> et <code>DeviceToken</code> restaient de toute façon en MVP : la réponse ne change pas le schéma, elle fixe l'ordre d'implémentation.</p></div>
+      <div class="open-item"><span class="pill p-mvp" style="align-self:flex-start">Tranché</span><h3>Le scan couvre quatre modes</h3><p>Code-barres, QR code, reconnaissance photo et OCR d'étiquette textile. <code>Scan</code> gagne <code>kind</code> et <code>code</code>. La technologie, elle, est <b>imposée par le module et toujours pas communiquée</b> — c'est le dernier point bloquant côté technique, et il décide aussi du mode de distribution : un module natif interdit Expo Go et impose un development build.</p></div>
+      <div class="open-item"><span class="pill p-valider" style="align-self:flex-start">Encadrant</span><h3>Trois validations toujours en attente</h3><p>Le passage d'une web app à une application mobile Expo ; le référentiel d'accessibilité (RAAM pour le mobile, RGAA pour le back-office web) ; le format de démonstration attendu par le jury. Aucune ne touche le modèle de données.</p></div>
+      <div class="open-item"><span class="pill p-mvp" style="align-self:flex-start">Tranché</span><h3>La vente entre dans le MVP, avec deux parcours</h3><p>Tout le domaine bascule — <code>Listing</code>, <code>Order</code>, <code>OrderAddress</code>, <code>Address</code>, <code>Payment</code>, <code>Refund</code>, <code>Dispute</code>, <code>Shipment</code> — plus une entité nouvelle, <code>OrderEvent</code>. Deux chemins sont à développer entièrement : <b>paiement en ligne</b> (encaissement, expédition, livraison, réception, reversement, remboursement) et <b>paiement en espèces à la remise</b> (aucun flux d'argent chez nous, double confirmation, aucun remboursement possible). La contradiction entre l'étiquette V2 et l'obligation Stripe du module est levée : Stripe est bien implémenté et démontrable.</p></div>
+    </div>
+    <div class="section-head" style="margin-top:36px;margin-bottom:14px">
+      <h3 style="font-size:19px;font-weight:800">Décisions techniques actées le 18 septembre</h3>
+    </div>
+    <div class="open">
+      <div class="open-item"><span class="pill p-mvp" style="align-self:flex-start">Acté</span><h3>Héritage <code>SINGLE_TABLE</code> pour Share et Comment</h3><p>Confirmé. Une classe abstraite et ses sous-types dans une seule table, avec une colonne discriminante. L'alternative des colonnes nullables de la V1 est écartée.</p></div>
+      <div class="open-item"><span class="pill p-mvp" style="align-self:flex-start">Acté</span><h3>Identifiants en UUID v7</h3><p>Confirmé. Les identifiants circulent dans les liens de partage et dans l'application mobile ; l'ordre temporel du v7 évite la fragmentation des index du v4.</p></div>
+      <div class="open-item"><span class="pill p-mvp" style="align-self:flex-start">Acté</span><h3>Énumérations en <code>varchar</code> + <code>CHECK</code></h3><p>Confirmé. Colonnes <code>varchar</code> contraintes par un <code>CHECK</code>, et <i>backed enums</i> PHP côté code. Ajouter une valeur ne demande qu'une migration de contrainte, pas un <code>ALTER TYPE</code>.</p></div>
+      <div class="open-item"><span class="pill p-mvp" style="align-self:flex-start">Acté</span><h3>Première migration : <code>LocationHistory</code> incluse, <code>Memory</code> décalée</h3><p><code>LocationHistory</code> passe en MVP et entre dans la première migration, avec son rôle et ses relations inchangés. <code>Memory</code> et <code>MemoryMedia</code> restent hors de la première migration.</p></div>
+      <div class="open-item"><span class="pill p-mvp" style="align-self:flex-start">Acté</span><h3>Permissions par défaut dans un <i>backed enum</i> PHP</h3><p>Confirmé. La matrice type de profil × permission vit dans le code ; <code>ProfilePermission</code> ne stocke que les exceptions posées par le tuteur.</p></div>
+      <div class="open-item"><span class="pill p-mvp" style="align-self:flex-start">Acté</span><h3>Profil enfant autonome : après le MVP</h3><p>Le schéma le permet (réécrire <code>account_id</code>), mais le parcours — création du compte, vérification de l'e-mail, retrait de la tutelle — n'est pas conçu pour le MVP.</p></div>
+      <div class="open-item"><span class="pill p-mvp" style="align-self:flex-start">Acté</span><h3>Hors modèle de données</h3><p>Authentification JWT (Lexik) avec jeton d'accès de 15 minutes en mémoire et jeton de rafraîchissement dans le coffre sécurisé du téléphone ; consultation hors ligne en cache uniquement ; un seul dépôt <code>/api</code> + <code>/app</code>. Détail dans <code>PENDERIE_STACK_TECHNIQUE.html</code>.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>Trois phrases pour la soutenance</h2>
+    </div>
+    <div class="decisions">
+      <article class="choice" style="padding:22px 28px;gap:12px">
+        <div class="choice-top"><span class="layer">Compte et profil</span></div>
+        <blockquote>Nous avons séparé le compte, qui porte l'authentification, du profil, qui porte l'identité et possède tout le contenu. Un compte gère plusieurs profils : le sien, celui de son enfant, celui d'un proche. C'est ce découpage qui permet à un profil enfant d'avoir réellement ses objets, ses vêtements et ses amis, sans qu'on ait à lui inventer une adresse e-mail.</blockquote>
+      </article>
+      <article class="choice" style="padding:22px 28px;gap:12px">
+        <div class="choice-top"><span class="layer">Contrôle parental</span></div>
+        <blockquote>Les permissions sont des données, pas des conditions dans le code. Chaque profil peut avoir, pour chacune des douze actions sensibles, un mode autorisé, interdit, ou soumis à accord. Une action en mode « soumis à accord » crée une demande adressée au tuteur, et n'est exécutée qu'après sa réponse. Il n'y a donc qu'un seul endroit dans l'application qui décide si une action est permise.</blockquote>
+      </article>
+      <article class="choice" style="padding:22px 28px;gap:12px">
+        <div class="choice-top"><span class="layer">Confidentialité</span></div>
+        <blockquote>Suivre quelqu'un, être son ami et avoir accès à son contenu sont trois choses différentes dans notre modèle. L'amitié ne donne accès à rien. C'est le propriétaire qui pose un partage sur une ressource précise, avec un niveau d'accès précis. Un dressing reste privé même entre amis, tant que son propriétaire n'a rien partagé.</blockquote>
+      </article>
+    </div>
+  </section>
+
+  <footer>
+    <span>Sources : <code>PENDERIE_structure_projet.md</code> (cadrage Asana, §03 à §22), review critique du 15 septembre 2026, maquette v2 Figma, <code>PENDERIE_STACK_TECHNIQUE.html</code>.</span>
+    <span>Prochaine étape : review de cette V2, puis validation, puis migrations Doctrine, entités Symfony et exposition API Platform. <b>Aucune migration n'est lancée à ce stade.</b></span>
+    <span>Penderie · module WR506D · entités en anglais, libellés d'interface en français.</span>
+  </footer>
+
+</div>

@@ -1,0 +1,25 @@
+# Système et éditeurs
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Captures de vérification Figma : régénérables à la demande
+design/verif-lots/
+
+# Symfony
+/api/vendor/
+/api/var/
+/api/.env.local
+/api/.env.*.local
+/api/public/uploads/
+
+# Expo / Node
+node_modules/
+/app/.expo/
+/app/dist/
+/app/web-build/
+*.log
+
+# Docker
+.env

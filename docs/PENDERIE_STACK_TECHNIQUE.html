@@ -1,0 +1,514 @@
+<title>Stack technique Penderie</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Instrument+Sans:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --bg: #F8FAFC;
+    --surface: #FFFFFF;
+    --ink: #1A1E24;
+    --sub: #475569;
+    --line: #E3E7EE;
+    --primary: #D31D66;
+    --primary-text: #C21B5E;
+    --primary-tint: #FAE4ED;
+    --main: #117D6F;
+    --main-text: #10786B;
+    --main-tint: #E7F2F1;
+    --cloth: #831297;
+    --cloth-tint: #F0E3F3;
+    --warn: #8A5A00;
+    --warn-tint: #FCF1DC;
+    --code-bg: #F1F3F7;
+    --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+    --body: "Instrument Sans", "Segoe UI", system-ui, sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #12151A; --surface: #1B1F26; --ink: #EDF1F6; --sub: #9BA7B8; --line: #2A303A;
+      --primary: #FF6098; --primary-text: #FF6098; --primary-tint: #3A1A28;
+      --main: #43BBA9; --main-text: #43BBA9; --main-tint: #16302D;
+      --cloth: #CE86DE; --cloth-tint: #2F2035;
+      --warn: #F0B952; --warn-tint: #33291A; --code-bg: #232833;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #12151A; --surface: #1B1F26; --ink: #EDF1F6; --sub: #9BA7B8; --line: #2A303A;
+    --primary: #FF6098; --primary-text: #FF6098; --primary-tint: #3A1A28;
+    --main: #43BBA9; --main-text: #43BBA9; --main-tint: #16302D;
+    --cloth: #CE86DE; --cloth-tint: #2F2035;
+    --warn: #F0B952; --warn-tint: #33291A; --code-bg: #232833;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg); color: var(--ink);
+    font: 16px/1.6 var(--body);
+    padding-inline: 20px; padding-block: 48px 80px;
+  }
+  .wrap { max-width: 880px; margin: 0 auto; display: flex; flex-direction: column; gap: 56px; }
+  h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; }
+  p { margin: 0; }
+  code, .pkg { font-family: var(--mono); font-size: 0.86em; background: var(--code-bg); padding: 1px 6px; border-radius: 6px; white-space: nowrap; }
+
+  /* En-tête */
+  header { display: flex; flex-direction: column; gap: 16px; }
+  .eyebrow { font-size: 12px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--primary-text); }
+  h1 { font-size: clamp(36px, 6vw, 56px); font-weight: 800; line-height: 1.02; letter-spacing: -.02em; }
+  h1 span { color: var(--primary); }
+  .lede { color: var(--sub); max-width: 64ch; font-size: 18px; }
+  .meta { display: flex; flex-wrap: wrap; gap: 8px 20px; font-size: 14px; color: var(--sub); }
+  .meta b { color: var(--ink); font-weight: 600; }
+
+  /* Légende statuts */
+  .pill { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 999px; white-space: nowrap; }
+  .pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .p-impose { background: var(--cloth-tint); color: var(--cloth); }
+  .p-decide { background: var(--main-tint); color: var(--main-text); }
+  .p-reco { background: var(--primary-tint); color: var(--primary-text); }
+  .p-ouvert { background: var(--warn-tint); color: var(--warn); }
+  .legend { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; font-size: 13px; color: var(--sub); }
+  .legend span.item { display: inline-flex; gap: 8px; align-items: center; }
+
+  /* Récap */
+  h2 { font-size: 28px; font-weight: 800; letter-spacing: -.01em; }
+  .section-head { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+  .section-head p { color: var(--sub); max-width: 64ch; }
+  .table-wrap { overflow-x: auto; background: var(--surface); border-radius: 16px; box-shadow: 0 1px 2px rgba(26,30,36,.06), 0 8px 24px rgba(26,30,36,.05); }
+  table { width: 100%; border-collapse: collapse; font-size: 15px; min-width: 560px; }
+  th, td { text-align: left; padding: 14px 18px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--sub); font-weight: 600; }
+  tr:last-child td { border-bottom: 0; }
+  td:first-child { font-weight: 600; white-space: nowrap; }
+  td a { color: inherit; text-decoration-color: var(--primary); text-underline-offset: 3px; }
+
+  /* Architecture */
+  .archi { background: var(--surface); border-radius: 16px; padding: 24px; overflow-x: auto; box-shadow: 0 1px 2px rgba(26,30,36,.06); }
+  .archi svg { display: block; min-width: 640px; width: 100%; height: auto; }
+  .archi .box { fill: var(--bg); stroke: var(--line); stroke-width: 1.5; }
+  .archi .box-main { fill: var(--primary-tint); stroke: var(--primary); stroke-width: 1.5; }
+  .archi .t { fill: var(--ink); font: 600 14px var(--body); }
+  .archi .s { fill: var(--sub); font: 12px var(--mono); }
+  .archi .edge { stroke: var(--sub); stroke-width: 1.5; fill: none; }
+  .archi .el { fill: var(--sub); font: 11px var(--body); }
+  .archi .zone { fill: none; stroke: var(--line); stroke-dasharray: 5 5; stroke-width: 1.5; }
+  .archi .zl { fill: var(--sub); font: 600 11px var(--body); letter-spacing: .08em; }
+
+  /* Décisions */
+  .decisions { display: flex; flex-direction: column; gap: 20px; }
+  .choice { background: var(--surface); border-radius: 16px; padding: 28px; display: flex; flex-direction: column; gap: 18px; box-shadow: 0 1px 2px rgba(26,30,36,.06); }
+  .choice-top { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 8px 16px; }
+  .layer { font-size: 12px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--sub); }
+  .choice h3 { font-size: 24px; font-weight: 800; letter-spacing: -.01em; line-height: 1.15; }
+  .pkgs { display: flex; flex-wrap: wrap; gap: 6px; }
+  .cols { display: grid; grid-template-columns: 1.5fr 1fr; gap: 24px; }
+  .cols h4 { margin: 0 0 8px; font-size: 13px; font-weight: 600; color: var(--sub); letter-spacing: .04em; }
+  ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; }
+  li::marker { color: var(--primary); }
+  .alt li::marker { color: var(--sub); }
+  .alt { color: var(--sub); font-size: 15px; }
+  .alt b { color: var(--ink); font-weight: 600; }
+  blockquote { margin: 0; padding: 14px 18px; background: var(--primary-tint); border-radius: 12px; font-style: italic; }
+  blockquote::before { content: "À l'oral"; display: block; font-style: normal; font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--primary-text); margin-bottom: 4px; }
+  .note { font-size: 14px; color: var(--sub); }
+  .versions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; background: var(--line); border-radius: 12px; overflow: hidden; font-size: 14px; }
+  .versions div { background: var(--bg); padding: 12px 14px; display: flex; flex-direction: column; gap: 2px; }
+  .versions strong { font-family: var(--display); font-size: 18px; }
+  .versions .good strong { color: var(--main-text); }
+  .versions span { color: var(--sub); font-variant-numeric: tabular-nums; }
+
+  /* Ouvert */
+  .open { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .open-item { background: var(--surface); border-radius: 12px; padding: 16px 18px; display: flex; flex-direction: column; gap: 6px; box-shadow: 0 1px 2px rgba(26,30,36,.06); }
+  .open-item h3 { font-family: var(--body); font-size: 16px; font-weight: 600; }
+  .open-item p { font-size: 14px; color: var(--sub); }
+
+  footer { font-size: 13px; color: var(--sub); display: flex; flex-direction: column; gap: 6px; border-top: 1px solid var(--line); padding-top: 20px; }
+  footer a { color: var(--primary-text); }
+  a:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; border-radius: 4px; }
+
+  @media (max-width: 680px) {
+    body { padding-block: 32px 56px; }
+    .cols, .open { grid-template-columns: 1fr; }
+    .versions { grid-template-columns: 1fr; }
+    .choice { padding: 20px; }
+  }
+</style>
+
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">WR506D · Penderie · Dossier technique</div>
+    <h1>La stack de <span>Penderie</span>, choix par choix</h1>
+    <p class="lede">Penderie est une application mobile pour ranger, retrouver, prêter et vendre entre amis ce qu'on possède. Ce document fixe les technologies retenues pour le développement et la raison de chaque choix, dans l'ordre où elles ont été décidées.</p>
+    <p class="lede" style="margin-top:10px"><b>Mise à jour du 15 septembre 2026 :</b> le front passe d'une <s>PWA Next.js</s> à une <b>application mobile React Native / Expo</b>. Le back-end, la base de données et Docker ne changent pas. Les couches touchées par ricochet (authentification, notifications, hors ligne, paiement) sont signalées plus bas.</p>
+    <p class="lede" style="margin-top:4px"><b>Mise à jour du 18 septembre 2026 :</b> l'authentification, le hors ligne et l'organisation du code passent en « Décidé », conformément à <code>PENDERIE_QUESTIONS_VALIDATION.md</code>. Le scan, la distribution de l'app et les tests restent ouverts.</p>
+    <div class="meta">
+      <span>Mis à jour le <b>18 septembre 2026</b></span>
+      <span>Auteur <b>Rafael Teixeira</b></span>
+      <span>État <b>maquette v2 terminée, développement non démarré</b></span>
+    </div>
+    <div class="legend">
+      <span class="item"><span class="pill p-impose">Imposé</span> par le module</span>
+      <span class="item"><span class="pill p-decide">Décidé</span> par nous</span>
+      <span class="item"><span class="pill p-reco">Recommandé</span> reste à confirmer</span>
+      <span class="item"><span class="pill p-ouvert">Ouvert</span> à préciser</span>
+    </div>
+  </header>
+
+  <section>
+    <div class="section-head">
+      <h2>En un coup d'œil</h2>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Couche</th><th>Choix</th><th>Statut</th></tr></thead>
+        <tbody>
+          <tr><td>Back-end</td><td><a href="#back">Symfony 7.4 LTS + API Platform</a></td><td><span class="pill p-impose">Imposé</span> <span class="pill p-decide">7.4 décidé</span></td></tr>
+          <tr><td>Front-end</td><td><a href="#front">React Native + Expo, TypeScript, NativeWind</a></td><td><span class="pill p-decide">Décidé</span></td></tr>
+          <tr><td>Base de données</td><td><a href="#bdd">PostgreSQL</a></td><td><span class="pill p-decide">Décidé</span></td></tr>
+          <tr><td>Environnement</td><td><a href="#docker">Docker (Docker Compose)</a></td><td><span class="pill p-decide">Décidé</span></td></tr>
+          <tr><td>Authentification</td><td><a href="#auth">JWT (Lexik) + refresh token, coffre du téléphone</a></td><td><span class="pill p-decide">Décidé</span></td></tr>
+          <tr><td>Photos</td><td><a href="#photos">Stockage S3 (MinIO en dev), URL signées</a></td><td><span class="pill p-decide">Décidé</span></td></tr>
+          <tr><td>Notifications</td><td><a href="#notifs">Push (expo-notifications) + e-mail (Mailer + Messenger)</a></td><td><span class="pill p-decide">Décidé</span></td></tr>
+          <tr><td>Hors ligne</td><td><a href="#offline">Consultation de l'inventaire en cache (niveau 2)</a></td><td><span class="pill p-decide">Décidé</span></td></tr>
+          <tr><td>Paiement</td><td><a href="#paiement">Stripe</a></td><td><span class="pill p-impose">Imposé</span></td></tr>
+          <tr><td>Scan</td><td><a href="#scan">Technologie communiquée plus tard</a></td><td><span class="pill p-impose">Imposé</span> <span class="pill p-ouvert">Ouvert</span></td></tr>
+          <tr><td>Distribution</td><td><a href="#distrib">Expo Go / development build, EAS Build</a></td><td><span class="pill p-ouvert">Ouvert</span></td></tr>
+          <tr><td>Organisation du code</td><td><a href="#code">Un seul dépôt : /api (Symfony) + /app (Expo)</a></td><td><span class="pill p-decide">Décidé</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>Comment les briques se parlent</h2>
+      <p>L'application installée sur le téléphone appelle directement l'API Symfony, en joignant un jeton JWT à chaque requête. Il n'y a plus de serveur front intermédiaire. Seule l'API accède aux données, aux photos et aux services externes.</p>
+    </div>
+    <div class="archi">
+      <svg viewBox="0 0 820 350" role="img" aria-label="Schéma : l'application Expo sur le téléphone appelle l'API Symfony, qui accède à PostgreSQL, au stockage S3, au service d'e-mail, à Stripe et au service de push Expo">
+        <rect class="zone" x="190" y="14" width="420" height="200" rx="14"/>
+        <text class="zl" x="206" y="36">CONTENEURS DOCKER</text>
+
+        <rect class="box" x="10" y="90" width="140" height="76" rx="12"/>
+        <text class="t" x="24" y="120">Téléphone</text>
+        <text class="s" x="24" y="142">App Expo</text>
+        <text class="s" x="24" y="158">React Native</text>
+
+        <rect class="box-main" x="206" y="90" width="170" height="76" rx="12"/>
+        <text class="t" x="220" y="126">API Symfony 7.4</text>
+        <text class="s" x="220" y="148">API Platform</text>
+
+        <rect class="box" x="430" y="40" width="164" height="48" rx="10"/>
+        <text class="t" x="444" y="70">PostgreSQL</text>
+        <rect class="box" x="430" y="100" width="164" height="48" rx="10"/>
+        <text class="t" x="444" y="130">S3 · MinIO</text>
+        <rect class="box" x="430" y="160" width="164" height="48" rx="10"/>
+        <text class="t" x="444" y="190">E-mail · Mailpit</text>
+
+        <rect class="box" x="430" y="228" width="164" height="48" rx="10"/>
+        <text class="t" x="444" y="258">Stripe</text>
+        <rect class="box" x="430" y="288" width="164" height="48" rx="10"/>
+        <text class="t" x="444" y="318">Push Expo</text>
+        <text class="s" x="606" y="262">services</text>
+        <text class="s" x="606" y="278">externes</text>
+
+        <path class="edge" d="M150 128 H206"/>
+        <text class="el" x="150" y="118">HTTPS · JWT</text>
+        <path class="edge" d="M376 128 C403 128 403 64 430 64"/>
+        <path class="edge" d="M376 128 H430"/>
+        <path class="edge" d="M376 128 C403 128 403 184 430 184"/>
+        <path class="edge" d="M376 128 C403 128 403 252 430 252"/>
+        <path class="edge" d="M376 128 C403 128 403 312 430 312"/>
+        <path class="edge" d="M430 324 H168 C156 324 150 316 150 304 V170"/>
+        <text class="el" x="168" y="316">push</text>
+      </svg>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>Les décisions et leurs raisons</h2>
+      <p>Pour chaque couche : ce qui est retenu, pourquoi, ce qui a été écarté, et une phrase prête pour la présentation.</p>
+    </div>
+
+    <div class="decisions">
+
+      <article class="choice" id="back">
+        <div class="choice-top"><span class="layer">Back-end</span><span><span class="pill p-impose">Symfony imposé</span> <span class="pill p-decide">Version décidée</span></span></div>
+        <h3>Symfony 7.4 LTS avec API Platform</h3>
+        <div class="versions" aria-label="Comparaison des versions de Symfony">
+          <div class="good"><strong>7.4 LTS</strong><span>Sortie nov. 2025</span><span>Bugs jusqu'à nov. 2028</span><span>Sécurité jusqu'à nov. 2029</span></div>
+          <div><strong>8.0</strong><span>Sortie nov. 2025</span><span>Plus maintenue depuis juil. 2026</span><span>PHP 8.4 minimum</span></div>
+          <div><strong>8.1</strong><span>Sortie mai 2026</span><span>Fin de support janv. 2027</span><span>PHP 8.4 minimum</span></div>
+        </div>
+        <div class="cols">
+          <div>
+            <h4>Pourquoi</h4>
+            <ul>
+              <li>7.4 et 8.0 sont sorties le même jour avec <b>les mêmes fonctionnalités</b> : la 8.0 retire seulement le code déprécié.</li>
+              <li>La 8.1 ne sera plus maintenue en janvier 2027, en plein développement. La 7.4 ne demande <b>aucune montée de version</b> avant la fin du projet.</li>
+              <li>Penderie gère des paiements, des adresses et un dressing privé : des correctifs de sécurité sont garantis jusqu'en 2029.</li>
+              <li>API Platform déclare la compatibilité <code>^7.4 || ^8.0</code> : aucune porte fermée.</li>
+              <li>Sans code déprécié en 7.4, le passage à Symfony 8 reste simple. C'est la voie de migration officielle.</li>
+            </ul>
+          </div>
+          <div class="alt">
+            <h4>Écarté</h4>
+            <ul>
+              <li><b>Symfony 8.1</b> : quelques nouveautés, contre deux montées de version à prévoir pendant le projet.</li>
+            </ul>
+          </div>
+        </div>
+        <blockquote>Nous avons choisi Symfony 7.4 LTS : mêmes fonctionnalités que Symfony 8.0, compatible avec API Platform, mais supportée jusqu'en 2029 contre quelques mois pour la 8.x. Et en évitant le code déprécié, le passage à Symfony 8 restera simple.</blockquote>
+        <p class="note">Sous Docker, prendre l'image PHP 8.4 : la 7.4 la supporte, et la migration vers Symfony 8 en sera facilitée. Confirmer la version stable d'API Platform au moment du <code>composer require</code> (la v5 est en bêta).</p>
+      </article>
+
+      <article class="choice" id="front">
+        <div class="choice-top"><span class="layer">Front-end</span><span class="pill p-decide">Décidé</span></div>
+        <h3>React Native avec Expo, TypeScript et NativeWind</h3>
+        <div class="pkgs"><span class="pkg">expo</span><span class="pkg">react-native</span><span class="pkg">expo-router</span><span class="pkg">typescript</span><span class="pkg">nativewind</span><span class="pkg">@tanstack/react-query</span></div>
+        <div class="cols">
+          <div>
+            <h4>Pourquoi</h4>
+            <ul>
+              <li>Le module laisse le front libre entre Twig et une techno front. <b>La maquette a été dessinée au format téléphone du premier écran au dernier</b> : une application mobile la restitue telle quelle, sans réinterprétation.</li>
+              <li><b>Les fonctions du téléphone sont au cœur du produit</b> : appareil photo, scan, galerie, notifications. En natif ce sont des API de première classe ; dans un navigateur elles dépendent du moteur, et Safari sur iOS est le maillon faible.</li>
+              <li><b>Expo</b> évite la configuration Xcode / Android Studio : <code>npx expo start</code> et l'app tourne sur un vrai téléphone via un QR code. EAS Build produit les binaires dans le cloud, sans Mac.</li>
+              <li><b>expo-router</b> reprend le routage par fichiers de Next.js et fournit une barre d'onglets native — exactement la navigation à cinq onglets de la maquette.</li>
+              <li><b>TypeScript</b> est conservé : un champ renommé côté Symfony casse la compilation, pas l'écran de l'utilisateur.</li>
+              <li><b>NativeWind</b> fait fonctionner les classes Tailwind en React Native : on garde les jetons du design system v2 (échelle 4 pt, rayons 8/12/16/24, couleurs de charte) et la justification déjà préparée pour Tailwind.</li>
+              <li>React Native, c'est React : composants, état, hooks identiques. Seules les balises changent (<code>View</code> et <code>Text</code> au lieu de <code>div</code> et <code>p</code>).</li>
+            </ul>
+          </div>
+          <div class="alt">
+            <h4>Écarté</h4>
+            <ul>
+              <li><b>PWA Next.js</b> (choix précédent, abandonné le 15/09) : installable sans store, mais notifications push bancales sur iPhone, accès caméra tributaire du navigateur, et sensation de site web pour un produit qui vit dans la poche.</li>
+              <li><b>Twig</b> : pages rendues par le serveur, peu adapté aux parcours en étapes de la maquette.</li>
+              <li><b>Flutter</b> : excellent, mais impose d'apprendre Dart en plus de PHP et TypeScript.</li>
+              <li><b>Natif pur</b> (Swift et Kotlin) : deux bases de code à tenir, hors budget du module.</li>
+            </ul>
+            <p class="note" style="margin-top:10px">Conséquence à acter : le livrable passe de <i>web app</i> à <i>application mobile</i>. À faire valider par l'encadrant.</p>
+          </div>
+        </div>
+        <blockquote>Le front est une application mobile React Native avec Expo, en TypeScript. La maquette est pensée pour le téléphone, et le scan comme l'appareil photo deviennent des fonctions natives plutôt que des API de navigateur. Expo permet de faire tourner l'app sur n'importe quel téléphone avec un QR code, sans passer par les stores pour la démonstration.</blockquote>
+      </article>
+
+      <article class="choice" id="bdd">
+        <div class="choice-top"><span class="layer">Base de données</span><span class="pill p-decide">Décidé</span></div>
+        <h3>PostgreSQL</h3>
+        <div class="pkgs"><span class="pkg">doctrine/orm</span><span class="pkg">unaccent</span><span class="pkg">pg_trgm</span><span class="pkg">JSONB</span></div>
+        <div class="cols">
+          <div>
+            <h4>Pourquoi</h4>
+            <ul>
+              <li><b>La recherche.</b> Le cadrage demande de « retrouver un objet en quelques secondes ». Avec <code>unaccent</code> et <code>pg_trgm</code>, « etagere » trouve « Étagère » et « perseuse » trouve « Perceuse Bosch », sans moteur de recherche externe.</li>
+              <li><b>Le scan.</b> Les informations récupérées changent selon l'objet (taille et matière pour un vêtement, référence pour un outil). <code>JSONB</code> les stocke et permet de les interroger avec des index.</li>
+              <li><b>L'écosystème.</b> La distribution API Platform et le template Symfony Docker utilisent PostgreSQL par défaut : la documentation s'applique telle quelle.</li>
+            </ul>
+          </div>
+          <div class="alt">
+            <h4>Écarté</h4>
+            <ul>
+              <li><b>MySQL</b> : parfaitement viable avec Doctrine, mais pas de recherche tolérante aux fautes sans outil externe, et un JSON moins pratique à indexer.</li>
+            </ul>
+            <p class="note" style="margin-top:10px">L'arborescence Logement › Pièce › Rangement › Carton fonctionne dans les deux (requêtes récursives) : ce point ne départage pas.</p>
+          </div>
+        </div>
+        <blockquote>Nous avons choisi PostgreSQL, la base recommandée par API Platform. Sa recherche insensible aux accents et tolérante aux fautes répond à notre objectif de retrouver un objet en quelques secondes, et le type JSONB stocke les informations variables issues du scan.</blockquote>
+      </article>
+
+      <article class="choice" id="docker">
+        <div class="choice-top"><span class="layer">Environnement</span><span class="pill p-decide">Décidé</span></div>
+        <h3>Docker Compose pour tout l'environnement</h3>
+        <div class="cols">
+          <div>
+            <h4>Pourquoi</h4>
+            <ul>
+              <li>Chaque service tourne dans son conteneur : PHP 8.4, PostgreSQL, MinIO, Mailpit. La version de PHP se choisit dans l'image, pas sur le poste.</li>
+              <li>Toute personne qui clone le projet le lance avec une seule commande, dans le même état.</li>
+              <li>Symfony génère déjà un <code>compose.yaml</code> : on le complète au lieu de partir de zéro.</li>
+            </ul>
+          </div>
+          <div class="alt">
+            <h4>Écarté</h4>
+            <ul>
+              <li><b>Installation locale (XAMPP…)</b> : versions figées par le poste, environnement différent d'une machine à l'autre.</li>
+            </ul>
+          </div>
+        </div>
+      </article>
+
+      <article class="choice" id="auth">
+        <div class="choice-top"><span class="layer">Authentification</span><span class="pill p-decide">Décidé</span></div>
+        <h3>Jetons JWT, rafraîchissement rangé dans le coffre du téléphone</h3>
+        <div class="pkgs"><span class="pkg">lexik/jwt-authentication-bundle</span><span class="pkg">gesdinet/jwt-refresh-token-bundle</span><span class="pkg">expo-secure-store</span><span class="pkg">nelmio/cors-bundle</span></div>
+        <div class="cols">
+          <div>
+            <h4>Pourquoi</h4>
+            <ul>
+              <li>L'API ne change pas : Lexik reste la solution d'authentification décrite par la documentation d'API Platform, et délivre les mêmes jetons.</li>
+              <li><b>Le cookie HttpOnly n'a plus de sens</b> : il n'y a ni navigateur ni serveur front intermédiaire. L'application envoie elle-même un en-tête <code>Authorization: Bearer</code>.</li>
+              <li><b>expo-secure-store</b> range le jeton de rafraîchissement dans le Keychain d'iOS ou le Keystore d'Android : chiffré par le système, lié à notre application, et protégé par le code de déverrouillage. C'est <b>plus sûr que le cookie</b> qu'on visait côté web.</li>
+              <li>Le jeton d'accès (15 minutes) reste en mémoire vive et n'est jamais écrit sur le disque : fermer l'app suffit à l'effacer.</li>
+              <li>Sans état côté serveur : l'API ne garde pas de session, conformément à une architecture REST.</li>
+              <li>L'app appelant l'API directement, <b>CORS doit être configuré</b> (nelmio/cors) — c'était justement ce que le serveur Next.js masquait.</li>
+            </ul>
+          </div>
+          <div class="alt">
+            <h4>Écarté</h4>
+            <ul>
+              <li><b>AsyncStorage</b> : stockage en clair dans le dossier de l'app, lisible sur un téléphone débridé ou dans une sauvegarde.</li>
+              <li><b>Cookies HttpOnly</b> : impossibles sans navigateur, c'était la réponse à un problème (le XSS) qui ne se pose plus de la même façon.</li>
+              <li><b>Sessions Symfony</b> : supposent des cookies et un navigateur, inadaptées à une app native.</li>
+            </ul>
+          </div>
+        </div>
+        <blockquote>L'authentification repose sur des jetons JWT délivrés par LexikJWTAuthenticationBundle. Le jeton d'accès, court, reste en mémoire ; le jeton de rafraîchissement est rangé par expo-secure-store dans le coffre-fort du système — Keychain sur iOS, Keystore sur Android — donc chiffré par le téléphone et réservé à notre application.</blockquote>
+      </article>
+
+      <article class="choice" id="photos">
+        <div class="choice-top"><span class="layer">Photos</span><span class="pill p-decide">Décidé</span></div>
+        <h3>Stockage compatible S3, photos servies par URL signées</h3>
+        <div class="pkgs"><span class="pkg">vich/uploader-bundle</span><span class="pkg">league/flysystem-bundle</span><span class="pkg">liip/imagine-bundle</span><span class="pkg">minio</span><span class="pkg">expo-image-picker</span><span class="pkg">expo-camera</span><span class="pkg">expo-image-manipulator</span></div>
+        <div class="cols">
+          <div>
+            <h4>Pourquoi</h4>
+            <ul>
+              <li><b>Confidentialité.</b> Le dressing est privé par défaut : les photos ne sont jamais publiques. L'API génère des URL signées à durée limitée, et seulement pour qui a le droit de les voir (propriétaire, ami avec qui l'objet est partagé).</li>
+              <li><b>Portabilité.</b> Flysystem isole le code du stockage : MinIO en développement, n'importe quel fournisseur S3 en production (AWS, Scaleway, Cloudflare R2…), sans changer une ligne.</li>
+              <li><b>Performance.</b> LiipImagine produit une miniature pour les listes et une version moyenne pour les fiches, plutôt qu'une photo de téléphone de 4 Mo dans chaque carte.</li>
+              <li>La photo est centrale dans la maquette, c'est le principe UX « la photo d'abord ».</li>
+              <li><b>Côté app</b>, <code>expo-image-picker</code> et <code>expo-camera</code> donnent l'accès à la pellicule et à l'appareil photo sans bidouille de navigateur, et <code>expo-image-manipulator</code> <b>redimensionne et compresse la photo avant l'envoi</b> : on ne téléverse plus 4 Mo pour afficher une vignette, ce qui économise le forfait de l'utilisateur.</li>
+            </ul>
+          </div>
+          <div class="alt">
+            <h4>Écarté</h4>
+            <ul>
+              <li><b>Disque du serveur</b> : photos perdues avec le conteneur si le volume est mal configuré, et droits d'accès à coder soi-même.</li>
+            </ul>
+          </div>
+        </div>
+        <blockquote>Les photos sont stockées dans un espace compatible S3 et servies par des URL signées à durée limitée : une photo de dressing privé n'est jamais accessible publiquement.</blockquote>
+      </article>
+
+      <article class="choice" id="notifs">
+        <div class="choice-top"><span class="layer">Notifications</span><span class="pill p-decide">Décidé</span></div>
+        <h3>Notifications push et e-mails, envoyés en tâche de fond</h3>
+        <div class="pkgs"><span class="pkg">expo-notifications</span><span class="pkg">symfony/mailer</span><span class="pkg">symfony/messenger</span><span class="pkg">twig</span><span class="pkg">mailpit</span></div>
+        <div class="cols">
+          <div>
+            <h4>Pourquoi</h4>
+            <ul>
+              <li><b>Le push devient simple en natif.</b> <code>expo-notifications</code> gère la demande d'autorisation et le jeton de l'appareil, et le service de push d'Expo relaie vers APNs (iOS) et FCM (Android) sans compte payant ni serveur dédié. C'est le gain le plus visible du passage au natif : c'était précisément le point faible de la PWA sur iPhone.</li>
+              <li><b>Le push porte l'urgent</b> : demande de prêt, prêt accepté, rappel de retour, objet vendu. Ce sont des événements où la minute compte et où personne ne va relever ses mails.</li>
+              <li><b>L'e-mail porte ce qui doit laisser une trace</b>, et atteint aussi celui qui a refusé les notifications : inscription, réinitialisation du mot de passe, reçu de vente, récapitulatif.</li>
+              <li><b>Messenger</b> envoie les deux de façon asynchrone : l'utilisateur voit « Objet prêté ! » sans attendre le réseau.</li>
+              <li><b>Twig</b> met en page les e-mails et <b>Mailpit</b> les intercepte en développement : aucun message ne part vers une vraie boîte pendant les tests.</li>
+            </ul>
+          </div>
+          <div class="alt">
+            <h4>Écarté</h4>
+            <ul>
+              <li><b>Push web (VAPID)</b> : c'était l'option en PWA, avec un support iOS conditionné à l'installation sur l'écran d'accueil. Sans objet désormais.</li>
+              <li><b>FCM en direct</b> : Expo l'utilise déjà par-dessous ; l'appeler à la main n'ajouterait que de la configuration.</li>
+              <li><b>Push seul, sans e-mail</b> : un utilisateur qui refuse les notifications ne recevrait plus rien, pas même un mot de passe oublié.</li>
+            </ul>
+            <p class="note" style="margin-top:10px">À prévoir : une table <code>DeviceToken</code> (un appareil = un jeton, plusieurs par utilisateur) et un réglage par type de notification dans le compte. En production, un service d'envoi d'e-mails (Brevo, Mailjet…) pour ne pas finir en spam.</p>
+          </div>
+        </div>
+        <blockquote>Les notifications sont doubles : en push via expo-notifications pour ce qui est urgent — une demande de prêt, un rappel de retour — et par e-mail pour ce qui doit laisser une trace. Les deux partent de façon asynchrone via Symfony Messenger. C'est exactement ce que la version web ne permettait pas de faire correctement sur iPhone.</blockquote>
+      </article>
+
+      <article class="choice" id="offline">
+        <div class="choice-top"><span class="layer">Hors ligne</span><span class="pill p-decide">Décidé</span></div>
+        <h3>Consultation hors ligne de l'inventaire déjà chargé</h3>
+        <div class="table-wrap" style="box-shadow:none;border:1px solid var(--line)">
+          <table>
+            <thead><tr><th>Niveau</th><th>Ce que ça fait</th><th>Coût</th></tr></thead>
+            <tbody>
+              <tr><td>0 · Rien</td><td>Pas de réseau = écran d'erreur</td><td>Nul</td></tr>
+              <tr><td>1 · Écran hors ligne</td><td>L'app s'ouvre et affiche « Pas de connexion » à ses couleurs</td><td>Faible · inclus</td></tr>
+              <tr><td>2 · Consultation</td><td>Voir ses objets et leur emplacement sans réseau (au fond du garage)</td><td><span class="pill p-decide">Retenu</span></td></tr>
+              <tr><td>3 · Complet</td><td>Ajouter et modifier hors ligne, synchronisation au retour du réseau</td><td>Élevé · exclu</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="cols">
+          <div>
+            <h4>Pourquoi</h4>
+            <ul>
+              <li><b>Le cas d'usage est réel</b> : on cherche un objet au fond d'un garage, d'une cave ou d'un grenier, là où le réseau ne passe pas. C'est même le moment où l'app sert le plus.</li>
+              <li>Le niveau 2 était écarté en PWA parce qu'il coûtait cher à construire ; <b>en natif il est presque offert</b> : <code>@tanstack/react-query</code> et son module de persistance écrivent le cache des requêtes sur le téléphone.</li>
+              <li>Les fiches, emplacements et listes déjà consultés restent lisibles sans réseau ; les photos suivent via le cache d'images.</li>
+              <li><b>L'écriture reste bloquée</b> : prêter, vendre, payer, partager engagent quelqu'un d'autre et demandent le réseau. Un bandeau « Hors connexion » l'annonce et désactive les boutons concernés.</li>
+              <li>Le dressing étant privé, le cache est vidé à la déconnexion et disparaît avec la désinstallation de l'app.</li>
+            </ul>
+          </div>
+          <div class="alt">
+            <h4>Écarté</h4>
+            <ul>
+              <li><b>Niveau 3</b> : file d'actions à rejouer, conflits, idempotence des requêtes — un projet à lui seul.</li>
+              <li><b>Niveau 1 seul</b> : c'était le compromis imposé par la PWA, il n'a plus de raison d'être.</li>
+            </ul>
+          </div>
+        </div>
+        <blockquote>Hors connexion, l'application reste consultable : le cache des requêtes est persisté sur le téléphone, donc on retrouve un objet et son emplacement même au fond d'une cave. Les actions qui engagent quelqu'un d'autre — prêter, vendre, payer — demandent le réseau et sont désactivées : nous n'avons volontairement pas fait de synchronisation, pour ne pas avoir à gérer des conflits.</blockquote>
+      </article>
+
+      <article class="choice" id="paiement">
+        <div class="choice-top"><span class="layer">Paiement</span><span class="pill p-impose">Imposé</span></div>
+        <h3>Stripe</h3>
+        <div class="cols">
+          <div>
+            <h4>Ce que ça implique</h4>
+            <ul>
+              <li>La vente se fait <b>entre amis</b> : l'argent doit arriver au vendeur, pas à la plateforme. Cela correspond à <b>Stripe Connect</b> (un compte Stripe par vendeur), pas à un paiement simple.</li>
+              <li>Les remboursements et litiges sont gérés par Stripe, ce qui répond au souhait du cadrage de ne pas les traiter à la main.</li>
+              <li>Tout le développement se fait en mode test Stripe : aucune vraie carte.</li>
+              <li><b>En natif, Stripe passe par <code>@stripe/stripe-react-native</code></b> et sa <code>PaymentSheet</code> : la saisie de carte est une feuille native, Apple Pay et Google Pay compris, et les numéros ne traversent jamais notre code.</li>
+            </ul>
+          </div>
+          <div class="alt">
+            <h4>À vérifier</h4>
+            <ul>
+              <li>Connect est-il attendu, ou un paiement simple en mode test suffit-il ?</li>
+              <li>Le cadrage et Asana mentionnent encore <b>MangoPay</b> (sections 14, 15 et validation client) : à renommer.</li>
+              <li><b>Règles des stores</b> : Apple et Google imposent leur achat intégré pour le <i>contenu numérique</i>, mais <b>exemptent les biens et services physiques entre personnes</b> (cas des places de marché). Vendre un vêtement à un ami relève de cette exemption : Stripe est donc autorisé. À savoir expliquer à l'oral, c'est la question qu'on nous posera.</li>
+            </ul>
+          </div>
+        </div>
+      </article>
+
+      <article class="choice" id="scan">
+        <div class="choice-top"><span class="layer">Scan</span><span><span class="pill p-impose">Imposé</span> <span class="pill p-ouvert">Ouvert</span></span></div>
+        <h3>Technologie communiquée plus tard</h3>
+        <p class="note" style="font-size:15px">Ce qu'il faudra vérifier dès qu'elle sera connue : <b>existe-t-il un module React Native ou un plugin Expo ?</b> (sinon il faudrait écrire un module natif, ce qui changerait le budget) ; la compatibilité avec le flux de travail Expo (un plugin natif impose un <i>development build</i>, Expo Go ne suffit plus) ; et la forme des données renvoyées, pour les stocker en <code>JSONB</code>. Le passage au natif libère en revanche les deux contraintes qui inquiétaient côté web : l'accès à la caméra ne dépend plus du navigateur (<code>expo-camera</code>, bibliothèques de vision type ML Kit), et il n'y a plus besoin d'HTTPS pour tester sur un téléphone.</p>
+      </article>
+
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>Reste à trancher</h2>
+    </div>
+    <div class="open">
+      <div class="open-item"><span class="pill p-ouvert" style="align-self:flex-start">Maquette</span><h3>Écran Notifications dans l'app</h3><p>La maquette contient une liste de notifications. Soit on la garde en plus des e-mails (une table et une route d'API, recommandé), soit on retire l'écran.</p></div>
+      <div class="open-item"><span class="pill p-ouvert" style="align-self:flex-start">Imposé</span><h3>Techno du scan</h3><p>En attente. Contrôler caméra, HTTPS et iOS dès réception.</p></div>
+      <div class="open-item" id="distrib"><span class="pill p-ouvert" style="align-self:flex-start">Plus tard</span><h3>Hébergement et distribution de l'app</h3><p>Où tourne l'API pour la démonstration (VPS, conteneurs, nom de domaine, certificat HTTPS), et par quel chemin l'app arrive sur le téléphone du jury : <b>Expo Go</b> (le plus simple, suffisant si aucun module natif exotique), <b>development build</b> (nécessaire dès qu'un plugin natif entre en jeu, par exemple pour le scan) ou <b>binaire EAS Build</b> installé à la main. Publication réelle sur l'App Store et le Play Store hors périmètre (comptes payants, délais de revue).</p></div>
+      <div class="open-item"><span class="pill p-ouvert" style="align-self:flex-start">À valider</span><h3>Accord de l'encadrant sur la forme</h3><p>Le cadrage annonçait une <i>web app</i> ; on livre désormais une <b>application mobile</b>. Le module n'impose que le back (Symfony + API Platform) et laisse le front libre, donc React Native rentre dans le cadre — mais le changement de forme du livrable doit être validé avant d'écrire la première ligne.</p></div>
+      <div class="open-item"><span class="pill p-ouvert" style="align-self:flex-start">Doc à reprendre</span><h3>Accessibilité : RGAA → RAAM</h3><p>Le <b>RGAA</b> évalue des pages web ; il ne s'applique pas à une application mobile. Le référentiel équivalent est le <b>RAAM</b> (référentiel d'évaluation de l'accessibilité des applications mobiles), adossé aux mêmes critères WCAG. En pratique : <code>accessibilityLabel</code> et <code>accessibilityRole</code> à la place des attributs ARIA, zones tactiles de 44 pt, respect de la taille de police du système, et tests avec VoiceOver et TalkBack plutôt qu'avec NVDA. <code>PENDERIE_RGAA.md</code> est à reprendre sur cette base.</p></div>
+      <div class="open-item" id="code"><span class="pill p-ouvert" style="align-self:flex-start">Plus tard</span><h3>Tests et intégration continue</h3><p>L'organisation du code est décidée : <b>un seul dépôt</b>, avec <code>/api</code> (Symfony) et <code>/app</code> (Expo) et un seul <code>docker-compose</code>. Une fonctionnalité qui touche l'API et l'app tient dans une seule PR, et le jury n'a qu'un lien. Restent à définir au démarrage du dépôt : les tests automatisés et l'intégration continue.</p></div>
+    </div>
+  </section>
+
+  <footer>
+    <span>Dates de support : <a href="https://symfony.com/releases">symfony.com/releases</a> · Compatibilité API Platform : <a href="https://packagist.org/packages/api-platform/symfony">packagist.org/packages/api-platform/symfony</a>, relevées le 12 septembre 2026.</span>
+    <span>Penderie · module WR506D</span>
+  </footer>
+
+</div>

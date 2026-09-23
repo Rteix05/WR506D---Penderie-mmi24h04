@@ -1,0 +1,273 @@
+<title>Audit UX Penderie</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Instrument+Sans:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --bg: #F8FAFC; --surface: #FFFFFF; --ink: #1A1E24; --sub: #475569; --line: #E3E7EE;
+    --primary: #D31D66; --primary-text: #C21B5E; --primary-tint: #FAE4ED;
+    --ok: #10786B; --ok-tint: #E7F2F1;
+    --part: #8A5A00; --part-tint: #FCF1DC;
+    --ko: #CA2323; --ko-tint: #FCE9E9;
+    --code-bg: #F1F3F7;
+    --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+    --body: "Instrument Sans", "Segoe UI", system-ui, sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #12151A; --surface: #1B1F26; --ink: #EDF1F6; --sub: #9BA7B8; --line: #2A303A;
+      --primary: #FF6098; --primary-text: #FF6098; --primary-tint: #3A1A28;
+      --ok: #43BBA9; --ok-tint: #16302D; --part: #F0B952; --part-tint: #33291A;
+      --ko: #FF6B6B; --ko-tint: #3A1C1C; --code-bg: #232833;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #12151A; --surface: #1B1F26; --ink: #EDF1F6; --sub: #9BA7B8; --line: #2A303A;
+    --primary: #FF6098; --primary-text: #FF6098; --primary-tint: #3A1A28;
+    --ok: #43BBA9; --ok-tint: #16302D; --part: #F0B952; --part-tint: #33291A;
+    --ko: #FF6B6B; --ko-tint: #3A1C1C; --code-bg: #232833;
+  }
+  * { box-sizing: border-box; }
+  body { background: var(--bg); color: var(--ink); font: 16px/1.55 var(--body); padding-inline: 20px; padding-block: 48px 80px; }
+  .wrap { max-width: 980px; margin: 0 auto; display: flex; flex-direction: column; gap: 48px; }
+  h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; }
+  p { margin: 0; }
+  code { font-family: var(--mono); font-size: .84em; background: var(--code-bg); padding: 1px 6px; border-radius: 6px; }
+  header { display: flex; flex-direction: column; gap: 14px; }
+  .eyebrow { font-size: 12px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--primary-text); }
+  h1 { font-size: clamp(34px, 5.5vw, 52px); font-weight: 800; line-height: 1.04; letter-spacing: -.02em; }
+  .lede { color: var(--sub); max-width: 68ch; font-size: 17px; }
+  h2 { font-size: 26px; font-weight: 800; letter-spacing: -.01em; }
+  .head { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+  .head p { color: var(--sub); max-width: 68ch; }
+
+  .pill { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; letter-spacing: .04em; padding: 3px 9px; border-radius: 999px; white-space: nowrap; }
+  .pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .COUVERT { background: var(--ok-tint); color: var(--ok); }
+  .PARTIEL { background: var(--part-tint); color: var(--part); }
+  .MANQUANT { background: var(--ko-tint); color: var(--ko); }
+
+  .totaux { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+  .tot { background: var(--surface); border-radius: 14px; padding: 16px 18px; display: flex; flex-direction: column; gap: 4px; box-shadow: 0 1px 2px rgba(26,30,36,.06); }
+  .tot strong { font-family: var(--display); font-size: 34px; line-height: 1; font-variant-numeric: tabular-nums; }
+  .tot span { font-size: 13px; color: var(--sub); }
+  .tot.ok strong { color: var(--ok); } .tot.part strong { color: var(--part); } .tot.ko strong { color: var(--ko); }
+
+  .bloc { background: var(--surface); border-radius: 16px; box-shadow: 0 1px 2px rgba(26,30,36,.06), 0 8px 24px rgba(26,30,36,.04); overflow: hidden; }
+  .bloc > h3 { font-size: 18px; font-weight: 800; padding: 18px 20px 12px; display: flex; gap: 10px; align-items: baseline; }
+  .bloc > h3 .num { font-family: var(--mono); font-size: 13px; color: var(--sub); font-weight: 500; }
+  .tw { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 760px; }
+  th, td { text-align: left; padding: 11px 16px; border-top: 1px solid var(--line); vertical-align: top; }
+  th { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--sub); font-weight: 600; background: var(--bg); }
+  td:nth-child(1) { width: 26%; font-weight: 600; }
+  td:nth-child(2) { width: 11%; }
+  td:nth-child(3) { width: 30%; color: var(--sub); }
+  td:nth-child(4) { width: 33%; }
+  .new { color: var(--primary-text); font-weight: 600; }
+
+  .incoh { display: flex; flex-direction: column; gap: 10px; }
+  .incoh div { background: var(--surface); border-radius: 12px; padding: 14px 18px; box-shadow: 0 1px 2px rgba(26,30,36,.06); }
+  .incoh b { display: block; margin-bottom: 2px; }
+  .incoh p { color: var(--sub); font-size: 14px; }
+
+  .plan { width: 100%; }
+  .plan td:nth-child(1) { width: 18%; font-family: var(--mono); font-weight: 500; font-size: 13px; }
+  .plan td:nth-child(2) { width: 22%; color: var(--ink); font-weight: 600; }
+  .plan td:nth-child(3) { width: 44%; color: var(--sub); font-weight: 400; }
+  .plan td:nth-child(4) { width: 16%; font-variant-numeric: tabular-nums; }
+
+  .questions { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 12px; }
+  .q { background: var(--primary-tint); border-radius: 12px; padding: 16px 18px; display: flex; flex-direction: column; gap: 6px; }
+  .q b { font-size: 15px; }
+  .q p { font-size: 14px; color: var(--ink); }
+  footer { font-size: 13px; color: var(--sub); border-top: 1px solid var(--line); padding-top: 18px; }
+  @media (max-width: 700px) {
+    .totaux { grid-template-columns: repeat(2, minmax(0,1fr)); }
+    .questions { grid-template-columns: 1fr; }
+  }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Penderie · Maquette v2 · Audit avant modification</div>
+    <h1>Audit UX du brief client</h1>
+    <p class="lede">Chaque exigence des 21 points du brief est comparée aux écrans réellement construits (131 écrans de la Maquette v2, plus les 11 écrans du lot 20 Abonnés). La preuve cite le nom exact de la frame. Rien n'a encore été modifié dans Figma.</p>
+  </header>
+
+  <section>
+    <div class="totaux" id="totaux">
+      <div class="tot"><strong id="t-all">–</strong><span>exigences auditées</span></div>
+      <div class="tot ok"><strong id="t-ok">–</strong><span>couvertes</span></div>
+      <div class="tot part"><strong id="t-part">–</strong><span>partielles</span></div>
+      <div class="tot ko"><strong id="t-ko">–</strong><span>manquantes</span></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="head">
+      <h2>Exigence par exigence</h2>
+      <p>En rose dans la dernière colonne : un écran nouveau. Sinon, une adaptation d'un écran existant, faite dans son propre lot.</p>
+    </div>
+    <div id="blocs" style="display:flex;flex-direction:column;gap:16px">
+
+<div class="bloc"><h3><span class="num">01</span>Dressing privé et confidentialité</h3><div class="tw"><table>
+<tr><th>Exigence</th><th>Statut</th><th>Preuve dans la maquette</th><th>À faire</th></tr>
+<tr><td>Privé par défaut</td><td><span class="pill COUVERT">COUVERT</span></td><td>Compte — Confidentialité (« Par défaut, personne ne voit rien ») · Objet — Vérification (« Visible par : Toi seul ») · Partage — État · Aucun partage</td><td>—</td></tr>
+<tr><td>Choisir avec qui : amis ou abonnés</td><td><span class="pill PARTIEL">PARTIEL</span></td><td>Partage — Partager ne liste que des amis (« 12 amis »)</td><td>Adapter Partager : onglets Amis / Abonnés</td></tr>
+<tr><td>Niveau d'accès (lecture / commentaires)</td><td><span class="pill PARTIEL">PARTIEL</span></td><td>Un seul interrupteur « Autoriser les commentaires », valable pour tout le partage</td><td>Adapter Partager : niveau par destinataire ; un abonné est toujours en lecture seule</td></tr>
+<tr><td>Choisir ce qui est partagé : vêtement, objet, pièce, collection</td><td><span class="pill PARTIEL">PARTIEL</span></td><td>L'élément est pré-choisi (Veste en jean) ; « Mon dressing » apparaît dans Mes partages ; aucune pièce ni collection</td><td class="new">Nouveau : Partage — Choisir quoi partager</td></tr>
+<tr><td>Un abonnement seul ne donne jamais accès</td><td><span class="pill COUVERT">COUVERT</span></td><td>Lot 20 : bandeaux des profils Abonnés (« S'abonner ne donne accès à rien de privé »)</td><td>—</td></tr>
+<tr><td>Vue abonné : lecture seule, sans commentaires</td><td><span class="pill MANQUANT">MANQUANT</span></td><td>Partage — Accès invité montre toujours « Voir les commentaires (3) »</td><td class="new">Nouveau : Partage — Accès abonné · Lecture seule</td></tr>
+<tr><td>États accès refusé / utilisateur non autorisé</td><td><span class="pill MANQUANT">MANQUANT</span></td><td>Aucun écran côté visiteur</td><td class="new">Nouveau : Partage — Invité · Accès refusé</td></tr>
+<tr><td>État accès révoqué</td><td><span class="pill PARTIEL">PARTIEL</span></td><td>Partage — Accès révoqué, côté propriétaire seulement</td><td class="new">Nouveau : Partage — Invité · Lien révoqué ou expiré</td></tr>
+<tr><td>État partage expiré</td><td><span class="pill PARTIEL">PARTIEL</span></td><td>Réglage « Expire dans 7 jours » + pastille « Expire bientôt » ; pas d'état expiré</td><td>Couvert par l'écran Invité · Lien révoqué ou expiré</td></tr>
+<tr><td>Aucun élément partagé</td><td><span class="pill COUVERT">COUVERT</span></td><td>Partage — État · Aucun partage (propriétaire) · Abonnés — Profil · Abonné (« Aucun pour l'instant »)</td><td>—</td></tr>
+</table></div></div>
+
+<div class="bloc"><h3><span class="num">02</span>Partage d'une pièce, d'une collection ou d'un objet</h3><div class="tw"><table>
+<tr><th>Exigence</th><th>Statut</th><th>Preuve dans la maquette</th><th>À faire</th></tr>
+<tr><td>Objet → Partager</td><td><span class="pill COUVERT">COUVERT</span></td><td>Objet — Fiche · Disponible (bouton « Partager »)</td><td>—</td></tr>
+<tr><td>Pièce → Partager</td><td><span class="pill MANQUANT">MANQUANT</span></td><td>Logement — Vue pièce n'a aucune action de partage</td><td>Adapter Vue pièce : rangée « Partager cette pièce »</td></tr>
+<tr><td>Collection → Partager</td><td><span class="pill MANQUANT">MANQUANT</span></td><td>La notion de collection n'existe nulle part dans la maquette</td><td>Voir question 1 : proposée comme simple portée dans « Choisir quoi partager »</td></tr>
+<tr><td>Générer un lien et un QR code</td><td><span class="pill COUVERT">COUVERT</span></td><td>Partage — Lien de partage (lien + carte QR) · Partage — Lien copié</td><td>—</td></tr>
+<tr><td>Consulter les personnes ayant accès, révoquer</td><td><span class="pill COUVERT">COUVERT</span></td><td>Partage — Détail d'un accès (« Qui a accès », « Révoquer », « Tout révoquer ») · Système — Confirmation · Retirer un partage</td><td>—</td></tr>
+<tr><td>Invité sans compte</td><td><span class="pill PARTIEL">PARTIEL</span></td><td>Partage — Accès invité est présenté comme un ami connecté</td><td>Couvert par les 3 écrans Invité (bandeau « Tu consultes sans compte »)</td></tr>
+<tr><td>Contenu non disponible, supprimé, rendu privé</td><td><span class="pill MANQUANT">MANQUANT</span></td><td>Aucun écran</td><td class="new">Nouveau : Partage — Invité · Contenu indisponible</td></tr>
+<tr><td>Le partage ne rend jamais le dressing public</td><td><span class="pill COUVERT">COUVERT</span></td><td>Bandeaux de Lien de partage et Accès invité (« Le reste de sa penderie reste privé »)</td><td>—</td></tr>
+</table></div></div>
+
+<div class="bloc"><h3><span class="num">03–07</span>« L'application m'habille »</h3><div class="tw"><table>
+<tr><th>Exigence</th><th>Statut</th><th>Preuve dans la maquette</th><th>À faire</th></tr>
+<tr><td>Suggestion à partir de la météo et du contexte</td><td><span class="pill COUVERT">COUVERT</span></td><td>Tenue — Ma tenue (carte météo) · Tenue — Suggestion (« Travail · 18° nuageux ») · Tenue — Préférences (contexte)</td><td>—</td></tr>
+<tr><td>Montrer POURQUOI la tenue est proposée</td><td><span class="pill PARTIEL">PARTIEL</span></td><td>Une seule phrase : « Aucune de ces pièces n'a été portée ces 7 derniers jours »</td><td>Adapter Suggestion : carte « Pourquoi cette tenue » (12 °C, journée de travail, veste pas portée cette semaine, pièces compatibles)</td></tr>
+<tr><td>Éviter les pièces portées récemment</td><td><span class="pill COUVERT">COUVERT</span></td><td>Interrupteur dans Tenue — Préférences · « Porté il y a 3 j » sur les cartes du dressing</td><td>—</td></tr>
+<tr><td>Indication « Déjà porté cette semaine » dans la suggestion</td><td><span class="pill PARTIEL">PARTIEL</span></td><td>Absente de Tenue — Remplacer une pièce</td><td>Adapter Remplacer : mention sur les alternatives</td></tr>
+<tr><td>Consulter l'historique de port</td><td><span class="pill COUVERT">COUVERT</span></td><td>Vêtement — Historique de port · bloc historique sur les fiches</td><td>—</td></tr>
+<tr><td>« Je n'aime pas cette pièce » ou « Remplacer cette pièce »</td><td><span class="pill PARTIEL">PARTIEL</span></td><td>Un seul bouton « Refuser », pour toute la tenue</td><td>Adapter Suggestion : les deux actions par pièce</td></tr>
+<tr><td>Feedback « Cette pièce ne sera plus proposée »</td><td><span class="pill MANQUANT">MANQUANT</span></td><td>Aucun retour après refus</td><td class="new">Nouveau : Tenue — Pièce refusée</td></tr>
+<tr><td>Une pièce refusée n'est jamais reproposée</td><td><span class="pill PARTIEL">PARTIEL</span></td><td>Contredit par Préférences : « Elles ne reviendront pas avant 30 jours »</td><td>Adapter Préférences : corriger la règle</td></tr>
+<tr><td>Revenir sur ses choix : pièces, couleurs, styles, contexte</td><td><span class="pill MANQUANT">MANQUANT</span></td><td>Préférences ne liste que des couleurs « à privilégier » ; aucune exclusion visible ni réactivable</td><td class="new">Nouveau : Tenue — Préférences · Mes exclusions (avec « Réactiver »)</td></tr>
+<tr><td>Modifier, annuler, réinitialiser, restaurer</td><td><span class="pill MANQUANT">MANQUANT</span></td><td>« Réinitialiser » n'existe que pour les filtres du dressing</td><td class="new">Nouveau : Tenue — Confirmation · Réinitialiser les préférences + Tenue — Préférence réactivée</td></tr>
+<tr><td>Classification de style en familles (Travail, Quotidien, Sport, Soirée, Événement, Maison)</td><td><span class="pill PARTIEL">PARTIEL</span></td><td>Style à choix unique (Casual, Sport, Élégant, Streetwear, Chic, Autre) ; contexte sans Quotidien ni Maison</td><td class="new">Nouveau : Vêtement — Catégories de style (référence, comme Objet — Statuts)</td></tr>
+<tr><td>Un vêtement dans plusieurs catégories</td><td><span class="pill MANQUANT">MANQUANT</span></td><td>Vêtement — Ajout · Informations et Modification : un seul style</td><td>Adapter les deux écrans : « Usages » à choix multiple</td></tr>
+<tr><td>Le moteur n'associe pas travail et sport</td><td><span class="pill PARTIEL">PARTIEL</span></td><td>Implicite seulement</td><td>Dit dans la carte « Pourquoi cette tenue »</td></tr>
+</table></div></div>
+
+<div class="bloc"><h3><span class="num">08–12</span>Objets, prêts et déplacements</h3><div class="tw"><table>
+<tr><th>Exigence</th><th>Statut</th><th>Preuve dans la maquette</th><th>À faire</th></tr>
+<tr><td>8 états : Disponible, Rangé, Prêté, Emprunté, Perdu, Vendu, À vendre, Déplacé</td><td><span class="pill PARTIEL">PARTIEL</span></td><td>Objet — Statuts en décrit 6 ; « Rangé » et « Déplacé » manquent (« À ranger » existe dans Mes logements)</td><td>Adapter Statuts : 8 états (voir question 3)</td></tr>
+<tr><td>L'état conditionne les actions</td><td><span class="pill PARTIEL">PARTIEL</span></td><td>Disponible, Prêté et Emprunté sont bien différenciés ; aucune fiche Vendu ni Perdu</td><td class="new">Nouveau : Objet — Fiche · Vendu · Objet — Fiche · Perdu</td></tr>
+<tr><td>Emprunté : « Objet emprunté à Thomas », Prêter désactivé avec explication</td><td><span class="pill PARTIEL">PARTIEL</span></td><td>Objet — Fiche · Emprunté : Prêter désactivé + « tu ne peux pas le prêter », sans la raison</td><td>Adapter : « Tu ne peux pas prêter cet objet car il appartient à Thomas. »</td></tr>
+<tr><td>Historique des prêts d'un objet</td><td><span class="pill MANQUANT">MANQUANT</span></td><td>Seulement « Ce prêt » après un retour, et la liste « Terminés » de Mes prêts</td><td class="new">Nouveau : Objet — Historique des prêts</td></tr>
+<tr><td>Objet perdu, endommagé ou non rendu pendant un prêt</td><td><span class="pill MANQUANT">MANQUANT</span></td><td>Objet — Fiche · Prêté n'a pas d'action de signalement ; le retour n'a qu'un interrupteur « État vérifié »</td><td class="new">Nouveau : Prêt — Signaler un problème · Prêt — Confirmation · Objet perdu · Prêt — Retour · Objet endommagé</td></tr>
+<tr><td>Déplacer vers un autre logement</td><td><span class="pill PARTIEL">PARTIEL</span></td><td>Objet — Déplacer a un champ Logement, mais l'exemple reste dans Maison principale</td><td>Adapter Déplacer : exemple vers un 2e logement</td></tr>
+<tr><td>Feedback « Objet déplacé vers … »</td><td><span class="pill MANQUANT">MANQUANT</span></td><td>« Confirmer » ramène à la fiche sans retour visible</td><td class="new">Nouveau : Objet — Déplacé · Confirmation</td></tr>
+<tr><td>Emplacement actuel toujours visible</td><td><span class="pill COUVERT">COUVERT</span></td><td>Bloc Localisation des fiches · fil d'Ariane de Déplacer</td><td>—</td></tr>
+</table></div></div>
+
+<div class="bloc"><h3><span class="num">13–15</span>Profils proches et contrôle parental</h3><div class="tw"><table>
+<tr><th>Exigence</th><th>Statut</th><th>Preuve dans la maquette</th><th>À faire</th></tr>
+<tr><td>Créer un profil, changer de profil</td><td><span class="pill COUVERT">COUVERT</span></td><td>Compte — Nouveau profil enfant (type Enfant / Famille) · Compte — Changer de profil</td><td>—</td></tr>
+<tr><td>Modifier un profil</td><td><span class="pill MANQUANT">MANQUANT</span></td><td>Bouton « Modifier » sur Profil famille, sans écran derrière</td><td class="new">Nouveau : Compte — Modifier un profil</td></tr>
+<tr><td>Supprimer un profil</td><td><span class="pill PARTIEL">PARTIEL</span></td><td>Lien « Supprimer ce profil » sans confirmation</td><td class="new">Nouveau : Système — Confirmation · Supprimer un profil</td></tr>
+<tr><td>Inventaire propre à chaque profil, permissions</td><td><span class="pill COUVERT">COUVERT</span></td><td>Changer de profil (« Les objets d'un profil ne sont pas visibles depuis un autre ») · Profil famille (« Ce que Léa peut faire »)</td><td>—</td></tr>
+<tr><td>Restrictions du profil enfant choisies par le parent</td><td><span class="pill COUVERT">COUVERT</span></td><td>Compte — Autorisations parentales (vendre et acheter bloqués, amis validés…)</td><td>—</td></tr>
+<tr><td>Ce que l'enfant voit quand une action est bloquée</td><td><span class="pill MANQUANT">MANQUANT</span></td><td>Aucun écran vu depuis le profil enfant</td><td class="new">Nouveau : Compte — Profil enfant · Action non autorisée</td></tr>
+<tr><td>Paramètres protégés</td><td><span class="pill MANQUANT">MANQUANT</span></td><td>Rien n'empêche un enfant d'ouvrir les autorisations</td><td class="new">Nouveau : Compte — Code parent</td></tr>
+<tr><td>Le parent gère les demandes d'amis du sous-compte</td><td><span class="pill PARTIEL">PARTIEL</span></td><td>Interrupteur « Tu valides chaque demande », mais ni liste ni décision</td><td class="new">Nouveau : Compte — Demandes du profil enfant · Compte — Demande d'ami · Décision (Autoriser / Refuser / Bloquer) ; + notification « Noé a reçu une demande d'ami » (lot 11)</td></tr>
+</table></div></div>
+
+<div class="bloc"><h3><span class="num">16–19</span>Relations, scan, souvenirs, vente</h3><div class="tw"><table>
+<tr><th>Exigence</th><th>Statut</th><th>Preuve dans la maquette</th><th>À faire</th></tr>
+<tr><td>Amis, abonnés, abonnements, mutuel → « Devenir amis »</td><td><span class="pill COUVERT">COUVERT</span></td><td>Lot 20 (11 écrans « Abonnés — … »), livré, à exécuter</td><td>—</td></tr>
+<tr><td>Scanner → résultat → vérification → modification → emplacement → confirmation</td><td><span class="pill COUVERT">COUVERT</span></td><td>Objet — Scanner, Résultat du scan, Informations, Localisation, Vérification, Confirmation</td><td>—</td></tr>
+<tr><td>Étape de détection</td><td><span class="pill PARTIEL">PARTIEL</span></td><td>Passage direct de la photo au résultat</td><td class="new">Nouveau : Objet — Scan · Analyse en cours</td></tr>
+<tr><td>Scan échoué : « Impossible d'identifier cet objet » → Réessayer / Ajouter manuellement</td><td><span class="pill MANQUANT">MANQUANT</span></td><td>Seul le lien « Ajouter manuellement » de l'écran Scanner existe</td><td class="new">Nouveau : Objet — Scan · Échec</td></tr>
+<tr><td>Photo et note d'un objet</td><td><span class="pill COUVERT">COUVERT</span></td><td>Objet — Informations (« Changer la photo », Note) · carte Notes de la fiche</td><td>—</td></tr>
+<tr><td>Souvenir / contexte personnel</td><td><span class="pill MANQUANT">MANQUANT</span></td><td>Aucun champ dédié</td><td>Adapter Informations et Fiche · Disponible : bloc « Souvenir »</td></tr>
+<tr><td>Modifier et supprimer une note ou un souvenir</td><td><span class="pill MANQUANT">MANQUANT</span></td><td>Aucun écran</td><td class="new">Nouveau : Objet — Notes et souvenir</td></tr>
+<tr><td>Vente jamais automatique, « Mettre en vente » explicite</td><td><span class="pill COUVERT">COUVERT</span></td><td>Vente — Informations (« Mettre en vente ») depuis les boutons « Vendre »</td><td>—</td></tr>
+<tr><td>Objet prêté non vendable, avec la raison</td><td><span class="pill PARTIEL">PARTIEL</span></td><td>Dit sur Vêtement — Fiche · Prêté ; Objet — Fiche · Prêté retire « Vendre » sans explication</td><td>Adapter Objet — Fiche · Prêté : note explicative</td></tr>
+<tr><td>Objet vendu : ni prêt ni déplacement, historique conservé</td><td><span class="pill MANQUANT">MANQUANT</span></td><td>Vente — État · Vendu montre l'annonce, pas l'objet</td><td>Couvert par Objet — Fiche · Vendu</td></tr>
+<tr><td>Amis acheteurs prioritaires</td><td><span class="pill COUVERT">COUVERT</span></td><td>Vente — Informations (« Visible par : Mes amis uniquement ») · Vente — À vendre chez mes amis</td><td>—</td></tr>
+</table></div></div>
+
+<div class="bloc"><h3><span class="num">20</span>Administration / back-office</h3><div class="tw"><table>
+<tr><th>Exigence</th><th>Statut</th><th>Preuve dans la maquette</th><th>À faire</th></tr>
+<tr><td>Accès réservé, hors navigation utilisateur</td><td><span class="pill MANQUANT">MANQUANT</span></td><td>Aucun écran d'administration</td><td class="new">Nouveau : Admin — Connexion</td></tr>
+<tr><td>Tableau de bord</td><td><span class="pill MANQUANT">MANQUANT</span></td><td>—</td><td class="new">Nouveau : Admin — Tableau de bord</td></tr>
+<tr><td>Utilisateurs, profils et sous-comptes</td><td><span class="pill MANQUANT">MANQUANT</span></td><td>—</td><td class="new">Nouveau : Admin — Utilisateurs · Admin — Fiche utilisateur</td></tr>
+<tr><td>Objets, contenus et commentaires signalés ; demandes</td><td><span class="pill MANQUANT">MANQUANT</span></td><td>—</td><td class="new">Nouveau : Admin — Signalements · Admin — Détail d'un signalement</td></tr>
+<tr><td>Ventes et transactions</td><td><span class="pill MANQUANT">MANQUANT</span></td><td>—</td><td class="new">Nouveau : Admin — Ventes et transactions</td></tr>
+<tr><td>Litiges et remboursements</td><td><span class="pill MANQUANT">MANQUANT</span></td><td>Côté utilisateur seulement (Paiement — Problème de commande, Remboursement en cours / terminé)</td><td class="new">Nouveau : Admin — Litiges · Admin — Détail d'un litige</td></tr>
+<tr><td>Catégories de vêtements et de style ; statuts</td><td><span class="pill MANQUANT">MANQUANT</span></td><td>—</td><td class="new">Nouveau : Admin — Catégories et statuts</td></tr>
+</table></div></div>
+
+<div class="bloc"><h3><span class="num">21</span>Règles de cohérence générales</h3><div class="tw"><table>
+<tr><th>Exigence</th><th>Statut</th><th>Preuve dans la maquette</th><th>À faire</th></tr>
+<tr><td>Confirmation, succès, erreur des actions destructives</td><td><span class="pill COUVERT">COUVERT</span></td><td>6 modales Système — Confirmation · … · Système — Erreur · toasts de succès partout</td><td>—</td></tr>
+<tr><td>États vides</td><td><span class="pill COUVERT">COUVERT</span></td><td>Dressing, tenues, amis, partages, notifications, recherche, inventaire, abonnés</td><td>—</td></tr>
+<tr><td>États impossibles expliqués</td><td><span class="pill PARTIEL">PARTIEL</span></td><td>Bien traité pour l'emprunt et le vêtement prêté ; manque objet vendu, perdu et prêté</td><td>Couvert par les fiches Vendu / Perdu et l'adaptation de Fiche · Prêté</td></tr>
+<tr><td>Conséquences sur les autres fonctionnalités</td><td><span class="pill PARTIEL">PARTIEL</span></td><td>Dites avant l'action pour le prêt et le carton ; absentes pour vendu et perdu</td><td>Dites sur les nouvelles fiches et la modale Objet perdu</td></tr>
+</table></div></div>
+
+    </div>
+  </section>
+
+  <section>
+    <div class="head">
+      <h2>Incohérences relevées en chemin</h2>
+      <p>Pas des manques : des écrans qui se contredisent. Corrigés dans les adaptations prévues.</p>
+    </div>
+    <div class="incoh">
+      <div><b>Pièces refusées : 30 jours ou jamais ?</b><p>Tenue — Préférences dit « Elles ne reviendront pas avant 30 jours » ; le brief exige qu'elles ne reviennent plus, sauf réactivation.</p></div>
+      <div><b>Qui a prêté l'objet emprunté ?</b><p>Objet — Mes objets affiche « Emprunté à Léa » ; la fiche du même objet affiche « Propriétaire : Thomas ».</p></div>
+      <div><b>Tout invité voit les commentaires</b><p>Partage — Accès invité propose « Voir les commentaires (3) » quel que soit le visiteur, ce qui contredit la règle abonné.</p></div>
+      <div><b>Partager avec ses abonnés, mais par quel écran ?</b><p>Le lot 20 affiche « Partagé avec ses abonnés » alors qu'aucun écran ne permet encore de partager avec des abonnés. L'adaptation de Partage — Partager ferme cette boucle.</p></div>
+      <div><b>Profil enfant : Léa ou Noé ?</b><p>Le brief prend l'exemple de « ma fille de 12 ans » ; dans la maquette, Léa est un profil famille et Noé (9 ans) le profil enfant. L'audit garde Noé pour rester cohérent.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="head">
+      <h2>Ce qui a été construit</h2>
+      <p>Livré le 13 septembre après validation des arbitrages. Écrans créés dans leur section, prototype câblé dans <code>penderie-prototype-v2.js</code>. Aucun nouvel écran ne duplique un nom existant.</p>
+    </div>
+    <div class="bloc"><div class="tw"><table class="plan">
+      <tr><th>Lot</th><th>Périmètre</th><th>Contenu</th><th>Écrans</th></tr>
+      <tr><td>21-objets-regles</td><td>Objets, prêts, localisation</td><td>Fiches Perdu, Endommagé, Vendu, À ranger · Historique des prêts · Déplacé · Scan : analyse et échec · Notes et souvenir · Signaler un problème · Objet perdu (overlay) · Retour endommagé · Objet non rendu. Adaptations : Statuts (8 états), Mes objets, fiches Disponible / Prêté / Emprunté, Mes prêts, Retour, Déplacer, Informations</td><td>13 + 9 adapt.</td></tr>
+      <tr><td>22-partage-acces</td><td>Confidentialité, partage, abonnés</td><td>Choisir quoi partager · Accès abonné en lecture seule · Invité : accès refusé, lien révoqué ou expiré, contenu indisponible. Adaptations : Partager (amis / abonnés, niveau par personne), Lien de partage (aperçu par profil), Accès invité, Détail d'un accès, Commentaires, Vue pièce</td><td>5 + 6 adapt.</td></tr>
+      <tr><td>23-collections</td><td>Collections en moodboard</td><td>Mes collections · État vide · Créer (informations, éléments, moodboard) · Créée · Vue · Modifier · Couverture · Supprimer (overlay) · Ajouter à une collection · Ajoutée · Partager · Lien et QR · Vue ami · Vue abonné. Refus et lien expiré : écrans génériques du lot 22</td><td>16 + 2 adapt.</td></tr>
+      <tr><td>24-habille</td><td>L'app m'habille</td><td>Pièce refusée · Mes exclusions · Préférence réactivée · Réinitialiser (overlay) · Catégories de style. Adaptations : Suggestion (raisons, actions par pièce), Remplacer, Préférences, Ma tenue, Ajout et Modification vêtement, Filtrer</td><td>5 + 6 adapt.</td></tr>
+      <tr><td>25-profils</td><td>Profils et contrôle parental</td><td>Modifier un profil · Enfant : action bloquée, demande envoyée · Code parent · Demandes pour Noé · Décision · Autorisée · Supprimer un profil (overlay). Adaptations : Autorisations, Profil, notification</td><td>8 + 3 adapt.</td></tr>
+      <tr><td>26-backoffice</td><td>Back-office 1440 px</td><td>Connexion · Tableau de bord · Utilisateurs · Fiche utilisateur · Signalements · Détail d'un signalement · Suspendre (overlay) · Ventes et transactions · Litiges et remboursements · Détail d'un litige · Catégories</td><td>11</td></tr>
+      <tr><td colspan="3" style="text-align:right;font-family:var(--body);font-weight:600">Total</td><td><b>58 nouveaux écrans</b></td></tr>
+    </table></div></div>
+  </section>
+
+  <section>
+    <div class="head"><h2>Arbitrages retenus</h2></div>
+    <div class="questions">
+      <div class="q"><b>Collections</b><p>Vraie fonctionnalité de moodboard (ajout final du brief), privée par défaut. Une collection référence des éléments, elle n'en crée ni n'en supprime jamais.</p></div>
+      <div class="q"><b>Back-office</b><p>Desktop 1440 px, section 14. Barre latérale sombre et pastille ADMIN pour le distinguer de l'app. L'administration décide, Stripe exécute les remboursements.</p></div>
+      <div class="q"><b>États d'un objet</b><p>À ranger, Disponible, Prêté, Emprunté, Perdu, Endommagé, À vendre, Vendu. « Déplacer » est une action : l'emplacement change, l'état reste.</p></div>
+      <div class="q"><b>Les 3 contradictions</b><p>Pièces refusées : jusqu'à réactivation. Objet emprunté : Ponceuse Makita, propriétaire Thomas, partout. Abonné autorisé : lecture seule, aucun commentaire visible.</p></div>
+    </div>
+  </section>
+
+  <footer>Audit établi le 13 septembre 2026 à partir des scripts de construction de la Maquette v2 (lots 01 à 20), puis complété par les lots 21 à 26. Les statuts du tableau ci-dessus décrivent l'état AVANT ces lots. Vérifié sur un banc qui simule Figma : 25 lots sans échec, 199 écrans résolus par le prototype, 724 interactions.</footer>
+</div>
+
+<script>
+  (function () {
+    var pills = document.querySelectorAll('#blocs td .pill');
+    var n = { COUVERT: 0, PARTIEL: 0, MANQUANT: 0 };
+    pills.forEach(function (p) { if (n[p.textContent] != null) n[p.textContent]++; });
+    document.getElementById('t-all').textContent = pills.length;
+    document.getElementById('t-ok').textContent = n.COUVERT;
+    document.getElementById('t-part').textContent = n.PARTIEL;
+    document.getElementById('t-ko').textContent = n.MANQUANT;
+  })();
+</script>
