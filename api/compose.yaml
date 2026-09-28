@@ -1,0 +1,62 @@
+# Environnement de développement de l'API Penderie.
+#
+#   docker compose up -d --build     → démarre PHP + PostgreSQL
+#   http://localhost:8080/api        → documentation interactive d'API Platform
+#
+# Les blocs « ###> paquet ### » sont gérés par Symfony Flex : un paquet installé
+# plus tard (mailer, messenger…) peut y ajouter son service automatiquement.
+
+services:
+  php:
+    build: .
+    depends_on:
+      database:
+        condition: service_healthy
+    environment:
+      # Dans le réseau Docker, la base s'appelle « database », pas 127.0.0.1.
+      DATABASE_URL: postgresql://${POSTGRES_USER:-penderie}:${POSTGRES_PASSWORD:-penderie}@database:5432/${POSTGRES_DB:-penderie}?serverVersion=${POSTGRES_VERSION:-17}&charset=utf8
+    volumes:
+      # Le code du poste est monté dans le conteneur : une modification est
+      # visible immédiatement, sans reconstruire l'image.
+      - ./:/app
+      # Sous Windows (et macOS), lire un fichier monté depuis le poste est très
+      # lent. Symfony en lit des milliers dans vendor/ et var/cache/ : en
+      # montage direct, une page met plus de 30 s. Ces deux dossiers restent
+      # donc dans des volumes Docker, côté Linux. Contrepartie : vendor/ est
+      # installé par le conteneur (docker-entrypoint.sh), pas copié du poste.
+      - api_vendor:/app/vendor
+      - api_var:/app/var
+      # Données et configuration de Caddy, conservées entre deux redémarrages.
+      - caddy_data:/data
+      - caddy_config:/config
+    ports:
+      # Port 8080 de l'hôte (8000 est souvent pris par un autre projet) : c'est
+      # l'adresse que l'app Expo appellera, http://<IP-du-poste>:8080/api depuis
+      # un téléphone sur le même Wi-Fi. Modifiable : API_HTTP_PORT=8090 docker compose up
+      - "${API_HTTP_PORT:-8080}:80"
+
+###> doctrine/doctrine-bundle ###
+  database:
+    image: postgres:${POSTGRES_VERSION:-17}-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-penderie}
+      # Identifiants de développement uniquement : jamais réutilisés en production.
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-penderie}
+      POSTGRES_USER: ${POSTGRES_USER:-penderie}
+    healthcheck:
+      test: ["CMD", "pg_isready", "-d", "${POSTGRES_DB:-penderie}", "-U", "${POSTGRES_USER:-penderie}"]
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    volumes:
+      - database_data:/var/lib/postgresql/data:rw
+###< doctrine/doctrine-bundle ###
+
+volumes:
+  api_vendor:
+  api_var:
+  caddy_data:
+  caddy_config:
+###> doctrine/doctrine-bundle ###
+  database_data:
+###< doctrine/doctrine-bundle ###

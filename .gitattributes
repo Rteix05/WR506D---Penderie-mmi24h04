@@ -1,0 +1,5 @@
+# Git convertit les fins de ligne selon le poste (core.autocrlf sous Windows).
+# Les fichiers exécutés dans un conteneur Linux doivent rester en LF quoi qu'il
+# arrive : un script shell en CRLF échoue avec « /bin/sh^M: not found ».
+*.sh        text eol=lf
+Dockerfile  text eol=lf

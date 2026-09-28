@@ -1,0 +1,6 @@
+# Contexte de build Docker : le code est monté en volume au lancement,
+# inutile d'envoyer les dépendances et le cache au moteur Docker à chaque build.
+vendor/
+var/
+.env.local
+.env.*.local

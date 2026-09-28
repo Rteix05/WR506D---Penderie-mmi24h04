@@ -1,0 +1,8 @@
+api_platform:
+    title: Penderie API
+    description: API de Penderie — ranger, retrouver, prêter et vendre entre amis ce que l'on possède.
+    version: 1.0.0
+    defaults:
+        stateless: true
+        cache_headers:
+            vary: ['Content-Type', 'Authorization', 'Origin']
