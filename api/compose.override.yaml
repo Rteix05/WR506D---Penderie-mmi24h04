@@ -1,0 +1,11 @@
+# Ajouts propres au poste de développement, chargés automatiquement par
+# « docker compose » en plus de compose.yaml.
+
+services:
+###> doctrine/doctrine-bundle ###
+  database:
+    ports:
+      # Base exposée sur le port 5432 de l'hôte : permet d'y brancher un client SQL
+      # (DBeaver, TablePlus…) ou de lancer PHP hors Docker avec le DATABASE_URL de .env.
+      - "5432:5432"
+###< doctrine/doctrine-bundle ###

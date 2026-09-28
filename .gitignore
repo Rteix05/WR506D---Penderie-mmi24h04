@@ -26,4 +26,6 @@ node_modules/
 *.log
 
 # Docker
-.env
+# Seulement à la racine : api/.env est commité (valeurs par défaut, sans secret),
+# comme le prévoit Symfony ; les secrets locaux vont dans api/.env.local
+/.env
