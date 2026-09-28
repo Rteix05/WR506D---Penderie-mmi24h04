@@ -1,0 +1,5 @@
+/* Point d'entrée Tailwind, compilé par NativeWind (voir metro.config.js).
+   Les jetons du design system sont dans tailwind.config.js, pas ici. */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
