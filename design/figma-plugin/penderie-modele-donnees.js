@@ -272,7 +272,7 @@ dom("02 — RELATIONS", C.main, [
             ["","status","PENDING · ACCEPTED · DECLINED"],["fk","approvalRequest","→ ApprovalRequest ?"]],
     rels: ["Profile N:1 (×2)"],
     note: "N'ouvre AUCUN accès au contenu." },
-  { id: "follow", nom: "Follow", statut: "V2", col: 1, sub: 0,
+  { id: "follow", nom: "Follow", statut: "MVP", col: 1, sub: 0,
     role: "L'abonnement, asymétrique et sans accord.",
     attrs: [["pk","id","uuid"],["fk","follower","→ Profile"],["fk","following","→ Profile"],["","createdAt","datetime"]],
     rels: ["Profile N:1 (×2)"],

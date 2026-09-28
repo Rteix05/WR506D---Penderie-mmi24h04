@@ -176,10 +176,10 @@
     <p class="lede">Reprise complète du modèle après review critique. Le découpage compte / profil, le système de permissions, les collections-moodboards, la séparation statut / condition et l'abstraction du paiement sont revus en profondeur — le reste est conservé, corrigé ou fusionné, entité par entité.</p>
     <p class="lede" style="margin-top:4px"><b>Révision du 15 septembre :</b> <code>Profile</code> porte désormais <code>firstName</code>, <code>lastName</code> et <code>dateOfBirth</code>, et toute la zone compte / profil / tutelle a été reprise — voir la section <a href="#identite">Identité d'un profil</a>.</p>
     <p class="lede" style="margin-top:4px"><b>Révision du 18 septembre :</b> alignement sur les décisions techniques actées dans <code>PENDERIE_QUESTIONS_VALIDATION.md</code>. <code>LocationHistory</code> entre dans le MVP et dans la première migration, sans changement de rôle ni de relations ; <code>Memory</code> est décalée hors de la première migration.</p>
-    <p class="lede" style="margin-top:4px"><b>Révision du 21 septembre :</b> les huit questions client de <code>PENDERIE_QUESTIONS_VALIDATION.md</code> ont reçu une réponse. Conséquences majeures : le <b>dressing et les suggestions de tenues entrent dans le MVP</b> (sept entités basculent), le <b>scan couvre quatre modes</b> (code-barres, QR, photo, OCR d'étiquette), la vente <b>ne prélève aucun frais de plateforme</b>, les annonces <b>acceptent les commentaires</b>, et la suppression d'un profil enfant <b>rattache toutes ses données au tuteur</b>, sans question au cas par cas. <b>Et la vente entre dans le MVP</b>, détaillée sur deux parcours — paiement en ligne, ou espèces à la remise — ce qui lève la contradiction avec l'obligation Stripe du module.</p>
+    <p class="lede" style="margin-top:4px"><b>Révision du 21 septembre :</b> les huit questions client de <code>PENDERIE_QUESTIONS_VALIDATION.md</code> ont reçu une réponse. Conséquences majeures : le <b>dressing et les suggestions de tenues entrent dans le MVP</b> (sept entités basculent), le <b>scan couvre quatre modes</b> (code-barres, QR, photo, OCR d'étiquette), la vente <b>ne prélève aucun frais de plateforme</b>, les annonces <b>acceptent les commentaires</b>, et la suppression d'un profil enfant <b>rattache toutes ses données au tuteur</b>, sans question au cas par cas. <b>Depuis le 23 septembre</b>, les <b>abonnés</b> entrent aussi dans le périmètre : <code>Follow</code> passe en MVP, en cohérence avec les onze écrans « Abonnés » de la maquette. <code>Block</code> reste en V2, faute du moindre écran. <b>Et la vente entre dans le MVP</b>, détaillée sur deux parcours — paiement en ligne, ou espèces à la remise — ce qui lève la contradiction avec l'obligation Stripe du module.</p>
     <p class="lede" style="margin-top:4px"><b>Aucune migration Doctrine n'est lancée.</b> Ce document est la matière de la review ; la V1 reste disponible pour comparaison.</p>
     <div class="meta">
-      <span>Mis à jour le <b>21 septembre 2026</b></span>
+      <span>Mis à jour le <b>23 septembre 2026</b></span>
       <span>Auteur <b>Rafael Teixeira</b></span>
       <span>Entités <b>53</b></span>
       <span>Sous-types <b>9</b></span>
@@ -434,7 +434,7 @@
   <section>
     <div class="section-head">
       <h2>Vue d'ensemble</h2>
-      <p>Onze domaines, cinquante-trois entités, sept tables de liaison et une table technique (<code>RefreshToken</code>). Les neuf sous-types — cinq pour <code>Share</code>, quatre pour <code>Comment</code> — partagent la table de leur parent et ne sont pas comptés à part. Trente-six cartes d'entité sont marquées MVP depuis les réponses client du 21 septembre — le dressing et ses suggestions ont fait basculer la moitié du domaine mode. Le schéma Figma en affiche davantage, car il dessine aussi les cinq sous-types de <code>Share</code> séparément.</p>
+      <p>Onze domaines, cinquante-trois entités, sept tables de liaison et une table technique (<code>RefreshToken</code>). Les neuf sous-types — cinq pour <code>Share</code>, quatre pour <code>Comment</code> — partagent la table de leur parent et ne sont pas comptés à part. Trente-sept cartes d'entité sont marquées MVP depuis les réponses client du 21 septembre — le dressing et ses suggestions ont fait basculer la moitié du domaine mode. Le schéma Figma en affiche davantage, car il dessine aussi les cinq sous-types de <code>Share</code> séparément.</p>
     </div>
     <div class="table-wrap">
       <table>
@@ -993,7 +993,7 @@
         </article>
 
         <article class="entity">
-          <div class="entity-top"><h4>Follow</h4><span class="pill p-v2">V2</span></div>
+          <div class="entity-top"><h4>Follow</h4><span class="pill p-mvp">MVP</span></div>
           <p class="role">L'abonnement, asymétrique et sans accord. Suivre quelqu'un ne donne jamais accès à un contenu privé.</p>
           <ul class="attrs">
             <li class="key"><b>id</b> <span>uuid</span></li>

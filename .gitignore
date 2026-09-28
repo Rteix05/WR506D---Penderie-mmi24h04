@@ -7,6 +7,10 @@ Thumbs.db
 # Captures de vérification Figma : régénérables à la demande
 design/verif-lots/
 
+# Sauvegardes manuelles avant une révision (ex. *.bak-23sept-avant-follow) :
+# l'historique git fait déjà ce travail, elles restent locales
+*.bak*
+
 # Symfony
 /api/vendor/
 /api/var/
