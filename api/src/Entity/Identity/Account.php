@@ -60,7 +60,8 @@ class Account implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[ORM\Column(length: 10)]
     #[Assert\NotBlank]
-    #[Assert\Locale]
+    // Pas Assert\Locale : il exige le composant symfony/intl, non installé.
+    #[Assert\Regex('/^[a-z]{2}(_[A-Z]{2})?$/', message: 'Code de langue attendu : « fr » ou « fr_FR ».')]
     private string $locale = 'fr';
 
     /** @var Collection<int, Profile> */
