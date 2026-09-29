@@ -19,6 +19,10 @@ use Symfony\Component\Validator\Constraints as Assert;
  * L'identifiant de connexion. Ne possède aucun contenu : il donne accès à
  * un ou plusieurs profils. L'identité réelle (prénom, nom, date de
  * naissance) vit sur Profile, jamais ici.
+ *
+ * Supprimer un compte, c'est supprimer ses profils (voir Profile) puis la
+ * ligne elle-même : ce qui doit survivre est réaffecté au compte fantôme.
+ * Un compte banni n'est pas supprimé : ses profils sont suspendus.
  */
 #[ORM\Entity(repositoryClass: AccountRepository::class)]
 #[ORM\HasLifecycleCallbacks]
@@ -29,6 +33,9 @@ class Account implements UserInterface, PasswordAuthenticatedUserInterface
 
     public const ROLE_USER = 'ROLE_USER';
     public const ROLE_ADMIN = 'ROLE_ADMIN';
+
+    /** Le compte qui porte le profil fantôme (Profile::GHOST_ID). */
+    public const GHOST_ID = '00000000-0000-7000-8000-000000000000';
 
     #[ORM\Id]
     #[ORM\Column(type: UuidType::NAME, unique: true)]
@@ -55,10 +62,6 @@ class Account implements UserInterface, PasswordAuthenticatedUserInterface
     #[Assert\NotBlank]
     #[Assert\Locale]
     private string $locale = 'fr';
-
-    /** Anonymisation RGPD : le compte n'est jamais supprimé physiquement. */
-    #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
-    private ?\DateTimeImmutable $deletedAt = null;
 
     /** @var Collection<int, Profile> */
     #[ORM\OneToMany(targetEntity: Profile::class, mappedBy: 'account')]
@@ -158,14 +161,9 @@ class Account implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    public function getDeletedAt(): ?\DateTimeImmutable
+    public function isGhost(): bool
     {
-        return $this->deletedAt;
-    }
-
-    public function isDeleted(): bool
-    {
-        return null !== $this->deletedAt;
+        return self::GHOST_ID === $this->id->toRfc4122();
     }
 
     /** @return Collection<int, Profile> */

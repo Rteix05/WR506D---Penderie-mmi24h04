@@ -20,11 +20,6 @@ final class ValidGuardianshipValidator extends ConstraintValidator
             throw new UnexpectedValueException($value, Profile::class);
         }
 
-        // Un profil supprimé est anonymisé : plus rien à contrôler.
-        if ($value->isDeleted()) {
-            return;
-        }
-
         $guardian = $value->getGuardian();
         $isNew = null === $value->getCreatedAt();
 

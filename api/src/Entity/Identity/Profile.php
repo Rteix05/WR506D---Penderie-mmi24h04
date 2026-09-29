@@ -25,8 +25,13 @@ use Symfony\Component\Validator\Constraints as Assert;
  *  - CHECK type CHILD ⇒ guardian_id non nul ;
  *  - CHECK guardian_id ≠ id ;
  *  - CHECK date_of_birth < CURRENT_DATE ;
- *  - CHECK identité réelle présente tant que le profil n'est pas supprimé ;
  *  - CHECK sur la liste des valeurs de type.
+ *
+ * Suppression : la ligne est réellement supprimée. Ce qui doit lui survivre
+ * (prêts terminés, commandes, commentaires…) est d'abord réaffecté au profil
+ * fantôme GHOST_ID, inséré par la migration. Un profil banni, lui, n'est pas
+ * supprimé : il est suspendu (suspendedAt), ce qui reste réversible et garde
+ * la trace de qui a fait quoi.
  */
 #[ORM\Entity(repositoryClass: ProfileRepository::class)]
 #[ORM\HasLifecycleCallbacks]
@@ -41,6 +46,13 @@ class Profile
 
     public const ADULT_AGE = 18;
 
+    /**
+     * Le profil « Profil supprimé », auquel sont réaffectées les lignes qui
+     * doivent survivre à une suppression. Inséré par la migration, jamais
+     * supprimé, jamais ouvert : son compte n'a pas de mot de passe.
+     */
+    public const GHOST_ID = '00000000-0000-7000-8000-000000000001';
+
     #[ORM\Id]
     #[ORM\Column(type: UuidType::NAME, unique: true)]
     private Uuid $id;
@@ -54,22 +66,20 @@ class Profile
     #[ORM\JoinColumn(nullable: true, onDelete: 'RESTRICT')]
     private ?Profile $guardian = null;
 
-    /** Nullable en base uniquement pour l'anonymisation d'un profil supprimé. */
-    #[ORM\Column(length: 80, nullable: true)]
+    #[ORM\Column(length: 80)]
     #[Assert\NotBlank]
     #[Assert\Length(min: 1, max: 80)]
-    private ?string $firstName;
+    private string $firstName;
 
-    #[ORM\Column(length: 80, nullable: true)]
+    #[ORM\Column(length: 80)]
     #[Assert\NotBlank]
     #[Assert\Length(min: 1, max: 80)]
-    private ?string $lastName;
+    private string $lastName;
 
-    #[ORM\Column(type: Types::DATE_IMMUTABLE, nullable: true)]
-    #[Assert\NotNull]
+    #[ORM\Column(type: Types::DATE_IMMUTABLE)]
     #[Assert\LessThan('today', message: 'La date de naissance doit être passée.')]
     #[Assert\GreaterThan('-120 years', message: 'Cette date de naissance n\'est pas plausible.')]
-    private ?\DateTimeImmutable $dateOfBirth;
+    private \DateTimeImmutable $dateOfBirth;
 
     /** L'identifiant public, celui qu'un ami cherche. */
     #[ORM\Column(length: 30, unique: true)]
@@ -101,9 +111,6 @@ class Profile
     /** Suspension par la modération : bloque ce profil, pas les autres du compte. */
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
     private ?\DateTimeImmutable $suspendedAt = null;
-
-    #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
-    private ?\DateTimeImmutable $deletedAt = null;
 
     /** @var Collection<int, ProfilePermission> */
     #[ORM\OneToMany(targetEntity: ProfilePermission::class, mappedBy: 'profile')]
@@ -156,7 +163,7 @@ class Profile
         return $this;
     }
 
-    public function getFirstName(): ?string
+    public function getFirstName(): string
     {
         return $this->firstName;
     }
@@ -168,7 +175,7 @@ class Profile
         return $this;
     }
 
-    public function getLastName(): ?string
+    public function getLastName(): string
     {
         return $this->lastName;
     }
@@ -180,7 +187,7 @@ class Profile
         return $this;
     }
 
-    public function getDateOfBirth(): ?\DateTimeImmutable
+    public function getDateOfBirth(): \DateTimeImmutable
     {
         return $this->dateOfBirth;
     }
@@ -192,14 +199,14 @@ class Profile
         return $this;
     }
 
-    public function getAge(?\DateTimeImmutable $at = null): ?int
+    public function getAge(?\DateTimeImmutable $at = null): int
     {
-        return $this->dateOfBirth?->diff($at ?? new \DateTimeImmutable('today'))->y;
+        return $this->dateOfBirth->diff($at ?? new \DateTimeImmutable('today'))->y;
     }
 
     public function isOfAge(): bool
     {
-        return ($this->getAge() ?? 0) >= self::ADULT_AGE;
+        return $this->getAge() >= self::ADULT_AGE;
     }
 
     public function getUsername(): string
@@ -299,39 +306,9 @@ class Profile
         return $this;
     }
 
-    public function getDeletedAt(): ?\DateTimeImmutable
+    public function isGhost(): bool
     {
-        return $this->deletedAt;
-    }
-
-    public function isDeleted(): bool
-    {
-        return null !== $this->deletedAt;
-    }
-
-    /**
-     * Suppression douce + effacement des données personnelles (RGPD).
-     *
-     * La ligne survit pour que prêts terminés, commandes et commentaires
-     * pointent toujours vers un profil existant, mais elle ne contient plus
-     * rien de personnel, et l'identifiant public est libéré. Le transfert
-     * des biens au tuteur est le travail d'un service, pas de l'entité.
-     */
-    public function anonymize(): static
-    {
-        $this->deletedAt ??= new \DateTimeImmutable();
-        $this->firstName = null;
-        $this->lastName = null;
-        $this->dateOfBirth = null;
-        $this->bio = null;
-        $this->avatarMedia = null;
-        $this->isDefault = false;
-        $this->displayName = 'Profil supprimé';
-        // « deleted. » + 22 caractères hexadécimaux aléatoires de l'UUID v7 :
-        // 30 caractères, unique, conforme au format d'un username.
-        $this->username = 'deleted.'.substr(str_replace('-', '', $this->id->toRfc4122()), -22);
-
-        return $this;
+        return self::GHOST_ID === $this->id->toRfc4122();
     }
 
     /** @return Collection<int, ProfilePermission> */

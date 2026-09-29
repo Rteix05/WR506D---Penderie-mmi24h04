@@ -18,6 +18,11 @@ use Doctrine\Migrations\AbstractMigration;
  * les supprimera donc pas). Les listes de valeurs sont recopiées ici plutôt
  * que lues dans les enums PHP : une migration décrit l'état de la base à un
  * instant donné et ne doit pas changer quand le code évolue.
+ *
+ * Elle insère aussi le compte et le profil fantômes (Account::GHOST_ID,
+ * Profile::GHOST_ID) : une suppression réaffecte au fantôme ce qui doit lui
+ * survivre (prêts terminés, commandes, commentaires), puis supprime vraiment
+ * la ligne.
  */
 final class Version20260929130748 extends AbstractMigration
 {
@@ -28,7 +33,7 @@ final class Version20260929130748 extends AbstractMigration
 
     public function up(Schema $schema): void
     {
-        $this->addSql('CREATE TABLE account (id UUID NOT NULL, email VARCHAR(180) NOT NULL, password VARCHAR(255) NOT NULL, roles JSON NOT NULL, email_verified_at TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT NULL, locale VARCHAR(10) NOT NULL, deleted_at TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT NULL, created_at TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL, updated_at TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL, PRIMARY KEY (id))');
+        $this->addSql('CREATE TABLE account (id UUID NOT NULL, email VARCHAR(180) NOT NULL, password VARCHAR(255) NOT NULL, roles JSON NOT NULL, email_verified_at TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT NULL, locale VARCHAR(10) NOT NULL, created_at TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL, updated_at TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL, PRIMARY KEY (id))');
         $this->addSql('CREATE UNIQUE INDEX UNIQ_7D3656A4E7927C74 ON account (email)');
         $this->addSql('CREATE TABLE approval_request (id UUID NOT NULL, permission VARCHAR(30) NOT NULL, subject_type VARCHAR(20) DEFAULT NULL, subject_id UUID DEFAULT NULL, payload JSONB NOT NULL, status VARCHAR(20) NOT NULL, decided_at TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT NULL, decision_note TEXT DEFAULT NULL, created_at TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL, updated_at TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL, requester_id UUID NOT NULL, approver_id UUID NOT NULL, PRIMARY KEY (id))');
         $this->addSql('CREATE INDEX idx_approval_request_approver_status ON approval_request (approver_id, status)');
@@ -38,7 +43,7 @@ final class Version20260929130748 extends AbstractMigration
         $this->addSql('CREATE UNIQUE INDEX UNIQ_6A2CA10CB548B0F ON media (path)');
         $this->addSql('CREATE INDEX idx_media_owner_created ON media (owner_id, created_at)');
         $this->addSql('CREATE INDEX IDX_6A2CA10C7E3C61F9 ON media (owner_id)');
-        $this->addSql('CREATE TABLE profile (id UUID NOT NULL, first_name VARCHAR(80) DEFAULT NULL, last_name VARCHAR(80) DEFAULT NULL, date_of_birth DATE DEFAULT NULL, username VARCHAR(30) NOT NULL, display_name VARCHAR(60) NOT NULL, type VARCHAR(20) NOT NULL, bio TEXT DEFAULT NULL, is_default BOOLEAN NOT NULL, suspended_at TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT NULL, deleted_at TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT NULL, created_at TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL, updated_at TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL, account_id UUID NOT NULL, guardian_id UUID DEFAULT NULL, avatar_media_id UUID DEFAULT NULL, PRIMARY KEY (id))');
+        $this->addSql('CREATE TABLE profile (id UUID NOT NULL, first_name VARCHAR(80) NOT NULL, last_name VARCHAR(80) NOT NULL, date_of_birth DATE NOT NULL, username VARCHAR(30) NOT NULL, display_name VARCHAR(60) NOT NULL, type VARCHAR(20) NOT NULL, bio TEXT DEFAULT NULL, is_default BOOLEAN NOT NULL, suspended_at TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT NULL, created_at TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL, updated_at TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL, account_id UUID NOT NULL, guardian_id UUID DEFAULT NULL, avatar_media_id UUID DEFAULT NULL, PRIMARY KEY (id))');
         $this->addSql('CREATE UNIQUE INDEX UNIQ_8157AA0FF85E0677 ON profile (username)');
         $this->addSql('CREATE INDEX idx_profile_account ON profile (account_id)');
         $this->addSql('CREATE INDEX idx_profile_guardian ON profile (guardian_id)');
@@ -73,9 +78,7 @@ final class Version20260929130748 extends AbstractMigration
         // Un profil n'est pas son propre tuteur.
         $this->addSql('ALTER TABLE profile ADD CONSTRAINT chk_profile_not_own_guardian CHECK (guardian_id IS NULL OR guardian_id <> id)');
         // Pas de date de naissance dans le futur.
-        $this->addSql('ALTER TABLE profile ADD CONSTRAINT chk_profile_birth_in_past CHECK (date_of_birth IS NULL OR date_of_birth < CURRENT_DATE)');
-        // L'identité réelle n'est vidée qu'à l'anonymisation d'un profil supprimé.
-        $this->addSql('ALTER TABLE profile ADD CONSTRAINT chk_profile_identity_until_deleted CHECK (deleted_at IS NOT NULL OR (first_name IS NOT NULL AND last_name IS NOT NULL AND date_of_birth IS NOT NULL))');
+        $this->addSql('ALTER TABLE profile ADD CONSTRAINT chk_profile_birth_in_past CHECK (date_of_birth < CURRENT_DATE)');
 
         // --- Cohérence locale ------------------------------------------------
         $this->addSql('ALTER TABLE media ADD CONSTRAINT chk_media_size_positive CHECK (size_bytes > 0)');
@@ -85,6 +88,12 @@ final class Version20260929130748 extends AbstractMigration
         $this->addSql("ALTER TABLE approval_request ADD CONSTRAINT chk_approval_request_decided CHECK ((status = 'PENDING') = (decided_at IS NULL))");
         // Un demandeur n'approuve pas sa propre demande.
         $this->addSql('ALTER TABLE approval_request ADD CONSTRAINT chk_approval_request_not_self CHECK (requester_id <> approver_id)');
+
+        // --- Compte et profil fantômes --------------------------------------
+        // Le mot de passe vide ne correspond à aucun hash : personne ne peut
+        // s'y connecter. Le domaine .invalid est réservé (RFC 2606).
+        $this->addSql("INSERT INTO account (id, email, password, roles, locale, created_at, updated_at) VALUES ('00000000-0000-7000-8000-000000000000', 'fantome@penderie.invalid', '', '[]', 'fr', now(), now())");
+        $this->addSql("INSERT INTO profile (id, account_id, guardian_id, first_name, last_name, date_of_birth, username, display_name, type, is_default, created_at, updated_at) VALUES ('00000000-0000-7000-8000-000000000001', '00000000-0000-7000-8000-000000000000', NULL, 'Profil', 'supprimé', '1900-01-01', 'profil.supprime', 'Profil supprimé', 'ADULT', true, now(), now())");
     }
 
     public function down(Schema $schema): void
