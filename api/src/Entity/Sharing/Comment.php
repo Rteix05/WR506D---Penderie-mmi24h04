@@ -15,8 +15,8 @@ use Symfony\Component\Validator\Constraints as Assert;
  * Un commentaire sur un contenu partagé.
  *
  * Héritage SINGLE_TABLE, comme Share : ItemComment, GarmentComment,
- * CollectionComment, PostComment. ListingComment (confirmé le 21/09)
- * arrivera avec la vente, quand Listing existera.
+ * CollectionComment, PostComment et ListingComment (annonces de vente,
+ * confirmé le 21/09).
  *
  * Le commentaire mémorise le partage sous lequel il a été écrit (nul si
  * l'auteur est le propriétaire). Qui voit quoi :
@@ -34,6 +34,7 @@ use Symfony\Component\Validator\Constraints as Assert;
     'GARMENT' => GarmentComment::class,
     'COLLECTION' => CollectionComment::class,
     'POST' => PostComment::class,
+    'LISTING' => ListingComment::class,
 ])]
 #[ORM\HasLifecycleCallbacks]
 #[ORM\Index(name: 'idx_comment_share', columns: ['share_id'])]
