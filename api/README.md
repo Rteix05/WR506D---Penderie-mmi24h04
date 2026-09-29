@@ -89,6 +89,16 @@ Toutes les autres routes `/api` exigent l'en-tête `Authorization: Bearer <token
 
 Les clés et la passphrase ne sont jamais commitées : `docker-entrypoint.sh` génère la passphrase dans `.env.local` et les paires de clés dans `config/jwt/` (dev) et `config/jwt/test/` (tests) au démarrage du conteneur.
 
+## Supprimer un profil
+
+`DELETE /api/profiles/{id}` : le tuteur supprime le profil d'un enfant (`ProfileDeleter`, procédure du MDD).
+
+- **Au tuteur** : objets, vêtements, médias, logements, collections, tenues, catégories personnelles (fusionnées si le tuteur en a une de même nom).
+- **Au profil fantôme** : ce qui concerne des tiers — prêts terminés, commandes, commentaires, publications, annonces, et leurs journaux.
+- **Supprimé avec le profil** : relations, préférences, suggestions, notifications.
+- **Bloqué (409)** tant qu'un prêt est en cours ou qu'une commande n'est pas terminée ; les prêts pas encore remis sont annulés.
+- La suppression d'un profil **adulte** n'est pas encore définie (422).
+
 ## Tests
 
 La suite PHPUnit tourne sur la base de test `penderie_test`, migrée et chargée de ses référentiels (voir « Base de données ») :
