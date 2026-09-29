@@ -74,6 +74,21 @@ docker compose exec -e APP_ENV=test php php bin/console doctrine:database:create
 docker compose exec -e APP_ENV=test php php bin/console doctrine:migrations:migrate -n
 ```
 
+## Tests
+
+La suite PHPUnit tourne sur la base de test `penderie_test`, migrée et chargée de ses référentiels (voir « Base de données ») :
+
+```bash
+docker compose exec php php bin/phpunit                    # toute la suite
+docker compose exec php php bin/phpunit tests/Unit         # sans base de données
+docker compose exec php php bin/phpunit --filter SaleTest  # un domaine
+```
+
+- `tests/Unit/` : règles pures (calculs de montants, permissions par défaut, énumérations, slugs de marque).
+- `tests/Integration/` : un fichier par domaine du MDD, sur un vrai PostgreSQL. Chaque test tourne dans une transaction annulée à la fin (`dama/doctrine-test-bundle`) ; `assertDbRejects()` vérifie qu'une contrainte en base refuse bien une donnée interdite.
+
+La CI GitHub Actions (`.github/workflows/api.yml`) rejoue tout sur chaque push et chaque PR qui touche `api/` : migrations (et leur retour à zéro), référentiels, validation du schéma, PHPUnit.
+
 ## Structure
 
 ```
@@ -91,6 +106,7 @@ api/
 │   ├── Repository/    requêtes Doctrine, même découpage que Entity/
 │   ├── Security/      résolution des permissions de profil
 │   └── Validator/     contraintes métier qui lisent plusieurs lignes
+├── tests/             Unit/ (sans base) et Integration/ (un fichier par domaine)
 ├── compose.yaml       environnement Docker
 ├── Dockerfile         image PHP
 └── docker-entrypoint.sh
