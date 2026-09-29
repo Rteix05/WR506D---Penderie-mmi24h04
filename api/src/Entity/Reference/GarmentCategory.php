@@ -2,10 +2,14 @@
 
 namespace App\Entity\Reference;
 
+use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
 use App\Enum\Reference\Warmth;
 use App\Repository\Reference\GarmentCategoryRepository;
 use App\Validator\Reference\ValidCategoryTree;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Attribute\Groups;
 
 /**
  * Catégorie de vêtement, arborescente. C'est elle qui déclare l'échelle de
@@ -18,17 +22,28 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\UniqueConstraint(name: 'uniq_garment_category_system_slug', columns: ['slug'], options: ['where' => '(owner_id IS NULL)'])]
 #[ORM\UniqueConstraint(name: 'uniq_garment_category_owner_slug', columns: ['owner_id', 'slug'], options: ['where' => '(owner_id IS NOT NULL)'])]
 #[ValidCategoryTree]
+#[ApiResource(
+    shortName: 'GarmentCategory',
+    operations: [
+        new GetCollection(),
+        new Get(),
+    ],
+    normalizationContext: ['groups' => ['category:read']],
+)]
 class GarmentCategory extends AbstractCategory
 {
     #[ORM\ManyToOne(targetEntity: self::class)]
     #[ORM\JoinColumn(nullable: true, onDelete: 'RESTRICT')]
+    #[Groups(['category:read'])]
     private ?GarmentCategory $parent = null;
 
     #[ORM\ManyToOne(targetEntity: SizeSystem::class)]
     #[ORM\JoinColumn(nullable: true, onDelete: 'RESTRICT')]
+    #[Groups(['category:read'])]
     private ?SizeSystem $sizeSystem = null;
 
     #[ORM\Column(length: 20, nullable: true, enumType: Warmth::class)]
+    #[Groups(['category:read'])]
     private ?Warmth $defaultWarmth = null;
 
     public function getParent(): ?static

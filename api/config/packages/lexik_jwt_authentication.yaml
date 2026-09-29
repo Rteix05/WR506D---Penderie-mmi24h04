@@ -1,0 +1,10 @@
+lexik_jwt_authentication:
+    secret_key: '%env(resolve:JWT_SECRET_KEY)%'
+    public_key: '%env(resolve:JWT_PUBLIC_KEY)%'
+    pass_phrase: '%env(JWT_PASSPHRASE)%'
+    # Jeton d'accès de 15 minutes, gardé en mémoire par l'application
+    # (décision du 18/09) ; la durée longue est portée par le jeton de
+    # rafraîchissement, rangé dans le coffre sécurisé du téléphone.
+    token_ttl: 900
+    # Identifiant de l'utilisateur dans le jeton : l'email du compte.
+    user_id_claim: email

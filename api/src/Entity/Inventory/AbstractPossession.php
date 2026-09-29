@@ -14,6 +14,7 @@ use App\Validator\Inventory\ValidLocation;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Types\UuidType;
+use Symfony\Component\Serializer\Attribute\Groups;
 use Symfony\Component\Uid\Uuid;
 use Symfony\Component\Validator\Constraints as Assert;
 
@@ -35,6 +36,7 @@ abstract class AbstractPossession
 
     #[ORM\Id]
     #[ORM\Column(type: UuidType::NAME, unique: true)]
+    #[Groups(['possession:read'])]
     protected Uuid $id;
 
     /** RESTRICT : transféré au tuteur ou traité par le service de suppression. */
@@ -46,47 +48,58 @@ abstract class AbstractPossession
     #[ORM\Column(length: 120)]
     #[Assert\NotBlank]
     #[Assert\Length(max: 120)]
+    #[Groups(['possession:read', 'possession:write'])]
     protected string $name;
 
     /** Visible de ceux qui ont accès à l'objet. */
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     #[Assert\Length(max: 2000)]
+    #[Groups(['possession:read', 'possession:write'])]
     protected ?string $description = null;
 
     /** Privées : jamais montrées à un autre profil. */
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     #[Assert\Length(max: 2000)]
+    #[Groups(['possession:read', 'possession:write'])]
     protected ?string $notes = null;
 
     #[ORM\Column(length: 20, enumType: Availability::class)]
+    #[Groups(['possession:read'])]
     protected Availability $availability = Availability::Available;
 
     #[ORM\Column(length: 20, nullable: true, enumType: Condition::class)]
+    #[Groups(['possession:read', 'possession:write'])]
     protected ?Condition $condition = null;
 
     /** RESTRICT : une pièce qui contient des objets ne se supprime pas (MDD). */
     #[ORM\ManyToOne(targetEntity: Room::class)]
     #[ORM\JoinColumn(nullable: false, onDelete: 'RESTRICT')]
+    #[Groups(['possession:read', 'possession:create'])]
     protected Room $room;
 
     #[ORM\ManyToOne(targetEntity: Storage::class)]
     #[ORM\JoinColumn(nullable: true, onDelete: 'RESTRICT')]
+    #[Groups(['possession:read'])]
     protected ?Storage $storage = null;
 
     #[ORM\ManyToOne(targetEntity: Box::class)]
     #[ORM\JoinColumn(nullable: true, onDelete: 'RESTRICT')]
+    #[Groups(['possession:read'])]
     protected ?Box $box = null;
 
     #[ORM\Column(type: Types::DATE_IMMUTABLE, nullable: true)]
     #[Assert\LessThanOrEqual('today')]
+    #[Groups(['possession:read', 'possession:write'])]
     protected ?\DateTimeImmutable $purchaseDate = null;
 
     /** decimal(10,2), manipulé en chaîne pour ne jamais perdre de centime. */
     #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2, nullable: true)]
     #[Assert\PositiveOrZero]
+    #[Groups(['possession:read', 'possession:write'])]
     protected ?string $estimatedValue = null;
 
     #[ORM\Column(length: 20, enumType: PossessionSource::class)]
+    #[Groups(['possession:read'])]
     protected PossessionSource $source = PossessionSource::Manual;
 
     /** @var array<string, mixed>|null ce que le scan a lu, quand source = SCAN */

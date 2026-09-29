@@ -64,6 +64,9 @@ jobs:
       - name: Dépendances
         run: composer install --no-interaction --no-progress --prefer-dist
 
+      - name: Clés JWT de test (jetables, voir .env.test)
+        run: php bin/console lexik:jwt:generate-keypair --skip-if-exists --no-interaction
+
       - name: Base de test
         run: php bin/console doctrine:database:create --if-not-exists
 

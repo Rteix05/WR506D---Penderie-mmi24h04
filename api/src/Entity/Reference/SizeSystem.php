@@ -2,6 +2,9 @@
 
 namespace App\Entity\Reference;
 
+use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
 use App\Entity\Trait\TimestampableTrait;
 use App\Enum\Reference\SizeSystemCode;
 use App\Repository\Reference\SizeSystemRepository;
@@ -9,6 +12,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Types\UuidType;
+use Symfony\Component\Serializer\Attribute\Groups;
 use Symfony\Component\Uid\Uuid;
 
 /**
@@ -17,22 +21,34 @@ use Symfony\Component\Uid\Uuid;
  */
 #[ORM\Entity(repositoryClass: SizeSystemRepository::class)]
 #[ORM\HasLifecycleCallbacks]
+#[ApiResource(
+    shortName: 'SizeSystem',
+    operations: [
+        new GetCollection(),
+        new Get(),
+    ],
+    normalizationContext: ['groups' => ['sizesystem:read']],
+)]
 class SizeSystem
 {
     use TimestampableTrait;
 
     #[ORM\Id]
     #[ORM\Column(type: UuidType::NAME, unique: true)]
+    #[Groups(['sizesystem:read'])]
     private Uuid $id;
 
     #[ORM\Column(length: 20, unique: true, enumType: SizeSystemCode::class)]
+    #[Groups(['sizesystem:read'])]
     private SizeSystemCode $code;
 
     #[ORM\Column(length: 80)]
+    #[Groups(['sizesystem:read'])]
     private string $name;
 
     /** « cm » pour un tour de cou ou une ceinture, nul pour une taille abstraite. */
     #[ORM\Column(length: 10, nullable: true)]
+    #[Groups(['sizesystem:read'])]
     private ?string $unit = null;
 
     /**
@@ -40,11 +56,13 @@ class SizeSystem
      * Utile pour une pointure US ou une taille propre à une marque.
      */
     #[ORM\Column]
+    #[Groups(['sizesystem:read'])]
     private bool $allowsFreeText = false;
 
     /** @var Collection<int, SizeValue> */
     #[ORM\OneToMany(targetEntity: SizeValue::class, mappedBy: 'sizeSystem')]
     #[ORM\OrderBy(['sortOrder' => 'ASC'])]
+    #[Groups(['sizesystem:read'])]
     private Collection $values;
 
     public function __construct(SizeSystemCode $code, string $name)

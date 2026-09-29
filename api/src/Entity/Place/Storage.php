@@ -2,6 +2,12 @@
 
 namespace App\Entity\Place;
 
+use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Delete;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Patch;
+use ApiPlatform\Metadata\Post;
 use App\Entity\Media\Media;
 use App\Entity\Trait\TimestampableTrait;
 use App\Enum\Place\StorageType;
@@ -10,6 +16,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Types\UuidType;
+use Symfony\Component\Serializer\Attribute\Groups;
 use Symfony\Component\Uid\Uuid;
 use Symfony\Component\Validator\Constraints as Assert;
 
@@ -19,24 +26,39 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[ORM\Entity(repositoryClass: StorageRepository::class)]
 #[ORM\HasLifecycleCallbacks]
 #[ORM\Index(name: 'idx_storage_room_position', columns: ['room_id', 'position'])]
+#[ApiResource(
+    shortName: 'Storage',
+    operations: [
+        new GetCollection(),
+        new Get(security: "is_granted('VIEW', object)"),
+        new Post(denormalizationContext: ['groups' => ['storage:write', 'storage:create']], securityPostDenormalize: "is_granted('EDIT', object)"),
+        new Patch(denormalizationContext: ['groups' => ['storage:write']], security: "is_granted('EDIT', object)"),
+        new Delete(security: "is_granted('EDIT', object)"),
+    ],
+    normalizationContext: ['groups' => ['storage:read']],
+)]
 class Storage
 {
     use TimestampableTrait;
 
     #[ORM\Id]
     #[ORM\Column(type: UuidType::NAME, unique: true)]
+    #[Groups(['storage:read'])]
     private Uuid $id;
 
     #[ORM\ManyToOne(targetEntity: Room::class, inversedBy: 'storages')]
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
+    #[Groups(['storage:read', 'storage:create'])]
     private Room $room;
 
     #[ORM\Column(length: 80)]
     #[Assert\NotBlank]
     #[Assert\Length(max: 80)]
+    #[Groups(['storage:read', 'storage:write'])]
     private string $name;
 
     #[ORM\Column(length: 20, enumType: StorageType::class)]
+    #[Groups(['storage:read', 'storage:write'])]
     private StorageType $type;
 
     #[ORM\ManyToOne(targetEntity: Media::class)]
@@ -46,6 +68,7 @@ class Storage
     /** L'ordre d'affichage dans la pièce. */
     #[ORM\Column]
     #[Assert\PositiveOrZero]
+    #[Groups(['storage:read', 'storage:write'])]
     private int $position = 0;
 
     /** @var Collection<int, Box> */
