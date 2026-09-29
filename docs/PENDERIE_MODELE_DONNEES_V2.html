@@ -177,7 +177,7 @@
     <p class="lede" style="margin-top:4px"><b>Révision du 15 septembre :</b> <code>Profile</code> porte désormais <code>firstName</code>, <code>lastName</code> et <code>dateOfBirth</code>, et toute la zone compte / profil / tutelle a été reprise — voir la section <a href="#identite">Identité d'un profil</a>.</p>
     <p class="lede" style="margin-top:4px"><b>Révision du 18 septembre :</b> alignement sur les décisions techniques actées dans <code>PENDERIE_QUESTIONS_VALIDATION.md</code>. <code>LocationHistory</code> entre dans le MVP et dans la première migration, sans changement de rôle ni de relations ; <code>Memory</code> est décalée hors de la première migration.</p>
     <p class="lede" style="margin-top:4px"><b>Révision du 21 septembre :</b> les huit questions client de <code>PENDERIE_QUESTIONS_VALIDATION.md</code> ont reçu une réponse. Conséquences majeures : le <b>dressing et les suggestions de tenues entrent dans le MVP</b> (sept entités basculent), le <b>scan couvre quatre modes</b> (code-barres, QR, photo, OCR d'étiquette), la vente <b>ne prélève aucun frais de plateforme</b>, les annonces <b>acceptent les commentaires</b>, et la suppression d'un profil enfant <b>rattache toutes ses données au tuteur</b>, sans question au cas par cas. <b>Depuis le 23 septembre</b>, les <b>abonnés</b> entrent aussi dans le périmètre : <code>Follow</code> passe en MVP, en cohérence avec les onze écrans « Abonnés » de la maquette. <code>Block</code> reste en V2, faute du moindre écran. <b>Et la vente entre dans le MVP</b>, détaillée sur deux parcours — paiement en ligne, ou espèces à la remise — ce qui lève la contradiction avec l'obligation Stripe du module.</p>
-    <p class="lede" style="margin-top:4px"><b>Révision du 29 septembre :</b> plus aucune entité « À valider ». <code>Collection</code> et <code>CollectionEntry</code> sont validées en MVP ; <code>Memory</code> est retenue dans sa forme riche (plusieurs souvenirs datés et illustrés) et passe en MVP, toujours hors de la première migration ; <code>ModerationAction</code> entre dans le MVP pour le back-office admin, sans attendre <code>Report</code> (V2) ; <code>Brand</code> devient un référentiel prédéfini, à la Vinted, que l'utilisateur peut compléter pour une collab ou une marque indépendante, sous contrôle de l'admin. Enfin, la règle « abonnés = lecture seule » s'applique aussi au <code>Post</code>. <b>Pendant l'écriture des entités :</b> la suppression d'un profil passe au <b>profil fantôme</b> — ce qui doit survivre est réaffecté à un profil unique « Profil supprimé », puis la ligne est réellement supprimée ; <code>deletedAt</code> disparaît de <code>Account</code> et de <code>Profile</code>. Un bannissement n'est pas une suppression : c'est une suspension, réversible. <code>Box</code> devient un <b>conteneur typé</b> (carton, étagère intérieure, tiroir, bac…) pour représenter « Chambre › Armoire › Étagère 2 » de la maquette, et les listes de types de pièce et de rangement sont fermées.</p>
+    <p class="lede" style="margin-top:4px"><b>Révision du 29 septembre :</b> plus aucune entité « À valider ». <code>Collection</code> et <code>CollectionEntry</code> sont validées en MVP ; <code>Memory</code> est retenue dans sa forme riche (plusieurs souvenirs datés et illustrés) et passe en MVP, toujours hors de la première migration ; <code>ModerationAction</code> entre dans le MVP pour le back-office admin, sans attendre <code>Report</code> (V2) ; <code>Brand</code> devient un référentiel prédéfini, à la Vinted, que l'utilisateur peut compléter pour une collab ou une marque indépendante, sous contrôle de l'admin. Enfin, la règle « abonnés = lecture seule » s'applique aussi au <code>Post</code>. <b>Pendant l'écriture des entités :</b> la suppression d'un profil passe au <b>profil fantôme</b> — ce qui doit survivre est réaffecté à un profil unique « Profil supprimé », puis la ligne est réellement supprimée ; <code>deletedAt</code> disparaît de <code>Account</code> et de <code>Profile</code>. Un bannissement n'est pas une suppression : c'est une suspension, réversible. <code>Box</code> devient un <b>conteneur typé</b> (carton, étagère intérieure, tiroir, bac…) pour représenter « Chambre › Armoire › Étagère 2 » de la maquette, et les listes de types de pièce et de rangement sont fermées. Un <b>8<sup>e</sup> système de tailles, <code>KIDS_AGE</code></b>, couvre les vêtements d'enfant, avec une branche « Enfant » dans les catégories de vêtements. Les référentiels sont chargés par une commande idempotente, <code>app:reference-data:load</code>, et non par les migrations.</p>
     <p class="lede" style="margin-top:4px"><b>Aucune migration Doctrine n'est lancée.</b> Ce document est la matière de la review ; la V1 reste disponible pour comparaison.</p>
     <div class="meta">
       <span>Mis à jour le <b>29 septembre 2026</b></span>
@@ -1136,16 +1136,17 @@
 
         <article class="entity">
           <div class="entity-top"><h4>ItemCategory · GarmentCategory</h4><span class="pill p-mvp">MVP</span></div>
-          <p class="role">Deux référentiels arborescents distincts, jamais mélangés. <code>owner</code> nul = catégorie fournie par l'application ; renseigné = catégorie créée par un profil.</p>
+          <p class="role">Deux référentiels arborescents distincts, jamais mélangés. <code>owner</code> nul = catégorie fournie par l'application, chargée par <code>app:reference-data:load</code> ; renseigné = catégorie créée par un profil, sous une catégorie système ou une des siennes.</p>
           <ul class="attrs">
             <li class="key"><b>id</b> <span>uuid</span></li>
             <li><b>name · icon · slug</b> <span>string</span></li>
             <li class="fk"><b>parent</b> <span>→ même entité, nullable</span></li>
             <li class="fk"><b>owner</b> <span>→ Profile, nullable</span></li>
-            <li><b>isSystem</b> <span>bool</span></li>
+            <li><b>isSystem</b> <span>bool — CHECK isSystem = (owner nul)</span></li>
             <li class="fk"><b>sizeSystem</b> <span>→ SizeSystem, nullable — GarmentCategory seulement</span></li>
             <li><b>defaultWarmth</b> <span>enum nullable — GarmentCategory seulement</span></li>
           </ul>
+          <p class="rel"><b>Contraintes</b> slug unique parmi les catégories système, et unique par profil pour les catégories personnelles (deux index uniques partiels) · pas de cycle, 3 niveaux au plus (validateur) · une catégorie ne descend pas de celle d'un autre profil.</p>
         </article>
 
         <article class="entity">
@@ -1185,10 +1186,10 @@
 
         <article class="entity">
           <div class="entity-top"><h4>SizeSystem</h4><span class="pill p-mvp">MVP</span></div>
-          <p class="role">Une échelle de mesure. Sept suffisent à couvrir un dressing courant.</p>
+          <p class="role">Une échelle de mesure. Huit couvrent un dressing courant, enfants compris (<code>KIDS_AGE</code>, ajouté le 29 septembre).</p>
           <ul class="attrs">
             <li class="key"><b>id</b> <span>uuid</span></li>
-            <li><b>code</b> <span>EU_SHOE · ALPHA · WAIST_LENGTH · FR_NUMERIC · COLLAR · BELT_CM · ONE_SIZE</span></li>
+            <li><b>code</b> <span>EU_SHOE · ALPHA · WAIST_LENGTH · FR_NUMERIC · COLLAR · BELT_CM · ONE_SIZE · KIDS_AGE</span></li>
             <li><b>name · unit</b> <span>string · string nullable</span></li>
             <li><b>allowsFreeText</b> <span>bool</span></li>
           </ul>
@@ -1211,8 +1212,8 @@
           <div class="entity-top"><h4>Brand · Color · Style</h4><span class="pill p-mvp">MVP</span></div>
           <p class="role">Trois référentiels partagés. <code>Color</code> et <code>Style</code> sont en n,n avec le vêtement — un jean peut être bleu et noir, casual et work — et servent aussi de cibles aux préférences de l'utilisateur.</p>
           <ul class="attrs">
-            <li><b>Brand</b> <span>name · slug unique (nom normalisé : minuscules, sans accents ni espaces) · logoMedia nullable · isVerified · createdBy → Profile nullable</span></li>
-            <li><b>Color</b> <span>name · hex · family (pour regrouper les nuances)</span></li>
+            <li><b>Brand</b> <span>name · slug unique (nom normalisé : minuscules, sans accents, espaces ni ponctuation — « Levi's » → levis) · logoMedia nullable · isVerified · createdBy → Profile nullable, SET NULL si le profil est supprimé</span></li>
+            <li><b>Color</b> <span>name unique · hex (#RRGGBB, nul seulement pour « Multicolore ») · family BLACK · WHITE · GREY · BEIGE · BROWN · RED · PINK · ORANGE · YELLOW · GREEN · BLUE · PURPLE · METALLIC · MULTI</span></li>
             <li><b>Style</b> <span>name · slug — casual, sport, work, evening, chic, streetwear</span></li>
           </ul>
           <p class="rel"><b>Brand, à la Vinted</b> (décision du 29 septembre) : une liste prédéfinie chargée par fixtures (<code>isVerified = true</code>, <code>createdBy = NULL</code>). Si sa marque n'y figure pas — collab, marque indépendante, créateur local —, l'utilisateur la saisit : elle est créée avec <code>isVerified = false</code> et <code>createdBy</code> renseigné, et reste utilisable tout de suite sur son vêtement. Le <code>slug</code> unique empêche « Zara », « ZARA » et « zara » d'exister trois fois : une saisie qui retombe sur un slug existant réutilise la marque. Dans le back-office, l'admin valide, renomme, fusionne un doublon (les vêtements sont réaffectés) ou supprime une marque non vérifiée. <b>Affichage (tranché le 29 septembre) :</b> une marque non vérifiée est visible par tout le monde, partout où le vêtement apparaît, avec une pastille « Non vérifiée » à côté de son nom. Quand l'admin la valide, la pastille disparaît et la marque rejoint la liste de choix proposée à tous les utilisateurs ; avant cela, seul son créateur la retrouve dans l'autocomplétion. Si un autre utilisateur saisit la même marque, le <code>slug</code> fait retomber sa saisie sur la marque existante.</p>
