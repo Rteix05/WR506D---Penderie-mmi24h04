@@ -61,6 +61,12 @@ docker compose exec php php bin/console doctrine:migrations:migrate
 
 Les contraintes `CHECK` (listes de valeurs des énumérations, règles de tutelle) sont écrites à la main dans les migrations : Doctrine ne sait pas les générer. Après avoir modifié une entité, `doctrine:migrations:diff` produit le SQL des tables, et il faut y ajouter les `CHECK` correspondants.
 
+Les référentiels (catégories système, échelles de tailles, marques de la liste prédéfinie, couleurs, styles) ne sont pas dans les migrations : ils se chargent avec une commande **idempotente**, qui crée ce qui manque, met à jour ce qui existe et ne supprime jamais rien. À lancer après les migrations, et à relancer sans risque après avoir complété une liste de `src/ReferenceData/` :
+
+```bash
+docker compose exec php php bin/console app:reference-data:load
+```
+
 Une base de test, `penderie_test`, se crée et se migre avec `APP_ENV=test` :
 
 ```bash
@@ -79,7 +85,9 @@ api/
 │   ├── ApiResource/   ressources API qui ne sont pas des entités
 │   ├── Entity/        entités Doctrine, un dossier par domaine du MDD
 │   │   └── Trait/     comportements partagés (createdAt / updatedAt)
+│   ├── Command/       commandes console (app:reference-data:load)
 │   ├── Enum/          énumérations métier (backed enums PHP)
+│   ├── ReferenceData/ contenu des référentiels et son chargeur
 │   ├── Repository/    requêtes Doctrine, même découpage que Entity/
 │   ├── Security/      résolution des permissions de profil
 │   └── Validator/     contraintes métier qui lisent plusieurs lignes
