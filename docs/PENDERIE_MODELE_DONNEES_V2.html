@@ -177,7 +177,7 @@
     <p class="lede" style="margin-top:4px"><b>Révision du 15 septembre :</b> <code>Profile</code> porte désormais <code>firstName</code>, <code>lastName</code> et <code>dateOfBirth</code>, et toute la zone compte / profil / tutelle a été reprise — voir la section <a href="#identite">Identité d'un profil</a>.</p>
     <p class="lede" style="margin-top:4px"><b>Révision du 18 septembre :</b> alignement sur les décisions techniques actées dans <code>PENDERIE_QUESTIONS_VALIDATION.md</code>. <code>LocationHistory</code> entre dans le MVP et dans la première migration, sans changement de rôle ni de relations ; <code>Memory</code> est décalée hors de la première migration.</p>
     <p class="lede" style="margin-top:4px"><b>Révision du 21 septembre :</b> les huit questions client de <code>PENDERIE_QUESTIONS_VALIDATION.md</code> ont reçu une réponse. Conséquences majeures : le <b>dressing et les suggestions de tenues entrent dans le MVP</b> (sept entités basculent), le <b>scan couvre quatre modes</b> (code-barres, QR, photo, OCR d'étiquette), la vente <b>ne prélève aucun frais de plateforme</b>, les annonces <b>acceptent les commentaires</b>, et la suppression d'un profil enfant <b>rattache toutes ses données au tuteur</b>, sans question au cas par cas. <b>Depuis le 23 septembre</b>, les <b>abonnés</b> entrent aussi dans le périmètre : <code>Follow</code> passe en MVP, en cohérence avec les onze écrans « Abonnés » de la maquette. <code>Block</code> reste en V2, faute du moindre écran. <b>Et la vente entre dans le MVP</b>, détaillée sur deux parcours — paiement en ligne, ou espèces à la remise — ce qui lève la contradiction avec l'obligation Stripe du module.</p>
-    <p class="lede" style="margin-top:4px"><b>Révision du 29 septembre :</b> plus aucune entité « À valider ». <code>Collection</code> et <code>CollectionEntry</code> sont validées en MVP ; <code>Memory</code> est retenue dans sa forme riche (plusieurs souvenirs datés et illustrés) et passe en MVP, toujours hors de la première migration ; <code>ModerationAction</code> entre dans le MVP pour le back-office admin, sans attendre <code>Report</code> (V2) ; <code>Brand</code> devient un référentiel prédéfini, à la Vinted, que l'utilisateur peut compléter pour une collab ou une marque indépendante, sous contrôle de l'admin. Enfin, la règle « abonnés = lecture seule » s'applique aussi au <code>Post</code>. <b>Pendant l'écriture des entités :</b> la suppression d'un profil passe au <b>profil fantôme</b> — ce qui doit survivre est réaffecté à un profil unique « Profil supprimé », puis la ligne est réellement supprimée ; <code>deletedAt</code> disparaît de <code>Account</code> et de <code>Profile</code>. Un bannissement n'est pas une suppression : c'est une suspension, réversible. <code>Box</code> devient un <b>conteneur typé</b> (carton, étagère intérieure, tiroir, bac…) pour représenter « Chambre › Armoire › Étagère 2 » de la maquette, et les listes de types de pièce et de rangement sont fermées. Un <b>8<sup>e</sup> système de tailles, <code>KIDS_AGE</code></b>, couvre les vêtements d'enfant, avec une branche « Enfant » dans les catégories de vêtements. Les référentiels sont chargés par une commande idempotente, <code>app:reference-data:load</code>, et non par les migrations.</p>
+    <p class="lede" style="margin-top:4px"><b>Révision du 29 septembre :</b> plus aucune entité « À valider ». <code>Collection</code> et <code>CollectionEntry</code> sont validées en MVP ; <code>Memory</code> est retenue dans sa forme riche (plusieurs souvenirs datés et illustrés) et passe en MVP, toujours hors de la première migration ; <code>ModerationAction</code> entre dans le MVP pour le back-office admin, sans attendre <code>Report</code> (V2) ; <code>Brand</code> devient un référentiel prédéfini, à la Vinted, que l'utilisateur peut compléter pour une collab ou une marque indépendante, sous contrôle de l'admin. Enfin, la règle « abonnés = lecture seule » s'applique aussi au <code>Post</code>. <b>Pendant l'écriture des entités :</b> la suppression d'un profil passe au <b>profil fantôme</b> — ce qui doit survivre est réaffecté à un profil unique « Profil supprimé », puis la ligne est réellement supprimée ; <code>deletedAt</code> disparaît de <code>Account</code> et de <code>Profile</code>. Un bannissement n'est pas une suppression : c'est une suspension, réversible. <code>Box</code> devient un <b>conteneur typé</b> (carton, étagère intérieure, tiroir, bac…) pour représenter « Chambre › Armoire › Étagère 2 » de la maquette, et les listes de types de pièce et de rangement sont fermées. Un <b>8<sup>e</sup> système de tailles, <code>KIDS_AGE</code></b>, couvre les vêtements d'enfant, avec une branche « Enfant » dans les catégories de vêtements. Les référentiels sont chargés par une commande idempotente, <code>app:reference-data:load</code>, et non par les migrations. Pour l'inventaire, <code>Garment</code> reçoit les champs communs d'<code>Item</code> (nom, description, notes, achat, provenance, suppression douce), que sa carte oubliait.</p>
     <p class="lede" style="margin-top:4px"><b>Aucune migration Doctrine n'est lancée.</b> Ce document est la matière de la review ; la V1 reste disponible pour comparaison.</p>
     <div class="meta">
       <span>Mis à jour le <b>29 septembre 2026</b></span>
@@ -1081,7 +1081,7 @@
           <ul class="attrs">
             <li class="key"><b>id</b> <span>uuid</span></li>
             <li class="fk"><b>item · garment</b> <span>nullables, exactement un renseigné</span></li>
-            <li class="fk"><b>room · storage · box</b> <span>→ l'emplacement quitté ; room obligatoire</span></li>
+            <li class="fk"><b>room · storage · box</b> <span>→ l'emplacement quitté ; room obligatoire, CASCADE — supprimer une pièce vide efface l'historique qui la cite, sinon une pièce ayant un jour contenu un objet ne pourrait plus être supprimée</span></li>
             <li class="fk"><b>movedBy</b> <span>→ Profile</span></li>
             <li><b>reason</b> <span>MANUAL_MOVE · BOX_MOVED · LOAN_RETURN · INITIAL</span></li>
             <li><b>movedAt</b> <span>datetime</span></li>
@@ -1102,11 +1102,12 @@
           <ul class="attrs">
             <li class="key"><b>id</b> <span>uuid</span></li>
             <li class="fk"><b>owner</b> <span>→ Profile</span></li>
-            <li class="fk"><b>category</b> <span>→ ItemCategory</span></li>
+            <li class="fk"><b>category</b> <span>→ ItemCategory, nullable — seul le nom est obligatoire à la saisie</span></li>
             <li><b>name</b> <span>string — seul champ obligatoire à la saisie</span></li>
             <li><b>description · notes</b> <span>text nullables — la description publique, les notes privées</span></li>
             <li><b>availability</b> <span>AVAILABLE · LENT · BORROWED · LOST · SOLD</span></li>
-            <li><b>condition</b> <span>NEW · EXCELLENT · GOOD · WORN · DAMAGED</span></li>
+            <li><b>condition</b> <span>NEW · EXCELLENT · GOOD · WORN · DAMAGED, nullable</span></li>
+            <li><b>deletedAt</b> <span>datetime nullable — suppression douce</span></li>
             <li class="fk"><b>room</b> <span>→ Room, obligatoire</span></li>
             <li class="fk"><b>storage · box</b> <span>→ Storage · → Box, nullables</span></li>
             <li><b>purchaseDate · estimatedValue</b> <span>date · decimal(10,2), nullables</span></li>
@@ -1121,7 +1122,8 @@
           <ul class="attrs">
             <li class="key"><b>id</b> <span>uuid</span></li>
             <li class="fk"><b>owner</b> <span>→ Profile</span></li>
-            <li class="fk"><b>category</b> <span>→ GarmentCategory — porte le système de tailles</span></li>
+            <li><b>name · description · notes</b> <span>comme <code>Item</code> — <b>ajoutés le 29 septembre</b> : la carte les oubliait, alors que l'index de recherche porte sur <code>garment (name)</code></span></li>
+            <li class="fk"><b>category</b> <span>→ GarmentCategory, obligatoire — porte le système de tailles</span></li>
             <li class="fk"><b>brand</b> <span>→ Brand, nullable</span></li>
             <li class="fk"><b>size</b> <span>→ SizeValue, nullable</span></li>
             <li><b>sizeLabel</b> <span>string nullable — repli si la catégorie l'autorise</span></li>
@@ -1130,8 +1132,9 @@
             <li><b>warmth</b> <span>VERY_LIGHT · LIGHT · MID · WARM · VERY_WARM, nullable — hérite de la catégorie</span></li>
             <li><b>waterResistant</b> <span>bool</span></li>
             <li class="fk"><b>room · storage · box</b> <span>room obligatoire, les deux autres nullables</span></li>
+            <li><b>purchaseDate · estimatedValue · source · scanData · deletedAt</b> <span>comme <code>Item</code> (ajoutés le 29 septembre)</span></li>
           </ul>
-          <p class="rel"><b>Relations</b> n,n <code>Color</code> · n,n <code>Style</code> · n,n <code>Media</code> via <code>GarmentMedia</code> · 1,n <code>WearLog</code> · 1,n <code>Loan</code> · 1,n <code>GarmentExclusion</code> · 1,n <code>Memory</code></p>
+          <p class="rel"><b>Relations</b> n,n <code>Color</code> via <code>garment_color</code> · n,n <code>Style</code> via <code>garment_style</code> · n,n <code>Media</code> via <code>GarmentMedia</code> · 1,n <code>WearLog</code> · 1,n <code>Loan</code> · 1,n <code>GarmentExclusion</code> · 1,n <code>Memory</code></p>
         </article>
 
         <article class="entity">
@@ -1155,7 +1158,7 @@
           <ul class="attrs">
             <li class="key"><b>id</b> <span>uuid</span></li>
             <li class="fk"><b>profile</b> <span>→ Profile</span></li>
-            <li class="fk"><b>media</b> <span>→ Media — l'image scannée</span></li>
+            <li class="fk"><b>media</b> <span>→ Media, nullable — l'image scannée ; un code-barres lu en direct n'en laisse pas forcément</span></li>
             <li><b>kind</b> <span>BARCODE · QRCODE · PHOTO · LABEL_OCR</span></li>
             <li><b>code</b> <span>string nullable — la valeur lue (EAN, contenu du QR)</span></li>
             <li><b>status</b> <span>SUCCESS · PARTIAL · FAILED</span></li>
