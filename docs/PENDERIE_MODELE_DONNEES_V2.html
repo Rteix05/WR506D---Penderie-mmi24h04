@@ -177,7 +177,7 @@
     <p class="lede" style="margin-top:4px"><b>Révision du 15 septembre :</b> <code>Profile</code> porte désormais <code>firstName</code>, <code>lastName</code> et <code>dateOfBirth</code>, et toute la zone compte / profil / tutelle a été reprise — voir la section <a href="#identite">Identité d'un profil</a>.</p>
     <p class="lede" style="margin-top:4px"><b>Révision du 18 septembre :</b> alignement sur les décisions techniques actées dans <code>PENDERIE_QUESTIONS_VALIDATION.md</code>. <code>LocationHistory</code> entre dans le MVP et dans la première migration, sans changement de rôle ni de relations ; <code>Memory</code> est décalée hors de la première migration.</p>
     <p class="lede" style="margin-top:4px"><b>Révision du 21 septembre :</b> les huit questions client de <code>PENDERIE_QUESTIONS_VALIDATION.md</code> ont reçu une réponse. Conséquences majeures : le <b>dressing et les suggestions de tenues entrent dans le MVP</b> (sept entités basculent), le <b>scan couvre quatre modes</b> (code-barres, QR, photo, OCR d'étiquette), la vente <b>ne prélève aucun frais de plateforme</b>, les annonces <b>acceptent les commentaires</b>, et la suppression d'un profil enfant <b>rattache toutes ses données au tuteur</b>, sans question au cas par cas. <b>Depuis le 23 septembre</b>, les <b>abonnés</b> entrent aussi dans le périmètre : <code>Follow</code> passe en MVP, en cohérence avec les onze écrans « Abonnés » de la maquette. <code>Block</code> reste en V2, faute du moindre écran. <b>Et la vente entre dans le MVP</b>, détaillée sur deux parcours — paiement en ligne, ou espèces à la remise — ce qui lève la contradiction avec l'obligation Stripe du module.</p>
-    <p class="lede" style="margin-top:4px"><b>Révision du 29 septembre :</b> plus aucune entité « À valider ». <code>Collection</code> et <code>CollectionEntry</code> sont validées en MVP ; <code>Memory</code> est retenue dans sa forme riche (plusieurs souvenirs datés et illustrés) et passe en MVP, toujours hors de la première migration ; <code>ModerationAction</code> entre dans le MVP pour le back-office admin, sans attendre <code>Report</code> (V2) ; <code>Brand</code> devient un référentiel prédéfini, à la Vinted, que l'utilisateur peut compléter pour une collab ou une marque indépendante, sous contrôle de l'admin. Enfin, la règle « abonnés = lecture seule » s'applique aussi au <code>Post</code>.</p>
+    <p class="lede" style="margin-top:4px"><b>Révision du 29 septembre :</b> plus aucune entité « À valider ». <code>Collection</code> et <code>CollectionEntry</code> sont validées en MVP ; <code>Memory</code> est retenue dans sa forme riche (plusieurs souvenirs datés et illustrés) et passe en MVP, toujours hors de la première migration ; <code>ModerationAction</code> entre dans le MVP pour le back-office admin, sans attendre <code>Report</code> (V2) ; <code>Brand</code> devient un référentiel prédéfini, à la Vinted, que l'utilisateur peut compléter pour une collab ou une marque indépendante, sous contrôle de l'admin. Enfin, la règle « abonnés = lecture seule » s'applique aussi au <code>Post</code>. <b>Pendant l'écriture des entités :</b> la suppression d'un profil passe au <b>profil fantôme</b> — ce qui doit survivre est réaffecté à un profil unique « Profil supprimé », puis la ligne est réellement supprimée ; <code>deletedAt</code> disparaît de <code>Account</code> et de <code>Profile</code>. Un bannissement n'est pas une suppression : c'est une suspension, réversible.</p>
     <p class="lede" style="margin-top:4px"><b>Aucune migration Doctrine n'est lancée.</b> Ce document est la matière de la review ; la V1 reste disponible pour comparaison.</p>
     <div class="meta">
       <span>Mis à jour le <b>29 septembre 2026</b></span>
@@ -764,7 +764,6 @@
           <tr><td><code>bio</code></td><td>Présentation libre, visible des amis</td><td>Nullable, 500 caractères</td></tr>
           <tr><td><code>isDefault</code></td><td>Le profil ouvert automatiquement à la connexion du compte</td><td>Un seul profil par défaut par compte, garanti par index unique partiel.</td></tr>
           <tr><td><code>suspendedAt</code></td><td>Suspension décidée par la modération</td><td>Nullable. Bloque la connexion à ce profil sans toucher aux autres profils du compte.</td></tr>
-          <tr><td><code>deletedAt</code></td><td>Suppression douce du profil</td><td>Nullable. Voir la procédure de suppression plus bas.</td></tr>
         </tbody>
       </table>
     </div>
@@ -851,7 +850,7 @@
 
     <div class="section-head" style="margin-top:36px;margin-bottom:14px">
       <h3 style="font-size:19px;font-weight:800">Supprimer un profil enfant</h3>
-      <p>Le tuteur supprime le profil : la suppression est douce (<code>deletedAt</code>) et s'accompagne d'un transfert. Rien n'est détruit par défaut, parce que rien ici n'appartient qu'à l'enfant — les prêts et les commandes impliquent des tiers.</p>
+      <p>Le tuteur supprime le profil : la ligne est réellement supprimée, après un transfert et une réaffectation. Rien de ce qui compte n'est détruit, parce que rien ici n'appartient qu'à l'enfant — les prêts et les commandes impliquent des tiers.</p>
     </div>
     <div class="table-wrap">
       <table>
@@ -861,10 +860,10 @@
           <tr><td><code>Place</code> · <code>Room</code> · <code>Storage</code> · <code>Box</code></td><td><code>owner_id</code> réécrit vers le tuteur</td><td>Le logement est celui du foyer ; sa structure ne disparaît pas avec un profil.</td></tr>
           <tr><td><code>Collection</code> · <code>Outfit</code> · <code>Memory</code></td><td>Transférées au tuteur</td><td>Contenu plus personnel, mais le client a tranché le 21 septembre : <b>toutes les données de l'enfant sont rattachées au compte du tuteur</b>. Le parcours de suppression informe, il ne demande plus quoi faire de chaque catégorie.</td></tr>
           <tr><td><code>Loan</code> actif</td><td><b>Bloque la suppression</b></td><td>Un objet est chez quelqu'un d'autre, ou quelqu'un attend son retour. Le prêt doit être clos avant.</td></tr>
-          <tr><td><code>Loan</code> terminé · <code>LoanEvent</code></td><td>Conservés, profil anonymisé</td><td>L'autre partie a le droit de garder son historique de prêt.</td></tr>
-          <tr><td><code>Order</code> · <code>Payment</code> · <code>Refund</code></td><td>Conservés, profil anonymisé</td><td>Conservation comptable. Ne devrait pas exister pour un <code>CHILD</code>, dont <code>PURCHASE</code> et <code>SELL</code> sont interdits par défaut.</td></tr>
+          <tr><td><code>Loan</code> terminé · <code>LoanEvent</code></td><td>Conservés, réaffectés au profil fantôme</td><td>L'autre partie a le droit de garder son historique de prêt.</td></tr>
+          <tr><td><code>Order</code> · <code>Payment</code> · <code>Refund</code></td><td>Conservés, réaffectés au profil fantôme</td><td>Conservation comptable. Ne devrait pas exister pour un <code>CHILD</code>, dont <code>PURCHASE</code> et <code>SELL</code> sont interdits par défaut.</td></tr>
           <tr><td><code>Share</code> · <code>ShareRecipient</code></td><td>Révoqués (<code>revokedAt</code>)</td><td>Couper l'accès immédiatement, sans effacer le contexte des commentaires déjà écrits.</td></tr>
-          <tr><td><code>Comment</code></td><td>Conservés, auteur anonymisé</td><td>Les supprimer casserait les fils de réponses d'autres personnes.</td></tr>
+          <tr><td><code>Comment</code></td><td>Conservés, auteur réaffecté au profil fantôme</td><td>Les supprimer casserait les fils de réponses d'autres personnes.</td></tr>
           <tr><td><code>Friendship</code> · <code>Follow</code> · <code>Block</code></td><td>Supprimés</td><td>Une relation sociale sans profil vivant n'a aucun sens, et personne d'autre n'en dépend.</td></tr>
           <tr><td><code>ProfilePermission</code> · <code>ApprovalRequest</code> en attente</td><td>Supprimées</td><td>Sans objet une fois le profil clos.</td></tr>
           <tr><td><code>WearLog</code> · <code>GarmentExclusion</code> · préférences</td><td>Supprimés</td><td>Données de suggestion propres au profil, sans valeur pour le tuteur et sans tiers concerné.</td></tr>
@@ -872,7 +871,7 @@
         </tbody>
       </table>
     </div>
-    <p class="note" style="margin-top:12px">Le profil lui-même n'est jamais effacé physiquement : <code>deletedAt</code> est renseigné, <code>firstName</code>, <code>lastName</code>, <code>dateOfBirth</code>, <code>bio</code> et <code>avatarMedia</code> sont vidés, et <code>username</code> est remplacé par une valeur neutre qui libère l'identifiant public. Les lignes qui doivent survivre pointent donc toujours vers une ligne existante, sans plus contenir de donnée personnelle — c'est ce qui permet de concilier le droit à l'effacement et l'intégrité référentielle.</p>
+    <p class="note" style="margin-top:12px"><b>Le profil fantôme</b> (révision du 29 septembre). La migration insère un compte et un profil uniques, « Profil supprimé » (<code>Account::GHOST_ID</code>, <code>Profile::GHOST_ID</code>), auxquels personne ne peut se connecter. À la suppression, les lignes qui doivent survivre — prêts terminés, commandes, commentaires, réglages de permission faits par ce profil — sont réaffectées au fantôme, puis la ligne du profil est <b>réellement supprimée</b> : il ne reste aucune donnée personnelle, et <code>firstName</code>, <code>lastName</code> et <code>dateOfBirth</code> restent <code>NOT NULL</code>. Les clés étrangères en <code>RESTRICT</code> bloquent la suppression tant qu'une référence n'a pas été réaffectée : un oubli ne passe pas en silence. Même mécanisme pour un compte supprimé. <b>Un bannissement n'est pas une suppression</b> : le compte et ses profils restent intacts et suspendus (<code>suspendedAt</code>, <code>ModerationAction</code> <code>BAN_ACCOUNT</code>), parce qu'un bannissement est réversible (<code>RESTORE</code>) et que la modération doit savoir qui a fait quoi.</p>
 
     <div class="section-head" style="margin-top:36px;margin-bottom:14px">
       <h3 style="font-size:19px;font-weight:800">Les contraintes à poser</h3>
@@ -918,8 +917,7 @@
             <li><b>roles</b> <span>json — ROLE_USER, ROLE_ADMIN</span></li>
             <li><b>emailVerifiedAt</b> <span>datetime nullable</span></li>
             <li><b>locale</b> <span>string</span></li>
-            <li><b>deletedAt</b> <span>datetime nullable — anonymisation RGPD</span></li>
-          </ul>
+                      </ul>
           <p class="rel"><b>Relations</b> 1,n <code>Profile</code> · 1,n <code>DeviceToken</code> · 1,n <code>ModerationAction</code> (si admin)<br><b style="display:inline">Ne contient pas</b> ni <code>firstName</code>, ni <code>lastName</code>, ni <code>dateOfBirth</code> : l'identité réelle vit sur <code>Profile</code>, parce qu'un compte peut en porter plusieurs.</p>
         </article>
 
@@ -939,7 +937,7 @@
             <li class="fk"><b>avatarMedia</b> <span>→ Media, nullable</span></li>
             <li><b>bio</b> <span>text nullable</span></li>
             <li><b>isDefault</b> <span>bool — le profil ouvert à la connexion</span></li>
-            <li><b>suspendedAt · deletedAt</b> <span>datetime nullables</span></li>
+            <li><b>suspendedAt</b> <span>datetime nullable — suspension ou bannissement</span></li>
           </ul>
           <p class="rel"><b>Relations</b> 1,n <code>Place</code> · 1,n <code>Item</code> · 1,n <code>Garment</code> · 1,n <code>Share</code> · 1,n <code>Collection</code> · 1,n <code>ProfilePermission</code> · n,n <code>Profile</code> via <code>Friendship</code> et <code>Follow</code></p>
         </article>
@@ -965,7 +963,7 @@
             <li class="fk"><b>requester</b> <span>→ Profile — l'enfant</span></li>
             <li class="fk"><b>approver</b> <span>→ Profile — résolu depuis <code>requester.guardian</code>, jamais choisi par l'appelant</span></li>
             <li><b>permission</b> <span>même énumération que ProfilePermission</span></li>
-            <li><b>subjectType · subjectId</b> <span>enum · uuid, nullables — la cible de l'action</span></li>
+            <li><b>subjectType · subjectId</b> <span>PROFILE · ITEM · GARMENT · COLLECTION · SHARE · POST · LISTING · uuid, nullables, renseignés ensemble — la cible de l'action</span></li>
             <li><b>payload</b> <span>jsonb — de quoi rejouer l'action à l'acceptation</span></li>
             <li><b>status</b> <span>PENDING · APPROVED · REJECTED · EXPIRED · WITHDRAWN</span></li>
             <li><b>decidedAt · decisionNote</b> <span>datetime · text, nullables</span></li>
@@ -1232,7 +1230,7 @@
           <ul class="attrs">
             <li class="key"><b>id</b> <span>uuid</span></li>
             <li class="fk"><b>owner</b> <span>→ Profile</span></li>
-            <li><b>path</b> <span>string — clé S3</span></li>
+            <li><b>path</b> <span>string unique — clé S3 ; deux médias ne pointent jamais vers le même fichier</span></li>
             <li><b>mimeType · sizeBytes</b> <span>string · int</span></li>
             <li><b>width · height</b> <span>int nullables</span></li>
             <li><b>kind</b> <span>PHOTO · SCAN_CAPTURE · INSPIRATION</span></li>
@@ -1795,7 +1793,7 @@
           <li>Refus de supprimer une <code>Room</code>, un <code>Storage</code> ou un <code>Box</code> non vide sans destination choisie.</li>
           <li>Copie de l'adresse dans <code>OrderAddress</code> à la validation de la commande.</li>
           <li>Marques : calcul du <code>slug</code> à la saisie et réutilisation d'une marque existante ; fusion de deux marques par réaffectation transactionnelle de <code>garment.brand</code>.</li>
-          <li>Anonymisation RGPD, avec conservation des pièces comptables.</li>
+          <li>Suppression RGPD par réaffectation au profil fantôme, avec conservation des pièces comptables.</li>
         </ul>
       </div>
     </div>
@@ -1803,7 +1801,7 @@
       <table>
         <thead><tr><th>Quand on supprime…</th><th>Politique</th><th>Raison</th></tr></thead>
         <tbody>
-          <tr><td><code>Profile</code></td><td>Soft delete + transfert au tuteur</td><td>On anonymise et on transfère, on ne détruit pas : les biens sont ceux du foyer, les prêts et commandes impliquent des tiers. Bloqué tant qu'un prêt est actif.</td></tr>
+          <tr><td><code>Profile</code></td><td>Transfert au tuteur + réaffectation au fantôme, puis suppression réelle</td><td>Les biens sont ceux du foyer et passent au tuteur ; les prêts, commandes et commentaires impliquent des tiers et passent au profil fantôme. Bloqué tant qu'un prêt est actif.</td></tr>
           <tr><td><code>Profile.guardian</code></td><td><code>RESTRICT</code></td><td>Supprimer un tuteur laisserait un profil enfant sans contrôle parental</td></tr>
           <tr><td><code>Item</code> · <code>Garment</code></td><td>Soft delete (<code>deletedAt</code>)</td><td>Un objet vendu ou prêté reste référencé par une commande et un historique</td></tr>
           <tr><td><code>Room</code> · <code>Storage</code> · <code>Box</code></td><td><code>RESTRICT</code> si non vide</td><td>Perdre l'emplacement de cent objets d'un clic n'est pas une suppression, c'est un accident</td></tr>

@@ -51,17 +51,38 @@ En revanche, `vendor/` et `var/` vivent dans des volumes Docker. Sous Windows, l
 
 Les services ajoutés par les prochaines fonctionnalités (stockage des photos, e-mails) viendront compléter `compose.yaml` avec leur feature.
 
+## Base de données
+
+Les entités suivent le modèle de données V2 (`docs/PENDERIE_MODELE_DONNEES_V2.html`). Chaque domaine arrive avec sa migration :
+
+```bash
+docker compose exec php php bin/console doctrine:migrations:migrate
+```
+
+Les contraintes `CHECK` (listes de valeurs des énumérations, règles de tutelle) sont écrites à la main dans les migrations : Doctrine ne sait pas les générer. Après avoir modifié une entité, `doctrine:migrations:diff` produit le SQL des tables, et il faut y ajouter les `CHECK` correspondants.
+
+Une base de test, `penderie_test`, se crée et se migre avec `APP_ENV=test` :
+
+```bash
+docker compose exec -e APP_ENV=test php php bin/console doctrine:database:create --if-not-exists
+docker compose exec -e APP_ENV=test php php bin/console doctrine:migrations:migrate -n
+```
+
 ## Structure
 
 ```
 api/
 ├── config/            configuration Symfony (packages/, routes/)
-├── migrations/        migrations Doctrine (aucune pour l'instant)
+├── migrations/        migrations Doctrine, une par domaine du MDD
 ├── public/            point d'entrée HTTP (index.php)
 ├── src/
 │   ├── ApiResource/   ressources API qui ne sont pas des entités
-│   ├── Entity/        entités Doctrine
-│   └── Repository/    requêtes Doctrine
+│   ├── Entity/        entités Doctrine, un dossier par domaine du MDD
+│   │   └── Trait/     comportements partagés (createdAt / updatedAt)
+│   ├── Enum/          énumérations métier (backed enums PHP)
+│   ├── Repository/    requêtes Doctrine, même découpage que Entity/
+│   ├── Security/      résolution des permissions de profil
+│   └── Validator/     contraintes métier qui lisent plusieurs lignes
 ├── compose.yaml       environnement Docker
 ├── Dockerfile         image PHP
 └── docker-entrypoint.sh
