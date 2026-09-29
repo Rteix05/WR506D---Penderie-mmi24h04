@@ -177,7 +177,7 @@
     <p class="lede" style="margin-top:4px"><b>Révision du 15 septembre :</b> <code>Profile</code> porte désormais <code>firstName</code>, <code>lastName</code> et <code>dateOfBirth</code>, et toute la zone compte / profil / tutelle a été reprise — voir la section <a href="#identite">Identité d'un profil</a>.</p>
     <p class="lede" style="margin-top:4px"><b>Révision du 18 septembre :</b> alignement sur les décisions techniques actées dans <code>PENDERIE_QUESTIONS_VALIDATION.md</code>. <code>LocationHistory</code> entre dans le MVP et dans la première migration, sans changement de rôle ni de relations ; <code>Memory</code> est décalée hors de la première migration.</p>
     <p class="lede" style="margin-top:4px"><b>Révision du 21 septembre :</b> les huit questions client de <code>PENDERIE_QUESTIONS_VALIDATION.md</code> ont reçu une réponse. Conséquences majeures : le <b>dressing et les suggestions de tenues entrent dans le MVP</b> (sept entités basculent), le <b>scan couvre quatre modes</b> (code-barres, QR, photo, OCR d'étiquette), la vente <b>ne prélève aucun frais de plateforme</b>, les annonces <b>acceptent les commentaires</b>, et la suppression d'un profil enfant <b>rattache toutes ses données au tuteur</b>, sans question au cas par cas. <b>Depuis le 23 septembre</b>, les <b>abonnés</b> entrent aussi dans le périmètre : <code>Follow</code> passe en MVP, en cohérence avec les onze écrans « Abonnés » de la maquette. <code>Block</code> reste en V2, faute du moindre écran. <b>Et la vente entre dans le MVP</b>, détaillée sur deux parcours — paiement en ligne, ou espèces à la remise — ce qui lève la contradiction avec l'obligation Stripe du module.</p>
-    <p class="lede" style="margin-top:4px"><b>Révision du 29 septembre :</b> plus aucune entité « À valider ». <code>Collection</code> et <code>CollectionEntry</code> sont validées en MVP ; <code>Memory</code> est retenue dans sa forme riche (plusieurs souvenirs datés et illustrés) et passe en MVP, toujours hors de la première migration ; <code>ModerationAction</code> entre dans le MVP pour le back-office admin, sans attendre <code>Report</code> (V2) ; <code>Brand</code> devient un référentiel prédéfini, à la Vinted, que l'utilisateur peut compléter pour une collab ou une marque indépendante, sous contrôle de l'admin. Enfin, la règle « abonnés = lecture seule » s'applique aussi au <code>Post</code>. <b>Pendant l'écriture des entités :</b> la suppression d'un profil passe au <b>profil fantôme</b> — ce qui doit survivre est réaffecté à un profil unique « Profil supprimé », puis la ligne est réellement supprimée ; <code>deletedAt</code> disparaît de <code>Account</code> et de <code>Profile</code>. Un bannissement n'est pas une suppression : c'est une suspension, réversible.</p>
+    <p class="lede" style="margin-top:4px"><b>Révision du 29 septembre :</b> plus aucune entité « À valider ». <code>Collection</code> et <code>CollectionEntry</code> sont validées en MVP ; <code>Memory</code> est retenue dans sa forme riche (plusieurs souvenirs datés et illustrés) et passe en MVP, toujours hors de la première migration ; <code>ModerationAction</code> entre dans le MVP pour le back-office admin, sans attendre <code>Report</code> (V2) ; <code>Brand</code> devient un référentiel prédéfini, à la Vinted, que l'utilisateur peut compléter pour une collab ou une marque indépendante, sous contrôle de l'admin. Enfin, la règle « abonnés = lecture seule » s'applique aussi au <code>Post</code>. <b>Pendant l'écriture des entités :</b> la suppression d'un profil passe au <b>profil fantôme</b> — ce qui doit survivre est réaffecté à un profil unique « Profil supprimé », puis la ligne est réellement supprimée ; <code>deletedAt</code> disparaît de <code>Account</code> et de <code>Profile</code>. Un bannissement n'est pas une suppression : c'est une suspension, réversible. <code>Box</code> devient un <b>conteneur typé</b> (carton, étagère intérieure, tiroir, bac…) pour représenter « Chambre › Armoire › Étagère 2 » de la maquette, et les listes de types de pièce et de rangement sont fermées.</p>
     <p class="lede" style="margin-top:4px"><b>Aucune migration Doctrine n'est lancée.</b> Ce document est la matière de la review ; la V1 reste disponible pour comparaison.</p>
     <div class="meta">
       <span>Mis à jour le <b>29 septembre 2026</b></span>
@@ -1017,7 +1017,7 @@
     </div>
 
     <div class="domain">
-      <div class="domain-head"><h3>Lieux</h3><p>La cascade conservée telle quelle : Place ▸ Room ▸ Storage ▸ Box.</p></div>
+      <div class="domain-head"><h3>Lieux</h3><p>La cascade conservée : Place ▸ Room ▸ Storage ▸ Box, où Box est un conteneur typé depuis le 29 septembre.</p></div>
       <div class="entities">
 
         <article class="entity">
@@ -1029,7 +1029,7 @@
             <li><b>name · type</b> <span>string · HOUSE · APARTMENT · STORAGE_UNIT · OTHER</span></li>
             <li><b>address · description</b> <span>string · text, nullables</span></li>
             <li class="fk"><b>coverMedia</b> <span>→ Media, nullable</span></li>
-            <li><b>isPrimary</b> <span>bool</span></li>
+            <li><b>isPrimary</b> <span>bool — une seule résidence principale par profil (index unique partiel)</span></li>
           </ul>
           <p class="rel"><b>Relations</b> 1,n <code>Room</code></p>
         </article>
@@ -1040,7 +1040,7 @@
           <ul class="attrs">
             <li class="key"><b>id</b> <span>uuid</span></li>
             <li class="fk"><b>place</b> <span>→ Place</span></li>
-            <li><b>name · type</b> <span>string · BEDROOM · KITCHEN · GARAGE · CELLAR · ATTIC · OFFICE…</span></li>
+            <li><b>name · type</b> <span>string · LIVING_ROOM · BEDROOM · KITCHEN · BATHROOM · OFFICE · ENTRANCE · DRESSING · LAUNDRY · GARAGE · CELLAR · ATTIC · OTHER</span></li>
             <li class="fk"><b>coverMedia</b> <span>→ Media, nullable</span></li>
             <li><b>position</b> <span>int</span></li>
           </ul>
@@ -1053,7 +1053,7 @@
           <ul class="attrs">
             <li class="key"><b>id</b> <span>uuid</span></li>
             <li class="fk"><b>room</b> <span>→ Room</span></li>
-            <li><b>name · type</b> <span>string · WARDROBE · SHELF · CABINET · DRAWER · RACK…</span></li>
+            <li><b>name · type</b> <span>string · WARDROBE · CLOSET · SHELF · BOOKCASE · CABINET · DRESSER · DRAWER · RACK · CHEST · OTHER</span></li>
             <li class="fk"><b>coverMedia</b> <span>→ Media, nullable</span></li>
             <li><b>position</b> <span>int</span></li>
           </ul>
@@ -1062,14 +1062,15 @@
 
         <article class="entity">
           <div class="entity-top"><h4>Box</h4><span class="pill p-mvp">MVP</span></div>
-          <p class="role">Le carton. Toujours dans une pièce, éventuellement posé sur un rangement.</p>
+          <p class="role">Le conteneur, 4e niveau facultatif. Toujours dans une pièce, éventuellement posé sur un rangement <b>de la même pièce</b>. <b>Depuis le 29 septembre, ce n'est plus seulement un carton :</b> son type dit ce qu'il est, ce qui représente « Chambre › Armoire › Étagère 2 » de la maquette sans imbriquer les rangements.</p>
           <ul class="attrs">
             <li class="key"><b>id</b> <span>uuid</span></li>
             <li class="fk"><b>room</b> <span>→ Room, obligatoire</span></li>
             <li class="fk"><b>storage</b> <span>→ Storage, nullable</span></li>
             <li><b>name · reference</b> <span>string · string nullable (étiquette, QR)</span></li>
+            <li><b>type</b> <span>CARTON · SHELF · DRAWER · BIN · SUITCASE · BAG · OTHER</span></li>
             <li class="fk"><b>coverMedia</b> <span>→ Media, nullable</span></li>
-            <li><b>isSealed</b> <span>bool</span></li>
+            <li><b>isSealed</b> <span>bool — carton uniquement, CHECK (type = 'CARTON' OR NOT is_sealed)</span></li>
           </ul>
           <p class="rel"><b>Relations</b> 1,n <code>Item</code> · 1,n <code>Garment</code></p>
         </article>
