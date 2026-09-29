@@ -177,9 +177,10 @@
     <p class="lede" style="margin-top:4px"><b>Révision du 15 septembre :</b> <code>Profile</code> porte désormais <code>firstName</code>, <code>lastName</code> et <code>dateOfBirth</code>, et toute la zone compte / profil / tutelle a été reprise — voir la section <a href="#identite">Identité d'un profil</a>.</p>
     <p class="lede" style="margin-top:4px"><b>Révision du 18 septembre :</b> alignement sur les décisions techniques actées dans <code>PENDERIE_QUESTIONS_VALIDATION.md</code>. <code>LocationHistory</code> entre dans le MVP et dans la première migration, sans changement de rôle ni de relations ; <code>Memory</code> est décalée hors de la première migration.</p>
     <p class="lede" style="margin-top:4px"><b>Révision du 21 septembre :</b> les huit questions client de <code>PENDERIE_QUESTIONS_VALIDATION.md</code> ont reçu une réponse. Conséquences majeures : le <b>dressing et les suggestions de tenues entrent dans le MVP</b> (sept entités basculent), le <b>scan couvre quatre modes</b> (code-barres, QR, photo, OCR d'étiquette), la vente <b>ne prélève aucun frais de plateforme</b>, les annonces <b>acceptent les commentaires</b>, et la suppression d'un profil enfant <b>rattache toutes ses données au tuteur</b>, sans question au cas par cas. <b>Depuis le 23 septembre</b>, les <b>abonnés</b> entrent aussi dans le périmètre : <code>Follow</code> passe en MVP, en cohérence avec les onze écrans « Abonnés » de la maquette. <code>Block</code> reste en V2, faute du moindre écran. <b>Et la vente entre dans le MVP</b>, détaillée sur deux parcours — paiement en ligne, ou espèces à la remise — ce qui lève la contradiction avec l'obligation Stripe du module.</p>
+    <p class="lede" style="margin-top:4px"><b>Révision du 29 septembre :</b> plus aucune entité « À valider ». <code>Collection</code> et <code>CollectionEntry</code> sont validées en MVP ; <code>Memory</code> est retenue dans sa forme riche (plusieurs souvenirs datés et illustrés) et passe en MVP, toujours hors de la première migration ; <code>ModerationAction</code> entre dans le MVP pour le back-office admin, sans attendre <code>Report</code> (V2) ; <code>Brand</code> devient un référentiel prédéfini, à la Vinted, que l'utilisateur peut compléter pour une collab ou une marque indépendante, sous contrôle de l'admin. Enfin, la règle « abonnés = lecture seule » s'applique aussi au <code>Post</code>.</p>
     <p class="lede" style="margin-top:4px"><b>Aucune migration Doctrine n'est lancée.</b> Ce document est la matière de la review ; la V1 reste disponible pour comparaison.</p>
     <div class="meta">
-      <span>Mis à jour le <b>23 septembre 2026</b></span>
+      <span>Mis à jour le <b>29 septembre 2026</b></span>
       <span>Auteur <b>Rafael Teixeira</b></span>
       <span>Entités <b>53</b></span>
       <span>Sous-types <b>9</b></span>
@@ -434,7 +435,7 @@
   <section>
     <div class="section-head">
       <h2>Vue d'ensemble</h2>
-      <p>Onze domaines, cinquante-trois entités, sept tables de liaison et une table technique (<code>RefreshToken</code>). Les neuf sous-types — cinq pour <code>Share</code>, quatre pour <code>Comment</code> — partagent la table de leur parent et ne sont pas comptés à part. Trente-sept cartes d'entité sont marquées MVP depuis les réponses client du 21 septembre — le dressing et ses suggestions ont fait basculer la moitié du domaine mode. Le schéma Figma en affiche davantage, car il dessine aussi les cinq sous-types de <code>Share</code> séparément.</p>
+      <p>Onze domaines, cinquante-trois entités, sept tables de liaison et une table technique (<code>RefreshToken</code>). Les neuf sous-types — cinq pour <code>Share</code>, quatre pour <code>Comment</code> — partagent la table de leur parent et ne sont pas comptés à part. Trente-sept cartes d'entité sont marquées MVP depuis les réponses client du 21 septembre — le dressing et ses suggestions ont fait basculer la moitié du domaine mode. Depuis le 29 septembre, plus aucune n'est « À valider » : seules <code>Block</code> et <code>Report</code> restent en V2. Le schéma Figma en affiche davantage, car il dessine aussi les cinq sous-types de <code>Share</code> séparément.</p>
     </div>
     <div class="table-wrap">
       <table>
@@ -443,14 +444,14 @@
           <tr><td>Identité &amp; accès</td><td><code>Account</code> <code>Profile</code> <code>ProfilePermission</code> <code>ApprovalRequest</code></td><td><span class="pill p-mvp">MVP</span> <span class="pill p-new">Nouveau</span></td></tr>
           <tr><td>Relations</td><td><code>Friendship</code> <code>Follow</code> <code>Block</code></td><td><span class="pill p-mvp">MVP</span> <span class="pill p-v2">V2</span></td></tr>
           <tr><td>Lieux</td><td><code>Place</code> <code>Room</code> <code>Storage</code> <code>Box</code> <code>LocationHistory</code></td><td><span class="pill p-mvp">MVP</span></td></tr>
-          <tr><td>Inventaire</td><td><code>Item</code> <code>ItemCategory</code> <code>Garment</code> <code>GarmentCategory</code> <code>Scan</code> <code>Memory</code></td><td><span class="pill p-mvp">MVP</span> <span class="pill p-valider">À valider</span></td></tr>
+          <tr><td>Inventaire</td><td><code>Item</code> <code>ItemCategory</code> <code>Garment</code> <code>GarmentCategory</code> <code>Scan</code> <code>Memory</code></td><td><span class="pill p-mvp">MVP</span></td></tr>
           <tr><td>Tailles &amp; référentiels mode</td><td><code>SizeSystem</code> <code>SizeValue</code> <code>Brand</code> <code>Color</code> <code>Style</code></td><td><span class="pill p-mvp">MVP</span></td></tr>
           <tr><td>Médias</td><td><code>Media</code> + 5 liaisons</td><td><span class="pill p-mvp">MVP</span> <span class="pill p-new">Nouveau</span></td></tr>
           <tr><td>Partage &amp; collections</td><td><code>Share</code> (5 sous-types) <code>ShareRecipient</code> <code>Comment</code> (4 sous-types) <code>Collection</code> <code>CollectionEntry</code> <code>Post</code></td><td><span class="pill p-mvp">MVP</span></td></tr>
           <tr><td>Prêt</td><td><code>Loan</code> <code>LoanEvent</code></td><td><span class="pill p-mvp">MVP</span> <span class="pill p-new">Nouveau</span></td></tr>
           <tr><td>Vente &amp; paiement</td><td><code>Listing</code> <code>Order</code> <code>OrderAddress</code> <code>Address</code> <code>Payment</code> <code>Refund</code> <code>Dispute</code> <code>Shipment</code> <code>OrderEvent</code></td><td><span class="pill p-mvp">MVP</span> <span class="pill p-new">Nouveau</span></td></tr>
           <tr><td>Dressing &amp; tenues</td><td><code>Outfit</code> <code>OutfitSuggestion</code> <code>WearLog</code> <code>GarmentExclusion</code> <code>ColorPreference</code> <code>StylePreference</code> <code>GarmentVisibilityPreference</code></td><td><span class="pill p-mvp">MVP</span> <span class="pill p-new">Nouveau</span></td></tr>
-          <tr><td>Notifications &amp; modération</td><td><code>Notification</code> <code>NotificationPreference</code> <code>DeviceToken</code> <code>Report</code> <code>ModerationAction</code> + <code>RefreshToken</code> (technique)</td><td><span class="pill p-mvp">MVP</span> <span class="pill p-v2">V2</span></td></tr>
+          <tr><td>Notifications &amp; modération</td><td><code>Notification</code> <code>NotificationPreference</code> <code>DeviceToken</code> <code>Report</code> <code>ModerationAction</code> + <code>RefreshToken</code> (technique)</td><td><span class="pill p-mvp">MVP</span> <span class="pill p-v2">V2</span> — seul <code>Report</code> est en V2</td></tr>
         </tbody>
       </table>
     </div>
@@ -1131,7 +1132,7 @@
             <li><b>waterResistant</b> <span>bool</span></li>
             <li class="fk"><b>room · storage · box</b> <span>room obligatoire, les deux autres nullables</span></li>
           </ul>
-          <p class="rel"><b>Relations</b> n,n <code>Color</code> · n,n <code>Style</code> · n,n <code>Media</code> via <code>GarmentMedia</code> · 1,n <code>WearLog</code> · 1,n <code>Loan</code> · 1,n <code>GarmentExclusion</code></p>
+          <p class="rel"><b>Relations</b> n,n <code>Color</code> · n,n <code>Style</code> · n,n <code>Media</code> via <code>GarmentMedia</code> · 1,n <code>WearLog</code> · 1,n <code>Loan</code> · 1,n <code>GarmentExclusion</code> · 1,n <code>Memory</code></p>
         </article>
 
         <article class="entity">
@@ -1164,8 +1165,8 @@
         </article>
 
         <article class="entity">
-          <div class="entity-top"><h4>Memory</h4><span class="pill p-valider">À valider</span></div>
-          <p class="role">Le souvenir attaché à un objet : « acheté à Lisbonne en 2019 ». Remplace le champ <code>story</code> de la V1, qui ne pouvait ni être daté ni porter de photos. <b>Décalée :</b> hors de la première migration, avec <code>MemoryMedia</code>.</p>
+          <div class="entity-top"><h4>Memory</h4><span class="pill p-mvp">MVP</span></div>
+          <p class="role">Le souvenir attaché à un objet : « acheté à Lisbonne en 2019 ». Remplace le champ <code>story</code> de la V1, qui ne pouvait ni être daté ni porter de photos. <b>Validée le 29 septembre dans sa forme riche :</b> un objet ou un vêtement porte <b>plusieurs</b> souvenirs, chacun daté, signé et illustré. <b>Toujours décalée :</b> hors de la première migration, avec <code>MemoryMedia</code>.</p>
           <ul class="attrs">
             <li class="key"><b>id</b> <span>uuid</span></li>
             <li class="fk"><b>item · garment</b> <span>nullables, exactement un renseigné</span></li>
@@ -1173,7 +1174,7 @@
             <li><b>title · body</b> <span>string · text</span></li>
             <li><b>happenedAt</b> <span>date nullable</span></li>
           </ul>
-          <p class="rel"><b>Relations</b> n,n <code>Media</code> via <code>MemoryMedia</code>. Si la fonctionnalité est écartée, un champ texte sur <code>Item</code> suffit et les deux tables disparaissent.</p>
+          <p class="rel"><b>Relations</b> n,n <code>Media</code> via <code>MemoryMedia</code>.</p>
         </article>
 
       </div>
@@ -1211,10 +1212,11 @@
           <div class="entity-top"><h4>Brand · Color · Style</h4><span class="pill p-mvp">MVP</span></div>
           <p class="role">Trois référentiels partagés. <code>Color</code> et <code>Style</code> sont en n,n avec le vêtement — un jean peut être bleu et noir, casual et work — et servent aussi de cibles aux préférences de l'utilisateur.</p>
           <ul class="attrs">
-            <li><b>Brand</b> <span>name unique · logoMedia nullable · isVerified</span></li>
+            <li><b>Brand</b> <span>name · slug unique (nom normalisé : minuscules, sans accents ni espaces) · logoMedia nullable · isVerified · createdBy → Profile nullable</span></li>
             <li><b>Color</b> <span>name · hex · family (pour regrouper les nuances)</span></li>
             <li><b>Style</b> <span>name · slug — casual, sport, work, evening, chic, streetwear</span></li>
           </ul>
+          <p class="rel"><b>Brand, à la Vinted</b> (décision du 29 septembre) : une liste prédéfinie chargée par fixtures (<code>isVerified = true</code>, <code>createdBy = NULL</code>). Si sa marque n'y figure pas — collab, marque indépendante, créateur local —, l'utilisateur la saisit : elle est créée avec <code>isVerified = false</code> et <code>createdBy</code> renseigné, et reste utilisable tout de suite sur son vêtement. Le <code>slug</code> unique empêche « Zara », « ZARA » et « zara » d'exister trois fois : une saisie qui retombe sur un slug existant réutilise la marque. Dans le back-office, l'admin valide, renomme, fusionne un doublon (les vêtements sont réaffectés) ou supprime une marque non vérifiée. <b>Affichage (tranché le 29 septembre) :</b> une marque non vérifiée est visible par tout le monde, partout où le vêtement apparaît, avec une pastille « Non vérifiée » à côté de son nom. Quand l'admin la valide, la pastille disparaît et la marque rejoint la liste de choix proposée à tous les utilisateurs ; avant cela, seul son créateur la retrouve dans l'autocomplétion. Si un autre utilisateur saisit la même marque, le <code>slug</code> fait retomber sa saisie sur la marque existante.</p>
         </article>
 
       </div>
@@ -1311,13 +1313,13 @@
             <li class="fk"><b>collection · item · garment</b> <span>nullables, au plus un — la ressource mise en avant</span></li>
             <li class="fk"><b>share</b> <span>→ Share, nullable — <b>l'accès à la ressource attachée</b></span></li>
             <li><b>publishedAt · deletedAt</b> <span>datetime · datetime nullable</span></li>
-            <li><b>commentsEnabled</b> <span>bool</span></li>
+            <li><b>commentsEnabled</b> <span>bool — toujours <code>false</code> si <code>audience = FOLLOWERS</code></span></li>
           </ul>
           <p class="rel"><b>Relations</b> n,n <code>Media</code> via <code>PostMedia</code> · 0,n <code>PostComment</code><br><b style="display:inline">Le point clé</b> publier une collection ne la rend pas publique. Le <code>Post</code> <b>porte un <code>Share</code></b> créé à la publication, avec la même audience : « Voir la collection › » passe donc par le mécanisme d'accès habituel. Il n'y a pas de seconde voie d'accès au contenu privé, et révoquer le partage suffit à fermer la porte sans supprimer la publication.</p>
         </article>
 
         <article class="entity">
-          <div class="entity-top"><h4>Collection</h4><span class="pill p-valider">À valider</span></div>
+          <div class="entity-top"><h4>Collection</h4><span class="pill p-mvp">MVP</span></div>
           <p class="role">Un regroupement libre, en liste ou en moodboard. Elle <b>référence</b> des objets, elle ne les possède pas.</p>
           <ul class="attrs">
             <li class="key"><b>id</b> <span>uuid</span></li>
@@ -1332,7 +1334,7 @@
         </article>
 
         <article class="entity wide">
-          <div class="entity-top"><h4>CollectionEntry</h4><span class="pill p-valider">À valider</span></div>
+          <div class="entity-top"><h4>CollectionEntry</h4><span class="pill p-mvp">MVP</span></div>
           <p class="role">Un élément posé sur la collection. Les champs de mise en page sont nullables : une collection en mode liste n'en remplit aucun, donc le cas simple ne paie pas le cas riche.</p>
           <ul class="attrs">
             <li class="key"><b>id</b> <span>uuid</span></li>
@@ -1674,8 +1676,8 @@
         </article>
 
         <article class="entity">
-          <div class="entity-top"><h4>ModerationAction</h4><span class="pill p-new">Nouveau</span></div>
-          <p class="role">Ce que l'administrateur a fait, et pourquoi. Existe aussi sans signalement préalable, pour une action spontanée.</p>
+          <div class="entity-top"><h4>ModerationAction</h4><span class="pill p-mvp">MVP</span><span class="pill p-new">Nouveau</span></div>
+          <p class="role">Ce que l'administrateur a fait, et pourquoi. Existe aussi sans signalement préalable, pour une action spontanée. <b>MVP depuis le 29 septembre</b> : le back-office agit dès le lancement alors que <code>Report</code> reste en V2 — la clé <code>report</code> reste donc <code>NULL</code> jusqu'à la V2.</p>
           <ul class="attrs">
             <li class="key"><b>id</b> <span>uuid</span></li>
             <li class="fk"><b>report</b> <span>→ Report, nullable</span></li>
@@ -1774,6 +1776,7 @@
           <li>Les dix-huit contraintes d'unicité listées ci-dessus, dont deux index partiels qui portent de vraies règles métier.</li>
           <li><code>CHECK</code> « exactement une clé sur deux » partout où la cible est <code>Item</code> ou <code>Garment</code> : <code>loan</code>, <code>listing</code>, <code>scan</code>, <code>memory</code>, <code>location_history</code>, <code>collection_entry</code>.</li>
           <li><code>CHECK</code> sur les montants : <code>price >= 0</code>, <code>amount > 0</code>.</li>
+          <li><code>CHECK</code> abonnés en lecture seule, sur le partage comme sur la publication : <code>audience IN ('FRIENDS','SPECIFIC') OR access_level = 'VIEW'</code> et <code>audience &lt;&gt; 'FOLLOWERS' OR comments_enabled = false</code>.</li>
           <li><code>CHECK</code> sur le couple paiement / livraison : <code>payment_method = 'CASH'</code> impose <code>delivery_method = 'HANDOVER'</code>.</li>
           <li><code>CHECK</code> anti-réflexivité : <code>requester &lt;&gt; addressee</code>, <code>follower &lt;&gt; following</code>, <code>lender &lt;&gt; borrower</code>, <code>blocker &lt;&gt; blocked</code>.</li>
           <li>Révocation des droits <code>UPDATE</code> et <code>DELETE</code> sur <code>loan_event</code> et <code>moderation_action</code> : les journaux sont en écriture seule pour de bon.</li>
@@ -1791,6 +1794,7 @@
           <li>Déplacement d'un carton : réaffectation transactionnelle de <code>room</code> et <code>storage</code> sur tout son contenu.</li>
           <li>Refus de supprimer une <code>Room</code>, un <code>Storage</code> ou un <code>Box</code> non vide sans destination choisie.</li>
           <li>Copie de l'adresse dans <code>OrderAddress</code> à la validation de la commande.</li>
+          <li>Marques : calcul du <code>slug</code> à la saisie et réutilisation d'une marque existante ; fusion de deux marques par réaffectation transactionnelle de <code>garment.brand</code>.</li>
           <li>Anonymisation RGPD, avec conservation des pièces comptables.</li>
         </ul>
       </div>
@@ -1913,7 +1917,7 @@
       <div class="open-item"><span class="pill p-valider" style="align-self:flex-start">Sans écran</span><h3><code>LocationHistory</code></h3><p>Aucun écran ne l'affiche : <code>Objet — Déplacé · Confirmation</code> montre le déplacement, jamais l'historique. La table est pourtant dans le MVP depuis le 18 septembre : elle est alimentée dès la première migration, et l'écran d'historique reste à ajouter à la maquette si on veut l'exposer.</p></div>
       <div class="open-item"><span class="pill p-valider" style="align-self:flex-start">Sans écran</span><h3><code>Block</code></h3><p>Le blocage est modélisé mais n'apparaît sur aucune frame — ni action de blocage, ni liste de comptes bloqués. Soit un écran manque, soit la fonctionnalité sort du périmètre.</p></div>
       <div class="open-item"><span class="pill p-valider" style="align-self:flex-start">Sans écran</span><h3>Le second logement</h3><p><code>Place.isPrimary</code> et le multi-logement sont modélisés ; <code>Logement — Mes logements</code> les liste, mais aucun écran ne montre un objet déplacé d'un logement à l'autre. Le déplacement inter-<code>Place</code> reste à vérifier côté parcours.</p></div>
-      <div class="open-item"><span class="pill p-tech" style="align-self:flex-start">Sans écran</span><h3><code>Memory</code> et <code>Brand</code></h3><p><code>Objet — Notes et souvenir</code> couvre <code>Memory</code>. En revanche aucun écran ne gère les marques : <code>Brand</code> est alimenté en référentiel, sans administration — à confirmer côté back-office.</p></div>
+      <div class="open-item"><span class="pill p-mvp" style="align-self:flex-start">Tranché le 29/09</span><h3><code>Memory</code> et <code>Brand</code></h3><p><code>Objet — Notes et souvenir</code> couvre <code>Memory</code>, retenue dans sa forme riche. Pour <code>Brand</code> : référentiel prédéfini à la Vinted, complété par l'utilisateur (collab, marque indépendante) avec <code>isVerified = false</code>, et un écran de gestion des marques à ajouter au back-office — il n'existe pas encore dans la maquette.</p></div>
       <div class="open-item"><span class="pill p-valider" style="align-self:flex-start">À reformuler</span><h3>« Paiements traités par Stripe »</h3><p>Libellé du back-office à remplacer par « Prestataire de paiement : Stripe ». Seule modification demandée dans la maquette — voir la table ci-dessous.</p></div>
     </div>
   </section>
@@ -1955,7 +1959,7 @@
       <div class="open-item"><span class="pill p-mvp" style="align-self:flex-start">Tranché</span><h3>Commentaires oui, frais non</h3><p>Les annonces de vente acceptent les commentaires : le sous-type <code>ListingComment</code> est confirmé, et le niveau <code>VIEW_COMMENTS</code> le gouverne comme ailleurs. Aucune commission n'est prélevée : <code>Order.feeAmount</code> disparaît, <code>totalAmount</code> égale <code>itemAmount</code> et le versement au vendeur est intégral, déduction faite des seuls frais Stripe.</p></div>
       <div class="open-item"><span class="pill p-mvp" style="align-self:flex-start">Tranché</span><h3>Notifications : la vente est obligatoire, le reste suit</h3><p>Les quatre types liés à la vente doivent être livrés. <code>Notification</code>, <code>NotificationPreference</code> et <code>DeviceToken</code> restaient de toute façon en MVP : la réponse ne change pas le schéma, elle fixe l'ordre d'implémentation.</p></div>
       <div class="open-item"><span class="pill p-mvp" style="align-self:flex-start">Tranché</span><h3>Le scan couvre quatre modes</h3><p>Code-barres, QR code, reconnaissance photo et OCR d'étiquette textile. <code>Scan</code> gagne <code>kind</code> et <code>code</code>. La technologie, elle, est <b>imposée par le module et toujours pas communiquée</b> — c'est le dernier point bloquant côté technique, et il décide aussi du mode de distribution : un module natif interdit Expo Go et impose un development build.</p></div>
-      <div class="open-item"><span class="pill p-valider" style="align-self:flex-start">Encadrant</span><h3>Trois validations toujours en attente</h3><p>Le passage d'une web app à une application mobile Expo ; le référentiel d'accessibilité (RAAM pour le mobile, RGAA pour le back-office web) ; le format de démonstration attendu par le jury. Aucune ne touche le modèle de données.</p></div>
+      <div class="open-item"><span class="pill p-valider" style="align-self:flex-start">Encadrant</span><h3>Deux validations toujours en attente</h3><p>Le passage à une application mobile Expo a été <b>validé le 28 septembre</b>. Restent le référentiel d'accessibilité (RAAM pour le mobile, RGAA pour le back-office web) et le format de démonstration attendu par le jury. Aucune ne touche le modèle de données.</p></div>
       <div class="open-item"><span class="pill p-mvp" style="align-self:flex-start">Tranché</span><h3>La vente entre dans le MVP, avec deux parcours</h3><p>Tout le domaine bascule — <code>Listing</code>, <code>Order</code>, <code>OrderAddress</code>, <code>Address</code>, <code>Payment</code>, <code>Refund</code>, <code>Dispute</code>, <code>Shipment</code> — plus une entité nouvelle, <code>OrderEvent</code>. Deux chemins sont à développer entièrement : <b>paiement en ligne</b> (encaissement, expédition, livraison, réception, reversement, remboursement) et <b>paiement en espèces à la remise</b> (aucun flux d'argent chez nous, double confirmation, aucun remboursement possible). La contradiction entre l'étiquette V2 et l'obligation Stripe du module est levée : Stripe est bien implémenté et démontrable.</p></div>
     </div>
     <div class="section-head" style="margin-top:36px;margin-bottom:14px">
