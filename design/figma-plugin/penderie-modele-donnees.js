@@ -490,13 +490,13 @@ dom("07 — PARTAGE & COLLECTIONS", C.cloth, [
             ["","positionX / positionY","int ?"],["","width / height / rotation","int ?"],["","zIndex","int"]],
     rels: ["Collection N:1","Item N:1 ?","Garment N:1 ?","Media N:1 ?"],
     note: "Supprimer la collection supprime ses entrées, et RIEN d'autre." },
-  { id: "post", nom: "Post", statut: "NOUVEAU", col: 4, sub: 1,
+  { id: "post", nom: "Post", statut: "MVP+NOUVEAU", col: 4, sub: 1,
     role: "Une publication du fil d'actualité.",
     attrs: [["pk","id","uuid"],["fk","author","→ Profile"],["","body","text"],
             ["","audience","FRIENDS · FOLLOWERS · SPECIFIC"],
-            ["fk","collection / item / garment","au plus un"],["fk","share","→ Share ?"],
+            ["fk","share","→ Share ? — porte la ressource"],
             ["","commentsEnabled","bool"]],
-    rels: ["Profile N:1","Share 1:1 ?","Collection N:1 ?","Media N:N","Comment 1:N"],
+    rels: ["Profile N:1","Share 1:1 ?","Media N:N","Comment 1:N"],
     note: "Un Post ne donne JAMAIS accès directement : il PORTE un Share de même audience." }
 ]);
 
