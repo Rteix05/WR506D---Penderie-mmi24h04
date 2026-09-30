@@ -42,11 +42,12 @@ final class SharingTest extends DatabaseTestCase
         $room = $this->room($rafael);
         $perceuse = new Item($rafael, 'Perceuse', $room);
 
-        $share = new ItemShare($rafael, $perceuse, Au::Specific, A::Comment);
+        $share = new ItemShare($rafael, $perceuse, Au::Specific, A::Edit);
         $recipient = $share->addRecipient($thomas);
         self::assertSame($recipient, $share->addRecipient($thomas), 'destinataire ajouté une seule fois');
         $this->expectLogic(fn () => $share->addRecipient($rafael));
-        $this->expectLogic(fn () => new ItemShare($rafael, $perceuse, Au::Followers, A::Comment));
+        $this->expectLogic(fn () => new ItemShare($rafael, $perceuse, Au::Followers, A::Edit));
+        $this->expectLogic(fn () => new ItemShare($rafael, $perceuse, Au::Friends, A::Edit));
         $this->expectLogic(fn () => new ItemShare($thomas, $perceuse, Au::Friends));
         $this->expectLogic(fn () => (new ItemShare($rafael, $perceuse, Au::Friends))->addRecipient($thomas));
 
@@ -69,8 +70,8 @@ final class SharingTest extends DatabaseTestCase
         $room = $this->room($rafael);
         $perceuse = new Item($rafael, 'Perceuse', $room);
         $veste = new Garment($rafael, 'Veste', $room, $this->garmentCategory('vestes'));
-        $canWrite = new ItemShare($rafael, $perceuse, Au::Specific, A::Comment);
-        $canRead = new ItemShare($rafael, $perceuse, Au::Friends, A::ViewComments);
+        $canWrite = new ItemShare($rafael, $perceuse, Au::Specific, A::Read);
+        $canRead = new ItemShare($rafael, $perceuse, Au::Followers);
         $this->persist($perceuse, $veste, $canWrite, $canRead);
 
         $c1 = new ItemComment($thomas, $perceuse, 'Tu me la prêtes ?', $canWrite);
@@ -100,7 +101,7 @@ final class SharingTest extends DatabaseTestCase
         $post = new Post($rafael, 'Vos avis ?', Au::Friends, true, $board);
         $this->persist($post);
         self::assertInstanceOf(CollectionShare::class, $post->getShare());
-        self::assertSame(A::Comment, $post->getShare()->getAccessLevel());
+        self::assertSame(A::Read, $post->getShare()->getAccessLevel());
         self::assertSame($board, $post->getFeatured(), 'la ressource est la cible du partage de la publication');
 
         $comment = new PostComment($thomas, $post, 'Trop bien');
@@ -154,7 +155,7 @@ final class SharingTest extends DatabaseTestCase
         $post = new Post($rafael, 'Abonnés', Au::Followers);
         $this->persist($box, $perceuse, $veste, $followers, $link, $itemShare, $board, $text, $post);
 
-        $this->assertDbRejects("UPDATE share SET access_level = 'COMMENT' WHERE id = '{$followers->getId()}'", 'chk_share_read_only_audience');
+        $this->assertDbRejects("UPDATE share SET access_level = 'EDIT' WHERE id = '{$followers->getId()}'", 'chk_share_edit_specific');
         $this->assertDbRejects("UPDATE share SET token = NULL WHERE id = '{$link->getId()}'", 'chk_share_link_token');
         $this->assertDbRejects("UPDATE share SET garment_id = '{$veste->getId()}' WHERE id = '{$itemShare->getId()}'", 'chk_share_target_garment_id');
         $this->assertDbRejects("UPDATE post SET comments_enabled = true WHERE id = '{$post->getId()}'", 'chk_post_followers_no_comments');

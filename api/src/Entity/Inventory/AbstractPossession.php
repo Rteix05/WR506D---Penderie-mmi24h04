@@ -107,6 +107,16 @@ abstract class AbstractPossession
     protected ?array $scanData = null;
 
     /**
+     * Objet « personnel » (décision du 30/09) : jamais visible par un autre
+     * profil, jamais partageable, et caché même quand sa pièce, son
+     * logement ou un moodboard qui le contient est partagé. Seuls son
+     * propriétaire et le tuteur de celui-ci le voient.
+     */
+    #[ORM\Column]
+    #[Groups(['possession:read', 'possession:write'])]
+    protected bool $isPersonal = false;
+
+    /**
      * Suppression douce : un objet vendu ou prêté reste référencé par une
      * commande et un historique.
      */
@@ -278,6 +288,23 @@ abstract class AbstractPossession
     {
         $this->source = PossessionSource::Scan;
         $this->scanData = $scanData;
+
+        return $this;
+    }
+
+    public function isPersonal(): bool
+    {
+        return $this->isPersonal;
+    }
+
+    /**
+     * Marquer personnel coupe l'accès de tous les partages existants : la
+     * règle est appliquée à la lecture (ResourceAccess), pas seulement à la
+     * création d'un partage.
+     */
+    public function setIsPersonal(bool $isPersonal): static
+    {
+        $this->isPersonal = $isPersonal;
 
         return $this;
     }

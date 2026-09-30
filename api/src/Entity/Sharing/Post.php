@@ -2,6 +2,7 @@
 
 namespace App\Entity\Sharing;
 
+use App\Entity\Dressing\Outfit;
 use App\Entity\Identity\Profile;
 use App\Entity\Inventory\Garment;
 use App\Entity\Inventory\Item;
@@ -94,7 +95,7 @@ class Post
         ?string $body,
         ShareAudience $audience,
         bool $commentsEnabled = true,
-        Collection|Item|Garment|null $featured = null,
+        Collection|Item|Garment|Outfit|null $featured = null,
     ) {
         if (ShareAudience::Link === $audience) {
             throw new \LogicException('Une publication s\'adresse à des amis ou à des abonnés, pas à un lien.');
@@ -113,11 +114,13 @@ class Post
         $this->media = new ArrayCollection();
 
         if (null !== $featured) {
-            $level = $this->commentsEnabled ? AccessLevel::Comment : AccessLevel::View;
+            // Lecture : les commentaires éventuels suivent commentsEnabled et l'audience.
+            $level = AccessLevel::Read;
             $this->share = match (true) {
                 $featured instanceof Collection => new CollectionShare($author, $featured, $audience, $level),
                 $featured instanceof Item => new ItemShare($author, $featured, $audience, $level),
                 $featured instanceof Garment => new GarmentShare($author, $featured, $audience, $level),
+                $featured instanceof Outfit => new OutfitShare($author, $featured, $audience, $level),
             };
         }
     }
@@ -143,12 +146,13 @@ class Post
     }
 
     /** La ressource mise en avant : la cible du partage porté par la publication. */
-    public function getFeatured(): Collection|Item|Garment|null
+    public function getFeatured(): Collection|Item|Garment|Outfit|null
     {
         return match (true) {
             $this->share instanceof CollectionShare => $this->share->getCollection(),
             $this->share instanceof ItemShare => $this->share->getItem(),
             $this->share instanceof GarmentShare => $this->share->getGarment(),
+            $this->share instanceof OutfitShare => $this->share->getOutfit(),
             default => null,
         };
     }

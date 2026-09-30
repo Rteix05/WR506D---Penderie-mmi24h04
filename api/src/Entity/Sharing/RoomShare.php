@@ -7,9 +7,10 @@ use App\Entity\Place\Room;
 use App\Enum\Sharing\AccessLevel;
 use App\Enum\Sharing\ShareAudience;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Uid\Uuid;
 
 /**
- * Partage d'une ressource précise : une pièce et tout ce qu'elle contient.
+ * Partage d'une ressource précise : une pièce et ce qu'elle contient (sauf les objets personnels).
  *
  * CASCADE : si la cible disparaît réellement, son partage n'a plus
  * d'objet. Une cible supprimée en douceur garde son partage.
@@ -21,11 +22,14 @@ class RoomShare extends Share
     #[ORM\JoinColumn(nullable: true, onDelete: 'CASCADE')]
     private Room $room;
 
-    public function __construct(Profile $owner, Room $room, ShareAudience $audience, AccessLevel $accessLevel = AccessLevel::View)
+    /**
+     * @param Share|null $grant pour un repartage par une personne autorisée à modifier
+     */
+    public function __construct(Profile $sharedBy, Room $room, ShareAudience $audience, AccessLevel $accessLevel = AccessLevel::Read, ?Share $grant = null)
     {
-        parent::__construct($owner, $audience, $accessLevel);
+        // La cible d'abord : le constructeur parent en déduit le propriétaire.
         $this->room = $room;
-        $this->assertOwnsTarget();
+        parent::__construct($sharedBy, $audience, $accessLevel, $grant);
     }
 
     public function getRoom(): Room
@@ -36,5 +40,10 @@ class RoomShare extends Share
     public function getTargetOwner(): Profile
     {
         return $this->room->getPlace()->getOwner();
+    }
+
+    public function getTargetId(): Uuid
+    {
+        return $this->room->getId();
     }
 }

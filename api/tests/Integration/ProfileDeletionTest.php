@@ -81,7 +81,7 @@ final class ProfileDeletionTest extends DatabaseTestCase
         $this->persist($livre, $returned);
         $returned->confirmReturn($thomas);
         $pending = Loan::request($console, $thomas);
-        $share = new ItemShare($lea, $console, ShareAudience::Specific, AccessLevel::Comment);
+        $share = new ItemShare($lea, $console, ShareAudience::Specific, AccessLevel::Read);
         $share->addRecipient($thomas);
         $comment = new ItemComment($lea, $console, 'Ma console !');
         $answer = new ItemComment($thomas, $console, 'Trop bien', $share, $comment);
