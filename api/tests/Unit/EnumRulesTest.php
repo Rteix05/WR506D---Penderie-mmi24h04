@@ -60,10 +60,10 @@ final class EnumRulesTest extends TestCase
         self::assertTrue(ShareAudience::Specific->allowsComments());
         self::assertFalse(ShareAudience::Followers->allowsComments());
         self::assertFalse(ShareAudience::Link->allowsComments());
-        self::assertFalse(AccessLevel::View->allowsReadingComments());
-        self::assertTrue(AccessLevel::ViewComments->allowsReadingComments());
-        self::assertFalse(AccessLevel::ViewComments->allowsWritingComments());
-        self::assertTrue(AccessLevel::Comment->allowsWritingComments());
+        // Modifier couvre Lire, pas l'inverse (30/09).
+        self::assertTrue(AccessLevel::Edit->includes(AccessLevel::Read));
+        self::assertTrue(AccessLevel::Read->includes(AccessLevel::Read));
+        self::assertFalse(AccessLevel::Read->includes(AccessLevel::Edit));
     }
 
     public function testSaleNotificationsAreCritical(): void

@@ -7,6 +7,7 @@ use App\Entity\Inventory\Item;
 use App\Enum\Sharing\AccessLevel;
 use App\Enum\Sharing\ShareAudience;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Uid\Uuid;
 
 /**
  * Partage d'une ressource précise : un objet.
@@ -21,11 +22,14 @@ class ItemShare extends Share
     #[ORM\JoinColumn(nullable: true, onDelete: 'CASCADE')]
     private Item $item;
 
-    public function __construct(Profile $owner, Item $item, ShareAudience $audience, AccessLevel $accessLevel = AccessLevel::View)
+    /**
+     * @param Share|null $grant pour un repartage par une personne autorisée à modifier
+     */
+    public function __construct(Profile $sharedBy, Item $item, ShareAudience $audience, AccessLevel $accessLevel = AccessLevel::Read, ?Share $grant = null)
     {
-        parent::__construct($owner, $audience, $accessLevel);
+        // La cible d'abord : le constructeur parent en déduit le propriétaire.
         $this->item = $item;
-        $this->assertOwnsTarget();
+        parent::__construct($sharedBy, $audience, $accessLevel, $grant);
     }
 
     public function getItem(): Item
@@ -36,5 +40,15 @@ class ItemShare extends Share
     public function getTargetOwner(): Profile
     {
         return $this->item->getOwner();
+    }
+
+    public function getTargetId(): Uuid
+    {
+        return $this->item->getId();
+    }
+
+    protected function isTargetPersonal(): bool
+    {
+        return $this->item->isPersonal();
     }
 }

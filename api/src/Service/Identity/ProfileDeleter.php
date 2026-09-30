@@ -74,8 +74,10 @@ final class ProfileDeleter
             $this->transferCategories($conn, 'item_category', 'item', $c, $g);
             $this->transferCategories($conn, 'garment_category', 'garment', $c, $g);
 
-            // Les partages de l'enfant sont révoqués (MDD), et suivent leurs cibles chez le tuteur.
-            $conn->executeStatement('UPDATE share SET revoked_at = COALESCE(revoked_at, now()), owner_id = :g WHERE owner_id = :c', ['g' => $g, 'c' => $c]);
+            // Les partages de l'enfant sont révoqués (MDD), et suivent leurs cibles chez le tuteur ;
+            // ceux qu'il avait repartagés chez d'autres sont révoqués et passent au fantôme.
+            $conn->executeStatement('UPDATE share SET revoked_at = COALESCE(revoked_at, now()), owner_id = :g, shared_by_id = CASE WHEN shared_by_id = :c THEN :g ELSE shared_by_id END WHERE owner_id = :c', ['g' => $g, 'c' => $c]);
+            $conn->executeStatement('UPDATE share SET revoked_at = COALESCE(revoked_at, now()), shared_by_id = :ghost WHERE shared_by_id = :c', ['ghost' => self::GHOST, 'c' => $c]);
 
             // --- Au fantôme : ce qui implique des tiers -------------------------------
             // Publications : retirées, mais les commentaires des autres gardent leur fil.

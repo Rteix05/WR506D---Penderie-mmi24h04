@@ -7,6 +7,7 @@ use App\Entity\Inventory\Garment;
 use App\Enum\Sharing\AccessLevel;
 use App\Enum\Sharing\ShareAudience;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Uid\Uuid;
 
 /**
  * Partage d'une ressource précise : un vêtement.
@@ -21,11 +22,14 @@ class GarmentShare extends Share
     #[ORM\JoinColumn(nullable: true, onDelete: 'CASCADE')]
     private Garment $garment;
 
-    public function __construct(Profile $owner, Garment $garment, ShareAudience $audience, AccessLevel $accessLevel = AccessLevel::View)
+    /**
+     * @param Share|null $grant pour un repartage par une personne autorisée à modifier
+     */
+    public function __construct(Profile $sharedBy, Garment $garment, ShareAudience $audience, AccessLevel $accessLevel = AccessLevel::Read, ?Share $grant = null)
     {
-        parent::__construct($owner, $audience, $accessLevel);
+        // La cible d'abord : le constructeur parent en déduit le propriétaire.
         $this->garment = $garment;
-        $this->assertOwnsTarget();
+        parent::__construct($sharedBy, $audience, $accessLevel, $grant);
     }
 
     public function getGarment(): Garment
@@ -36,5 +40,15 @@ class GarmentShare extends Share
     public function getTargetOwner(): Profile
     {
         return $this->garment->getOwner();
+    }
+
+    public function getTargetId(): Uuid
+    {
+        return $this->garment->getId();
+    }
+
+    protected function isTargetPersonal(): bool
+    {
+        return $this->garment->isPersonal();
     }
 }
