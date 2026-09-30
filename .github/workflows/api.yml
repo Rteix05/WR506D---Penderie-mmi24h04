@@ -1,0 +1,85 @@
+# Intégration continue de l'API Symfony.
+#
+# Sur chaque push et chaque PR qui touche api/ : PostgreSQL 17 réel, les
+# migrations jouées puis rejouées dans les deux sens, les référentiels
+# chargés, le schéma validé contre le mapping, puis la suite PHPUnit.
+name: API
+
+on:
+  push:
+    branches: [main, develop, 'feature/**']
+    paths: ['api/**', '.github/workflows/api.yml']
+  pull_request:
+    paths: ['api/**', '.github/workflows/api.yml']
+
+concurrency:
+  group: api-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    name: Migrations et tests
+    runs-on: ubuntu-latest
+
+    services:
+      database:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: penderie
+          POSTGRES_USER: penderie
+          POSTGRES_PASSWORD: penderie
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U penderie"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      APP_ENV: test
+      # En environnement test, Doctrine ajoute le suffixe _test : la base
+      # utilisée est penderie_test.
+      DATABASE_URL: postgresql://penderie:penderie@127.0.0.1:5432/penderie?serverVersion=17&charset=utf8
+
+    defaults:
+      run:
+        working-directory: api
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: pdo_pgsql
+          coverage: none
+
+      - name: Cache Composer
+        uses: actions/cache@v4
+        with:
+          path: ~/.composer/cache
+          key: composer-${{ hashFiles('api/composer.lock') }}
+          restore-keys: composer-
+
+      - name: Dépendances
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Base de test
+        run: php bin/console doctrine:database:create --if-not-exists
+
+      - name: Migrations
+        run: php bin/console doctrine:migrations:migrate --no-interaction
+
+      - name: Migrations réversibles (retour à zéro, puis rejouées)
+        run: |
+          php bin/console doctrine:migrations:migrate first --no-interaction
+          php bin/console doctrine:migrations:migrate --no-interaction
+
+      - name: Référentiels
+        run: php bin/console app:reference-data:load
+
+      - name: Schéma synchronisé avec le mapping
+        run: php bin/console doctrine:schema:validate
+
+      - name: PHPUnit
+        run: php bin/phpunit
