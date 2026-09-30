@@ -52,7 +52,7 @@ final class VisibilityTest extends DatabaseTestCase
 
     private function garment(string $name, bool $personal = false): Garment
     {
-        $g = (new Garment($this->camille, $name, $this->dressing, $this->garmentCategory('robes')))->setIsPersonal($personal);
+        $g = (new Garment($this->camille, $name, $this->dressing, $this->garmentCategory('robes')))->setPersonal($personal);
         $this->persist($g);
 
         return $g;
@@ -113,7 +113,7 @@ final class VisibilityTest extends DatabaseTestCase
         self::assertFalse($this->access->canRead($this->sophie, $journal), 'l\'objet personnel reste caché dans la pièce partagée');
 
         $this->expectException(\LogicException::class);
-        new ItemShare($this->camille, (new Item($this->camille, 'Papiers', $this->dressing))->setIsPersonal(true), Au::Specific);
+        new ItemShare($this->camille, (new Item($this->camille, 'Papiers', $this->dressing))->setPersonal(true), Au::Specific);
     }
 
     /** Situation 2 : un look publié dont un vêtement est en vente. */

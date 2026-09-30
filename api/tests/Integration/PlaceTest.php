@@ -15,7 +15,7 @@ final class PlaceTest extends DatabaseTestCase
     public function testMockupCascadeWithAShelfInsideAWardrobe(): void
     {
         $rafael = $this->profile('rafael');
-        $maison = (new Place($rafael, 'Maison'))->setIsPrimary(true);
+        $maison = (new Place($rafael, 'Maison'))->setPrimary(true);
         $chambre = new Room($maison, 'Chambre', RoomType::Bedroom);
         $armoire = new Storage($chambre, 'Armoire', StorageType::Wardrobe);
         $etagere = new Box($chambre, 'Étagère 2', BoxType::Shelf, $armoire);
@@ -70,7 +70,7 @@ final class PlaceTest extends DatabaseTestCase
     public function testDatabaseGuardsPlaces(): void
     {
         $rafael = $this->profile('rafael');
-        $maison = (new Place($rafael, 'Maison'))->setIsPrimary(true);
+        $maison = (new Place($rafael, 'Maison'))->setPrimary(true);
         $room = new Room($maison, 'Garage');
         $etagere = new Box($room, 'Étagère', BoxType::Shelf);
         $this->persist($maison, $room, $etagere);

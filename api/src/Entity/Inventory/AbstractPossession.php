@@ -60,7 +60,7 @@ abstract class AbstractPossession
     /** Privées : jamais montrées à un autre profil. */
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     #[Assert\Length(max: 2000)]
-    #[Groups(['possession:read', 'possession:write'])]
+    #[Groups(['possession:private', 'possession:write'])]
     protected ?string $notes = null;
 
     #[ORM\Column(length: 20, enumType: Availability::class)]
@@ -74,32 +74,32 @@ abstract class AbstractPossession
     /** RESTRICT : une pièce qui contient des objets ne se supprime pas (MDD). */
     #[ORM\ManyToOne(targetEntity: Room::class)]
     #[ORM\JoinColumn(nullable: false, onDelete: 'RESTRICT')]
-    #[Groups(['possession:read', 'possession:create'])]
+    #[Groups(['possession:private', 'possession:create'])]
     protected Room $room;
 
     #[ORM\ManyToOne(targetEntity: Storage::class)]
     #[ORM\JoinColumn(nullable: true, onDelete: 'RESTRICT')]
-    #[Groups(['possession:read'])]
+    #[Groups(['possession:private'])]
     protected ?Storage $storage = null;
 
     #[ORM\ManyToOne(targetEntity: Box::class)]
     #[ORM\JoinColumn(nullable: true, onDelete: 'RESTRICT')]
-    #[Groups(['possession:read'])]
+    #[Groups(['possession:private'])]
     protected ?Box $box = null;
 
     #[ORM\Column(type: Types::DATE_IMMUTABLE, nullable: true)]
     #[Assert\LessThanOrEqual('today')]
-    #[Groups(['possession:read', 'possession:write'])]
+    #[Groups(['possession:private', 'possession:write'])]
     protected ?\DateTimeImmutable $purchaseDate = null;
 
     /** decimal(10,2), manipulé en chaîne pour ne jamais perdre de centime. */
     #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2, nullable: true)]
     #[Assert\PositiveOrZero]
-    #[Groups(['possession:read', 'possession:write'])]
+    #[Groups(['possession:private', 'possession:write'])]
     protected ?string $estimatedValue = null;
 
     #[ORM\Column(length: 20, enumType: PossessionSource::class)]
-    #[Groups(['possession:read'])]
+    #[Groups(['possession:private'])]
     protected PossessionSource $source = PossessionSource::Manual;
 
     /** @var array<string, mixed>|null ce que le scan a lu, quand source = SCAN */
@@ -112,9 +112,9 @@ abstract class AbstractPossession
      * logement ou un moodboard qui le contient est partagé. Seuls son
      * propriétaire et le tuteur de celui-ci le voient.
      */
-    #[ORM\Column]
-    #[Groups(['possession:read', 'possession:write'])]
-    protected bool $isPersonal = false;
+    #[ORM\Column(name: 'is_personal')]
+    #[Groups(['possession:private', 'possession:write'])]
+    protected bool $personal = false;
 
     /**
      * Suppression douce : un objet vendu ou prêté reste référencé par une
@@ -294,7 +294,7 @@ abstract class AbstractPossession
 
     public function isPersonal(): bool
     {
-        return $this->isPersonal;
+        return $this->personal;
     }
 
     /**
@@ -302,9 +302,9 @@ abstract class AbstractPossession
      * règle est appliquée à la lecture (ResourceAccess), pas seulement à la
      * création d'un partage.
      */
-    public function setIsPersonal(bool $isPersonal): static
+    public function setPersonal(bool $personal): static
     {
-        $this->isPersonal = $isPersonal;
+        $this->personal = $personal;
 
         return $this;
     }
