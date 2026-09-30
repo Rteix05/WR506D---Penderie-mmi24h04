@@ -3,12 +3,14 @@
 namespace App\Entity\Identity;
 
 use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Delete;
 use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
 use App\Entity\Media\Media;
 use App\Entity\Trait\TimestampableTrait;
 use App\Enum\Identity\ProfileType;
 use App\Repository\Identity\ProfileRepository;
+use App\State\ProfileDeletionProcessor;
 use App\Validator\Identity\ValidGuardianship;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -49,6 +51,10 @@ use Symfony\Component\Validator\Constraints as Assert;
     operations: [
         new GetCollection(),
         new Get(security: "object.getAccount() == user"),
+        // Le tuteur supprime le profil d'un enfant (transferts, profil fantôme, blocages :
+        // voir ProfileDeleter). 403 si ce n'est pas le tuteur, 409 si un prêt ou une
+        // commande est en cours, 422 pour un profil adulte (décision en attente).
+        new Delete(security: "object.getAccount() == user", processor: ProfileDeletionProcessor::class),
     ],
     normalizationContext: ['groups' => ['profile:read']],
 )]
