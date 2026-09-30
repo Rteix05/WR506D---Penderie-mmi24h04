@@ -2,9 +2,13 @@
 
 namespace App\Entity\Reference;
 
+use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
 use App\Repository\Reference\ItemCategoryRepository;
 use App\Validator\Reference\ValidCategoryTree;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Attribute\Groups;
 
 /**
  * Catégorie d'objet (électroménager, outillage, livres…), arborescente.
@@ -14,10 +18,19 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\UniqueConstraint(name: 'uniq_item_category_system_slug', columns: ['slug'], options: ['where' => '(owner_id IS NULL)'])]
 #[ORM\UniqueConstraint(name: 'uniq_item_category_owner_slug', columns: ['owner_id', 'slug'], options: ['where' => '(owner_id IS NOT NULL)'])]
 #[ValidCategoryTree]
+#[ApiResource(
+    shortName: 'ItemCategory',
+    operations: [
+        new GetCollection(),
+        new Get(),
+    ],
+    normalizationContext: ['groups' => ['category:read']],
+)]
 class ItemCategory extends AbstractCategory
 {
     #[ORM\ManyToOne(targetEntity: self::class)]
     #[ORM\JoinColumn(nullable: true, onDelete: 'RESTRICT')]
+    #[Groups(['category:read'])]
     private ?ItemCategory $parent = null;
 
     public function getParent(): ?static

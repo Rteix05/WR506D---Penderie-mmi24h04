@@ -2,6 +2,12 @@
 
 namespace App\Entity\Place;
 
+use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Delete;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Patch;
+use ApiPlatform\Metadata\Post;
 use App\Entity\Media\Media;
 use App\Entity\Trait\TimestampableTrait;
 use App\Enum\Place\RoomType;
@@ -10,6 +16,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Types\UuidType;
+use Symfony\Component\Serializer\Attribute\Groups;
 use Symfony\Component\Uid\Uuid;
 use Symfony\Component\Validator\Constraints as Assert;
 
@@ -20,12 +27,24 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[ORM\Entity(repositoryClass: RoomRepository::class)]
 #[ORM\HasLifecycleCallbacks]
 #[ORM\Index(name: 'idx_room_place_position', columns: ['place_id', 'position'])]
+#[ApiResource(
+    shortName: 'Room',
+    operations: [
+        new GetCollection(),
+        new Get(security: "is_granted('VIEW', object)"),
+        new Post(denormalizationContext: ['groups' => ['room:write', 'room:create']], securityPostDenormalize: "is_granted('EDIT', object)"),
+        new Patch(denormalizationContext: ['groups' => ['room:write']], security: "is_granted('EDIT', object)"),
+        new Delete(security: "is_granted('EDIT', object)"),
+    ],
+    normalizationContext: ['groups' => ['room:read']],
+)]
 class Room
 {
     use TimestampableTrait;
 
     #[ORM\Id]
     #[ORM\Column(type: UuidType::NAME, unique: true)]
+    #[Groups(['room:read'])]
     private Uuid $id;
 
     /**
@@ -35,14 +54,17 @@ class Room
      */
     #[ORM\ManyToOne(targetEntity: Place::class, inversedBy: 'rooms')]
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
+    #[Groups(['room:read', 'room:create'])]
     private Place $place;
 
     #[ORM\Column(length: 80)]
     #[Assert\NotBlank]
     #[Assert\Length(max: 80)]
+    #[Groups(['room:read', 'room:write'])]
     private string $name;
 
     #[ORM\Column(length: 20, enumType: RoomType::class)]
+    #[Groups(['room:read', 'room:write'])]
     private RoomType $type;
 
     #[ORM\ManyToOne(targetEntity: Media::class)]
@@ -52,6 +74,7 @@ class Room
     /** L'ordre d'affichage dans le logement. */
     #[ORM\Column]
     #[Assert\PositiveOrZero]
+    #[Groups(['room:read', 'room:write'])]
     private int $position = 0;
 
     /** @var Collection<int, Storage> */

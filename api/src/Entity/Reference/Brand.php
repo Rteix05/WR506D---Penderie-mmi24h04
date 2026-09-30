@@ -2,6 +2,9 @@
 
 namespace App\Entity\Reference;
 
+use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
 use App\Entity\Identity\Profile;
 use App\Entity\Media\Media;
 use App\Entity\Trait\TimestampableTrait;
@@ -9,6 +12,7 @@ use App\Repository\Reference\BrandRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Types\UuidType;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+use Symfony\Component\Serializer\Attribute\Groups;
 use Symfony\Component\String\UnicodeString;
 use Symfony\Component\Uid\Uuid;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -28,21 +32,32 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[ORM\Entity(repositoryClass: BrandRepository::class)]
 #[ORM\HasLifecycleCallbacks]
 #[UniqueEntity(fields: ['slug'], message: 'Cette marque existe déjà.')]
+#[ApiResource(
+    shortName: 'Brand',
+    operations: [
+        new GetCollection(),
+        new Get(),
+    ],
+    normalizationContext: ['groups' => ['brand:read']],
+)]
 class Brand
 {
     use TimestampableTrait;
 
     #[ORM\Id]
     #[ORM\Column(type: UuidType::NAME, unique: true)]
+    #[Groups(['brand:read'])]
     private Uuid $id;
 
     #[ORM\Column(length: 80)]
     #[Assert\NotBlank]
     #[Assert\Length(max: 80)]
+    #[Groups(['brand:read'])]
     private string $name;
 
     #[ORM\Column(length: 80, unique: true)]
     #[Assert\NotBlank(message: 'Ce nom de marque ne contient aucune lettre ni aucun chiffre.')]
+    #[Groups(['brand:read'])]
     private string $slug;
 
     #[ORM\ManyToOne(targetEntity: Media::class)]
@@ -50,6 +65,7 @@ class Brand
     private ?Media $logoMedia = null;
 
     #[ORM\Column]
+    #[Groups(['brand:read'])]
     private bool $isVerified;
 
     /**

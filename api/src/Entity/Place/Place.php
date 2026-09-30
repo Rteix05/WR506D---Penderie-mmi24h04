@@ -2,6 +2,12 @@
 
 namespace App\Entity\Place;
 
+use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Delete;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Patch;
+use ApiPlatform\Metadata\Post;
 use App\Entity\Identity\Profile;
 use App\Entity\Media\Media;
 use App\Entity\Trait\TimestampableTrait;
@@ -12,6 +18,7 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Types\UuidType;
+use Symfony\Component\Serializer\Attribute\Groups;
 use Symfony\Component\Uid\Uuid;
 use Symfony\Component\Validator\Constraints as Assert;
 
@@ -26,12 +33,24 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[ORM\HasLifecycleCallbacks]
 #[ORM\Index(name: 'idx_place_owner', columns: ['owner_id'])]
 #[ORM\UniqueConstraint(name: 'uniq_place_primary_per_owner', columns: ['owner_id'], options: ['where' => '(is_primary = true)'])]
+#[ApiResource(
+    shortName: 'Place',
+    operations: [
+        new GetCollection(),
+        new Get(security: "is_granted('VIEW', object)"),
+        new Post(denormalizationContext: ['groups' => ['place:write']], securityPostDenormalize: "is_granted('EDIT', object)"),
+        new Patch(denormalizationContext: ['groups' => ['place:write']], security: "is_granted('EDIT', object)"),
+        new Delete(security: "is_granted('EDIT', object)"),
+    ],
+    normalizationContext: ['groups' => ['place:read']],
+)]
 class Place
 {
     use TimestampableTrait;
 
     #[ORM\Id]
     #[ORM\Column(type: UuidType::NAME, unique: true)]
+    #[Groups(['place:read'])]
     private Uuid $id;
 
     /**
@@ -45,17 +64,21 @@ class Place
     #[ORM\Column(length: 80)]
     #[Assert\NotBlank]
     #[Assert\Length(max: 80)]
+    #[Groups(['place:read', 'place:write'])]
     private string $name;
 
     #[ORM\Column(length: 20, enumType: PlaceType::class)]
+    #[Groups(['place:read', 'place:write'])]
     private PlaceType $type;
 
     #[ORM\Column(length: 255, nullable: true)]
     #[Assert\Length(max: 255)]
+    #[Groups(['place:read', 'place:write'])]
     private ?string $address = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     #[Assert\Length(max: 1000)]
+    #[Groups(['place:read', 'place:write'])]
     private ?string $description = null;
 
     #[ORM\ManyToOne(targetEntity: Media::class)]
@@ -64,6 +87,7 @@ class Place
 
     /** La résidence principale : une seule par profil (index unique partiel). */
     #[ORM\Column]
+    #[Groups(['place:read', 'place:write'])]
     private bool $isPrimary = false;
 
     /** @var Collection<int, Room> */

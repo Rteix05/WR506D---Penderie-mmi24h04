@@ -74,6 +74,21 @@ docker compose exec -e APP_ENV=test php php bin/console doctrine:database:create
 docker compose exec -e APP_ENV=test php php bin/console doctrine:migrations:migrate -n
 ```
 
+## Authentification
+
+JWT (LexikJWTAuthenticationBundle) : un jeton d'accès de 15 minutes, gardé en mémoire par l'application, et un jeton de rafraîchissement (gesdinet/jwt-refresh-token-bundle, 30 jours, à usage unique) rangé dans le coffre sécurisé du téléphone.
+
+| Route | Rôle |
+|---|---|
+| `POST /api/auth/register` | Crée le compte et son premier profil (adulte, par défaut). |
+| `POST /api/auth/login` | `{email, password}` → `{token, refreshToken}`. |
+| `POST /api/auth/refresh` | `{refreshToken}` → une nouvelle paire ; l'ancien jeton de rafraîchissement ne sert plus. |
+| `GET /api/me` | Le compte, ses profils, et le profil actif. |
+
+Toutes les autres routes `/api` exigent l'en-tête `Authorization: Bearer <token>`. Le jeton identifie un **compte** ; le **profil** qui agit se choisit par l'en-tête `X-Profile: <id du profil>` (sans en-tête : le profil par défaut). Un profil d'un autre compte, ou suspendu, est refusé (403).
+
+Les clés et la passphrase ne sont jamais commitées : `docker-entrypoint.sh` génère la passphrase dans `.env.local` et les paires de clés dans `config/jwt/` (dev) et `config/jwt/test/` (tests) au démarrage du conteneur.
+
 ## Tests
 
 La suite PHPUnit tourne sur la base de test `penderie_test`, migrée et chargée de ses référentiels (voir « Base de données ») :
@@ -85,6 +100,7 @@ docker compose exec php php bin/phpunit --filter SaleTest  # un domaine
 ```
 
 - `tests/Unit/` : règles pures (calculs de montants, permissions par défaut, énumérations, slugs de marque).
+- `tests/Api/` : de vraies requêtes HTTP (inscription, connexion, rafraîchissement, profil actif, droits sur l'inventaire).
 - `tests/Integration/` : un fichier par domaine du MDD, sur un vrai PostgreSQL. Chaque test tourne dans une transaction annulée à la fin (`dama/doctrine-test-bundle`) ; `assertDbRejects()` vérifie qu'une contrainte en base refuse bien une donnée interdite.
 
 La CI GitHub Actions (`.github/workflows/api.yml`) rejoue tout sur chaque push et chaque PR qui touche `api/` : migrations (et leur retour à zéro), référentiels, validation du schéma, PHPUnit.
@@ -101,10 +117,14 @@ api/
 │   ├── Entity/        entités Doctrine, un dossier par domaine du MDD
 │   │   └── Trait/     comportements partagés (createdAt / updatedAt)
 │   ├── Command/       commandes console (app:reference-data:load)
+│   ├── Controller/    inscription, /api/me
+│   ├── Doctrine/      filtrage des listes par profil actif
 │   ├── Enum/          énumérations métier (backed enums PHP)
 │   ├── ReferenceData/ contenu des référentiels et son chargeur
 │   ├── Repository/    requêtes Doctrine, même découpage que Entity/
-│   ├── Security/      résolution des permissions de profil
+│   ├── Security/      profil actif, voters, résolution des permissions
+│   ├── Serializer/    propriétaire injecté côté serveur à la création
+│   ├── State/         suppression douce
 │   └── Validator/     contraintes métier qui lisent plusieurs lignes
 ├── tests/             Unit/ (sans base) et Integration/ (un fichier par domaine)
 ├── compose.yaml       environnement Docker

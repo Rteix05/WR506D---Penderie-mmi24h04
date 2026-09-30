@@ -2,13 +2,21 @@
 
 namespace App\Entity\Inventory;
 
+use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Delete;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Patch;
+use ApiPlatform\Metadata\Post;
 use App\Entity\Identity\Profile;
 use App\Entity\Place\Room;
 use App\Entity\Reference\ItemCategory;
 use App\Repository\Inventory\ItemRepository;
+use App\State\SoftDeleteProcessor;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Attribute\Groups;
 
 /**
  * L'objet possédé : perceuse, lampe, console…
@@ -20,10 +28,22 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Index(name: 'idx_item_owner_availability', columns: ['owner_id', 'availability'])]
 #[ORM\Index(name: 'idx_item_room', columns: ['room_id'])]
 #[ORM\Index(name: 'idx_item_box', columns: ['box_id'])]
+#[ApiResource(
+    shortName: 'Item',
+    operations: [
+        new GetCollection(),
+        new Get(security: "is_granted('VIEW', object)"),
+        new Post(denormalizationContext: ['groups' => ['possession:write', 'possession:create', 'item:write']], securityPostDenormalize: "is_granted('ITEM_CREATE') and is_granted('EDIT', object.getRoom())"),
+        new Patch(denormalizationContext: ['groups' => ['possession:write', 'item:write']], security: "is_granted('EDIT', object)"),
+        new Delete(security: "is_granted('EDIT', object)", processor: SoftDeleteProcessor::class),
+    ],
+    normalizationContext: ['groups' => ['possession:read', 'item:read']],
+)]
 class Item extends AbstractPossession
 {
     #[ORM\ManyToOne(targetEntity: ItemCategory::class)]
     #[ORM\JoinColumn(nullable: true, onDelete: 'RESTRICT')]
+    #[Groups(['item:read', 'item:write'])]
     private ?ItemCategory $category = null;
 
     /** @var Collection<int, ItemMedia> */

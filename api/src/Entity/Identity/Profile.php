@@ -2,6 +2,9 @@
 
 namespace App\Entity\Identity;
 
+use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
 use App\Entity\Media\Media;
 use App\Entity\Trait\TimestampableTrait;
 use App\Enum\Identity\ProfileType;
@@ -13,6 +16,7 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Types\UuidType;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+use Symfony\Component\Serializer\Attribute\Groups;
 use Symfony\Component\Uid\Uuid;
 use Symfony\Component\Validator\Constraints as Assert;
 
@@ -40,6 +44,14 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[ORM\UniqueConstraint(name: 'uniq_profile_default_per_account', columns: ['account_id'], options: ['where' => '(is_default = true)'])]
 #[UniqueEntity(fields: ['username'], message: 'Cet identifiant est déjà pris.')]
 #[ValidGuardianship]
+#[ApiResource(
+    shortName: 'Profile',
+    operations: [
+        new GetCollection(),
+        new Get(security: "object.getAccount() == user"),
+    ],
+    normalizationContext: ['groups' => ['profile:read']],
+)]
 class Profile
 {
     use TimestampableTrait;
@@ -55,6 +67,7 @@ class Profile
 
     #[ORM\Id]
     #[ORM\Column(type: UuidType::NAME, unique: true)]
+    #[Groups(['profile:read'])]
     private Uuid $id;
 
     #[ORM\ManyToOne(targetEntity: Account::class, inversedBy: 'profiles')]
@@ -86,14 +99,17 @@ class Profile
     #[Assert\NotBlank]
     #[Assert\Length(min: 3, max: 30)]
     #[Assert\Regex('/^[a-z0-9.-]+$/', message: 'Minuscules, chiffres, tirets et points uniquement.')]
+    #[Groups(['profile:read'])]
     private string $username;
 
     #[ORM\Column(length: 60)]
     #[Assert\NotBlank]
     #[Assert\Length(min: 1, max: 60)]
+    #[Groups(['profile:read'])]
     private string $displayName;
 
     #[ORM\Column(length: 20, enumType: ProfileType::class)]
+    #[Groups(['profile:read'])]
     private ProfileType $type;
 
     #[ORM\ManyToOne(targetEntity: Media::class)]

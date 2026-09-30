@@ -2,6 +2,12 @@
 
 namespace App\Entity\Inventory;
 
+use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Delete;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Patch;
+use ApiPlatform\Metadata\Post;
 use App\Entity\Identity\Profile;
 use App\Entity\Place\Room;
 use App\Entity\Reference\Brand;
@@ -12,10 +18,12 @@ use App\Entity\Reference\Style;
 use App\Enum\Inventory\GarmentUsage;
 use App\Enum\Reference\Warmth;
 use App\Repository\Inventory\GarmentRepository;
+use App\State\SoftDeleteProcessor;
 use App\Validator\Inventory\ValidGarmentSize;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Attribute\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
@@ -32,35 +40,53 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[ORM\Index(name: 'idx_garment_room', columns: ['room_id'])]
 #[ORM\Index(name: 'idx_garment_box', columns: ['box_id'])]
 #[ValidGarmentSize]
+#[ApiResource(
+    shortName: 'Garment',
+    operations: [
+        new GetCollection(),
+        new Get(security: "is_granted('VIEW', object)"),
+        new Post(denormalizationContext: ['groups' => ['possession:write', 'possession:create', 'garment:write', 'garment:create']], securityPostDenormalize: "is_granted('GARMENT_MANAGE') and is_granted('EDIT', object.getRoom())"),
+        new Patch(denormalizationContext: ['groups' => ['possession:write', 'garment:write']], security: "is_granted('EDIT', object)"),
+        new Delete(security: "is_granted('EDIT', object)", processor: SoftDeleteProcessor::class),
+    ],
+    normalizationContext: ['groups' => ['possession:read', 'garment:read']],
+)]
 class Garment extends AbstractPossession
 {
     #[ORM\ManyToOne(targetEntity: GarmentCategory::class)]
     #[ORM\JoinColumn(nullable: false, onDelete: 'RESTRICT')]
+    #[Groups(['garment:read', 'garment:create'])]
     private GarmentCategory $category;
 
     /** RESTRICT : une marque utilisée se fusionne, elle ne se supprime pas. */
     #[ORM\ManyToOne(targetEntity: Brand::class)]
     #[ORM\JoinColumn(nullable: true, onDelete: 'RESTRICT')]
+    #[Groups(['garment:read', 'garment:write'])]
     private ?Brand $brand = null;
 
     /** Une graduation de l'échelle de la catégorie (ValidGarmentSize). */
     #[ORM\ManyToOne(targetEntity: SizeValue::class)]
     #[ORM\JoinColumn(nullable: true, onDelete: 'RESTRICT')]
+    #[Groups(['garment:read', 'garment:write'])]
     private ?SizeValue $size = null;
 
     /** Repli texte libre, si l'échelle de la catégorie l'autorise. */
     #[ORM\Column(length: 20, nullable: true)]
     #[Assert\Length(max: 20)]
+    #[Groups(['garment:read', 'garment:write'])]
     private ?string $sizeLabel = null;
 
     #[ORM\Column(length: 20, enumType: GarmentUsage::class)]
+    #[Groups(['garment:read', 'garment:write'])]
     private GarmentUsage $usage = GarmentUsage::Everyday;
 
     /** Nul = hérite de la catégorie (getEffectiveWarmth). */
     #[ORM\Column(length: 20, nullable: true, enumType: Warmth::class)]
+    #[Groups(['garment:read', 'garment:write'])]
     private ?Warmth $warmth = null;
 
     #[ORM\Column]
+    #[Groups(['garment:read', 'garment:write'])]
     private bool $waterResistant = false;
 
     /** @var Collection<int, Color> */
@@ -68,6 +94,7 @@ class Garment extends AbstractPossession
     #[ORM\JoinTable(name: 'garment_color')]
     #[ORM\JoinColumn(name: 'garment_id', onDelete: 'CASCADE')]
     #[ORM\InverseJoinColumn(name: 'color_id', onDelete: 'RESTRICT')]
+    #[Groups(['garment:read', 'garment:write'])]
     private Collection $colors;
 
     /** @var Collection<int, Style> */
@@ -75,6 +102,7 @@ class Garment extends AbstractPossession
     #[ORM\JoinTable(name: 'garment_style')]
     #[ORM\JoinColumn(name: 'garment_id', onDelete: 'CASCADE')]
     #[ORM\InverseJoinColumn(name: 'style_id', onDelete: 'RESTRICT')]
+    #[Groups(['garment:read', 'garment:write'])]
     private Collection $styles;
 
     /** @var Collection<int, GarmentMedia> */

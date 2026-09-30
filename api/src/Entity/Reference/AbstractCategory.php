@@ -6,6 +6,7 @@ use App\Entity\Identity\Profile;
 use App\Entity\Trait\TimestampableTrait;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Types\UuidType;
+use Symfony\Component\Serializer\Attribute\Groups;
 use Symfony\Component\String\Slugger\AsciiSlugger;
 use Symfony\Component\Uid\Uuid;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -28,21 +29,25 @@ abstract class AbstractCategory
 
     #[ORM\Id]
     #[ORM\Column(type: UuidType::NAME, unique: true)]
+    #[Groups(['category:read'])]
     protected Uuid $id;
 
     #[ORM\Column(length: 80)]
     #[Assert\NotBlank]
     #[Assert\Length(max: 80)]
+    #[Groups(['category:read'])]
     protected string $name;
 
     /** Identifiant stable : clé de chargement pour une catégorie système. */
     #[ORM\Column(length: 80)]
     #[Assert\NotBlank]
     #[Assert\Regex('/^[a-z0-9-]+$/')]
+    #[Groups(['category:read'])]
     protected string $slug;
 
     /** Nom d'icône du design system, facultatif. */
     #[ORM\Column(length: 50, nullable: true)]
+    #[Groups(['category:read'])]
     protected ?string $icon = null;
 
     /** RESTRICT : transférée au tuteur ou traitée à la suppression du profil. */
@@ -51,6 +56,7 @@ abstract class AbstractCategory
     protected ?Profile $owner;
 
     #[ORM\Column]
+    #[Groups(['category:read'])]
     protected bool $isSystem;
 
     public function __construct(string $name, ?Profile $owner = null, ?string $slug = null)
