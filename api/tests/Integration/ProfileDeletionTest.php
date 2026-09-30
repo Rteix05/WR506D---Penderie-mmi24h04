@@ -62,8 +62,8 @@ final class ProfileDeletionTest extends DatabaseTestCase
         $ghost = Profile::GHOST_ID;
 
         // Les biens de Léa, chez elle et chez Rafael.
-        $rafaelHome = (new Place($rafael, 'Maison'))->setIsPrimary(true);
-        $leaPlace = (new Place($lea, 'Chambre de Léa'))->setIsPrimary(true);
+        $rafaelHome = (new Place($rafael, 'Maison'))->setPrimary(true);
+        $leaPlace = (new Place($lea, 'Chambre de Léa'))->setPrimary(true);
         $leaRoom = new Room($leaPlace, 'Chambre');
         $leaCategory = new ItemCategory('Jeux', $lea);
         $rafaelCategory = new ItemCategory('Jeux', $rafael);

@@ -37,6 +37,8 @@ security:
 
     access_control:
         - { path: ^/api/auth/(login|refresh|register)$, roles: PUBLIC_ACCESS }
+        # Un lien de partage s'ouvre sans compte (lecture seule, voir LinkController).
+        - { path: ^/api/links/, roles: PUBLIC_ACCESS }
         # La documentation de l'API reste consultable sans jeton.
         - { path: ^/api/docs, roles: PUBLIC_ACCESS }
         - { path: ^/api$, roles: PUBLIC_ACCESS }

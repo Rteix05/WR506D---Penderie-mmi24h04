@@ -73,7 +73,7 @@ class Place
 
     #[ORM\Column(length: 255, nullable: true)]
     #[Assert\Length(max: 255)]
-    #[Groups(['place:read', 'place:write'])]
+    #[Groups(['place:private', 'place:write'])]
     private ?string $address = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
@@ -86,9 +86,9 @@ class Place
     private ?Media $coverMedia = null;
 
     /** La résidence principale : une seule par profil (index unique partiel). */
-    #[ORM\Column]
+    #[ORM\Column(name: 'is_primary')]
     #[Groups(['place:read', 'place:write'])]
-    private bool $isPrimary = false;
+    private bool $primary = false;
 
     /** @var Collection<int, Room> */
     #[ORM\OneToMany(targetEntity: Room::class, mappedBy: 'place')]
@@ -184,12 +184,12 @@ class Place
 
     public function isPrimary(): bool
     {
-        return $this->isPrimary;
+        return $this->primary;
     }
 
-    public function setIsPrimary(bool $isPrimary): static
+    public function setPrimary(bool $primary): static
     {
-        $this->isPrimary = $isPrimary;
+        $this->primary = $primary;
 
         return $this;
     }
