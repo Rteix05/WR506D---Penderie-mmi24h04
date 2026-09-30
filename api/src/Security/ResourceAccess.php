@@ -11,6 +11,7 @@ use App\Entity\Inventory\Item;
 use App\Entity\Place\Box;
 use App\Entity\Place\Place;
 use App\Entity\Place\Room;
+use App\Entity\Place\Storage;
 use App\Entity\Relation\Follow;
 use App\Entity\Sharing\BoxShare;
 use App\Entity\Sharing\Collection;
@@ -178,6 +179,10 @@ final class ResourceAccess
             $shares = [...$shares, ...$this->active(RoomShare::class, 'room', $resource->getRoom())];
             $shares = [...$shares, ...$this->active(PlaceShare::class, 'place', $resource->getRoom()->getPlace())];
         }
+        if ($resource instanceof Storage) {
+            $shares = [...$shares, ...$this->active(RoomShare::class, 'room', $resource->getRoom())];
+            $shares = [...$shares, ...$this->active(PlaceShare::class, 'place', $resource->getRoom()->getPlace())];
+        }
         if ($resource instanceof Room) {
             $shares = [...$shares, ...$this->active(PlaceShare::class, 'place', $resource->getPlace())];
         }
@@ -221,6 +226,7 @@ final class ResourceAccess
         return match (true) {
             $resource instanceof AbstractPossession, $resource instanceof Place, $resource instanceof Outfit, $resource instanceof Collection => $resource->getOwner(),
             $resource instanceof Room => $resource->getPlace()->getOwner(),
+            $resource instanceof Storage => $resource->getRoom()->getPlace()->getOwner(),
             $resource instanceof Box => $resource->getRoom()->getPlace()->getOwner(),
             default => null,
         };
