@@ -38,7 +38,8 @@ final class AuthTest extends ApiTestBase
     {
         $this->signUp('rafael');
 
-        $this->client->request('POST', '/api/auth/login', ['json' => ['email' => 'rafael@exemple.fr', 'password' => 'mauvais']]);
+        // Un mot de passe volontairement faux, dérivé de celui du test plutôt qu'écrit en dur.
+        $this->client->request('POST', '/api/auth/login', ['json' => ['email' => 'rafael@exemple.fr', 'password' => strrev(self::PASSWORD)]]);
         self::assertResponseStatusCodeSame(401);
 
         $this->client->request('POST', '/api/auth/login', ['json' => ['email' => 'fantome@penderie.invalid', 'password' => '']]);
