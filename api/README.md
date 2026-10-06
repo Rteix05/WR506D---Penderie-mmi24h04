@@ -122,6 +122,20 @@ Codes : 403 sans droit, 404 introuvable, 422 règle refusée (objet personnel, `
 - **Bloqué (409)** tant qu'un prêt est en cours ou qu'une commande n'est pas terminée ; les prêts pas encore remis sont annulés.
 - La suppression d'un profil **adulte** n'est pas encore définie (422).
 
+## Scan par IA (OpenRouter)
+
+`POST /api/scans/analyze` (multipart : `kind` = `PHOTO` ou `LABEL_OCR`, `image` = JPEG/PNG/WebP ≤ 8 Mo) envoie la photo à un modèle de vision via [OpenRouter](https://openrouter.ai) et renvoie de quoi pré-remplir la fiche. Chaque scan, réussi ou non, est tracé dans `Scan`.
+
+**Clé API** (gratuite, aucune carte bancaire) :
+
+1. Créer un compte sur https://openrouter.ai, puis **Settings → Keys** (https://openrouter.ai/settings/keys) → *Create key*.
+2. Dans **Settings → Privacy** (https://openrouter.ai/settings/privacy), autoriser les fournisseurs des modèles gratuits (*free endpoints that may train on inputs*). Sinon tous les modèles `:free` répondent 404 et le scan échoue.
+3. La mettre dans `api/.env.local` (jamais commité) : `OPENROUTER_API_KEY=sk-or-v1-...`
+
+Les modèles sont essayés dans l'ordre de `OPENROUTER_SCAN_MODELS` (`.env`) : quota dépassé, modèle retiré, panne ou réponse illisible → modèle suivant. Limites des modèles gratuits : ~20 requêtes/minute et 50/jour (1 000/jour une fois 10 $ de crédits achetés sur le compte).
+
+Pour tester depuis le téléphone : écran **Tester le scan** de l'app (`app/src/app/scan.tsx`).
+
 ## Tests
 
 La suite PHPUnit tourne sur la base de test `penderie_test`, migrée et chargée de ses référentiels (voir « Base de données ») :

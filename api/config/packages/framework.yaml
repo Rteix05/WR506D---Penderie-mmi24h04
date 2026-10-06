@@ -5,6 +5,18 @@ framework:
     # Note that the session will be started ONLY if you read or write from it.
     session: true
 
+    # Le scan par IA passe par OpenRouter (voir App\Service\Scan\OpenRouterVision).
+    # Client dédié : la clé ne part que vers openrouter.ai.
+    http_client:
+        scoped_clients:
+            openrouter.client:
+                base_uri: 'https://openrouter.ai/api/v1/'
+                headers:
+                    Authorization: 'Bearer %env(OPENROUTER_API_KEY)%'
+                    # Facultatifs : identifient l'app dans le tableau de bord OpenRouter.
+                    HTTP-Referer: 'https://github.com/Rteix05/WR506D---Penderie'
+                    X-Title: 'Penderie'
+
     #esi: true
     #fragments: true
 
@@ -13,3 +25,6 @@ when@test:
         test: true
         session:
             storage_factory_id: session.storage.factory.mock_file
+        # Aucun test n'appelle le vrai OpenRouter : réponses simulées.
+        http_client:
+            mock_response_factory: App\Tests\Support\OpenRouterMock

@@ -12,7 +12,7 @@ use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Symfony\Component\HttpKernel\KernelEvents;
 
 /**
- * Les routes écrites à la main (partages, liens, contributions, colocation) ne passent
+ * Les routes écrites à la main (partages, liens, contributions, colocation, scan) ne passent
  * pas par API Platform, donc pas par son exception_to_status : sans ceci,
  * une règle métier refusée (LogicException) tomberait en 500.
  *
@@ -24,7 +24,7 @@ use Symfony\Component\HttpKernel\KernelEvents;
  */
 final class ControllerErrorSubscriber implements EventSubscriberInterface
 {
-    private const ROUTES = ['api_share_', 'api_link_', 'api_contribution_', 'api_flatshare_'];
+    private const ROUTES = ['api_share_', 'api_link_', 'api_contribution_', 'api_flatshare_', 'api_scan_'];
 
     public static function getSubscribedEvents(): array
     {
