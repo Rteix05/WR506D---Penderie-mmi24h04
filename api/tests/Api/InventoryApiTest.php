@@ -70,6 +70,22 @@ final class InventoryApiTest extends ApiTestBase
         self::assertResponseStatusCodeSame(204);
     }
 
+    /** Les listes de lieux ne montrent que les siens (logements dont on est membre, et ce qu'ils contiennent). */
+    public function testPlaceListsOnlyShowMine(): void
+    {
+        $rafael = $this->signUp('rafael');
+        $thomas = $this->signUp('thomas');
+        $room = $this->roomOf($rafael);
+        $this->call('POST', '/api/storages', $rafael, ['room' => $room, 'name' => 'Armoire', 'type' => 'WARDROBE']);
+        $this->call('POST', '/api/boxes', $rafael, ['room' => $room, 'name' => 'Carton', 'type' => 'CARTON']);
+        $this->roomOf($thomas);
+
+        foreach (['/api/places' => 1, '/api/rooms' => 1, '/api/storages' => 0, '/api/boxes' => 0] as $url => $expected) {
+            self::assertSame($expected, $this->call('GET', $url, $thomas)->toArray()['totalItems'], "$url : rien de Rafael");
+            self::assertSame(1, $this->call('GET', $url, $rafael)->toArray()['totalItems'], "$url : le sien");
+        }
+    }
+
     public function testCannotStoreInSomeoneElsesRoom(): void
     {
         $rafael = $this->signUp('rafael');
@@ -116,7 +132,9 @@ final class InventoryApiTest extends ApiTestBase
         self::assertEqualsCanonicalizing(['Perceuse', 'Console'], array_column($this->call('GET', '/api/items', $rafael)->toArray()['member'], 'name'), 'le tuteur voit les objets de l\'enfant');
         self::assertSame(['Console'], array_column($this->call('GET', '/api/items', $rafael, null, $leaId)->toArray()['member'], 'name'), 'l\'enfant ne voit que les siens');
 
-        $this->call('GET', $parentItem['@id'], $rafael, null, $leaId);
+        // Tableau des droits, colonne « profil −18 » : l'enfant VOIT les objets du foyer, sans les modifier.
+        self::assertSame('VIEW', $this->call('GET', $parentItem['@id'], $rafael, null, $leaId)->toArray()['access']);
+        $this->call('PATCH', $parentItem['@id'], $rafael, ['name' => 'À moi'], $leaId);
         self::assertResponseStatusCodeSame(403);
         $this->call('PATCH', $console['@id'], $rafael, ['name' => 'Console de Léa']);
         self::assertResponseIsSuccessful();

@@ -18,3 +18,5 @@ api_platform:
         Doctrine\ORM\OptimisticLockException: 409
         LogicException: 422
         App\Service\Identity\ProfileDeletionBlocked: 409
+        App\Service\Place\ContainsPossessions: 409
+        App\Service\Place\DecisionRequired: 409

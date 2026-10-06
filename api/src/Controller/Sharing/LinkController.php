@@ -9,6 +9,7 @@ use App\Entity\Inventory\Item;
 use App\Entity\Place\Box;
 use App\Entity\Place\Place;
 use App\Entity\Place\Room;
+use App\Entity\Place\Storage;
 use App\Entity\Sharing\Share;
 use App\Enum\Sharing\ShareAudience;
 use App\Service\Sharing\ShareTargets;
@@ -22,7 +23,8 @@ use Symfony\Component\Routing\Attribute\Route;
  *
  * Un lien est un « porteur » : quiconque le présente voit la même chose,
  * en lecture seule, sans commentaires, jamais un objet personnel ni un
- * champ privé (notes, emplacement précis, valeur, adresse). Un lien
+ * champ privé (notes, emplacement précis, valeur, adresse), ni les
+ * affaires d'un coloc rangées dans la pièce partagée. Un lien
  * révoqué ou expiré ne montre plus rien, à personne.
  */
 final class LinkController extends AbstractController
@@ -42,6 +44,7 @@ final class LinkController extends AbstractController
         $possessions = match (true) {
             $target instanceof AbstractPossession => [$target],
             $target instanceof Box => $this->possessionsWhere($em, 'box', $target),
+            $target instanceof Storage => $this->possessionsWhere($em, 'storage', $target),
             $target instanceof Room => $this->possessionsWhere($em, 'room', $target),
             $target instanceof Place => $this->possessionsIn($em, $target),
             $target instanceof Outfit => $target->getGarments(),
@@ -57,8 +60,17 @@ final class LinkController extends AbstractController
                 'name' => $p->getName(),
                 'description' => $p->getDescription(),
                 'condition' => $p->getCondition()?->value,
-            ], array_filter($possessions, static fn (AbstractPossession $p) => !$p->isPersonal() && !$p->isDeleted()))),
+            ], array_filter($possessions, static fn (AbstractPossession $p) => !$p->isPersonal() && !$p->isDeleted() && self::sharedBy($share, $p)))),
         ]);
+    }
+
+    /** Un partage de lieu ne montre que les affaires de son propriétaire (et de ses enfants), jamais celles d'un coloc. */
+    private static function sharedBy(Share $share, AbstractPossession $p): bool
+    {
+        $owner = $p->getOwner();
+
+        return $owner->getId()->equals($share->getOwner()->getId())
+            || (null !== $owner->getGuardian() && $owner->getGuardian()->getId()->equals($share->getOwner()->getId()));
     }
 
     /** @return list<AbstractPossession> */

@@ -96,7 +96,7 @@ final class VisibilityTest extends DatabaseTestCase
         self::assertSame(['camille' => 'MODIFIER', 'sophie' => 'VOIR', 'hugo' => 'VOIR', 'paul' => 'RIEN'], $this->row($robe), 'objet normal : Sophie via la pièce, Hugo via le look publié');
         self::assertSame(['camille' => 'MODIFIER', 'sophie' => 'RIEN', 'hugo' => 'RIEN', 'paul' => 'RIEN'], $this->row($journal), 'objet personnel : personne');
         self::assertSame(['camille' => 'MODIFIER', 'sophie' => 'VOIR', 'hugo' => 'RIEN', 'paul' => 'RIEN'], $this->row($this->dressing), 'pièce : seulement Sophie, à qui elle est partagée');
-        self::assertSame(['camille' => 'MODIFIER', 'sophie' => 'RIEN', 'hugo' => 'VOIR', 'paul' => 'RIEN'], $this->row($look), 'look publié aux abonnés : Hugo');
+        self::assertSame(['camille' => 'MODIFIER', 'sophie' => 'VOIR', 'hugo' => 'VOIR', 'paul' => 'RIEN'], $this->row($look), 'look publié aux abonnés : Hugo, et Sophie (« Abonnés » inclut les amis)');
         self::assertFalse($this->access->canComment($this->hugo, $look), 'un abonné ne commente pas');
     }
 

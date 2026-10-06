@@ -2,6 +2,8 @@
 
 namespace App\EventSubscriber;
 
+use App\Service\Place\ContainsPossessions;
+use App\Service\Place\DecisionRequired;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -10,17 +12,19 @@ use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Symfony\Component\HttpKernel\KernelEvents;
 
 /**
- * Les routes écrites à la main (partages, liens, contributions) ne passent
+ * Les routes écrites à la main (partages, liens, contributions, colocation) ne passent
  * pas par API Platform, donc pas par son exception_to_status : sans ceci,
  * une règle métier refusée (LogicException) tomberait en 500.
  *
  * Même table que pour API Platform : règle violée par l'appelant → 422,
- * requête mal formée (valeur d'énumération inconnue, JSON invalide) → 400.
+ * opération bloquée par une situation en cours (logement pas vide,
+ * décision commune requise) → 409, requête mal formée (valeur
+ * d'énumération inconnue, JSON invalide) → 400.
  * Les exceptions HTTP (403, 404…) et tout le reste suivent leur cours.
  */
 final class ControllerErrorSubscriber implements EventSubscriberInterface
 {
-    private const ROUTES = ['api_share_', 'api_link_', 'api_contribution_'];
+    private const ROUTES = ['api_share_', 'api_link_', 'api_contribution_', 'api_flatshare_'];
 
     public static function getSubscribedEvents(): array
     {
@@ -35,6 +39,7 @@ final class ControllerErrorSubscriber implements EventSubscriberInterface
         $e = $event->getThrowable();
         $status = match (true) {
             $e instanceof HttpExceptionInterface => null,
+            $e instanceof ContainsPossessions, $e instanceof DecisionRequired => 409,
             $e instanceof \ValueError, $e instanceof \JsonException, $e instanceof \TypeError => 400,
             $e instanceof \LogicException => 422,
             default => null,
@@ -43,7 +48,7 @@ final class ControllerErrorSubscriber implements EventSubscriberInterface
             return;
         }
         $event->setResponse(new JsonResponse(
-            ['title' => 400 === $status ? 'Requête invalide' : 'Règle non respectée', 'status' => $status, 'detail' => $e->getMessage()],
+            ['title' => match ($status) { 400 => 'Requête invalide', 409 => 'Situation bloquante', default => 'Règle non respectée' }, 'status' => $status, 'detail' => $e->getMessage()],
             $status,
             ['Content-Type' => 'application/problem+json'],
         ));

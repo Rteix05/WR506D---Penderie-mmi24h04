@@ -14,9 +14,10 @@ use Symfony\Component\Security\Core\Authorization\Voter\Voter;
  *  - VIEW : le propriétaire, son tuteur, ou quiconque à qui un partage
  *    actif s'applique (jamais pour un objet personnel) ;
  *  - EDIT (modifier directement, supprimer) : le propriétaire et son
- *    tuteur SEULEMENT. Un droit « Modifier » accordé par un partage ne
- *    permet que de PROPOSER, via une Contribution validée par le
- *    propriétaire.
+ *    tuteur ; en colocation, tout membre sur une pièce commune et ses
+ *    rangements (ResourceAccess::canManage). Un droit « Modifier » accordé
+ *    par un partage, ou le foyer, ne permet que de PROPOSER, via une
+ *    Contribution validée par le propriétaire.
  *
  * @extends Voter<string, object>
  */
@@ -41,7 +42,7 @@ final class OwnershipVoter extends Voter
         $me = $this->current->get();
 
         return self::EDIT === $attribute
-            ? $this->access->isOwner($me, $subject)
+            ? $this->access->canManage($me, $subject)
             : $this->access->canRead($me, $subject);
     }
 }

@@ -13,6 +13,7 @@ use App\Entity\Media\Media;
 use App\Entity\Trait\TimestampableTrait;
 use App\Enum\Place\PlaceType;
 use App\Repository\Place\PlaceRepository;
+use App\State\PlaceRemovalProcessor;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
@@ -25,6 +26,12 @@ use Symfony\Component\Validator\Constraints as Assert;
 /**
  * Le logement : résidence principale, second domicile, garde-meuble.
  * Premier niveau de la cascade Place ▸ Room ▸ Storage ▸ Box.
+ *
+ * Colocation (décision du 30/09) : un logement a des MEMBRES, tous admins.
+ * Son créateur est le premier ; owner reste le « référent » (celui qui
+ * partage le logement entier), repris par un autre membre s'il part.
+ * Faire entrer quelqu'un ou supprimer le logement : accord de tous
+ * (PlaceDecision).
  *
  * Changer de logement ne demande aucun champ : un objet pointe une Room
  * d'une autre Place.
@@ -40,7 +47,7 @@ use Symfony\Component\Validator\Constraints as Assert;
         new Get(security: "is_granted('VIEW', object)"),
         new Post(denormalizationContext: ['groups' => ['place:write']], securityPostDenormalize: "is_granted('EDIT', object)"),
         new Patch(denormalizationContext: ['groups' => ['place:write']], security: "is_granted('EDIT', object)"),
-        new Delete(security: "is_granted('EDIT', object)"),
+        new Delete(security: "is_granted('EDIT', object)", processor: PlaceRemovalProcessor::class),
     ],
     normalizationContext: ['groups' => ['place:read']],
 )]
@@ -90,6 +97,10 @@ class Place
     #[Groups(['place:read', 'place:write'])]
     private bool $primary = false;
 
+    /** @var Collection<int, PlaceMember> */
+    #[ORM\OneToMany(targetEntity: PlaceMember::class, mappedBy: 'place', cascade: ['persist'], orphanRemoval: true)]
+    private Collection $members;
+
     /** @var Collection<int, Room> */
     #[ORM\OneToMany(targetEntity: Room::class, mappedBy: 'place')]
     #[ORM\OrderBy(['position' => 'ASC'])]
@@ -102,6 +113,8 @@ class Place
         $this->name = $name;
         $this->type = $type;
         $this->rooms = new ArrayCollection();
+        $this->members = new ArrayCollection();
+        $this->addMember($owner);
     }
 
     public function getId(): Uuid
@@ -112,6 +125,63 @@ class Place
     public function getOwner(): Profile
     {
         return $this->owner;
+    }
+
+    /** @return Collection<int, PlaceMember> */
+    public function getMembers(): Collection
+    {
+        return $this->members;
+    }
+
+    /** @return list<Profile> */
+    public function getMemberProfiles(): array
+    {
+        return array_values($this->members->map(static fn (PlaceMember $m) => $m->getProfile())->toArray());
+    }
+
+    public function hasMember(Profile $profile): bool
+    {
+        return null !== $this->memberOf($profile);
+    }
+
+    public function memberOf(Profile $profile): ?PlaceMember
+    {
+        foreach ($this->members as $member) {
+            if ($member->getProfile()->getId()->equals($profile->getId())) {
+                return $member;
+            }
+        }
+
+        return null;
+    }
+
+    /** Une colocation : plus d'un membre. */
+    public function isShared(): bool
+    {
+        return $this->members->count() > 1;
+    }
+
+    /** @internal Par PlaceDecisions (invitation acceptée par tous) et à la création. */
+    public function addMember(Profile $profile): PlaceMember
+    {
+        $member = $this->memberOf($profile) ?? new PlaceMember($this, $profile);
+        if (!$this->members->contains($member)) {
+            $this->members->add($member);
+        }
+
+        return $member;
+    }
+
+    /** @internal Par PlaceLeaver : le référent qui part passe la main au plus ancien membre restant. */
+    public function removeMember(Profile $profile): void
+    {
+        if (null !== ($member = $this->memberOf($profile))) {
+            $this->members->removeElement($member);
+        }
+        if ($this->owner->getId()->equals($profile->getId()) && !$this->members->isEmpty()) {
+            $this->owner = $this->members->first()->getProfile();
+            $this->primary = false;
+        }
     }
 
     /** Transfert au tuteur à la suppression d'un profil enfant. */

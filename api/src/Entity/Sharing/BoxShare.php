@@ -39,7 +39,7 @@ class BoxShare extends Share
 
     public function getTargetOwner(): Profile
     {
-        return $this->box->getRoom()->getPlace()->getOwner();
+        return $this->box->getOwner();
     }
 
     public function getTargetId(): Uuid
