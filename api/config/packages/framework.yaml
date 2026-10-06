@@ -14,7 +14,7 @@ framework:
                 headers:
                     Authorization: 'Bearer %env(OPENROUTER_API_KEY)%'
                     # Facultatifs : identifient l'app dans le tableau de bord OpenRouter.
-                    HTTP-Referer: 'https://github.com/Rteix05/WR506D---Penderie'
+                    HTTP-Referer: 'https://github.com/Rteix05/WR506D---Penderie-mmi24h04'
                     X-Title: 'Penderie'
 
     #esi: true
