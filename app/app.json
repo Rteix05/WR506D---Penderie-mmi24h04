@@ -33,6 +33,14 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Penderie accède à tes photos pour scanner un objet ou une étiquette.",
+          "cameraPermission": "Penderie utilise l'appareil photo pour scanner un objet ou une étiquette.",
+          "microphonePermission": false
+        }
       ]
     ],
     "experiments": {
