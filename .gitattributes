@@ -3,3 +3,4 @@
 # arrive : un script shell en CRLF échoue avec « /bin/sh^M: not found ».
 *.sh        text eol=lf
 Dockerfile  text eol=lf
+api/bin/*   text eol=lf
