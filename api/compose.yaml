@@ -29,6 +29,9 @@ services:
       # Données et configuration de Caddy, conservées entre deux redémarrages.
       - caddy_data:/data
       - caddy_config:/config
+      # Réglages PHP du projet (taille des photos envoyées au scan), sans
+      # reconstruire l'image.
+      - ./docker/php.ini:/usr/local/etc/php/conf.d/zz-penderie.ini:ro
     ports:
       # Port 8080 de l'hôte (8000 est souvent pris par un autre projet) : c'est
       # l'adresse que l'app Expo appellera, http://<IP-du-poste>:8080/api depuis
