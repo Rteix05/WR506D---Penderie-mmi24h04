@@ -18,5 +18,16 @@ if ! grep -qs '^APP_SECRET=.\+' .env.local; then
     echo "APP_SECRET généré dans .env.local"
 fi
 
+# Même principe pour la passphrase des clés JWT, puis les clés elles-mêmes
+# (config/jwt/*.pem, ignorées par git). --skip-if-exists : on ne régénère
+# jamais une paire existante, sinon tous les jetons en cours deviendraient
+# invalides. Les tests ont leur propre paire jetable (config/jwt/test/).
+if ! grep -qs '^JWT_PASSPHRASE=.\+' .env.local; then
+    echo "JWT_PASSPHRASE=$(php -r 'echo bin2hex(random_bytes(32));')" >> .env.local
+    echo "JWT_PASSPHRASE générée dans .env.local"
+fi
+php bin/console lexik:jwt:generate-keypair --skip-if-exists --no-interaction
+APP_ENV=test php bin/console lexik:jwt:generate-keypair --skip-if-exists --no-interaction
+
 # Lance ensuite la commande normale de l'image (FrankenPHP).
 exec docker-php-entrypoint "$@"

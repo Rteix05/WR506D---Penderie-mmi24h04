@@ -1,0 +1,10 @@
+gesdinet_jwt_refresh_token:
+    refresh_token_class: App\Entity\Identity\RefreshToken
+    # Durée de vie d'un jeton de rafraîchissement : 30 jours, prolongée à
+    # chaque usage (ttl_update), et remplacée à chaque rafraîchissement
+    # (single_use) : un jeton volé ne sert qu'une fois.
+    ttl: 2592000
+    ttl_update: true
+    single_use: true
+    token_parameter_name: refreshToken
+    return_expiration: true

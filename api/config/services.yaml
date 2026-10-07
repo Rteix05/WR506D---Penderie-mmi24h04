@@ -21,3 +21,13 @@ services:
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
+
+    # Les modèles de vision, essayés dans l'ordre jusqu'au premier qui répond.
+    App\Service\Scan\OpenRouterVision:
+        arguments:
+            $models: '%env(csv:OPENROUTER_SCAN_MODELS)%'
+
+when@test:
+    services:
+        # Les réponses simulées d'OpenRouter (framework.http_client.mock_response_factory).
+        App\Tests\Support\OpenRouterMock: ~

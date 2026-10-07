@@ -6,3 +6,17 @@ api_platform:
         stateless: true
         cache_headers:
             vary: ['Content-Type', 'Authorization', 'Origin']
+    # Codes HTTP des erreurs. Déclarer cette table REMPLACE celle d'API Platform :
+    # on reprend donc ses valeurs par défaut (les quatre premières), sans quoi une
+    # valeur mal formée (énumération inconnue…) tomberait en 500 au lieu de 400.
+    # Puis nos erreurs métier : une règle violée par l'appelant (422), une
+    # opération bloquée par une situation en cours (409).
+    exception_to_status:
+        Symfony\Component\Serializer\Exception\ExceptionInterface: 400
+        ApiPlatform\Exception\InvalidArgumentException: 400
+        ApiPlatform\ParameterValidator\Exception\ValidationExceptionInterface: 400
+        Doctrine\ORM\OptimisticLockException: 409
+        LogicException: 422
+        App\Service\Identity\ProfileDeletionBlocked: 409
+        App\Service\Place\ContainsPossessions: 409
+        App\Service\Place\DecisionRequired: 409

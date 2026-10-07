@@ -1,0 +1,9 @@
+# Routes traitées par le pare-feu (security.yaml), sans contrôleur :
+# json_login pour la connexion, refresh_jwt pour le rafraîchissement.
+api_login:
+    path: /api/auth/login
+    methods: [POST]
+
+api_refresh_token:
+    path: /api/auth/refresh
+    methods: [POST]

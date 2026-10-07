@@ -51,17 +51,157 @@ En revanche, `vendor/` et `var/` vivent dans des volumes Docker. Sous Windows, l
 
 Les services ajoutés par les prochaines fonctionnalités (stockage des photos, e-mails) viendront compléter `compose.yaml` avec leur feature.
 
+## Base de données
+
+Les entités suivent le modèle de données V2 (`docs/PENDERIE_MODELE_DONNEES_V2.html`). Chaque domaine arrive avec sa migration :
+
+```bash
+docker compose exec php php bin/console doctrine:migrations:migrate
+```
+
+Les contraintes `CHECK` (listes de valeurs des énumérations, règles de tutelle) sont écrites à la main dans les migrations : Doctrine ne sait pas les générer. Après avoir modifié une entité, `doctrine:migrations:diff` produit le SQL des tables, et il faut y ajouter les `CHECK` correspondants.
+
+Les référentiels (catégories système, échelles de tailles, marques de la liste prédéfinie, couleurs, styles) ne sont pas dans les migrations : ils se chargent avec une commande **idempotente**, qui crée ce qui manque, met à jour ce qui existe et ne supprime jamais rien. À lancer après les migrations, et à relancer sans risque après avoir complété une liste de `src/ReferenceData/` :
+
+```bash
+docker compose exec php php bin/console app:reference-data:load
+```
+
+Une base de test, `penderie_test`, se crée et se migre avec `APP_ENV=test` :
+
+```bash
+docker compose exec -e APP_ENV=test php php bin/console doctrine:database:create --if-not-exists
+docker compose exec -e APP_ENV=test php php bin/console doctrine:migrations:migrate -n
+```
+
+## Authentification
+
+JWT (LexikJWTAuthenticationBundle) : un jeton d'accès de 15 minutes, gardé en mémoire par l'application, et un jeton de rafraîchissement (gesdinet/jwt-refresh-token-bundle, 30 jours, à usage unique) rangé dans le coffre sécurisé du téléphone.
+
+| Route | Rôle |
+|---|---|
+| `POST /api/auth/register` | Crée le compte et son premier profil (adulte, par défaut). |
+| `POST /api/auth/login` | `{email, password}` → `{token, refreshToken}`. |
+| `POST /api/auth/refresh` | `{refreshToken}` → une nouvelle paire ; l'ancien jeton de rafraîchissement ne sert plus. |
+| `GET /api/me` | Le compte, ses profils, et le profil actif. |
+
+Toutes les autres routes `/api` exigent l'en-tête `Authorization: Bearer <token>`. Le jeton identifie un **compte** ; le **profil** qui agit se choisit par l'en-tête `X-Profile: <id du profil>` (sans en-tête : le profil par défaut). Un profil d'un autre compte, ou suspendu, est refusé (403).
+
+Les clés et la passphrase ne sont jamais commitées : `docker-entrypoint.sh` génère la passphrase dans `.env.local` et les paires de clés dans `config/jwt/` (dev) et `config/jwt/test/` (tests) au démarrage du conteneur.
+
+## Partage et visibilité
+
+Tout est **privé par défaut**. Un partage ouvre l'accès, à trois niveaux : rien < **Lire** (`READ`) < **Modifier** (`EDIT`). Les règles sont dans `ResourceAccess` (décisions du 30/09, section « Qui voit quoi » du MDD) :
+
+- **Lire** : voir l'objet, et commenter entre amis. Abonnés et lien : lecture seule, sans commentaires.
+- **Modifier** : seulement pour des amis **nommés**. On ne modifie jamais directement : on **propose** (déposer un objet dans la pièce, ajouter au moodboard, corriger le nom ou la description), et le propriétaire valide. On peut repartager, en lecture seule ; l'objet reste celui du propriétaire (« repartagé par… »).
+- **Personnel** (`personal: true`) : jamais visible par un autre, jamais partageable, caché même dans une pièce ou par un lien partagés.
+- Qui n'est pas propriétaire (ou tuteur) ne reçoit **jamais** les champs privés : notes, date et valeur d'achat, provenance, adresse du logement. L'emplacement (pièce / rangement / conteneur) n'est montré qu'au foyer et aux colocs qui voient la pièce — jamais à un ami, un abonné ou un lien (`PrivateFieldsNormalizer`).
+- Chaque ressource renvoie un champ `access` (`ADMIN`, `EDIT`, `VIEW`) : la case du tableau des droits pour celui qui regarde, pour n'afficher que les gestes permis.
+- L'amitié et l'abonnement sont vérifiés **à chaque requête** : retirer un ami coupe l'accès tout de suite.
+
+| Route | Rôle |
+|---|---|
+| `POST /api/shares` | `{targetType: ITEM\|GARMENT\|ROOM\|STORAGE\|BOX\|PLACE\|OUTFIT\|COLLECTION, targetId, audience: SPECIFIC\|FRIENDS\|FOLLOWERS\|LINK, accessLevel?, recipients?: [profileId], expiresAt?}` |
+| `GET /api/shares` | Mes partages (de mes affaires, ou faits par moi), avec le jeton des liens. |
+| `GET /api/shares/received` | Ce qu'on me partage et que je peux voir maintenant. |
+| `DELETE /api/shares/{id}` | Révoquer (le propriétaire, son tuteur, ou l'auteur du partage). |
+| `GET /api/links/{token}` | **Sans compte** : ce que montre un lien actif (nom, description, état ; rien de privé). 404 si révoqué ou expiré. |
+| `POST /api/contributions` | Proposer : `PLACE_POSSESSION`, `ADD_COLLECTION_ENTRY` ou `EDIT_FIELDS` (voir `ContributionController`). |
+| `GET /api/contributions` | `{toReview, mine}` : à valider, et mes propositions. |
+| `POST /api/contributions/{id}/accept` · `/reject` · `/withdraw` | Le propriétaire (ou son tuteur) accepte ou refuse ; l'auteur retire. |
+
+Codes : 403 sans droit, 404 introuvable, 422 règle refusée (objet personnel, `EDIT` à une audience ouverte…), 400 valeur inconnue.
+
+## Colocation et foyer
+
+Le tableau des droits complet (propriétaire, coloc, profil +18 / −18 du même compte, amis, abonnés, public) est dans `docs/PENDERIE_DROITS_v2.xlsx` et dans la section « Colocation et foyer » du MDD. `ResourceAccess::level()` le traduit en code ; `RightsTableTest` le vérifie case par case.
+
+**Colocation** : un logement a des **membres**, tous admins (son créateur est le premier). Être membre ne donne aucun droit sur les affaires des autres.
+
+- Une pièce est **commune** par défaut : chaque coloc la voit, la modifie directement (nom, type, rangements) et y range ses affaires, sans toucher à celles des autres.
+- Son créateur peut la **fermer** : seuls lui et les colocs qu'il autorise la voient. Il la rouvre ; s'il a quitté le logement, n'importe quel membre le peut.
+- **Unanimité** pour inviter quelqu'un, supprimer le logement ou une pièce commune. Le demandeur vote oui d'office, l'invité vote aussi, un seul « non » rejette, le dernier « oui » applique la décision.
+- On ne supprime qu'un logement ou une pièce **vide** (409 sinon). En coloc, un `DELETE` direct sur le logement ou une pièce commune répond 409 : passer par une décision.
+- **Partir** : ses affaires partent avec soi (`TAKE`, déplacement tracé) ou passent à un coloc (`TRANSFER`, jamais un objet personnel, prêté ou en vente).
+
+| Route | Rôle |
+|---|---|
+| `GET /api/places/{id}/members` | Les membres du logement. |
+| `GET /api/places/{id}/decisions` | Les décisions du logement. |
+| `POST /api/places/{id}/decisions` | `{kind: INVITE_MEMBER, inviteeId}` \| `{kind: DELETE_PLACE}` \| `{kind: DELETE_ROOM, roomId}` |
+| `GET /api/place_decisions/awaiting` | Les décisions qui attendent mon vote (dont les invitations reçues). |
+| `POST /api/place_decisions/{id}/approve` · `/reject` · `/cancel` | Voter oui, non ; le demandeur annule. |
+| `POST /api/places/{id}/leave` | `{mode: TAKE, roomId}` (une de mes pièces, ailleurs) \| `{mode: TRANSFER, heirId}` (un coloc). |
+| `POST /api/rooms/{id}/close` · `/open` | Fermer / rouvrir une pièce. |
+| `POST /api/rooms/{id}/allowed` · `DELETE /api/rooms/{id}/allowed/{profileId}` | `{profileId}` : autoriser / retirer un coloc dans sa pièce fermée. |
+
+**Foyer** (profils d'un même compte) : ils voient tout ce qui appartient aux autres, sauf le personnel. Un adulte **propose** des modifications (`POST /api/contributions`, sans partage) sur les objets, pièces, rangements et catégories ; un mineur sur les rangements et catégories. Le propriétaire valide.
+
+Codes : 409 « Situation bloquante » (pas vide, décision requise), 422 règle refusée, 403 sans droit.
+
+## Supprimer un profil
+
+`DELETE /api/profiles/{id}` : le tuteur supprime le profil d'un enfant (`ProfileDeleter`, procédure du MDD).
+
+- **Au tuteur** : objets, vêtements, médias, logements, collections, tenues, catégories personnelles (fusionnées si le tuteur en a une de même nom).
+- **Au profil fantôme** : ce qui concerne des tiers — prêts terminés, commandes, commentaires, publications, annonces, et leurs journaux.
+- **Supprimé avec le profil** : relations, préférences, suggestions, notifications.
+- **Bloqué (409)** tant qu'un prêt est en cours ou qu'une commande n'est pas terminée ; les prêts pas encore remis sont annulés.
+- La suppression d'un profil **adulte** n'est pas encore définie (422).
+
+## Scan par IA (OpenRouter)
+
+`POST /api/scans/analyze` (multipart : `kind` = `PHOTO` ou `LABEL_OCR`, `image` = JPEG/PNG/WebP ≤ 8 Mo) envoie la photo à un modèle de vision via [OpenRouter](https://openrouter.ai) et renvoie de quoi pré-remplir la fiche. Chaque scan, réussi ou non, est tracé dans `Scan`.
+
+**Clé API** (gratuite, aucune carte bancaire) :
+
+1. Créer un compte sur https://openrouter.ai, puis **Settings → Keys** (https://openrouter.ai/settings/keys) → *Create key*.
+2. Dans **Settings → Privacy** (https://openrouter.ai/settings/privacy), autoriser les fournisseurs des modèles gratuits (*free endpoints that may train on inputs*). Sinon tous les modèles `:free` répondent 404 et le scan échoue.
+3. La mettre dans `api/.env.local` (jamais commité) : `OPENROUTER_API_KEY=sk-or-v1-...`
+
+Les modèles sont essayés dans l'ordre de `OPENROUTER_SCAN_MODELS` (`.env`) : quota dépassé, modèle retiré, panne ou réponse illisible → modèle suivant. Limites des modèles gratuits : ~20 requêtes/minute et 50/jour (1 000/jour une fois 10 $ de crédits achetés sur le compte).
+
+Pour tester depuis le téléphone : écran **Tester le scan** de l'app (`app/src/app/scan.tsx`).
+
+## Tests
+
+La suite PHPUnit tourne sur la base de test `penderie_test`, migrée et chargée de ses référentiels (voir « Base de données ») :
+
+```bash
+docker compose exec php php bin/phpunit                    # toute la suite
+docker compose exec php php bin/phpunit tests/Unit         # sans base de données
+docker compose exec php php bin/phpunit --filter SaleTest  # un domaine
+```
+
+- `tests/Unit/` : règles pures (calculs de montants, permissions par défaut, énumérations, slugs de marque).
+- `tests/Api/` : de vraies requêtes HTTP (inscription, connexion, rafraîchissement, profil actif, droits sur l'inventaire, partage et visibilité — dont « voler les affaires du voisin »).
+- `tests/Integration/` : un fichier par domaine du MDD, sur un vrai PostgreSQL. Chaque test tourne dans une transaction annulée à la fin (`dama/doctrine-test-bundle`) ; `assertDbRejects()` vérifie qu'une contrainte en base refuse bien une donnée interdite.
+
+La CI GitHub Actions (`.github/workflows/api.yml`) rejoue tout sur chaque push et chaque PR qui touche `api/` : migrations (et leur retour à zéro), référentiels, validation du schéma, PHPUnit.
+
 ## Structure
 
 ```
 api/
 ├── config/            configuration Symfony (packages/, routes/)
-├── migrations/        migrations Doctrine (aucune pour l'instant)
+├── migrations/        migrations Doctrine, une par domaine du MDD
 ├── public/            point d'entrée HTTP (index.php)
 ├── src/
 │   ├── ApiResource/   ressources API qui ne sont pas des entités
-│   ├── Entity/        entités Doctrine
-│   └── Repository/    requêtes Doctrine
+│   ├── Entity/        entités Doctrine, un dossier par domaine du MDD
+│   │   └── Trait/     comportements partagés (createdAt / updatedAt)
+│   ├── Command/       commandes console (app:reference-data:load)
+│   ├── Controller/    inscription, /api/me
+│   ├── Doctrine/      filtrage des listes par profil actif
+│   ├── Enum/          énumérations métier (backed enums PHP)
+│   ├── ReferenceData/ contenu des référentiels et son chargeur
+│   ├── Repository/    requêtes Doctrine, même découpage que Entity/
+│   ├── Security/      profil actif, voters, résolution des permissions
+│   ├── Serializer/    propriétaire injecté côté serveur à la création
+│   ├── State/         suppression douce
+│   └── Validator/     contraintes métier qui lisent plusieurs lignes
+├── tests/             Unit/ (sans base) et Integration/ (un fichier par domaine)
 ├── compose.yaml       environnement Docker
 ├── Dockerfile         image PHP
 └── docker-entrypoint.sh

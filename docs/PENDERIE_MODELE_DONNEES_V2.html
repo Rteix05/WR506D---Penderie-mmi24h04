@@ -177,13 +177,15 @@
     <p class="lede" style="margin-top:4px"><b>Révision du 15 septembre :</b> <code>Profile</code> porte désormais <code>firstName</code>, <code>lastName</code> et <code>dateOfBirth</code>, et toute la zone compte / profil / tutelle a été reprise — voir la section <a href="#identite">Identité d'un profil</a>.</p>
     <p class="lede" style="margin-top:4px"><b>Révision du 18 septembre :</b> alignement sur les décisions techniques actées dans <code>PENDERIE_QUESTIONS_VALIDATION.md</code>. <code>LocationHistory</code> entre dans le MVP et dans la première migration, sans changement de rôle ni de relations ; <code>Memory</code> est décalée hors de la première migration.</p>
     <p class="lede" style="margin-top:4px"><b>Révision du 21 septembre :</b> les huit questions client de <code>PENDERIE_QUESTIONS_VALIDATION.md</code> ont reçu une réponse. Conséquences majeures : le <b>dressing et les suggestions de tenues entrent dans le MVP</b> (sept entités basculent), le <b>scan couvre quatre modes</b> (code-barres, QR, photo, OCR d'étiquette), la vente <b>ne prélève aucun frais de plateforme</b>, les annonces <b>acceptent les commentaires</b>, et la suppression d'un profil enfant <b>rattache toutes ses données au tuteur</b>, sans question au cas par cas. <b>Depuis le 23 septembre</b>, les <b>abonnés</b> entrent aussi dans le périmètre : <code>Follow</code> passe en MVP, en cohérence avec les onze écrans « Abonnés » de la maquette. <code>Block</code> reste en V2, faute du moindre écran. <b>Et la vente entre dans le MVP</b>, détaillée sur deux parcours — paiement en ligne, ou espèces à la remise — ce qui lève la contradiction avec l'obligation Stripe du module.</p>
-    <p class="lede" style="margin-top:4px"><b>Révision du 29 septembre :</b> plus aucune entité « À valider ». <code>Collection</code> et <code>CollectionEntry</code> sont validées en MVP ; <code>Memory</code> est retenue dans sa forme riche (plusieurs souvenirs datés et illustrés) et passe en MVP, toujours hors de la première migration ; <code>ModerationAction</code> entre dans le MVP pour le back-office admin, sans attendre <code>Report</code> (V2) ; <code>Brand</code> devient un référentiel prédéfini, à la Vinted, que l'utilisateur peut compléter pour une collab ou une marque indépendante, sous contrôle de l'admin. Enfin, la règle « abonnés = lecture seule » s'applique aussi au <code>Post</code>.</p>
+    <p class="lede" style="margin-top:4px"><b>Révision du 29 septembre :</b> plus aucune entité « À valider ». <code>Collection</code> et <code>CollectionEntry</code> sont validées en MVP ; <code>Memory</code> est retenue dans sa forme riche (plusieurs souvenirs datés et illustrés) et passe en MVP, toujours hors de la première migration ; <code>ModerationAction</code> entre dans le MVP pour le back-office admin, sans attendre <code>Report</code> (V2) ; <code>Brand</code> devient un référentiel prédéfini, à la Vinted, que l'utilisateur peut compléter pour une collab ou une marque indépendante, sous contrôle de l'admin. Enfin, la règle « abonnés = lecture seule » s'applique aussi au <code>Post</code>. <b>Pendant l'écriture des entités :</b> la suppression d'un profil passe au <b>profil fantôme</b> — ce qui doit survivre est réaffecté à un profil unique « Profil supprimé », puis la ligne est réellement supprimée ; <code>deletedAt</code> disparaît de <code>Account</code> et de <code>Profile</code>. Un bannissement n'est pas une suppression : c'est une suspension, réversible. <code>Box</code> devient un <b>conteneur typé</b> (carton, étagère intérieure, tiroir, bac…) pour représenter « Chambre › Armoire › Étagère 2 » de la maquette, et les listes de types de pièce et de rangement sont fermées. Un <b>8<sup>e</sup> système de tailles, <code>KIDS_AGE</code></b>, couvre les vêtements d'enfant, avec une branche « Enfant » dans les catégories de vêtements. Les référentiels sont chargés par une commande idempotente, <code>app:reference-data:load</code>, et non par les migrations. Pour l'inventaire, <code>Garment</code> reçoit les champs communs d'<code>Item</code> (nom, description, notes, achat, provenance, suppression douce), que sa carte oubliait. Pour le partage, <code>Post</code> ne pointe plus sa ressource que <b>via son partage</b> (les colonnes <code>collection · item · garment</code> disparaissent : le double chemin rendait la suppression d'une collection publiée impossible), et une publication à des personnes choisies met toujours en avant une ressource. Pour le prêt, l'écriture seule de <code>LoanEvent</code> est garantie par un <b>déclencheur de garde</b> plutôt que par une révocation de droits, sans effet sur le rôle superutilisateur de l'image Docker ; et un prêt peut naître <b>accepté</b> quand le propriétaire prête de lui-même. Pour la vente : <code>ListingComment</code> devient le cinquième sous-type de <code>Comment</code>, une annonce libérée par une annulation peut être rachetée (une seule commande <b>non annulée</b> par annonce), et un objet n'a qu'une annonce en cours à la fois. Pour le dressing, les unicités qui portent sur des colonnes facultatives (règle de masquage, préférence « toujours ») sont garanties par des index sur expression, un index unique ordinaire laissant passer les doublons qui ne diffèrent que par NULL. Pour la modération, <code>ModerationAction.report</code> attend <code>Report</code> (V2) pour exister, et l'action est garantie compatible avec sa cible.</p>
+    <p class="lede" style="margin-top:4px"><b>Révision du 30 septembre — la visibilité :</b> tout est <b>privé par défaut</b>, et l'accès suit trois niveaux hiérarchiques, <b>Rien &lt; Lire &lt; Modifier</b> (qui modifie peut lire, pas l'inverse). <code>AccessLevel</code> devient <code>READ</code> · <code>EDIT</code>. <b>Lire</b> inclut commenter, entre amis seulement ; abonnés et lien lisent sans commenter. <b>Modifier</b> ne se donne qu'à des personnes nommées et permet de <b>proposer</b> des ajouts et des corrections, validés par le propriétaire (<code>Contribution</code>), et de repartager en lecture — jamais de supprimer ni de prêter. Un objet <b>personnel</b> (<code>isPersonal</code>) n'est jamais visible par un autre, même dans une pièce partagée. Le <b>logement</b> et le <b>look</b> deviennent partageables (<code>PlaceShare</code>, <code>OutfitShare</code>). Voir la section <a href="#visibilite">Qui voit quoi</a>.</p>
+    <p class="lede" style="margin-top:4px"><b>Révision du 6 octobre — colocation et foyer :</b> un logement a des <b>membres</b>, tous admins (<code>PlaceMember</code>) ; inviter quelqu'un, supprimer le logement ou une pièce commune se décide à l'<b>unanimité</b> (<code>PlaceDecision</code>, <code>PlaceDecisionVote</code>). Une pièce a un <b>créateur</b> et peut être <b>fermée</b> aux colocs (<code>Room.createdBy</code>, <code>isClosed</code>, <code>allowedMembers</code>). Les profils d'un même compte forment un <b>foyer</b> qui peut proposer des modifications sans partage (<code>Contribution.basis = HOUSEHOLD</code>). Un rangement devient partageable (<code>StorageShare</code>). Le tableau des droits complet est dans <a href="#colocation">Colocation et foyer</a> et dans <code>docs/PENDERIE_DROITS_v2.xlsx</code>.</p>
     <p class="lede" style="margin-top:4px"><b>Aucune migration Doctrine n'est lancée.</b> Ce document est la matière de la review ; la V1 reste disponible pour comparaison.</p>
     <div class="meta">
       <span>Mis à jour le <b>29 septembre 2026</b></span>
       <span>Auteur <b>Rafael Teixeira</b></span>
       <span>Entités <b>53</b></span>
-      <span>Sous-types <b>9</b></span>
+      <span>Sous-types <b>10</b></span>
       <span>Tables de liaison <b>7</b></span>
       <span>Table technique <b>1</b></span>
       <span>Nommage <b>anglais</b></span>
@@ -435,7 +437,7 @@
   <section>
     <div class="section-head">
       <h2>Vue d'ensemble</h2>
-      <p>Onze domaines, cinquante-trois entités, sept tables de liaison et une table technique (<code>RefreshToken</code>). Les neuf sous-types — cinq pour <code>Share</code>, quatre pour <code>Comment</code> — partagent la table de leur parent et ne sont pas comptés à part. Trente-sept cartes d'entité sont marquées MVP depuis les réponses client du 21 septembre — le dressing et ses suggestions ont fait basculer la moitié du domaine mode. Depuis le 29 septembre, plus aucune n'est « À valider » : seules <code>Block</code> et <code>Report</code> restent en V2. Le schéma Figma en affiche davantage, car il dessine aussi les cinq sous-types de <code>Share</code> séparément.</p>
+      <p>Onze domaines, cinquante-trois entités, sept tables de liaison et une table technique (<code>RefreshToken</code>). Les dix sous-types — cinq pour <code>Share</code>, cinq pour <code>Comment</code> — partagent la table de leur parent et ne sont pas comptés à part. Trente-sept cartes d'entité sont marquées MVP depuis les réponses client du 21 septembre — le dressing et ses suggestions ont fait basculer la moitié du domaine mode. Depuis le 29 septembre, plus aucune n'est « À valider » : seules <code>Block</code> et <code>Report</code> restent en V2. Le schéma Figma en affiche davantage, car il dessine aussi les cinq sous-types de <code>Share</code> séparément.</p>
     </div>
     <div class="table-wrap">
       <table>
@@ -764,7 +766,6 @@
           <tr><td><code>bio</code></td><td>Présentation libre, visible des amis</td><td>Nullable, 500 caractères</td></tr>
           <tr><td><code>isDefault</code></td><td>Le profil ouvert automatiquement à la connexion du compte</td><td>Un seul profil par défaut par compte, garanti par index unique partiel.</td></tr>
           <tr><td><code>suspendedAt</code></td><td>Suspension décidée par la modération</td><td>Nullable. Bloque la connexion à ce profil sans toucher aux autres profils du compte.</td></tr>
-          <tr><td><code>deletedAt</code></td><td>Suppression douce du profil</td><td>Nullable. Voir la procédure de suppression plus bas.</td></tr>
         </tbody>
       </table>
     </div>
@@ -851,7 +852,7 @@
 
     <div class="section-head" style="margin-top:36px;margin-bottom:14px">
       <h3 style="font-size:19px;font-weight:800">Supprimer un profil enfant</h3>
-      <p>Le tuteur supprime le profil : la suppression est douce (<code>deletedAt</code>) et s'accompagne d'un transfert. Rien n'est détruit par défaut, parce que rien ici n'appartient qu'à l'enfant — les prêts et les commandes impliquent des tiers.</p>
+      <p>Le tuteur supprime le profil : la ligne est réellement supprimée, après un transfert et une réaffectation. Rien de ce qui compte n'est détruit, parce que rien ici n'appartient qu'à l'enfant — les prêts et les commandes impliquent des tiers.</p>
     </div>
     <div class="table-wrap">
       <table>
@@ -861,10 +862,10 @@
           <tr><td><code>Place</code> · <code>Room</code> · <code>Storage</code> · <code>Box</code></td><td><code>owner_id</code> réécrit vers le tuteur</td><td>Le logement est celui du foyer ; sa structure ne disparaît pas avec un profil.</td></tr>
           <tr><td><code>Collection</code> · <code>Outfit</code> · <code>Memory</code></td><td>Transférées au tuteur</td><td>Contenu plus personnel, mais le client a tranché le 21 septembre : <b>toutes les données de l'enfant sont rattachées au compte du tuteur</b>. Le parcours de suppression informe, il ne demande plus quoi faire de chaque catégorie.</td></tr>
           <tr><td><code>Loan</code> actif</td><td><b>Bloque la suppression</b></td><td>Un objet est chez quelqu'un d'autre, ou quelqu'un attend son retour. Le prêt doit être clos avant.</td></tr>
-          <tr><td><code>Loan</code> terminé · <code>LoanEvent</code></td><td>Conservés, profil anonymisé</td><td>L'autre partie a le droit de garder son historique de prêt.</td></tr>
-          <tr><td><code>Order</code> · <code>Payment</code> · <code>Refund</code></td><td>Conservés, profil anonymisé</td><td>Conservation comptable. Ne devrait pas exister pour un <code>CHILD</code>, dont <code>PURCHASE</code> et <code>SELL</code> sont interdits par défaut.</td></tr>
+          <tr><td><code>Loan</code> terminé · <code>LoanEvent</code></td><td>Conservés, réaffectés au profil fantôme</td><td>L'autre partie a le droit de garder son historique de prêt.</td></tr>
+          <tr><td><code>Order</code> · <code>Payment</code> · <code>Refund</code></td><td>Conservés, réaffectés au profil fantôme</td><td>Conservation comptable. Ne devrait pas exister pour un <code>CHILD</code>, dont <code>PURCHASE</code> et <code>SELL</code> sont interdits par défaut.</td></tr>
           <tr><td><code>Share</code> · <code>ShareRecipient</code></td><td>Révoqués (<code>revokedAt</code>)</td><td>Couper l'accès immédiatement, sans effacer le contexte des commentaires déjà écrits.</td></tr>
-          <tr><td><code>Comment</code></td><td>Conservés, auteur anonymisé</td><td>Les supprimer casserait les fils de réponses d'autres personnes.</td></tr>
+          <tr><td><code>Comment</code></td><td>Conservés, auteur réaffecté au profil fantôme</td><td>Les supprimer casserait les fils de réponses d'autres personnes.</td></tr>
           <tr><td><code>Friendship</code> · <code>Follow</code> · <code>Block</code></td><td>Supprimés</td><td>Une relation sociale sans profil vivant n'a aucun sens, et personne d'autre n'en dépend.</td></tr>
           <tr><td><code>ProfilePermission</code> · <code>ApprovalRequest</code> en attente</td><td>Supprimées</td><td>Sans objet une fois le profil clos.</td></tr>
           <tr><td><code>WearLog</code> · <code>GarmentExclusion</code> · préférences</td><td>Supprimés</td><td>Données de suggestion propres au profil, sans valeur pour le tuteur et sans tiers concerné.</td></tr>
@@ -872,7 +873,7 @@
         </tbody>
       </table>
     </div>
-    <p class="note" style="margin-top:12px">Le profil lui-même n'est jamais effacé physiquement : <code>deletedAt</code> est renseigné, <code>firstName</code>, <code>lastName</code>, <code>dateOfBirth</code>, <code>bio</code> et <code>avatarMedia</code> sont vidés, et <code>username</code> est remplacé par une valeur neutre qui libère l'identifiant public. Les lignes qui doivent survivre pointent donc toujours vers une ligne existante, sans plus contenir de donnée personnelle — c'est ce qui permet de concilier le droit à l'effacement et l'intégrité référentielle.</p>
+    <p class="note" style="margin-top:12px"><b>Le profil fantôme</b> (révision du 29 septembre). La migration insère un compte et un profil uniques, « Profil supprimé » (<code>Account::GHOST_ID</code>, <code>Profile::GHOST_ID</code>), auxquels personne ne peut se connecter. À la suppression, les lignes qui doivent survivre — prêts terminés, commandes, commentaires, réglages de permission faits par ce profil — sont réaffectées au fantôme, puis la ligne du profil est <b>réellement supprimée</b> : il ne reste aucune donnée personnelle, et <code>firstName</code>, <code>lastName</code> et <code>dateOfBirth</code> restent <code>NOT NULL</code>. Les clés étrangères en <code>RESTRICT</code> bloquent la suppression tant qu'une référence n'a pas été réaffectée : un oubli ne passe pas en silence. Même mécanisme pour un compte supprimé. <b>Un bannissement n'est pas une suppression</b> : le compte et ses profils restent intacts et suspendus (<code>suspendedAt</code>, <code>ModerationAction</code> <code>BAN_ACCOUNT</code>), parce qu'un bannissement est réversible (<code>RESTORE</code>) et que la modération doit savoir qui a fait quoi.</p>
 
     <div class="section-head" style="margin-top:36px;margin-bottom:14px">
       <h3 style="font-size:19px;font-weight:800">Les contraintes à poser</h3>
@@ -900,6 +901,58 @@
 
   <section>
     <div class="section-head">
+      <h2 id="visibilite">Qui voit quoi</h2>
+      <p>Décisions du 30 septembre (séance 8). Privé par défaut ; seul un partage actif ouvre un accès, et l'audience est vérifiée au moment de la lecture.</p>
+    </div>
+    <div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th></th><th>Camille (propriétaire)</th><th>Sophie (une amie)</th><th>Un abonné</th><th>Quelqu'un qui passe</th></tr></thead>
+          <tbody>
+            <tr><td>Un objet normal</td><td>MODIFIER</td><td>RIEN, ou VOIR s'il lui est partagé (lui, sa pièce, son logement, un look ou un moodboard qui le montre) ; MODIFIER (propositions validées) si elle est nommée avec ce droit</td><td>RIEN, ou VOIR s'il est dans un partage aux abonnés</td><td>RIEN, ou VOIR avec un lien</td></tr>
+            <tr><td>Un objet « personnel »</td><td>MODIFIER</td><td>RIEN</td><td>RIEN</td><td>RIEN</td></tr>
+            <tr><td>Une pièce, le logement</td><td>MODIFIER</td><td>RIEN, ou VOIR / MODIFIER si partagée (son contenu aussi, sauf l'objet personnel)</td><td>RIEN, ou VOIR si partagée aux abonnés</td><td>RIEN, ou VOIR avec un lien</td></tr>
+            <tr><td>Un look publié</td><td>MODIFIER</td><td>VOIR et commenter si publié aux amis</td><td>VOIR, sans commenter, si publié aux abonnés</td><td>RIEN (une publication ne s'adresse pas à un lien)</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p><b>Les quatre situations.</b> (1) Un objet personnel dans une penderie partagée reste invisible. (2) Un abonné qui ouvre un look publié voit le look et ses vêtements, sans notes privées ni emplacement ; l'annonce d'un vêtement ne lui apparaît que si son audience inclut les abonnés, et seul un ami achète. (3) Un lien est un « porteur » : la sœur à qui Sophie le transfère voit la même chose qu'elle, en lecture seule, jamais un objet personnel ; la parade est l'expiration et la révocation, qui coupent l'accès à tous. (4) Retirer Sophie de ses amis lui retire aussitôt tout accès, même aux partages où elle était nommée : l'amitié est vérifiée à chaque lecture.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2 id="colocation">Colocation et foyer</h2>
+      <p>Décisions du 30 septembre, codées le 6 octobre. Le tableau des droits complet : sept profils face à chaque ressource. Il est vérifié case par case par <code>RightsTableTest</code> et appliqué par <code>ResourceAccess::level()</code> ; l'API renvoie la case dans un champ <code>access</code>, pour que l'application n'affiche que les gestes permis.</p>
+    </div>
+    <div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th></th><th>Propriétaire</th><th>Coloc</th><th>Profil +18 (même compte)</th><th>Profil −18 (même compte)</th><th>Amis</th><th>Abonnés</th><th>Public</th></tr></thead>
+          <tbody>
+            <tr><td>Un objet normal</td><td>ADMIN</td><td>VOIR s'il est rangé dans une pièce qu'il voit</td><td>PROPOSER</td><td>VOIR</td><td>VOIR si partagé</td><td>VOIR si partagé</td><td>RIEN</td></tr>
+            <tr><td>Un objet « personnel »</td><td>ADMIN</td><td>RIEN</td><td>RIEN</td><td>RIEN</td><td>RIEN</td><td>RIEN</td><td>RIEN</td></tr>
+            <tr><td>Catégories</td><td>ADMIN</td><td>RIEN</td><td>PROPOSER</td><td>PROPOSER</td><td>RIEN</td><td>RIEN</td><td>RIEN</td></tr>
+            <tr><td>Rangement (privé par défaut)</td><td>ADMIN</td><td>RIEN</td><td>PROPOSER</td><td>PROPOSER</td><td>RIEN</td><td>RIEN</td><td>RIEN</td></tr>
+            <tr><td>Rangement partagé</td><td>ADMIN</td><td>MODIFIER (pièce commune)</td><td>PROPOSER</td><td>PROPOSER</td><td>VOIR</td><td>RIEN</td><td>RIEN</td></tr>
+            <tr><td>Pièce fermée</td><td>ADMIN</td><td>RIEN (sauf colocs autorisés)</td><td>PROPOSER</td><td>VOIR</td><td>RIEN</td><td>RIEN</td><td>RIEN</td></tr>
+            <tr><td>Pièce commune / partagée</td><td>ADMIN</td><td>MODIFIER directement ; supprimer = accord de tous</td><td>PROPOSER</td><td>VOIR</td><td>VOIR si partagée</td><td>RIEN</td><td>RIEN</td></tr>
+            <tr><td>Logement</td><td>ADMIN</td><td>ADMIN (inviter, supprimer = accord de tous)</td><td>VOIR</td><td>VOIR</td><td>RIEN</td><td>RIEN</td><td>RIEN</td></tr>
+            <tr><td>Un look publié</td><td>ADMIN</td><td>VOIR</td><td>VOIR</td><td>VOIR</td><td>VOIR</td><td>VOIR</td><td>RIEN</td></tr>
+            <tr><td>Un objet vu dans un look</td><td>ADMIN</td><td>VOIR</td><td>PROPOSER</td><td>VOIR</td><td>VOIR</td><td>VOIR</td><td>RIEN</td></tr>
+            <tr><td>Prêts</td><td>ADMIN</td><td>VOIR</td><td>VOIR</td><td>VOIR</td><td>VOIR</td><td>RIEN</td><td>RIEN</td></tr>
+            <tr><td>Ventes</td><td>ADMIN</td><td>VOIR</td><td>VOIR</td><td>VOIR</td><td>VOIR</td><td>VOIR si l'annonce leur est ouverte</td><td>RIEN</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p><b>Lire le tableau.</b> ADMIN : tout faire. MODIFIER : directement, sans validation — seulement un coloc sur une pièce commune et ses rangements. PROPOSER : une <code>Contribution</code> que le propriétaire valide. VOIR : sans les champs privés (notes, achat, valeur, adresse). RIEN : la ressource n'apparaît pas. Un objet personnel n'est jamais visible par un autre profil, nulle part. La colonne Public ne s'ouvre aujourd'hui qu'avec un lien ; le compte public est la prochaine étape.</p>
+      <p><b>La colocation.</b> (1) Chaque membre est admin du logement, mais être membre ne donne <b>aucun</b> droit sur les affaires des autres : on voit ce qui est rangé dans les pièces communes, jamais on ne le modifie. (2) Une pièce est <b>commune</b> par défaut ; son créateur peut la <b>fermer</b> et y autoriser certains colocs. Il la rouvre ; s'il a quitté le logement, n'importe quel membre le peut. (3) Inviter quelqu'un, supprimer le logement ou une pièce commune : <b>unanimité</b>. Le demandeur vote oui d'office, l'invité vote aussi, un seul « non » rejette ; la décision s'applique au dernier « oui ». (4) On ne supprime qu'un logement ou une pièce <b>vide</b>. (5) En partant, on reprend ses affaires (le déplacement est tracé) ou on les transmet à un coloc, jamais un objet personnel, prêté ou en vente ; ses partages du logement sont révoqués. (6) Partager une pièce commune ne montre que ses propres affaires, jamais celles des colocs.</p>
+      <p><b>Le foyer.</b> Les profils d'un même compte voient tout ce qui appartient aux autres, sauf le personnel. Un adulte <b>propose</b> des modifications sur les objets, pièces, rangements et catégories ; un mineur sur les rangements et catégories. Le tuteur reste ADMIN sur ce qui appartient à l'enfant.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
       <h2>Les entités en détail</h2>
       <p>Attributs principaux, relations et cardinalités. Clés primaires en vert, clés étrangères en violet. Les horodatages <code>createdAt</code> et <code>updatedAt</code> sont implicites partout.</p>
     </div>
@@ -918,8 +971,7 @@
             <li><b>roles</b> <span>json — ROLE_USER, ROLE_ADMIN</span></li>
             <li><b>emailVerifiedAt</b> <span>datetime nullable</span></li>
             <li><b>locale</b> <span>string</span></li>
-            <li><b>deletedAt</b> <span>datetime nullable — anonymisation RGPD</span></li>
-          </ul>
+                      </ul>
           <p class="rel"><b>Relations</b> 1,n <code>Profile</code> · 1,n <code>DeviceToken</code> · 1,n <code>ModerationAction</code> (si admin)<br><b style="display:inline">Ne contient pas</b> ni <code>firstName</code>, ni <code>lastName</code>, ni <code>dateOfBirth</code> : l'identité réelle vit sur <code>Profile</code>, parce qu'un compte peut en porter plusieurs.</p>
         </article>
 
@@ -939,7 +991,7 @@
             <li class="fk"><b>avatarMedia</b> <span>→ Media, nullable</span></li>
             <li><b>bio</b> <span>text nullable</span></li>
             <li><b>isDefault</b> <span>bool — le profil ouvert à la connexion</span></li>
-            <li><b>suspendedAt · deletedAt</b> <span>datetime nullables</span></li>
+            <li><b>suspendedAt</b> <span>datetime nullable — suspension ou bannissement</span></li>
           </ul>
           <p class="rel"><b>Relations</b> 1,n <code>Place</code> · 1,n <code>Item</code> · 1,n <code>Garment</code> · 1,n <code>Share</code> · 1,n <code>Collection</code> · 1,n <code>ProfilePermission</code> · n,n <code>Profile</code> via <code>Friendship</code> et <code>Follow</code></p>
         </article>
@@ -965,7 +1017,7 @@
             <li class="fk"><b>requester</b> <span>→ Profile — l'enfant</span></li>
             <li class="fk"><b>approver</b> <span>→ Profile — résolu depuis <code>requester.guardian</code>, jamais choisi par l'appelant</span></li>
             <li><b>permission</b> <span>même énumération que ProfilePermission</span></li>
-            <li><b>subjectType · subjectId</b> <span>enum · uuid, nullables — la cible de l'action</span></li>
+            <li><b>subjectType · subjectId</b> <span>PROFILE · ITEM · GARMENT · COLLECTION · SHARE · POST · LISTING · uuid, nullables, renseignés ensemble — la cible de l'action</span></li>
             <li><b>payload</b> <span>jsonb — de quoi rejouer l'action à l'acceptation</span></li>
             <li><b>status</b> <span>PENDING · APPROVED · REJECTED · EXPIRED · WITHDRAWN</span></li>
             <li><b>decidedAt · decisionNote</b> <span>datetime · text, nullables</span></li>
@@ -1019,21 +1071,21 @@
     </div>
 
     <div class="domain">
-      <div class="domain-head"><h3>Lieux</h3><p>La cascade conservée telle quelle : Place ▸ Room ▸ Storage ▸ Box.</p></div>
+      <div class="domain-head"><h3>Lieux</h3><p>La cascade conservée : Place ▸ Room ▸ Storage ▸ Box, où Box est un conteneur typé depuis le 29 septembre.</p></div>
       <div class="entities">
 
         <article class="entity">
           <div class="entity-top"><h4>Place</h4><span class="pill p-mvp">MVP</span></div>
-          <p class="role">Le logement. Un profil peut en avoir plusieurs — résidence principale, second domicile, box de stockage.</p>
+          <p class="role">Le logement. Un profil peut en avoir plusieurs — résidence principale, second domicile, box de stockage. <b>Depuis le 6 octobre</b>, il peut être partagé par plusieurs <b>membres</b> (colocation) : <code>owner</code> devient le référent, repris par le plus ancien membre s'il part.</p>
           <ul class="attrs">
             <li class="key"><b>id</b> <span>uuid</span></li>
             <li class="fk"><b>owner</b> <span>→ Profile</span></li>
             <li><b>name · type</b> <span>string · HOUSE · APARTMENT · STORAGE_UNIT · OTHER</span></li>
             <li><b>address · description</b> <span>string · text, nullables</span></li>
             <li class="fk"><b>coverMedia</b> <span>→ Media, nullable</span></li>
-            <li><b>isPrimary</b> <span>bool</span></li>
+            <li><b>isPrimary</b> <span>bool — une seule résidence principale par profil (index unique partiel)</span></li>
           </ul>
-          <p class="rel"><b>Relations</b> 1,n <code>Room</code></p>
+          <p class="rel"><b>Relations</b> 1,n <code>Room</code> · 1,n <code>PlaceMember</code> (son créateur est le premier) · 0,n <code>PlaceDecision</code></p>
         </article>
 
         <article class="entity">
@@ -1042,7 +1094,10 @@
           <ul class="attrs">
             <li class="key"><b>id</b> <span>uuid</span></li>
             <li class="fk"><b>place</b> <span>→ Place</span></li>
-            <li><b>name · type</b> <span>string · BEDROOM · KITCHEN · GARAGE · CELLAR · ATTIC · OFFICE…</span></li>
+            <li class="fk"><b>createdBy</b> <span>→ Profile, RESTRICT — le créateur, propriétaire de la pièce (6 octobre)</span></li>
+            <li><b>isClosed</b> <span>bool, faux par défaut — pièce fermée : seuls son créateur et les colocs autorisés la voient, avec son contenu</span></li>
+            <li class="fk"><b>allowedMembers</b> <span>n,n → Profile (<code>room_allowed_member</code>) — les colocs autorisés dans la pièce fermée</span></li>
+            <li><b>name · type</b> <span>string · LIVING_ROOM · BEDROOM · KITCHEN · BATHROOM · OFFICE · ENTRANCE · DRESSING · LAUNDRY · GARAGE · CELLAR · ATTIC · OTHER</span></li>
             <li class="fk"><b>coverMedia</b> <span>→ Media, nullable</span></li>
             <li><b>position</b> <span>int</span></li>
           </ul>
@@ -1055,7 +1110,7 @@
           <ul class="attrs">
             <li class="key"><b>id</b> <span>uuid</span></li>
             <li class="fk"><b>room</b> <span>→ Room</span></li>
-            <li><b>name · type</b> <span>string · WARDROBE · SHELF · CABINET · DRAWER · RACK…</span></li>
+            <li><b>name · type</b> <span>string · WARDROBE · CLOSET · SHELF · BOOKCASE · CABINET · DRESSER · DRAWER · RACK · CHEST · OTHER</span></li>
             <li class="fk"><b>coverMedia</b> <span>→ Media, nullable</span></li>
             <li><b>position</b> <span>int</span></li>
           </ul>
@@ -1064,16 +1119,51 @@
 
         <article class="entity">
           <div class="entity-top"><h4>Box</h4><span class="pill p-mvp">MVP</span></div>
-          <p class="role">Le carton. Toujours dans une pièce, éventuellement posé sur un rangement.</p>
+          <p class="role">Le conteneur, 4e niveau facultatif. Toujours dans une pièce, éventuellement posé sur un rangement <b>de la même pièce</b>. <b>Depuis le 29 septembre, ce n'est plus seulement un carton :</b> son type dit ce qu'il est, ce qui représente « Chambre › Armoire › Étagère 2 » de la maquette sans imbriquer les rangements.</p>
           <ul class="attrs">
             <li class="key"><b>id</b> <span>uuid</span></li>
             <li class="fk"><b>room</b> <span>→ Room, obligatoire</span></li>
             <li class="fk"><b>storage</b> <span>→ Storage, nullable</span></li>
             <li><b>name · reference</b> <span>string · string nullable (étiquette, QR)</span></li>
+            <li><b>type</b> <span>CARTON · SHELF · DRAWER · BIN · SUITCASE · BAG · OTHER</span></li>
             <li class="fk"><b>coverMedia</b> <span>→ Media, nullable</span></li>
-            <li><b>isSealed</b> <span>bool</span></li>
+            <li><b>isSealed</b> <span>bool — carton uniquement, CHECK (type = 'CARTON' OR NOT is_sealed)</span></li>
           </ul>
           <p class="rel"><b>Relations</b> 1,n <code>Item</code> · 1,n <code>Garment</code></p>
+        </article>
+
+        <article class="entity">
+          <div class="entity-top"><h4>PlaceMember</h4><span class="pill p-mvp">MVP</span><span class="pill p-new">Nouveau</span></div>
+          <p class="role">Un occupant du logement, admin au même titre que les autres. Un logement d'une seule personne a un seul membre. Ajouté le 6 octobre.</p>
+          <ul class="attrs">
+            <li class="key"><b>id</b> <span>uuid</span></li>
+            <li class="fk"><b>place · profile</b> <span>→ Place · → Profile, CASCADE ; unique (place, profile)</span></li>
+            <li><b>createdAt</b> <span>datetime — date d'arrivée ; le plus ancien devient référent si le référent part</span></li>
+          </ul>
+          <p class="rel"><b>Aucun droit</b> sur les affaires des autres membres : on voit ce qui est rangé dans les pièces communes, sans le modifier.</p>
+        </article>
+
+        <article class="entity">
+          <div class="entity-top"><h4>PlaceDecision</h4><span class="pill p-mvp">MVP</span><span class="pill p-new">Nouveau</span></div>
+          <p class="role">Une décision de colocation prise à l'<b>unanimité</b>. Ajoutée le 6 octobre.</p>
+          <ul class="attrs">
+            <li class="key"><b>id</b> <span>uuid</span></li>
+            <li class="fk"><b>place · requestedBy</b> <span>→ Place · → Profile (vote oui d'office)</span></li>
+            <li><b>kind</b> <span>INVITE_MEMBER · DELETE_PLACE · DELETE_ROOM</span></li>
+            <li class="fk"><b>invitee · room</b> <span>→ Profile si INVITE_MEMBER · → Room si DELETE_ROOM (CHECK, chacun exactement dans son cas)</span></li>
+            <li><b>status · closedAt</b> <span>PENDING · APPROVED · REJECTED · CANCELLED ; closedAt renseigné dès qu'elle n'est plus en attente (CHECK)</span></li>
+          </ul>
+          <p class="rel"><b>Décompte</b> les votants sont les membres <b>au moment du décompte</b> (plus l'invité) : qui part ne bloque plus, qui arrive doit voter. Un seul « non » rejette ; le dernier « oui » l'applique, dans la même transaction.</p>
+        </article>
+
+        <article class="entity">
+          <div class="entity-top"><h4>PlaceDecisionVote</h4><span class="pill p-mvp">MVP</span><span class="pill p-new">Nouveau</span></div>
+          <p class="role">Le vote d'un membre (ou de l'invité) sur une décision. Ajouté le 6 octobre.</p>
+          <ul class="attrs">
+            <li class="key"><b>id</b> <span>uuid</span></li>
+            <li class="fk"><b>decision · voter</b> <span>→ PlaceDecision · → Profile, CASCADE ; unique (decision, voter)</span></li>
+            <li><b>approval</b> <span>bool — oui / non</span></li>
+          </ul>
         </article>
 
         <article class="entity wide">
@@ -1082,7 +1172,7 @@
           <ul class="attrs">
             <li class="key"><b>id</b> <span>uuid</span></li>
             <li class="fk"><b>item · garment</b> <span>nullables, exactement un renseigné</span></li>
-            <li class="fk"><b>room · storage · box</b> <span>→ l'emplacement quitté ; room obligatoire</span></li>
+            <li class="fk"><b>room · storage · box</b> <span>→ l'emplacement quitté ; room obligatoire, CASCADE — supprimer une pièce vide efface l'historique qui la cite, sinon une pièce ayant un jour contenu un objet ne pourrait plus être supprimée</span></li>
             <li class="fk"><b>movedBy</b> <span>→ Profile</span></li>
             <li><b>reason</b> <span>MANUAL_MOVE · BOX_MOVED · LOAN_RETURN · INITIAL</span></li>
             <li><b>movedAt</b> <span>datetime</span></li>
@@ -1103,11 +1193,13 @@
           <ul class="attrs">
             <li class="key"><b>id</b> <span>uuid</span></li>
             <li class="fk"><b>owner</b> <span>→ Profile</span></li>
-            <li class="fk"><b>category</b> <span>→ ItemCategory</span></li>
+            <li class="fk"><b>category</b> <span>→ ItemCategory, nullable — seul le nom est obligatoire à la saisie</span></li>
             <li><b>name</b> <span>string — seul champ obligatoire à la saisie</span></li>
             <li><b>description · notes</b> <span>text nullables — la description publique, les notes privées</span></li>
             <li><b>availability</b> <span>AVAILABLE · LENT · BORROWED · LOST · SOLD</span></li>
-            <li><b>condition</b> <span>NEW · EXCELLENT · GOOD · WORN · DAMAGED</span></li>
+            <li><b>condition</b> <span>NEW · EXCELLENT · GOOD · WORN · DAMAGED, nullable</span></li>
+            <li><b>isPersonal</b> <span>bool — objet personnel : jamais visible par un autre profil, jamais partageable, caché même dans une pièce, un logement ou un moodboard partagé (30 septembre) ; même champ sur <code>Garment</code></span></li>
+            <li><b>deletedAt</b> <span>datetime nullable — suppression douce</span></li>
             <li class="fk"><b>room</b> <span>→ Room, obligatoire</span></li>
             <li class="fk"><b>storage · box</b> <span>→ Storage · → Box, nullables</span></li>
             <li><b>purchaseDate · estimatedValue</b> <span>date · decimal(10,2), nullables</span></li>
@@ -1122,7 +1214,8 @@
           <ul class="attrs">
             <li class="key"><b>id</b> <span>uuid</span></li>
             <li class="fk"><b>owner</b> <span>→ Profile</span></li>
-            <li class="fk"><b>category</b> <span>→ GarmentCategory — porte le système de tailles</span></li>
+            <li><b>name · description · notes</b> <span>comme <code>Item</code> — <b>ajoutés le 29 septembre</b> : la carte les oubliait, alors que l'index de recherche porte sur <code>garment (name)</code></span></li>
+            <li class="fk"><b>category</b> <span>→ GarmentCategory, obligatoire — porte le système de tailles</span></li>
             <li class="fk"><b>brand</b> <span>→ Brand, nullable</span></li>
             <li class="fk"><b>size</b> <span>→ SizeValue, nullable</span></li>
             <li><b>sizeLabel</b> <span>string nullable — repli si la catégorie l'autorise</span></li>
@@ -1131,22 +1224,24 @@
             <li><b>warmth</b> <span>VERY_LIGHT · LIGHT · MID · WARM · VERY_WARM, nullable — hérite de la catégorie</span></li>
             <li><b>waterResistant</b> <span>bool</span></li>
             <li class="fk"><b>room · storage · box</b> <span>room obligatoire, les deux autres nullables</span></li>
+            <li><b>purchaseDate · estimatedValue · source · scanData · deletedAt</b> <span>comme <code>Item</code> (ajoutés le 29 septembre)</span></li>
           </ul>
-          <p class="rel"><b>Relations</b> n,n <code>Color</code> · n,n <code>Style</code> · n,n <code>Media</code> via <code>GarmentMedia</code> · 1,n <code>WearLog</code> · 1,n <code>Loan</code> · 1,n <code>GarmentExclusion</code> · 1,n <code>Memory</code></p>
+          <p class="rel"><b>Relations</b> n,n <code>Color</code> via <code>garment_color</code> · n,n <code>Style</code> via <code>garment_style</code> · n,n <code>Media</code> via <code>GarmentMedia</code> · 1,n <code>WearLog</code> · 1,n <code>Loan</code> · 1,n <code>GarmentExclusion</code> · 1,n <code>Memory</code></p>
         </article>
 
         <article class="entity">
           <div class="entity-top"><h4>ItemCategory · GarmentCategory</h4><span class="pill p-mvp">MVP</span></div>
-          <p class="role">Deux référentiels arborescents distincts, jamais mélangés. <code>owner</code> nul = catégorie fournie par l'application ; renseigné = catégorie créée par un profil.</p>
+          <p class="role">Deux référentiels arborescents distincts, jamais mélangés. <code>owner</code> nul = catégorie fournie par l'application, chargée par <code>app:reference-data:load</code> ; renseigné = catégorie créée par un profil, sous une catégorie système ou une des siennes.</p>
           <ul class="attrs">
             <li class="key"><b>id</b> <span>uuid</span></li>
             <li><b>name · icon · slug</b> <span>string</span></li>
             <li class="fk"><b>parent</b> <span>→ même entité, nullable</span></li>
             <li class="fk"><b>owner</b> <span>→ Profile, nullable</span></li>
-            <li><b>isSystem</b> <span>bool</span></li>
+            <li><b>isSystem</b> <span>bool — CHECK isSystem = (owner nul)</span></li>
             <li class="fk"><b>sizeSystem</b> <span>→ SizeSystem, nullable — GarmentCategory seulement</span></li>
             <li><b>defaultWarmth</b> <span>enum nullable — GarmentCategory seulement</span></li>
           </ul>
+          <p class="rel"><b>Contraintes</b> slug unique parmi les catégories système, et unique par profil pour les catégories personnelles (deux index uniques partiels) · pas de cycle, 3 niveaux au plus (validateur) · une catégorie ne descend pas de celle d'un autre profil.</p>
         </article>
 
         <article class="entity">
@@ -1155,7 +1250,7 @@
           <ul class="attrs">
             <li class="key"><b>id</b> <span>uuid</span></li>
             <li class="fk"><b>profile</b> <span>→ Profile</span></li>
-            <li class="fk"><b>media</b> <span>→ Media — l'image scannée</span></li>
+            <li class="fk"><b>media</b> <span>→ Media, nullable — l'image scannée ; un code-barres lu en direct n'en laisse pas forcément</span></li>
             <li><b>kind</b> <span>BARCODE · QRCODE · PHOTO · LABEL_OCR</span></li>
             <li><b>code</b> <span>string nullable — la valeur lue (EAN, contenu du QR)</span></li>
             <li><b>status</b> <span>SUCCESS · PARTIAL · FAILED</span></li>
@@ -1186,10 +1281,10 @@
 
         <article class="entity">
           <div class="entity-top"><h4>SizeSystem</h4><span class="pill p-mvp">MVP</span></div>
-          <p class="role">Une échelle de mesure. Sept suffisent à couvrir un dressing courant.</p>
+          <p class="role">Une échelle de mesure. Huit couvrent un dressing courant, enfants compris (<code>KIDS_AGE</code>, ajouté le 29 septembre).</p>
           <ul class="attrs">
             <li class="key"><b>id</b> <span>uuid</span></li>
-            <li><b>code</b> <span>EU_SHOE · ALPHA · WAIST_LENGTH · FR_NUMERIC · COLLAR · BELT_CM · ONE_SIZE</span></li>
+            <li><b>code</b> <span>EU_SHOE · ALPHA · WAIST_LENGTH · FR_NUMERIC · COLLAR · BELT_CM · ONE_SIZE · KIDS_AGE</span></li>
             <li><b>name · unit</b> <span>string · string nullable</span></li>
             <li><b>allowsFreeText</b> <span>bool</span></li>
           </ul>
@@ -1212,8 +1307,8 @@
           <div class="entity-top"><h4>Brand · Color · Style</h4><span class="pill p-mvp">MVP</span></div>
           <p class="role">Trois référentiels partagés. <code>Color</code> et <code>Style</code> sont en n,n avec le vêtement — un jean peut être bleu et noir, casual et work — et servent aussi de cibles aux préférences de l'utilisateur.</p>
           <ul class="attrs">
-            <li><b>Brand</b> <span>name · slug unique (nom normalisé : minuscules, sans accents ni espaces) · logoMedia nullable · isVerified · createdBy → Profile nullable</span></li>
-            <li><b>Color</b> <span>name · hex · family (pour regrouper les nuances)</span></li>
+            <li><b>Brand</b> <span>name · slug unique (nom normalisé : minuscules, sans accents, espaces ni ponctuation — « Levi's » → levis) · logoMedia nullable · isVerified · createdBy → Profile nullable, SET NULL si le profil est supprimé</span></li>
+            <li><b>Color</b> <span>name unique · hex (#RRGGBB, nul seulement pour « Multicolore ») · family BLACK · WHITE · GREY · BEIGE · BROWN · RED · PINK · ORANGE · YELLOW · GREEN · BLUE · PURPLE · METALLIC · MULTI</span></li>
             <li><b>Style</b> <span>name · slug — casual, sport, work, evening, chic, streetwear</span></li>
           </ul>
           <p class="rel"><b>Brand, à la Vinted</b> (décision du 29 septembre) : une liste prédéfinie chargée par fixtures (<code>isVerified = true</code>, <code>createdBy = NULL</code>). Si sa marque n'y figure pas — collab, marque indépendante, créateur local —, l'utilisateur la saisit : elle est créée avec <code>isVerified = false</code> et <code>createdBy</code> renseigné, et reste utilisable tout de suite sur son vêtement. Le <code>slug</code> unique empêche « Zara », « ZARA » et « zara » d'exister trois fois : une saisie qui retombe sur un slug existant réutilise la marque. Dans le back-office, l'admin valide, renomme, fusionne un doublon (les vêtements sont réaffectés) ou supprime une marque non vérifiée. <b>Affichage (tranché le 29 septembre) :</b> une marque non vérifiée est visible par tout le monde, partout où le vêtement apparaît, avec une pastille « Non vérifiée » à côté de son nom. Quand l'admin la valide, la pastille disparaît et la marque rejoint la liste de choix proposée à tous les utilisateurs ; avant cela, seul son créateur la retrouve dans l'autocomplétion. Si un autre utilisateur saisit la même marque, le <code>slug</code> fait retomber sa saisie sur la marque existante.</p>
@@ -1232,7 +1327,7 @@
           <ul class="attrs">
             <li class="key"><b>id</b> <span>uuid</span></li>
             <li class="fk"><b>owner</b> <span>→ Profile</span></li>
-            <li><b>path</b> <span>string — clé S3</span></li>
+            <li><b>path</b> <span>string unique — clé S3 ; deux médias ne pointent jamais vers le même fichier</span></li>
             <li><b>mimeType · sizeBytes</b> <span>string · int</span></li>
             <li><b>width · height</b> <span>int nullables</span></li>
             <li><b>kind</b> <span>PHOTO · SCAN_CAPTURE · INSPIRATION</span></li>
@@ -1262,18 +1357,19 @@
 
         <article class="entity wide">
           <div class="entity-top"><h4>Share <span style="font-family:var(--body);font-size:12px;color:var(--sub)">— abstraite, 5 sous-types</span></h4><span class="pill p-mvp">MVP</span></div>
-          <p class="role">L'autorisation d'accès à une ressource précise. Héritage <code>SINGLE_TABLE</code> : <code>ItemShare</code>, <code>GarmentShare</code>, <code>RoomShare</code>, <code>BoxShare</code>, <code>CollectionShare</code>, chacune typée sur sa cible.</p>
+          <p class="role">L'autorisation d'accès à une ressource précise — la seule porte vers un contenu privé. Héritage <code>SINGLE_TABLE</code> : <code>ItemShare</code>, <code>GarmentShare</code>, <code>RoomShare</code>, <code>BoxShare</code>, <code>PlaceShare</code>, <code>OutfitShare</code>, <code>CollectionShare</code>, <code>StorageShare</code> (huit sous-types : sept depuis le 30 septembre, plus le rangement le 6 octobre — le rangement et son contenu, conteneurs compris, sauf le personnel), chacune typée sur sa cible.</p>
           <ul class="attrs">
             <li class="key"><b>id</b> <span>uuid</span></li>
             <li><b>discriminator</b> <span>string — géré par Doctrine</span></li>
             <li class="fk"><b>owner</b> <span>→ Profile</span></li>
             <li><b>audience</b> <span>SPECIFIC · FRIENDS · FOLLOWERS · LINK</span></li>
-            <li><b>accessLevel</b> <span>VIEW · VIEW_COMMENTS · COMMENT — <b>bridé par l'audience</b>, voir ci-dessous</span></li>
-            <li><b>token</b> <span>string unique nullable — consultable sans compte si audience = LINK</span></li>
+            <li><b>accessLevel</b> <span>READ · EDIT (30 septembre) — EDIT seulement si audience = SPECIFIC (CHECK)</span></li>
+            <li class="fk"><b>sharedBy</b> <span>→ Profile — le propriétaire, ou une personne autorisée à modifier qui repartage (en lecture seule) ; <code>owner</code> reste celui de la cible</span></li>
+            <li><b>token</b> <span>string unique nullable — consultable sans compte si audience = LINK ; CHECK (audience = 'LINK') = (token non nul)</span></li>
             <li><b>expiresAt · revokedAt</b> <span>datetime nullables</span></li>
             <li><b>viewCount</b> <span>int</span></li>
           </ul>
-          <p class="rel"><b>Relations</b> 1,n <code>ShareRecipient</code> si <code>audience = SPECIFIC</code> · 0,n <code>Comment</code> écrits sous ce partage<br><b style="display:inline">Jamais supprimé</b> révoquer renseigne <code>revokedAt</code>. La ligne survit pour que les commentaires gardent leur contexte.<br><b style="display:inline">Audience × niveau d'accès</b> <code>FOLLOWERS</code> et <code>LINK</code> sont <b>bornés à <code>VIEW</code></b> : un abonné ou un visiteur anonyme ne voit jamais les commentaires et n'en écrit jamais. Seuls <code>FRIENDS</code> et <code>SPECIFIC</code> ouvrent <code>VIEW_COMMENTS</code> et <code>COMMENT</code>. Garanti par un <code>CHECK</code> en base, pas seulement par l'interface.</p>
+          <p class="rel"><b>Relations</b> 1,n <code>ShareRecipient</code> si <code>audience = SPECIFIC</code> · 0,n <code>Comment</code> écrits sous ce partage<br><b style="display:inline">Jamais supprimé</b> révoquer renseigne <code>revokedAt</code>. La ligne survit pour que les commentaires gardent leur contexte.<br><b style="display:inline">Audience × niveau d'accès</b> lire inclut commenter pour <code>FRIENDS</code> et <code>SPECIFIC</code> ; <code>FOLLOWERS</code> et <code>LINK</code> lisent sans jamais commenter ; <code>EDIT</code> est réservé à <code>SPECIFIC</code>. L'audience est vérifiée <b>au moment de la lecture</b>, par rapport à <code>sharedBy</code> : un ami retiré perd l'accès aussitôt, même nommé.</p>
         </article>
 
         <article class="entity">
@@ -1289,8 +1385,8 @@
         </article>
 
         <article class="entity">
-          <div class="entity-top"><h4>Comment <span style="font-family:var(--body);font-size:12px;color:var(--sub)">— abstraite, 4 sous-types</span></h4><span class="pill p-mvp">MVP</span></div>
-          <p class="role">Un commentaire sur un contenu partagé. <code>ItemComment</code>, <code>GarmentComment</code>, <code>CollectionComment</code> et <code>PostComment</code>, ajouté pour le fil d'actualité.</p>
+          <div class="entity-top"><h4>Comment <span style="font-family:var(--body);font-size:12px;color:var(--sub)">— abstraite, 5 sous-types</span></h4><span class="pill p-mvp">MVP</span></div>
+          <p class="role">Un commentaire sur un contenu partagé. <code>ItemComment</code>, <code>GarmentComment</code>, <code>CollectionComment</code> et <code>PostComment</code>, ajouté pour le fil d'actualité. <code>ListingComment</code>, confirmé le 21 septembre, est le cinquième : il arrive avec la vente, et une annonce n'ayant pas de <code>Share</code>, son audience dit qui la voit.</p>
           <ul class="attrs">
             <li class="key"><b>id</b> <span>uuid</span></li>
             <li class="fk"><b>author</b> <span>→ Profile</span></li>
@@ -1309,9 +1405,8 @@
             <li class="key"><b>id</b> <span>uuid</span></li>
             <li class="fk"><b>author</b> <span>→ Profile</span></li>
             <li><b>body</b> <span>text — « Ma collection pour cet été est prête. Vos avis ? »</span></li>
-            <li><b>audience</b> <span>FRIENDS · FOLLOWERS · SPECIFIC — la pastille « Amis autorisés » de l'écran</span></li>
-            <li class="fk"><b>collection · item · garment</b> <span>nullables, au plus un — la ressource mise en avant</span></li>
-            <li class="fk"><b>share</b> <span>→ Share, nullable — <b>l'accès à la ressource attachée</b></span></li>
+            <li><b>audience</b> <span>FRIENDS · FOLLOWERS · SPECIFIC — la pastille « Amis autorisés » de l'écran ; SPECIFIC exige une ressource (ses destinataires sont ceux du partage)</span></li>
+                        <li class="fk"><b>share</b> <span>→ Share, nullable, SET NULL — <b>l'accès à la ressource mise en avant, et la seule référence à cette ressource</b> : la ressource est la cible du partage (29 septembre)</span></li>
             <li><b>publishedAt · deletedAt</b> <span>datetime · datetime nullable</span></li>
             <li><b>commentsEnabled</b> <span>bool — toujours <code>false</code> si <code>audience = FOLLOWERS</code></span></li>
           </ul>
@@ -1350,6 +1445,24 @@
           <p class="rel"><b>Suppression</b> supprimer une collection supprime ses entrées (<code>CASCADE</code>) et rien d'autre. Supprimer un objet supprime ses entrées de collection, jamais la collection.</p>
         </article>
 
+        <article class="entity">
+          <div class="entity-top"><h4>Contribution</h4><span class="pill p-mvp">MVP</span><span class="pill p-new">Nouveau</span></div>
+          <p class="role">Ce qu'une personne autorisée à modifier propose au propriétaire. <b>Rien n'est appliqué avant sa validation.</b> Ajoutée le 30 septembre ; depuis le 6 octobre, on peut proposer par un partage <code>EDIT</code> <b>ou au sein du foyer</b>.</p>
+          <ul class="attrs">
+            <li class="key"><b>id</b> <span>uuid</span></li>
+            <li class="fk"><b>contributor · owner</b> <span>→ Profile · → Profile, le propriétaire qui décide</span></li>
+            <li><b>basis</b> <span>SHARE · HOUSEHOLD (6 octobre) — ce qui autorise à proposer</span></li>
+            <li class="fk"><b>grant</b> <span>→ Share (EDIT, dont il est destinataire), renseigné si et seulement si basis = SHARE (CHECK) ; un moodboard ne reçoit de proposition que par un partage</span></li>
+            <li><b>kind</b> <span>PLACE_POSSESSION · ADD_COLLECTION_ENTRY · EDIT_FIELDS</span></li>
+            <li class="fk"><b>item · garment · room · storage · box</b> <span>PLACE_POSSESSION : ranger un de SES objets chez le propriétaire — le carton déposé chez un proche reste à celui qui le dépose</span></li>
+            <li class="fk"><b>collection · entryKind · media · caption</b> <span>ADD_COLLECTION_ENTRY : poser un élément sur un moodboard</span></li>
+            <li><b>changes · targetType · targetId</b> <span>jsonb · string · uuid — EDIT_FIELDS : corriger des champs de la cible (objet, vêtement, logement, pièce, rangement, conteneur, moodboard, look, catégorie), selon une liste blanche par cible</span></li>
+            <li><b>status</b> <span>PENDING · ACCEPTED · REJECTED · WITHDRAWN</span></li>
+            <li class="fk"><b>decidedBy · decidedAt · note</b> <span>le propriétaire (ou son tuteur) qui a décidé</span></li>
+          </ul>
+          <p class="rel"><b>Jamais</b> supprimer, prêter, vendre : aucune sorte de contribution ne porte ces gestes, qui restent au propriétaire. Une contribution acceptée est appliquée dans la même transaction que sa décision.</p>
+        </article>
+
       </div>
     </div>
 
@@ -1364,7 +1477,7 @@
             <li class="key"><b>id</b> <span>uuid</span></li>
             <li class="fk"><b>item · garment</b> <span>nullables, exactement un renseigné</span></li>
             <li class="fk"><b>lender · borrower</b> <span>→ Profile — lender est toujours le propriétaire</span></li>
-            <li><b>status</b> <span>REQUESTED · ACCEPTED · ACTIVE · RETURNED · DECLINED · CANCELLED · LOST</span></li>
+            <li><b>status</b> <span>REQUESTED · ACCEPTED · ACTIVE · RETURNED · DECLINED · CANCELLED · LOST — un prêt proposé par le propriétaire lui-même naît ACCEPTED ; les dates suivent le statut (CHECK)</span></li>
             <li><b>requestedAt · acceptedAt · receivedAt</b> <span>datetime nullables</span></li>
             <li><b>dueDate</b> <span>date nullable — obligatoire ou non : décision client</span></li>
             <li><b>returnDeclaredAt · returnConfirmedAt</b> <span>datetime nullables</span></li>
@@ -1386,7 +1499,7 @@
             <li><b>payload</b> <span>jsonb — ancienne et nouvelle valeur, identifiants de médias du constat</span></li>
             <li><b>occurredAt</b> <span>datetime</span></li>
           </ul>
-          <p class="rel"><b>Contraintes</b> aucune modification ni suppression après écriture — garanti par une révocation des droits <code>UPDATE</code> et <code>DELETE</code> sur la table, pas seulement par convention</p>
+          <p class="rel"><b>Contraintes</b> aucune modification ni suppression après écriture — garanti en base par un déclencheur de garde (<code>penderie_append_only</code>), qui ne laisse modifier que <code>actor_id</code> pour la réaffectation au profil fantôme. Une révocation des droits <code>UPDATE</code> et <code>DELETE</code> était prévue ; elle est sans effet sur un rôle superutilisateur, ce qu'est le rôle de l'application dans l'image Docker PostgreSQL</p>
         </article>
 
       </div>
@@ -1420,7 +1533,8 @@
             <li><b>price · currency</b> <span>decimal(10,2) ≥ 0 · string</span></li>
             <li><b>description</b> <span>text — pré-remplie depuis l'objet</span></li>
             <li><b>status</b> <span>DRAFT · PUBLISHED · RESERVED · SOLD · WITHDRAWN · EXPIRED</span></li>
-            <li><b>audience</b> <span>FRIENDS_ONLY par défaut</span></li>
+            <li><b>audience</b> <span>FRIENDS_ONLY (par défaut) · FRIENDS_AND_FOLLOWERS — les abonnés voient l'annonce, seuls les amis achètent</span></li>
+            <li><b>Contrainte</b> <span>une seule annonce PUBLISHED ou RESERVED par objet (index unique partiel) : un objet ne se vend pas deux fois</span></li>
             <li><b>publishedAt · closedAt</b> <span>datetime nullables</span></li>
           </ul>
           <p class="rel"><b>Relations</b> n,n <code>Media</code> via <code>ListingMedia</code> · 0,1 <code>Order</code></p>
@@ -1569,7 +1683,8 @@
             <li class="fk"><b>garment</b> <span>→ Garment</span></li>
             <li class="fk"><b>profile</b> <span>→ Profile — le porteur</span></li>
             <li class="fk"><b>outfit</b> <span>→ Outfit, nullable</span></li>
-            <li><b>wornAt</b> <span>date</span></li>
+            <li><b>wornAt</b> <span>date, jamais dans le futur</span></li>
+            <li><b>Contrainte</b> <span>unique (garment, profile, wornAt) : une pièce est portée une fois par jour et par personne</span></li>
           </ul>
         </article>
 
@@ -1585,7 +1700,7 @@
             <li><b>hiddenAt</b> <span>datetime</span></li>
             <li><b>reactivatedAt</b> <span>datetime nullable — active tant que nul</span></li>
           </ul>
-          <p class="rel"><b>Comment ça marche</b> les trois critères se combinent en <b>ET</b>. <code>category = T-shirt</code> seul masque tous les t-shirts ; <code>category = T-shirt</code> + <code>color = Noir</code> ne masque que les t-shirts noirs ; <code>color = Noir</code> seul masque tout ce qui est noir.<br><b style="display:inline">Contraintes</b> au moins un des trois critères renseigné (<code>CHECK</code>) · index unique partiel sur (profile, garmentCategory, color, style) <code>WHERE reactivated_at IS NULL</code> : pas deux fois la même règle active, et l'historique des masquages levés reste en base.<br><b style="display:inline">Ce que ce n'est pas</b> cette entité ne vise <b>aucun <code>Garment</code> en particulier</b> : c'est un filtre évalué à l'affichage, pas une liste de pièces. Un vêtement ajouté demain qui correspond aux critères sera masqué sans rien écrire.</p>
+          <p class="rel"><b>Comment ça marche</b> les trois critères se combinent en <b>ET</b>. <code>category = T-shirt</code> seul masque tous les t-shirts ; <code>category = T-shirt</code> + <code>color = Noir</code> ne masque que les t-shirts noirs ; <code>color = Noir</code> seul masque tout ce qui est noir.<br><b style="display:inline">Contraintes</b> au moins un des trois critères renseigné (<code>CHECK</code>) · index unique partiel sur (profile, garmentCategory, color, style) <code>WHERE reactivated_at IS NULL</code> : pas deux fois la même règle active, et l'historique des masquages levés reste en base.<br><b style="display:inline">Ce que ce n'est pas</b> cette entité ne vise <b>aucun <code>Garment</code> en particulier</b> : c'est un filtre évalué à l'affichage, pas une liste de pièces. Un vêtement ajouté demain qui correspond aux critères sera masqué sans rien écrire. La catégorie couvre ses sous-catégories : masquer « Hauts » masque les t-shirts et les chemises.</p>
         </article>
 
         <article class="entity">
@@ -1643,7 +1758,7 @@
           <div class="entity-top"><h4>NotificationPreference · DeviceToken</h4><span class="pill p-mvp">MVP</span></div>
           <p class="role">Le réglage par type et par profil, et les appareils à joindre. Le jeton appartient au <b>compte</b> — c'est l'appareil qui se connecte — alors que la notification vise un <b>profil</b>.</p>
           <ul class="attrs">
-            <li><b>NotificationPreference</b> <span>profile · type · pushEnabled · emailEnabled</span></li>
+            <li><b>NotificationPreference</b> <span>profile · type · pushEnabled · emailEnabled — aucune ligne = réglage par défaut (push oui, email non) : on ne stocke que ce qui dévie</span></li>
             <li><b>DeviceToken</b> <span>account · token unique · platform IOS|ANDROID · lastSeenAt</span></li>
           </ul>
           <p class="rel"><b>Contraintes</b> unique (profile, type) · unique (token). L'envoi résout : profil destinataire → son compte → les jetons de ce compte, en indiquant le profil visé dans la charge utile.</p>
@@ -1680,10 +1795,10 @@
           <p class="role">Ce que l'administrateur a fait, et pourquoi. Existe aussi sans signalement préalable, pour une action spontanée. <b>MVP depuis le 29 septembre</b> : le back-office agit dès le lancement alors que <code>Report</code> reste en V2 — la clé <code>report</code> reste donc <code>NULL</code> jusqu'à la V2.</p>
           <ul class="attrs">
             <li class="key"><b>id</b> <span>uuid</span></li>
-            <li class="fk"><b>report</b> <span>→ Report, nullable</span></li>
+            <li class="fk"><b>report</b> <span>→ Report, nullable — <b>colonne créée avec Report, en V2</b> : sans la table, elle ne pourrait pas porter de vraie clé étrangère</span></li>
             <li class="fk"><b>admin</b> <span>→ Account</span></li>
             <li><b>actionType</b> <span>HIDE_CONTENT · DELETE_CONTENT · WARN · SUSPEND_PROFILE · BAN_ACCOUNT · RESTORE</span></li>
-            <li><b>targetType · targetId</b> <span>enum · uuid</span></li>
+            <li><b>targetType · targetId</b> <span>ACCOUNT · PROFILE · ITEM · GARMENT · COMMENT · LISTING · COLLECTION · POST · uuid, sans clé étrangère (comme Report) — l'action correspond à sa cible (CHECK) : on suspend ou avertit un profil, on bannit un compte, on masque ou supprime un contenu, RESTORE vise tout ; seules suspension et bannissement expirent</span></li>
             <li><b>reason</b> <span>text</span></li>
             <li><b>expiresAt</b> <span>datetime nullable — pour une suspension temporaire</span></li>
           </ul>
@@ -1719,7 +1834,7 @@
           <tr><td><code>share_recipient</code></td><td>unique (share, profile)</td><td>Un destinataire ajouté deux fois</td></tr>
           <tr><td><code>size_value</code></td><td>unique (size_system, label)</td><td>Deux « M » dans la même échelle</td></tr>
           <tr><td><code>item_media</code> · <code>garment_media</code></td><td>unique (item, media) · unique (garment, media)</td><td>La même photo deux fois dans une galerie</td></tr>
-          <tr><td><code>order</code></td><td>unique (reference) · unique (listing)</td><td>Deux commandes sur la même annonce</td></tr>
+          <tr><td><code>order</code></td><td>unique (reference) · unique partiel (listing) WHERE status &lt;&gt; 'CANCELLED'</td><td>Deux commandes en cours sur la même annonce — une annonce libérée par une annulation reste rachetable</td></tr>
           <tr><td><code>order_address</code></td><td>unique (order, role)</td><td>Deux adresses de livraison sur une commande</td></tr>
           <tr><td><code>payment</code></td><td>unique (provider, external_id)</td><td>Un webhook rejoué qui créerait un double encaissement</td></tr>
           <tr><td><code>notification_preference</code></td><td>unique (profile, type)</td><td>Deux réglages pour le même type d'alerte</td></tr>
@@ -1779,7 +1894,7 @@
           <li><code>CHECK</code> abonnés en lecture seule, sur le partage comme sur la publication : <code>audience IN ('FRIENDS','SPECIFIC') OR access_level = 'VIEW'</code> et <code>audience &lt;&gt; 'FOLLOWERS' OR comments_enabled = false</code>.</li>
           <li><code>CHECK</code> sur le couple paiement / livraison : <code>payment_method = 'CASH'</code> impose <code>delivery_method = 'HANDOVER'</code>.</li>
           <li><code>CHECK</code> anti-réflexivité : <code>requester &lt;&gt; addressee</code>, <code>follower &lt;&gt; following</code>, <code>lender &lt;&gt; borrower</code>, <code>blocker &lt;&gt; blocked</code>.</li>
-          <li>Révocation des droits <code>UPDATE</code> et <code>DELETE</code> sur <code>loan_event</code> et <code>moderation_action</code> : les journaux sont en écriture seule pour de bon.</li>
+          <li>Déclencheur de garde <code>penderie_append_only</code> sur <code>loan_event</code> et <code>moderation_action</code> : les journaux sont en écriture seule pour de bon, y compris pour un rôle superutilisateur (une révocation de droits ne l'arrête pas).</li>
         </ul>
       </div>
       <div class="entity" style="gap:12px">
@@ -1795,7 +1910,7 @@
           <li>Refus de supprimer une <code>Room</code>, un <code>Storage</code> ou un <code>Box</code> non vide sans destination choisie.</li>
           <li>Copie de l'adresse dans <code>OrderAddress</code> à la validation de la commande.</li>
           <li>Marques : calcul du <code>slug</code> à la saisie et réutilisation d'une marque existante ; fusion de deux marques par réaffectation transactionnelle de <code>garment.brand</code>.</li>
-          <li>Anonymisation RGPD, avec conservation des pièces comptables.</li>
+          <li>Suppression RGPD par réaffectation au profil fantôme, avec conservation des pièces comptables.</li>
         </ul>
       </div>
     </div>
@@ -1803,7 +1918,7 @@
       <table>
         <thead><tr><th>Quand on supprime…</th><th>Politique</th><th>Raison</th></tr></thead>
         <tbody>
-          <tr><td><code>Profile</code></td><td>Soft delete + transfert au tuteur</td><td>On anonymise et on transfère, on ne détruit pas : les biens sont ceux du foyer, les prêts et commandes impliquent des tiers. Bloqué tant qu'un prêt est actif.</td></tr>
+          <tr><td><code>Profile</code></td><td>Transfert au tuteur + réaffectation au fantôme, puis suppression réelle</td><td>Les biens sont ceux du foyer et passent au tuteur ; les prêts, commandes et commentaires impliquent des tiers et passent au profil fantôme. Bloqué tant qu'un prêt est actif.</td></tr>
           <tr><td><code>Profile.guardian</code></td><td><code>RESTRICT</code></td><td>Supprimer un tuteur laisserait un profil enfant sans contrôle parental</td></tr>
           <tr><td><code>Item</code> · <code>Garment</code></td><td>Soft delete (<code>deletedAt</code>)</td><td>Un objet vendu ou prêté reste référencé par une commande et un historique</td></tr>
           <tr><td><code>Room</code> · <code>Storage</code> · <code>Box</code></td><td><code>RESTRICT</code> si non vide</td><td>Perdre l'emplacement de cent objets d'un clic n'est pas une suppression, c'est un accident</td></tr>
