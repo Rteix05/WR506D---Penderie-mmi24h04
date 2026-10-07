@@ -68,6 +68,14 @@ final class ProfileDeleter
             // --- Au tuteur : les biens du foyer ------------------------------------
             // Une seule résidence principale par profil : celle de l'enfant perd ce statut.
             $conn->executeStatement('UPDATE place SET owner_id = :g, is_primary = false WHERE owner_id = :c', ['g' => $g, 'c' => $c]);
+            // Ses pièces (il les a créées) et sa place dans les logements : au tuteur.
+            $conn->executeStatement('UPDATE room SET created_by_id = :g WHERE created_by_id = :c', ['g' => $g, 'c' => $c]);
+            $conn->executeStatement(
+                'INSERT INTO place_member (id, place_id, profile_id, created_at, updated_at)
+                 SELECT gen_random_uuid(), m.place_id, :g, now(), now() FROM place_member m
+                 WHERE m.profile_id = :c AND NOT EXISTS (SELECT 1 FROM place_member o WHERE o.place_id = m.place_id AND o.profile_id = :g)',
+                ['g' => $g, 'c' => $c],
+            );
             foreach (['item', 'garment', 'media', 'collection', 'outfit'] as $table) {
                 $conn->executeStatement("UPDATE $table SET owner_id = :g WHERE owner_id = :c", ['g' => $g, 'c' => $c]);
             }

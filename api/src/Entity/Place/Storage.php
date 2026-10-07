@@ -90,6 +90,12 @@ class Storage
         return $this->id;
     }
 
+    /** Son propriétaire : celui de la pièce (son créateur). */
+    public function getOwner(): \App\Entity\Identity\Profile
+    {
+        return $this->room->getOwner();
+    }
+
     public function getRoom(): Room
     {
         return $this->room;

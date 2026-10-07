@@ -10,6 +10,7 @@ use App\Entity\Inventory\Garment;
 use App\Entity\Inventory\Item;
 use App\Entity\Place\Box;
 use App\Entity\Place\Place;
+use App\Entity\Place\PlaceMember;
 use App\Entity\Place\Room;
 use App\Entity\Place\Storage;
 use App\Entity\Reference\GarmentCategory;
@@ -23,6 +24,10 @@ use Doctrine\ORM\QueryBuilder;
  * tuteur — le même périmètre que OwnershipVoter, appliqué en SQL.
  *
  * Les objets et vêtements supprimés en douceur n'apparaissent pas.
+ *
+ * Colocation : les logements dont on est membre, et dans ceux-ci les pièces
+ * qu'on voit (communes, les siennes, celles où l'on est autorisé), avec
+ * leurs rangements et conteneurs.
  */
 final class OwnedByCurrentProfileExtension implements QueryCollectionExtensionInterface
 {
@@ -30,10 +35,6 @@ final class OwnedByCurrentProfileExtension implements QueryCollectionExtensionIn
     private const OWNER_PATHS = [
         Item::class => [],
         Garment::class => [],
-        Place::class => [],
-        Room::class => ['place'],
-        Storage::class => ['room', 'place'],
-        Box::class => ['room', 'place'],
     ];
 
     public function __construct(private readonly CurrentProfile $current)
@@ -60,6 +61,31 @@ final class OwnedByCurrentProfileExtension implements QueryCollectionExtensionIn
             return;
         }
 
+        // Les logements dont on est membre.
+        if (Place::class === $resourceClass) {
+            $queryBuilder->andWhere($this->memberOf("$alias.id", $queryBuilder, $queryNameGenerator));
+
+            return;
+        }
+
+        // Les pièces qu'on y voit (communes, les siennes, celles où l'on est autorisé), leurs rangements et conteneurs.
+        if (\in_array($resourceClass, [Room::class, Storage::class, Box::class], true)) {
+            $room = $alias;
+            if (Room::class !== $resourceClass) {
+                $room = $queryNameGenerator->generateJoinAlias('room');
+                $queryBuilder->join("$alias.room", $room);
+            }
+            $creator = $queryNameGenerator->generateJoinAlias('creator');
+            $me = $queryNameGenerator->generateParameterName('me');
+            $queryBuilder
+                ->join("$room.createdBy", $creator)
+                ->andWhere($this->memberOf("IDENTITY($room.place)", $queryBuilder, $queryNameGenerator))
+                ->andWhere("$room.closed = false OR $creator = :$me OR $creator.guardian = :$me OR :$me MEMBER OF $room.allowedMembers")
+                ->setParameter($me, $this->current->get()->getId(), 'uuid');
+
+            return;
+        }
+
         if (!\array_key_exists($resourceClass, self::OWNER_PATHS)) {
             return;
         }
@@ -81,5 +107,16 @@ final class OwnedByCurrentProfileExtension implements QueryCollectionExtensionIn
         if (\in_array($resourceClass, [Item::class, Garment::class], true)) {
             $queryBuilder->andWhere("$alias.deletedAt IS NULL");
         }
+    }
+
+    /** « $placeId est un logement dont je suis membre (moi ou un enfant dont je suis le tuteur) ». */
+    private function memberOf(string $placeId, QueryBuilder $queryBuilder, QueryNameGeneratorInterface $queryNameGenerator): string
+    {
+        $m = $queryNameGenerator->generateJoinAlias('member');
+        $mp = $queryNameGenerator->generateJoinAlias('memberProfile');
+        $me = $queryNameGenerator->generateParameterName('me');
+        $queryBuilder->setParameter($me, $this->current->get()->getId(), 'uuid');
+
+        return "$placeId IN (SELECT IDENTITY($m.place) FROM ".PlaceMember::class." $m JOIN $m.profile $mp WHERE $mp = :$me OR $mp.guardian = :$me)";
     }
 }

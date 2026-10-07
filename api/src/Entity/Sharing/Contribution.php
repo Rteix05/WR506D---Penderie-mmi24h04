@@ -11,9 +11,12 @@ use App\Entity\Place\Box;
 use App\Entity\Place\Place;
 use App\Entity\Place\Room;
 use App\Entity\Place\Storage;
+use App\Entity\Reference\GarmentCategory;
+use App\Entity\Reference\ItemCategory;
 use App\Entity\Trait\TimestampableTrait;
 use App\Enum\Sharing\AccessLevel;
 use App\Enum\Sharing\CollectionEntryKind;
+use App\Enum\Sharing\ContributionBasis;
 use App\Enum\Sharing\ContributionKind;
 use App\Enum\Sharing\ContributionStatus;
 use App\Repository\Sharing\ContributionRepository;
@@ -23,9 +26,15 @@ use Symfony\Bridge\Doctrine\Types\UuidType;
 use Symfony\Component\Uid\Uuid;
 
 /**
- * Ce qu'une personne autorisée à modifier (partage EDIT, décision du
- * 30/09) propose au propriétaire. RIEN n'est appliqué avant sa validation
- * (ContributionReviewer). Trois sortes :
+ * Ce qu'une personne autorisée à modifier propose au propriétaire. RIEN
+ * n'est appliqué avant sa validation (ContributionReviewer).
+ *
+ * Qui peut proposer (basis) :
+ *  - SHARE : un partage EDIT à son nom (décision du 30/09) ;
+ *  - HOUSEHOLD : un autre profil du même compte, dans les limites du
+ *    tableau des droits (vérifiées par ResourceAccess::householdMayPropose).
+ *
+ * Trois sortes :
  *
  *  - PLACE_POSSESSION : ranger un de SES objets chez le propriétaire — le
  *    carton déposé chez un proche. L'objet reste à celui qui le dépose ;
@@ -42,6 +51,7 @@ use Symfony\Component\Uid\Uuid;
 #[ORM\HasLifecycleCallbacks]
 #[ORM\Index(name: 'idx_contribution_grant_status', columns: ['grant_id', 'status'])]
 #[ORM\Index(name: 'idx_contribution_contributor', columns: ['contributor_id', 'created_at'])]
+#[ORM\Index(name: 'idx_contribution_owner_status', columns: ['owner_id', 'status'])]
 class Contribution
 {
     use TimestampableTrait;
@@ -52,9 +62,26 @@ class Contribution
         Garment::class => ['name', 'description'],
         Place::class => ['name', 'description'],
         Room::class => ['name'],
+        Storage::class => ['name'],
         Box::class => ['name'],
+        GarmentCategory::class => ['name'],
+        ItemCategory::class => ['name'],
         Collection::class => ['name', 'description'],
         Outfit::class => ['name'],
+    ];
+
+    /** Le nom de chaque type de cible corrigeable (colonne target_type). */
+    public const TARGET_TYPES = [
+        Item::class => 'ITEM',
+        Garment::class => 'GARMENT',
+        Place::class => 'PLACE',
+        Room::class => 'ROOM',
+        Storage::class => 'STORAGE',
+        Box::class => 'BOX',
+        Collection::class => 'COLLECTION',
+        Outfit::class => 'OUTFIT',
+        GarmentCategory::class => 'GARMENT_CATEGORY',
+        ItemCategory::class => 'ITEM_CATEGORY',
     ];
 
     #[ORM\Id]
@@ -65,10 +92,18 @@ class Contribution
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     private Profile $contributor;
 
-    /** Le partage EDIT qui autorise la proposition ; son propriétaire valide. */
+    #[ORM\Column(length: 20, enumType: ContributionBasis::class)]
+    private ContributionBasis $basis;
+
+    /** SHARE : le partage EDIT qui autorise la proposition (révoqué ou supprimé : la proposition part avec). */
     #[ORM\ManyToOne(targetEntity: Share::class)]
+    #[ORM\JoinColumn(nullable: true, onDelete: 'CASCADE')]
+    private ?Share $grant;
+
+    /** Celui qui valide : le propriétaire de ce qui serait modifié (ou son tuteur). */
+    #[ORM\ManyToOne(targetEntity: Profile::class)]
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
-    private Share $grant;
+    private Profile $owner;
 
     #[ORM\Column(length: 30, enumType: ContributionKind::class)]
     private ContributionKind $kind;
@@ -120,6 +155,13 @@ class Contribution
     #[ORM\Column(type: Types::JSON, nullable: true, options: ['jsonb' => true])]
     private ?array $changes = null;
 
+    /** La cible corrigée (un des TARGET_TYPES) : pas de clé étrangère, la cible est relue à l'acceptation. */
+    #[ORM\Column(length: 20, nullable: true)]
+    private ?string $targetType = null;
+
+    #[ORM\Column(type: UuidType::NAME, nullable: true)]
+    private ?Uuid $targetId = null;
+
     // --- Décision --------------------------------------------------------------------
 
     #[ORM\ManyToOne(targetEntity: Profile::class)]
@@ -132,19 +174,31 @@ class Contribution
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $note = null;
 
-    private function __construct(Profile $contributor, Share $grant, ContributionKind $kind)
+    private function __construct(Profile $contributor, ?Share $grant, Profile $owner, ContributionKind $kind)
     {
-        if (!$grant->isActive() || AccessLevel::Edit !== $grant->getAccessLevel() || !$grant->isRecipient($contributor)) {
-            throw new \LogicException('Proposer une modification demande un droit de modifier, actif, à son nom.');
+        if (null !== $grant) {
+            if (!$grant->isActive() || AccessLevel::Edit !== $grant->getAccessLevel() || !$grant->isRecipient($contributor)) {
+                throw new \LogicException('Proposer une modification demande un droit de modifier, actif, à son nom.');
+            }
+            $owner = $grant->getOwner();
+        } elseif ($contributor->isGhost() || $contributor->getId()->equals($owner->getId())
+            || !$contributor->getAccount()->getId()->equals($owner->getAccount()->getId())) {
+            throw new \LogicException('Sans partage, seul un autre profil du même compte propose une modification.');
         }
         $this->id = Uuid::v7();
         $this->contributor = $contributor;
         $this->grant = $grant;
+        $this->basis = null !== $grant ? ContributionBasis::Share : ContributionBasis::Household;
+        $this->owner = $owner;
         $this->kind = $kind;
     }
 
-    /** Ranger un de ses objets dans la pièce (ou le conteneur) partagé(e) du propriétaire. */
-    public static function placePossession(Profile $contributor, Share $grant, Item|Garment $possession, Room $room, ?Storage $storage = null, ?Box $box = null): self
+    /**
+     * Ranger un de ses objets dans la pièce, le rangement ou le conteneur du
+     * propriétaire : par un partage EDIT qui couvre cet emplacement, ou (sans
+     * partage) au sein du foyer.
+     */
+    public static function placePossession(Profile $contributor, ?Share $grant, Item|Garment $possession, Room $room, ?Storage $storage = null, ?Box $box = null): self
     {
         if (!$possession->getOwner()->getId()->equals($contributor->getId())) {
             throw new \LogicException('On ne dépose chez quelqu\'un que ses propres affaires.');
@@ -156,14 +210,17 @@ class Contribution
         $covered = match (true) {
             $grant instanceof PlaceShare => $grant->getPlace()->getId()->equals($room->getPlace()->getId()),
             $grant instanceof RoomShare => $grant->getRoom()->getId()->equals($room->getId()),
+            $grant instanceof StorageShare => null !== $storage && $grant->getStorage()->getId()->equals($storage->getId()),
             $grant instanceof BoxShare => null !== $box && $grant->getBox()->getId()->equals($box->getId()),
+            null === $grant => true,
             default => false,
         };
         if (!$covered) {
             throw new \LogicException('Ce droit de modifier ne couvre pas cet emplacement.');
         }
 
-        $c = new self($contributor, $grant, ContributionKind::PlacePossession);
+        $destinationOwner = ($box ?? $storage ?? $room)->getOwner();
+        $c = new self($contributor, $grant, $destinationOwner, ContributionKind::PlacePossession);
         $c->item = $possession instanceof Item ? $possession : null;
         $c->garment = $possession instanceof Garment ? $possession : null;
         $c->room = $room;
@@ -186,7 +243,7 @@ class Contribution
             throw new \LogicException('Un texte vide n\'est pas une contribution.');
         }
 
-        $c = new self($contributor, $grant, ContributionKind::AddCollectionEntry);
+        $c = new self($contributor, $grant, $grant->getOwner(), ContributionKind::AddCollectionEntry);
         $c->collection = $grant->getCollection();
         [$c->entryKind, $c->item, $c->garment, $c->media, $c->caption] = match (true) {
             $content instanceof Item => [CollectionEntryKind::Item, $content, null, null, $caption],
@@ -199,13 +256,18 @@ class Contribution
     }
 
     /**
-     * Corriger des champs de la cible du partage, dans la liste blanche.
+     * Corriger des champs d'une cible, dans la liste blanche : la cible
+     * même du partage EDIT, ou (sans partage) un bien du foyer.
      *
      * @param array<string, string> $changes
      */
-    public static function editFields(Profile $contributor, Share $grant, array $changes): self
+    public static function editFields(Profile $contributor, ?Share $grant, object $target, array $changes): self
     {
-        $allowed = self::EDITABLE_FIELDS[self::targetClass($grant)] ?? [];
+        if (null !== $grant && !($target instanceof (self::targetClass($grant)) && $grant->getTargetId()->equals($target->getId()))) {
+            throw new \LogicException('Ce droit de modifier porte sur une autre cible.');
+        }
+        $type = self::typeOf($target);
+        $allowed = self::EDITABLE_FIELDS[array_search($type, self::TARGET_TYPES, true)] ?? [];
         if ([] === $changes) {
             throw new \LogicException('Aucune correction proposée.');
         }
@@ -215,8 +277,11 @@ class Contribution
             }
         }
 
-        $c = new self($contributor, $grant, ContributionKind::EditFields);
+        $owner = $target->getOwner() ?? throw new \LogicException('Les données de référence ne se corrigent pas ici.');
+        $c = new self($contributor, $grant, $owner, ContributionKind::EditFields);
         $c->changes = $changes;
+        $c->targetType = $type;
+        $c->targetId = $target->getId();
 
         return $c;
     }
@@ -229,10 +294,22 @@ class Contribution
             $grant instanceof GarmentShare => Garment::class,
             $grant instanceof PlaceShare => Place::class,
             $grant instanceof RoomShare => Room::class,
+            $grant instanceof StorageShare => Storage::class,
             $grant instanceof BoxShare => Box::class,
             $grant instanceof CollectionShare => Collection::class,
             $grant instanceof OutfitShare => Outfit::class,
         };
+    }
+
+    /** Le type (TARGET_TYPES) d'une cible, proxies Doctrine compris. */
+    public static function typeOf(object $target): string
+    {
+        foreach (self::TARGET_TYPES as $class => $type) {
+            if ($target instanceof $class) {
+                return $type;
+            }
+        }
+        throw new \LogicException('Cette ressource ne se corrige pas par une proposition.');
     }
 
     // --- Décision --------------------------------------------------------------------
@@ -262,7 +339,7 @@ class Contribution
     /** Le propriétaire de la cible, ou son tuteur. */
     public function assertReviewer(Profile $reviewer): void
     {
-        $owner = $this->grant->getOwner();
+        $owner = $this->owner;
         $isOwner = $owner->getId()->equals($reviewer->getId());
         $isGuardian = null !== $owner->getGuardian() && $owner->getGuardian()->getId()->equals($reviewer->getId());
         if (!$isOwner && !$isGuardian) {
@@ -295,14 +372,29 @@ class Contribution
         return $this->contributor;
     }
 
-    public function getGrant(): Share
+    public function getGrant(): ?Share
     {
         return $this->grant;
     }
 
+    public function getBasis(): ContributionBasis
+    {
+        return $this->basis;
+    }
+
     public function getOwner(): Profile
     {
-        return $this->grant->getOwner();
+        return $this->owner;
+    }
+
+    public function getTargetType(): ?string
+    {
+        return $this->targetType;
+    }
+
+    public function getTargetId(): ?Uuid
+    {
+        return $this->targetId;
     }
 
     public function getKind(): ContributionKind

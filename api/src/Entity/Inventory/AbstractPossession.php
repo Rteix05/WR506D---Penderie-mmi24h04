@@ -74,17 +74,17 @@ abstract class AbstractPossession
     /** RESTRICT : une pièce qui contient des objets ne se supprime pas (MDD). */
     #[ORM\ManyToOne(targetEntity: Room::class)]
     #[ORM\JoinColumn(nullable: false, onDelete: 'RESTRICT')]
-    #[Groups(['possession:private', 'possession:create'])]
+    #[Groups(['possession:location', 'possession:create'])]
     protected Room $room;
 
     #[ORM\ManyToOne(targetEntity: Storage::class)]
     #[ORM\JoinColumn(nullable: true, onDelete: 'RESTRICT')]
-    #[Groups(['possession:private'])]
+    #[Groups(['possession:location'])]
     protected ?Storage $storage = null;
 
     #[ORM\ManyToOne(targetEntity: Box::class)]
     #[ORM\JoinColumn(nullable: true, onDelete: 'RESTRICT')]
-    #[Groups(['possession:private'])]
+    #[Groups(['possession:location'])]
     protected ?Box $box = null;
 
     #[ORM\Column(type: Types::DATE_IMMUTABLE, nullable: true)]

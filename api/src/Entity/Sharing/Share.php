@@ -44,6 +44,7 @@ use Symfony\Component\Uid\Uuid;
     'COLLECTION' => CollectionShare::class,
     'PLACE' => PlaceShare::class,
     'OUTFIT' => OutfitShare::class,
+    'STORAGE' => StorageShare::class,
 ])]
 #[ORM\HasLifecycleCallbacks]
 #[ORM\Index(name: 'idx_share_owner_revoked', columns: ['owner_id', 'revoked_at'])]

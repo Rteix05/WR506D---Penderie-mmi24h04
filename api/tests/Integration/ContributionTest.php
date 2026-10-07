@@ -68,7 +68,7 @@ final class ContributionTest extends DatabaseTestCase
         $grant = $this->grantTo($this->sophie, new CollectionShare($this->camille, $board, Au::Specific, A::Edit));
 
         $entry = Contribution::addToCollection($this->sophie, $grant, 'Tons sable');
-        $rename = Contribution::editFields($this->sophie, $grant, ['name' => 'Été 2026']);
+        $rename = Contribution::editFields($this->sophie, $grant, $board, ['name' => 'Été 2026']);
         $this->persist($entry, $rename);
         self::assertSame(0, $board->getEntries()->count());
         self::assertSame('Été', $board->getName());
@@ -86,13 +86,13 @@ final class ContributionTest extends DatabaseTestCase
         $this->persist($robe);
         $readOnly = $this->grantTo($this->sophie, new ItemShare($this->camille, $robe, Au::Specific, A::Read));
         $edit = $this->grantTo($this->sophie, new ItemShare($this->camille, $robe, Au::Specific, A::Edit));
-        $proposal = Contribution::editFields($this->sophie, $edit, ['name' => 'Robe rouge']);
+        $proposal = Contribution::editFields($this->sophie, $edit, $robe, ['name' => 'Robe rouge']);
         $this->persist($proposal);
 
         foreach ([
-            'lire ne suffit pas pour proposer' => fn () => Contribution::editFields($this->sophie, $readOnly, ['name' => 'X']),
-            'champ hors liste blanche' => fn () => Contribution::editFields($this->sophie, $edit, ['owner' => 'moi']),
-            'pas de suppression déguisée en correction' => fn () => Contribution::editFields($this->sophie, $edit, ['deletedAt' => 'now']),
+            'lire ne suffit pas pour proposer' => fn () => Contribution::editFields($this->sophie, $readOnly, $robe, ['name' => 'X']),
+            'champ hors liste blanche' => fn () => Contribution::editFields($this->sophie, $edit, $robe, ['owner' => 'moi']),
+            'pas de suppression déguisée en correction' => fn () => Contribution::editFields($this->sophie, $edit, $robe, ['deletedAt' => 'now']),
             'seul le propriétaire valide' => fn () => $this->reviewer->accept($proposal, $this->sophie),
             'déposer l\'objet d\'un autre' => fn () => Contribution::placePossession($this->sophie, $edit, $robe, $robe->getRoom()),
         ] as $label => $forbidden) {
@@ -115,7 +115,7 @@ final class ContributionTest extends DatabaseTestCase
         $robe = new Item($this->camille, 'Robe', $this->room($this->camille));
         $this->persist($robe);
         $grant = $this->grantTo($this->sophie, new ItemShare($this->camille, $robe, Au::Specific, A::Edit));
-        $proposal = Contribution::editFields($this->sophie, $grant, ['name' => 'Robe rouge']);
+        $proposal = Contribution::editFields($this->sophie, $grant, $robe, ['name' => 'Robe rouge']);
         $this->persist($proposal);
 
         $this->assertDbRejects("UPDATE contribution SET status = 'ACCEPTED'", 'chk_contribution_decided');

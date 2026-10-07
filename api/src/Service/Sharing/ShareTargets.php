@@ -8,6 +8,7 @@ use App\Entity\Inventory\Item;
 use App\Entity\Place\Box;
 use App\Entity\Place\Place;
 use App\Entity\Place\Room;
+use App\Entity\Place\Storage;
 use App\Entity\Sharing\BoxShare;
 use App\Entity\Sharing\Collection;
 use App\Entity\Sharing\CollectionShare;
@@ -16,7 +17,9 @@ use App\Entity\Sharing\ItemShare;
 use App\Entity\Sharing\OutfitShare;
 use App\Entity\Sharing\PlaceShare;
 use App\Entity\Sharing\RoomShare;
+use App\Entity\Sharing\Contribution;
 use App\Entity\Sharing\Share;
+use App\Entity\Sharing\StorageShare;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
@@ -32,6 +35,7 @@ final class ShareTargets
         'ITEM' => [Item::class, ItemShare::class, 'getItem'],
         'GARMENT' => [Garment::class, GarmentShare::class, 'getGarment'],
         'ROOM' => [Room::class, RoomShare::class, 'getRoom'],
+        'STORAGE' => [Storage::class, StorageShare::class, 'getStorage'],
         'BOX' => [Box::class, BoxShare::class, 'getBox'],
         'PLACE' => [Place::class, PlaceShare::class, 'getPlace'],
         'OUTFIT' => [Outfit::class, OutfitShare::class, 'getOutfit'],
@@ -44,7 +48,9 @@ final class ShareTargets
 
     public function find(string $type, string $id): object
     {
-        $class = self::TYPES[$type][0] ?? throw new \LogicException(\sprintf('Type de cible inconnu : « %s ».', $type));
+        // Les cibles de partage, et ce qu'une proposition peut corriger en plus (catégories).
+        $class = self::TYPES[$type][0] ?? (array_search($type, Contribution::TARGET_TYPES, true) ?: null)
+            ?? throw new \LogicException(\sprintf('Type de cible inconnu : « %s ».', $type));
 
         return $this->em->find($class, $id) ?? throw new NotFoundHttpException('Cible introuvable.');
     }

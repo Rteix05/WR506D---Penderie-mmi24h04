@@ -7,7 +7,6 @@ use App\Entity\Inventory\Garment;
 use App\Entity\Inventory\Item;
 use App\Entity\Sharing\CollectionEntry;
 use App\Entity\Sharing\Contribution;
-use App\Entity\Sharing\Share;
 use App\Enum\Inventory\MoveReason;
 use App\Enum\Sharing\ContributionKind;
 use App\Service\Inventory\LocationMover;
@@ -73,18 +72,13 @@ final class ContributionReviewer
     /** Applique les corrections par les setters de la cible (liste blanche vérifiée à la création). */
     private function editFields(Contribution $c): object
     {
-        $target = $this->targetOf($c->getGrant());
+        $class = array_search($c->getTargetType(), Contribution::TARGET_TYPES, true);
+        $target = (false !== $class ? $this->em->find($class, $c->getTargetId()) : null)
+            ?? throw new \LogicException('Ce qui devait être corrigé n\'existe plus.');
         foreach ($c->getChanges() as $field => $value) {
             $target->{'set'.ucfirst($field)}($value);
         }
 
         return $target;
-    }
-
-    private function targetOf(Share $grant): object
-    {
-        $getter = 'get'.(new \ReflectionClass(Contribution::targetClass($grant)))->getShortName();
-
-        return $grant->{$getter}();
     }
 }

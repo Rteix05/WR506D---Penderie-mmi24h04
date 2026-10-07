@@ -26,8 +26,10 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 
 /**
- * Proposer une modification (droit « Modifier ») et la faire valider par
- * le propriétaire. Rien n'est appliqué avant son accord.
+ * Proposer une modification et la faire valider par le propriétaire. Rien
+ * n'est appliqué avant son accord. On peut proposer grâce à un partage
+ * « Modifier » à son nom, ou au sein du foyer (autre profil du même
+ * compte, dans les limites du tableau des droits).
  */
 #[Route('/api/contributions')]
 final class ContributionController extends AbstractController
@@ -46,6 +48,8 @@ final class ContributionController extends AbstractController
      *  - PLACE_POSSESSION     : {possessionType: ITEM|GARMENT, possessionId, roomId, storageId?, boxId?}
      *  - ADD_COLLECTION_ENTRY : {collectionId, itemId? | garmentId? | mediaId? | text?, caption?}
      *  - EDIT_FIELDS          : {targetType, targetId, changes: {name?, description?}}
+     *    (targetType : ITEM, GARMENT, PLACE, ROOM, STORAGE, BOX, COLLECTION, OUTFIT,
+     *    GARMENT_CATEGORY, ITEM_CATEGORY)
      */
     #[Route('', name: 'api_contribution_create', methods: ['POST'])]
     public function create(Request $request): JsonResponse
@@ -56,11 +60,7 @@ final class ContributionController extends AbstractController
         $contribution = match (ContributionKind::from((string) ($b['kind'] ?? ''))) {
             ContributionKind::PlacePossession => $this->placePossession($b),
             ContributionKind::AddCollectionEntry => $this->addToCollection($b),
-            ContributionKind::EditFields => Contribution::editFields(
-                $me,
-                $this->grantOn($this->targets->find((string) ($b['targetType'] ?? ''), (string) ($b['targetId'] ?? ''))),
-                (array) ($b['changes'] ?? []),
-            ),
+            ContributionKind::EditFields => $this->editFields($b),
         };
         $this->em->persist($contribution);
         $this->em->flush();
@@ -74,7 +74,7 @@ final class ContributionController extends AbstractController
     {
         $me = $this->current->get();
         $toReview = $this->em->createQueryBuilder()->select('c')->from(Contribution::class, 'c')
-            ->join('c.grant', 's')->join('s.owner', 'o')
+            ->join('c.owner', 'o')
             ->where('o = :me OR o.guardian = :me')->andWhere('c.status = :pending')
             ->setParameter('me', $me->getId(), 'uuid')->setParameter('pending', ContributionStatus::Pending->value)
             ->getQuery()->getResult();
@@ -126,10 +126,16 @@ final class ContributionController extends AbstractController
         $storage = isset($b['storageId']) ? $this->em->find(Storage::class, (string) $b['storageId']) : null;
         $box = isset($b['boxId']) ? $this->em->find(Box::class, (string) $b['boxId']) : null;
 
-        // Le droit de modifier le conteneur, la pièce ou le logement qui accueille l'objet.
+        // Un partage « Modifier » du conteneur, du rangement, de la pièce ou du logement qui accueille l'objet…
+        $storage = $box?->getStorage() ?? $storage;
         $grant = (null !== $box ? $this->access->editGrant($me, $box) : null)
+            ?? (null !== $storage ? $this->access->editGrant($me, $storage) : null)
             ?? $this->access->editGrant($me, $room)
-            ?? $this->grantOn($room->getPlace());
+            ?? $this->access->editGrant($me, $room->getPlace());
+        // … ou le foyer, sur cet emplacement précis.
+        if (null === $grant && !$this->access->householdMayPropose($me, $box ?? $storage ?? $room)) {
+            throw new AccessDeniedException('Aucun droit de proposer un rangement ici.');
+        }
 
         return Contribution::placePossession($me, $grant, $possession, $room, $storage, $box);
     }
@@ -148,6 +154,19 @@ final class ContributionController extends AbstractController
         } ?? throw $this->createNotFoundException('Élément introuvable.');
 
         return Contribution::addToCollection($this->current->get(), $grant, $content, $b['caption'] ?? null);
+    }
+
+    /** @param array<string, mixed> $b */
+    private function editFields(array $b): Contribution
+    {
+        $me = $this->current->get();
+        $target = $this->targets->find((string) ($b['targetType'] ?? ''), (string) ($b['targetId'] ?? ''));
+        $grant = $this->access->editGrant($me, $target);
+        if (null === $grant && !$this->access->householdMayPropose($me, $target)) {
+            throw new AccessDeniedException('Aucun droit de proposer une modification ici.');
+        }
+
+        return Contribution::editFields($me, $grant, $target, (array) ($b['changes'] ?? []));
     }
 
     private function grantOn(object $target): Share
@@ -180,6 +199,7 @@ final class ContributionController extends AbstractController
         return array_filter([
             'id' => (string) $c->getId(),
             'kind' => $c->getKind()->value,
+            'basis' => $c->getBasis()->value,
             'status' => $c->getStatus()->value,
             'contributor' => $c->getContributor()->getDisplayName(),
             'owner' => $c->getOwner()->getDisplayName(),
@@ -188,6 +208,7 @@ final class ContributionController extends AbstractController
             'collection' => $c->getCollection()?->getName(),
             'caption' => $c->getCaption(),
             'changes' => $c->getChanges(),
+            'target' => null !== $c->getTargetType() ? ['type' => $c->getTargetType(), 'id' => (string) $c->getTargetId()] : null,
             'note' => $c->getNote(),
         ], static fn ($v) => null !== $v);
     }
