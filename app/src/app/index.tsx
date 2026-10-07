@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { Link } from 'expo-router';
 import { Pressable, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -52,6 +53,12 @@ export default function Index() {
             </View>
           )}
         </View>
+
+        <Link href="/scan" asChild>
+          <Pressable accessibilityRole="button" className="min-h-11 items-center justify-center rounded-md bg-primary px-4">
+            <Text className="text-body font-bold text-white">Tester le scan</Text>
+          </Pressable>
+        </Link>
       </View>
     </SafeAreaView>
   );
