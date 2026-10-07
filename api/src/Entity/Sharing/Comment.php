@@ -21,10 +21,9 @@ use Symfony\Component\Validator\Constraints as Assert;
  * Le commentaire mémorise le partage sous lequel il a été écrit (nul si
  * l'auteur est le propriétaire). Qui voit quoi :
  *  - le propriétaire voit tout ;
- *  - un tiers voit les commentaires si son partage actif a
- *    accessLevel ≥ VIEW_COMMENTS, et écrit si accessLevel = COMMENT.
- * Ces règles vivent dans le futur voter ; les helpers de Share et
- * d'AccessLevel les rendent lisibles.
+ *  - un tiers qui peut lire (partage READ ou EDIT) voit et écrit des
+ *    commentaires, si l'audience est une audience d'amis (SPECIFIC,
+ *    FRIENDS) ; abonnés et lien restent en lecture seule (30/09).
  */
 #[ORM\Entity(repositoryClass: CommentRepository::class)]
 #[ORM\InheritanceType('SINGLE_TABLE')]
@@ -78,7 +77,9 @@ abstract class Comment
         if (null !== $share && !$share->isActive()) {
             throw new \LogicException('Ce partage n\'est plus actif.');
         }
-        if (null !== $share && !$share->getAccessLevel()->allowsWritingComments()) {
+        // Lire inclut commenter, mais seulement entre amis : un abonné ou un
+        // visiteur par lien ne commente jamais (décision du 30/09).
+        if (null !== $share && !$share->getAudience()->allowsComments()) {
             throw new \LogicException('Ce partage ne permet pas de commenter.');
         }
 

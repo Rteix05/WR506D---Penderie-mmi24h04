@@ -17,11 +17,18 @@ use Symfony\Component\Uid\Uuid;
 /**
  * L'autorisation d'accès à UNE ressource précise. C'est la seule porte vers
  * un contenu privé : ni l'amitié ni l'abonnement n'ouvrent quoi que ce soit.
+ * Tout est privé par défaut (décision du 30/09).
  *
  * Héritage SINGLE_TABLE (décision du 18/09) : une table share, un
  * discriminant target_type, et une colonne de cible par sous-type
- * (ItemShare, GarmentShare, RoomShare, BoxShare, CollectionShare). La
- * migration garantit qu'une ligne ne remplit que la colonne de son type.
+ * (ItemShare, GarmentShare, RoomShare, BoxShare, PlaceShare, OutfitShare,
+ * CollectionShare). La migration garantit qu'une ligne ne remplit que la
+ * colonne de son type.
+ *
+ * Le propriétaire (owner) est TOUJOURS celui de la cible. Celui qui partage
+ * (sharedBy) est le propriétaire, ou une personne à qui il a donné le
+ * droit de modifier : elle peut repartager, en lecture seule, et l'objet
+ * reste affiché comme celui du propriétaire (« repartagé par … »).
  *
  * Jamais supprimé : révoquer renseigne revokedAt, pour que les
  * commentaires écrits sous ce partage gardent leur contexte.
@@ -35,6 +42,8 @@ use Symfony\Component\Uid\Uuid;
     'ROOM' => RoomShare::class,
     'BOX' => BoxShare::class,
     'COLLECTION' => CollectionShare::class,
+    'PLACE' => PlaceShare::class,
+    'OUTFIT' => OutfitShare::class,
 ])]
 #[ORM\HasLifecycleCallbacks]
 #[ORM\Index(name: 'idx_share_owner_revoked', columns: ['owner_id', 'revoked_at'])]
@@ -46,10 +55,15 @@ abstract class Share
     #[ORM\Column(type: UuidType::NAME, unique: true)]
     protected Uuid $id;
 
-    /** RESTRICT : réaffecté au profil fantôme à la suppression du profil. */
+    /** Le propriétaire de la cible, déduit d'elle. RESTRICT : transféré ou fantôme. */
     #[ORM\ManyToOne(targetEntity: Profile::class)]
     #[ORM\JoinColumn(nullable: false, onDelete: 'RESTRICT')]
     protected Profile $owner;
+
+    /** Qui a partagé : le propriétaire, ou une personne autorisée à modifier (repartage). */
+    #[ORM\ManyToOne(targetEntity: Profile::class)]
+    #[ORM\JoinColumn(nullable: false, onDelete: 'RESTRICT')]
+    protected Profile $sharedBy;
 
     #[ORM\Column(length: 20, enumType: ShareAudience::class)]
     protected ShareAudience $audience;
@@ -74,17 +88,33 @@ abstract class Share
     #[ORM\OneToMany(targetEntity: ShareRecipient::class, mappedBy: 'share')]
     protected Collection $recipients;
 
-    protected function __construct(Profile $owner, ShareAudience $audience, AccessLevel $accessLevel)
+    /**
+     * Appelé par chaque sous-type APRÈS qu'il a fixé sa cible : le
+     * propriétaire en est déduit.
+     *
+     * @param Share|null $grant pour un repartage : le partage EDIT qui y autorise
+     */
+    protected function __construct(Profile $sharedBy, ShareAudience $audience, AccessLevel $accessLevel, ?Share $grant = null)
     {
-        if ($owner->isGhost()) {
+        if ($sharedBy->isGhost()) {
             throw new \LogicException('Le profil fantôme ne partage rien.');
         }
-        if (!$audience->allowsComments() && AccessLevel::View !== $accessLevel) {
-            throw new \LogicException('Un partage aux abonnés ou par lien est en lecture seule.');
+        if ($this->isTargetPersonal()) {
+            throw new \LogicException('Un objet personnel ne se partage pas.');
+        }
+        // « Modifier » ne se donne qu'à des personnes nommées (décision du 30/09) ;
+        // abonnés et lien sont donc forcément en lecture seule.
+        if (AccessLevel::Edit === $accessLevel && ShareAudience::Specific !== $audience) {
+            throw new \LogicException('Le droit de modifier ne se donne qu\'à des personnes choisies.');
+        }
+
+        $this->owner = $this->getTargetOwner();
+        $this->sharedBy = $sharedBy;
+        if (!$sharedBy->getId()->equals($this->owner->getId())) {
+            $this->assertMayReshare($sharedBy, $accessLevel, $grant);
         }
 
         $this->id = Uuid::v7();
-        $this->owner = $owner;
         $this->audience = $audience;
         $this->accessLevel = $accessLevel;
         $this->recipients = new ArrayCollection();
@@ -94,14 +124,58 @@ abstract class Share
         }
     }
 
-    /** Le propriétaire de la ressource partagée : seul lui peut la partager. */
+    /**
+     * Repartager ce qui n'est pas à soi : seulement avec un partage EDIT actif
+     * sur la MÊME cible, dont on est destinataire nommé — et seulement en
+     * lecture : seul le propriétaire donne le droit de modifier.
+     */
+    private function assertMayReshare(Profile $sharedBy, AccessLevel $accessLevel, ?Share $grant): void
+    {
+        if (AccessLevel::Read !== $accessLevel) {
+            throw new \LogicException('Seul le propriétaire donne le droit de modifier.');
+        }
+        if (null === $grant
+            || !$grant->isActive()
+            || AccessLevel::Edit !== $grant->getAccessLevel()
+            || $grant::class !== static::class
+            || !$grant->getTargetId()->equals($this->getTargetId())
+            || !$grant->isRecipient($sharedBy)
+        ) {
+            throw new \LogicException('On ne partage que ce qu\'on possède, ou ce qu\'on a le droit de modifier.');
+        }
+    }
+
+    /** Le propriétaire de la ressource partagée. */
     abstract public function getTargetOwner(): Profile;
 
-    protected function assertOwnsTarget(): void
+    abstract public function getTargetId(): Uuid;
+
+    /** Un objet personnel ne se partage jamais (décision du 30/09). */
+    protected function isTargetPersonal(): bool
     {
-        if (!$this->getTargetOwner()->getId()->equals($this->owner->getId())) {
-            throw new \LogicException('On ne partage que ce qu\'on possède.');
+        return false;
+    }
+
+    public function isRecipient(Profile $profile): bool
+    {
+        foreach ($this->recipients as $recipient) {
+            if ($recipient->getProfile()->getId()->equals($profile->getId())) {
+                return true;
+            }
         }
+
+        return false;
+    }
+
+    public function getSharedBy(): Profile
+    {
+        return $this->sharedBy;
+    }
+
+    /** Partagé par quelqu'un d'autre que le propriétaire (« repartagé par … »). */
+    public function isReshare(): bool
+    {
+        return !$this->sharedBy->getId()->equals($this->owner->getId());
     }
 
     public function getId(): Uuid
@@ -185,7 +259,7 @@ abstract class Share
         if (ShareAudience::Specific !== $this->audience) {
             throw new \LogicException('Seul un partage à des personnes choisies a des destinataires nommés.');
         }
-        if ($profile->getId()->equals($this->owner->getId())) {
+        if ($profile->getId()->equals($this->owner->getId()) || $profile->getId()->equals($this->sharedBy->getId())) {
             throw new \LogicException('Le propriétaire n\'est pas son propre destinataire.');
         }
         foreach ($this->recipients as $recipient) {

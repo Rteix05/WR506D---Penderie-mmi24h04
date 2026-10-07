@@ -6,6 +6,7 @@ use App\Entity\Identity\Profile;
 use App\Enum\Sharing\AccessLevel;
 use App\Enum\Sharing\ShareAudience;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Uid\Uuid;
 
 /**
  * Partage d'une ressource précise : une collection ou un moodboard.
@@ -20,11 +21,14 @@ class CollectionShare extends Share
     #[ORM\JoinColumn(nullable: true, onDelete: 'CASCADE')]
     private Collection $collection;
 
-    public function __construct(Profile $owner, Collection $collection, ShareAudience $audience, AccessLevel $accessLevel = AccessLevel::View)
+    /**
+     * @param Share|null $grant pour un repartage par une personne autorisée à modifier
+     */
+    public function __construct(Profile $sharedBy, Collection $collection, ShareAudience $audience, AccessLevel $accessLevel = AccessLevel::Read, ?Share $grant = null)
     {
-        parent::__construct($owner, $audience, $accessLevel);
+        // La cible d'abord : le constructeur parent en déduit le propriétaire.
         $this->collection = $collection;
-        $this->assertOwnsTarget();
+        parent::__construct($sharedBy, $audience, $accessLevel, $grant);
     }
 
     public function getCollection(): Collection
@@ -35,5 +39,10 @@ class CollectionShare extends Share
     public function getTargetOwner(): Profile
     {
         return $this->collection->getOwner();
+    }
+
+    public function getTargetId(): Uuid
+    {
+        return $this->collection->getId();
     }
 }
