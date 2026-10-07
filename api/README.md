@@ -89,6 +89,29 @@ Toutes les autres routes `/api` exigent l'en-tête `Authorization: Bearer <token
 
 Les clés et la passphrase ne sont jamais commitées : `docker-entrypoint.sh` génère la passphrase dans `.env.local` et les paires de clés dans `config/jwt/` (dev) et `config/jwt/test/` (tests) au démarrage du conteneur.
 
+## Partage et visibilité
+
+Tout est **privé par défaut**. Un partage ouvre l'accès, à trois niveaux : rien < **Lire** (`READ`) < **Modifier** (`EDIT`). Les règles sont dans `ResourceAccess` (décisions du 30/09, section « Qui voit quoi » du MDD) :
+
+- **Lire** : voir l'objet, et commenter entre amis. Abonnés et lien : lecture seule, sans commentaires.
+- **Modifier** : seulement pour des amis **nommés**. On ne modifie jamais directement : on **propose** (déposer un objet dans la pièce, ajouter au moodboard, corriger le nom ou la description), et le propriétaire valide. On peut repartager, en lecture seule ; l'objet reste celui du propriétaire (« repartagé par… »).
+- **Personnel** (`personal: true`) : jamais visible par un autre, jamais partageable, caché même dans une pièce ou par un lien partagés.
+- Qui n'est pas propriétaire ne reçoit **jamais** les champs privés : notes, pièce / rangement / conteneur, date et valeur d'achat, provenance, adresse du logement (`PrivateFieldsNormalizer`).
+- L'amitié et l'abonnement sont vérifiés **à chaque requête** : retirer un ami coupe l'accès tout de suite.
+
+| Route | Rôle |
+|---|---|
+| `POST /api/shares` | `{targetType: ITEM\|GARMENT\|ROOM\|BOX\|PLACE\|OUTFIT\|COLLECTION, targetId, audience: SPECIFIC\|FRIENDS\|FOLLOWERS\|LINK, accessLevel?, recipients?: [profileId], expiresAt?}` |
+| `GET /api/shares` | Mes partages (de mes affaires, ou faits par moi), avec le jeton des liens. |
+| `GET /api/shares/received` | Ce qu'on me partage et que je peux voir maintenant. |
+| `DELETE /api/shares/{id}` | Révoquer (le propriétaire, son tuteur, ou l'auteur du partage). |
+| `GET /api/links/{token}` | **Sans compte** : ce que montre un lien actif (nom, description, état ; rien de privé). 404 si révoqué ou expiré. |
+| `POST /api/contributions` | Proposer : `PLACE_POSSESSION`, `ADD_COLLECTION_ENTRY` ou `EDIT_FIELDS` (voir `ContributionController`). |
+| `GET /api/contributions` | `{toReview, mine}` : à valider, et mes propositions. |
+| `POST /api/contributions/{id}/accept` · `/reject` · `/withdraw` | Le propriétaire (ou son tuteur) accepte ou refuse ; l'auteur retire. |
+
+Codes : 403 sans droit, 404 introuvable, 422 règle refusée (objet personnel, `EDIT` à une audience ouverte…), 400 valeur inconnue.
+
 ## Supprimer un profil
 
 `DELETE /api/profiles/{id}` : le tuteur supprime le profil d'un enfant (`ProfileDeleter`, procédure du MDD).
@@ -110,7 +133,7 @@ docker compose exec php php bin/phpunit --filter SaleTest  # un domaine
 ```
 
 - `tests/Unit/` : règles pures (calculs de montants, permissions par défaut, énumérations, slugs de marque).
-- `tests/Api/` : de vraies requêtes HTTP (inscription, connexion, rafraîchissement, profil actif, droits sur l'inventaire).
+- `tests/Api/` : de vraies requêtes HTTP (inscription, connexion, rafraîchissement, profil actif, droits sur l'inventaire, partage et visibilité — dont « voler les affaires du voisin »).
 - `tests/Integration/` : un fichier par domaine du MDD, sur un vrai PostgreSQL. Chaque test tourne dans une transaction annulée à la fin (`dama/doctrine-test-bundle`) ; `assertDbRejects()` vérifie qu'une contrainte en base refuse bien une donnée interdite.
 
 La CI GitHub Actions (`.github/workflows/api.yml`) rejoue tout sur chaque push et chaque PR qui touche `api/` : migrations (et leur retour à zéro), référentiels, validation du schéma, PHPUnit.

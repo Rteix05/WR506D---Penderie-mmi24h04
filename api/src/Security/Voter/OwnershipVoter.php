@@ -2,25 +2,21 @@
 
 namespace App\Security\Voter;
 
-use App\Entity\Identity\Profile;
-use App\Entity\Inventory\AbstractPossession;
-use App\Entity\Place\Box;
-use App\Entity\Place\Place;
-use App\Entity\Place\Room;
-use App\Entity\Place\Storage;
 use App\Security\CurrentProfile;
+use App\Security\ResourceAccess;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\Vote;
 use Symfony\Component\Security\Core\Authorization\Voter\Voter;
 
 /**
- * Qui peut voir ou modifier un bien (objet, vêtement) ou un lieu : son
- * propriétaire, et le tuteur de ce propriétaire (contrôle parental). Le
- * contenu de Léa n'appartient pas à Rafael — seul owner fait foi (MDD) —
- * mais Rafael, son tuteur, peut le gérer.
- *
- * L'accès des AUTRES profils (amis, abonnés) passe par un Share actif :
- * il viendra avec l'exposition du partage, dans ResourceAccessVoter.
+ * VIEW et EDIT sur un bien, un lieu, un look ou une collection, décidés
+ * par ResourceAccess (décisions du 30/09) :
+ *  - VIEW : le propriétaire, son tuteur, ou quiconque à qui un partage
+ *    actif s'applique (jamais pour un objet personnel) ;
+ *  - EDIT (modifier directement, supprimer) : le propriétaire et son
+ *    tuteur SEULEMENT. Un droit « Modifier » accordé par un partage ne
+ *    permet que de PROPOSER, via une Contribution validée par le
+ *    propriétaire.
  *
  * @extends Voter<string, object>
  */
@@ -29,32 +25,23 @@ final class OwnershipVoter extends Voter
     public const VIEW = 'VIEW';
     public const EDIT = 'EDIT';
 
-    public function __construct(private readonly CurrentProfile $current)
-    {
+    public function __construct(
+        private readonly CurrentProfile $current,
+        private readonly ResourceAccess $access,
+    ) {
     }
 
     protected function supports(string $attribute, mixed $subject): bool
     {
-        return \in_array($attribute, [self::VIEW, self::EDIT], true) && null !== self::ownerOf($subject);
+        return \in_array($attribute, [self::VIEW, self::EDIT], true) && \is_object($subject) && null !== ResourceAccess::ownerOf($subject);
     }
 
     protected function voteOnAttribute(string $attribute, mixed $subject, TokenInterface $token, ?Vote $vote = null): bool
     {
-        $owner = self::ownerOf($subject);
         $me = $this->current->get();
 
-        return $owner->getId()->equals($me->getId())
-            || (null !== $owner->getGuardian() && $owner->getGuardian()->getId()->equals($me->getId()));
-    }
-
-    public static function ownerOf(mixed $subject): ?Profile
-    {
-        return match (true) {
-            $subject instanceof AbstractPossession, $subject instanceof Place => $subject->getOwner(),
-            $subject instanceof Room => $subject->getPlace()->getOwner(),
-            $subject instanceof Storage => $subject->getRoom()->getPlace()->getOwner(),
-            $subject instanceof Box => $subject->getRoom()->getPlace()->getOwner(),
-            default => null,
-        };
+        return self::EDIT === $attribute
+            ? $this->access->isOwner($me, $subject)
+            : $this->access->canRead($me, $subject);
     }
 }

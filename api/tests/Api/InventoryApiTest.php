@@ -44,6 +44,32 @@ final class InventoryApiTest extends ApiTestBase
         self::assertResponseStatusCodeSame(403);
     }
 
+    /** Régression (PR #17) : le rangement avait disparu du voter, son propriétaire recevait 403. */
+    public function testOwnerManagesStoragesAndBoxes(): void
+    {
+        $rafael = $this->signUp('rafael');
+        $thomas = $this->signUp('thomas');
+        $room = $this->roomOf($rafael);
+
+        $storage = $this->call('POST', '/api/storages', $rafael, ['room' => $room, 'name' => 'Armoire', 'type' => 'WARDROBE'])->toArray();
+        self::assertResponseStatusCodeSame(201);
+        $this->call('GET', $storage['@id'], $rafael);
+        self::assertResponseIsSuccessful();
+        $this->call('PATCH', $storage['@id'], $rafael, ['name' => 'Grande armoire']);
+        self::assertResponseIsSuccessful();
+        $this->call('GET', $storage['@id'], $thomas);
+        self::assertResponseStatusCodeSame(403);
+        $this->call('PATCH', $storage['@id'], $thomas, ['name' => 'À moi']);
+        self::assertResponseStatusCodeSame(403);
+
+        $box = $this->call('POST', '/api/boxes', $rafael, ['room' => $room, 'name' => 'Carton hiver', 'type' => 'CARTON'])->toArray();
+        self::assertResponseStatusCodeSame(201);
+        $this->call('GET', $box['@id'], $thomas);
+        self::assertResponseStatusCodeSame(403);
+        $this->call('DELETE', $storage['@id'], $rafael);
+        self::assertResponseStatusCodeSame(204);
+    }
+
     public function testCannotStoreInSomeoneElsesRoom(): void
     {
         $rafael = $this->signUp('rafael');
