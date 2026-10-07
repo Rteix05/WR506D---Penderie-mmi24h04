@@ -96,12 +96,13 @@ Tout est **privé par défaut**. Un partage ouvre l'accès, à trois niveaux : r
 - **Lire** : voir l'objet, et commenter entre amis. Abonnés et lien : lecture seule, sans commentaires.
 - **Modifier** : seulement pour des amis **nommés**. On ne modifie jamais directement : on **propose** (déposer un objet dans la pièce, ajouter au moodboard, corriger le nom ou la description), et le propriétaire valide. On peut repartager, en lecture seule ; l'objet reste celui du propriétaire (« repartagé par… »).
 - **Personnel** (`personal: true`) : jamais visible par un autre, jamais partageable, caché même dans une pièce ou par un lien partagés.
-- Qui n'est pas propriétaire ne reçoit **jamais** les champs privés : notes, pièce / rangement / conteneur, date et valeur d'achat, provenance, adresse du logement (`PrivateFieldsNormalizer`).
+- Qui n'est pas propriétaire (ou tuteur) ne reçoit **jamais** les champs privés : notes, date et valeur d'achat, provenance, adresse du logement. L'emplacement (pièce / rangement / conteneur) n'est montré qu'au foyer et aux colocs qui voient la pièce — jamais à un ami, un abonné ou un lien (`PrivateFieldsNormalizer`).
+- Chaque ressource renvoie un champ `access` (`ADMIN`, `EDIT`, `VIEW`) : la case du tableau des droits pour celui qui regarde, pour n'afficher que les gestes permis.
 - L'amitié et l'abonnement sont vérifiés **à chaque requête** : retirer un ami coupe l'accès tout de suite.
 
 | Route | Rôle |
 |---|---|
-| `POST /api/shares` | `{targetType: ITEM\|GARMENT\|ROOM\|BOX\|PLACE\|OUTFIT\|COLLECTION, targetId, audience: SPECIFIC\|FRIENDS\|FOLLOWERS\|LINK, accessLevel?, recipients?: [profileId], expiresAt?}` |
+| `POST /api/shares` | `{targetType: ITEM\|GARMENT\|ROOM\|STORAGE\|BOX\|PLACE\|OUTFIT\|COLLECTION, targetId, audience: SPECIFIC\|FRIENDS\|FOLLOWERS\|LINK, accessLevel?, recipients?: [profileId], expiresAt?}` |
 | `GET /api/shares` | Mes partages (de mes affaires, ou faits par moi), avec le jeton des liens. |
 | `GET /api/shares/received` | Ce qu'on me partage et que je peux voir maintenant. |
 | `DELETE /api/shares/{id}` | Révoquer (le propriétaire, son tuteur, ou l'auteur du partage). |
@@ -111,6 +112,33 @@ Tout est **privé par défaut**. Un partage ouvre l'accès, à trois niveaux : r
 | `POST /api/contributions/{id}/accept` · `/reject` · `/withdraw` | Le propriétaire (ou son tuteur) accepte ou refuse ; l'auteur retire. |
 
 Codes : 403 sans droit, 404 introuvable, 422 règle refusée (objet personnel, `EDIT` à une audience ouverte…), 400 valeur inconnue.
+
+## Colocation et foyer
+
+Le tableau des droits complet (propriétaire, coloc, profil +18 / −18 du même compte, amis, abonnés, public) est dans `docs/PENDERIE_DROITS_v2.xlsx` et dans la section « Colocation et foyer » du MDD. `ResourceAccess::level()` le traduit en code ; `RightsTableTest` le vérifie case par case.
+
+**Colocation** : un logement a des **membres**, tous admins (son créateur est le premier). Être membre ne donne aucun droit sur les affaires des autres.
+
+- Une pièce est **commune** par défaut : chaque coloc la voit, la modifie directement (nom, type, rangements) et y range ses affaires, sans toucher à celles des autres.
+- Son créateur peut la **fermer** : seuls lui et les colocs qu'il autorise la voient. Il la rouvre ; s'il a quitté le logement, n'importe quel membre le peut.
+- **Unanimité** pour inviter quelqu'un, supprimer le logement ou une pièce commune. Le demandeur vote oui d'office, l'invité vote aussi, un seul « non » rejette, le dernier « oui » applique la décision.
+- On ne supprime qu'un logement ou une pièce **vide** (409 sinon). En coloc, un `DELETE` direct sur le logement ou une pièce commune répond 409 : passer par une décision.
+- **Partir** : ses affaires partent avec soi (`TAKE`, déplacement tracé) ou passent à un coloc (`TRANSFER`, jamais un objet personnel, prêté ou en vente).
+
+| Route | Rôle |
+|---|---|
+| `GET /api/places/{id}/members` | Les membres du logement. |
+| `GET /api/places/{id}/decisions` | Les décisions du logement. |
+| `POST /api/places/{id}/decisions` | `{kind: INVITE_MEMBER, inviteeId}` \| `{kind: DELETE_PLACE}` \| `{kind: DELETE_ROOM, roomId}` |
+| `GET /api/place_decisions/awaiting` | Les décisions qui attendent mon vote (dont les invitations reçues). |
+| `POST /api/place_decisions/{id}/approve` · `/reject` · `/cancel` | Voter oui, non ; le demandeur annule. |
+| `POST /api/places/{id}/leave` | `{mode: TAKE, roomId}` (une de mes pièces, ailleurs) \| `{mode: TRANSFER, heirId}` (un coloc). |
+| `POST /api/rooms/{id}/close` · `/open` | Fermer / rouvrir une pièce. |
+| `POST /api/rooms/{id}/allowed` · `DELETE /api/rooms/{id}/allowed/{profileId}` | `{profileId}` : autoriser / retirer un coloc dans sa pièce fermée. |
+
+**Foyer** (profils d'un même compte) : ils voient tout ce qui appartient aux autres, sauf le personnel. Un adulte **propose** des modifications (`POST /api/contributions`, sans partage) sur les objets, pièces, rangements et catégories ; un mineur sur les rangements et catégories. Le propriétaire valide.
+
+Codes : 409 « Situation bloquante » (pas vide, décision requise), 422 règle refusée, 403 sans droit.
 
 ## Supprimer un profil
 
