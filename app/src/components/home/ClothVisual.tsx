@@ -11,7 +11,7 @@ import { View } from 'react-native';
  * (vignette de 44,1 × 31,7) ; `scale` agrandit le tout (cartes « Derniers
  * ajouts » : 86,8 de large, soit × 1,968).
  */
-export type ClothKind = 'baskets' | 'casquette' | 'pantalon' | 'veste' | 'tshirt' | 'robe';
+export type ClothKind = 'baskets' | 'casquette' | 'pantalon' | 'veste' | 'tshirt' | 'robe' | 'pull' | 'short' | 'echarpe' | 'cintre';
 
 const ART: Record<Exclude<ClothKind, 'baskets'>, { source: number; w: number; h: number }> = {
   casquette: { source: require('@/assets/images/figma/casquette.svg'), w: 16.927, h: 21.485 },
@@ -19,6 +19,11 @@ const ART: Record<Exclude<ClothKind, 'baskets'>, { source: number; w: number; h:
   veste: { source: require('@/assets/images/figma/veste.svg'), w: 24.877, h: 20.487 },
   tshirt: { source: require('@/assets/images/figma/tshirt.svg'), w: 24.877, h: 20.731 },
   robe: { source: require('@/assets/images/figma/robe.svg'), w: 16.716, h: 21.632 },
+  // Grille « C'est quoi ? » (node 135:2935), relevées à × 0,889 et ramenées ici à × 1.
+  pull: { source: require('@/assets/images/figma/pull.svg'), w: 18.414, h: 21.484 },
+  short: { source: require('@/assets/images/figma/short.svg'), w: 18.047, h: 21.484 },
+  echarpe: { source: require('@/assets/images/figma/echarpe.svg'), w: 17.648, h: 21.484 },
+  cintre: { source: require('@/assets/images/figma/cintre.svg'), w: 20.344, h: 12.25 },
 };
 
 // Les baskets sont deux calques empilés : le dessus et la semelle.

@@ -43,7 +43,7 @@ export default function HomeScreen() {
 
         <View className="flex-row gap-3 px-5">
           <View className="flex-1">
-            <Button glyph="[ ]" label="Scanner" onPress={() => router.push('/scan')} />
+            <Button glyph="[ ]" label="Scanner" onPress={() => router.push('/ajout/scan')} />
           </View>
           <View className="flex-1">
             <Button glyph="+" label="Ajouter" variant="secondary" onPress={openAdd} />

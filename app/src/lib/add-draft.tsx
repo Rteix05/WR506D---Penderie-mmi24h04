@@ -1,0 +1,195 @@
+import { useQueryClient } from '@tanstack/react-query';
+import type { ImagePickerAsset } from 'expo-image-picker';
+import { createContext, use, useCallback, useMemo, useState, type PropsWithChildren } from 'react';
+
+import type { ClothKind } from '@/components/home/ClothVisual';
+import { ApiError, apiGet, apiRequest } from '@/lib/api';
+import type { Ref } from '@/lib/reference';
+import type { ScanResult } from '@/lib/scan';
+
+/** État à l'ajout (enum Condition de l'API, sans « Abîmé », absent de la maquette). */
+export type Condition = 'NEW' | 'EXCELLENT' | 'GOOD' | 'WORN';
+export const CONDITIONS: { value: Condition; label: string }[] = [
+  { value: 'NEW', label: 'Neuf' },
+  { value: 'EXCELLENT', label: 'Très bon état' },
+  { value: 'GOOD', label: 'Bon état' },
+  { value: 'WORN', label: 'Usé' },
+];
+
+/** Usage d'un vêtement (enum GarmentUsage de l'API : UN seul usage par vêtement). */
+export type Usage = 'EVERYDAY' | 'WORK' | 'SPORT' | 'EVENING';
+export const USAGES: { value: Usage; label: string }[] = [
+  { value: 'EVERYDAY', label: 'Quotidien' },
+  { value: 'WORK', label: 'Travail' },
+  { value: 'SPORT', label: 'Sport' },
+  { value: 'EVENING', label: 'Soirée' },
+];
+
+/**
+ * Les 12 types de la grille « C'est quoi ? » (Figma 135:2935), reliés à une
+ * catégorie de vêtement de l'API (slug) et au dessin de la maquette.
+ * « Autre » n'a pas de catégorie : on la choisit à l'étape suivante.
+ */
+export type GarmentType = { label: string; slug: string | null; art: ClothKind; sizes: 'ALPHA' | 'EU_SHOE' | 'ONE_SIZE' };
+export const GARMENT_TYPES: GarmentType[] = [
+  { label: 'T-shirt', slug: 't-shirts', art: 'tshirt', sizes: 'ALPHA' },
+  { label: 'Chemise', slug: 'chemises', art: 'tshirt', sizes: 'ALPHA' },
+  { label: 'Pull', slug: 'pulls', art: 'pull', sizes: 'ALPHA' },
+  { label: 'Veste', slug: 'vestes', art: 'veste', sizes: 'ALPHA' },
+  { label: 'Manteau', slug: 'manteaux', art: 'pull', sizes: 'ALPHA' },
+  { label: 'Pantalon', slug: 'pantalons', art: 'pantalon', sizes: 'ALPHA' },
+  { label: 'Short', slug: 'shorts', art: 'short', sizes: 'ALPHA' },
+  { label: 'Robe', slug: 'robes', art: 'robe', sizes: 'ALPHA' },
+  { label: 'Chaussures', slug: 'chaussures', art: 'baskets', sizes: 'EU_SHOE' },
+  { label: 'Casquette', slug: 'bonnets-chapeaux', art: 'casquette', sizes: 'ONE_SIZE' },
+  { label: 'Écharpe', slug: 'echarpes', art: 'echarpe', sizes: 'ONE_SIZE' },
+  { label: 'Autre', slug: null, art: 'cintre', sizes: 'ALPHA' },
+];
+
+export type Location = { place: Ref | null; room: Ref | null; storage: Ref | null; box: Ref | null };
+const NO_LOCATION: Location = { place: null, room: null, storage: null, box: null };
+
+export type Draft = {
+  kind: 'item' | 'garment';
+  /** Photo prise ou importée. Gardée pendant le parcours ; l'API ne sait pas encore la joindre à l'objet. */
+  photo: ImagePickerAsset | null;
+  scan: ScanResult | null;
+  name: string;
+  category: Ref | null;
+  condition: Condition | null;
+  notes: string;
+  // Vêtement
+  garmentType: GarmentType | null;
+  brand: Ref | null;
+  size: Ref | null;
+  color: Ref | null;
+  usage: Usage;
+  styles: Ref[];
+  location: Location;
+};
+
+const EMPTY: Draft = {
+  kind: 'item',
+  photo: null,
+  scan: null,
+  name: '',
+  category: null,
+  condition: null,
+  notes: '',
+  garmentType: null,
+  brand: null,
+  size: null,
+  color: null,
+  usage: 'EVERYDAY',
+  styles: [],
+  location: NO_LOCATION,
+};
+
+export type Created = { id: string; name: string; kind: Draft['kind']; total: number };
+
+type DraftApi = {
+  draft: Draft;
+  update: (patch: Partial<Draft>) => void;
+  /** Repart d'un brouillon vide (garde la photo si demandé : « Ajouter manuellement » après un scan). */
+  reset: (kind: Draft['kind'], keepPhoto?: boolean) => void;
+  /** Reporte la suggestion du scan dans le brouillon. */
+  applyScan: (result: ScanResult) => void;
+  submit: () => Promise<Created>;
+  created: Created | null;
+};
+
+const DraftContext = createContext<DraftApi | null>(null);
+
+export function useDraft(): DraftApi {
+  const value = use(DraftContext);
+  if (value === null) {
+    throw new Error('useDraft doit être utilisé dans le parcours d’ajout.');
+  }
+
+  return value;
+}
+
+/**
+ * Le brouillon partagé par les écrans du parcours d'ajout (app/(app)/ajout).
+ * Rien n'est envoyé à l'API avant la vérification : « Rien n'est enregistré
+ * tant que tu n'as pas terminé » (maquette, résultat du scan).
+ */
+export function DraftProvider({ children }: PropsWithChildren) {
+  const [draft, setDraft] = useState<Draft>(EMPTY);
+  const [created, setCreated] = useState<Created | null>(null);
+  const queryClient = useQueryClient();
+
+  const update = useCallback((patch: Partial<Draft>) => setDraft((d) => ({ ...d, ...patch })), []);
+
+  const reset = useCallback((kind: Draft['kind'], keepPhoto = false) => {
+    setCreated(null);
+    setDraft((d) => ({ ...EMPTY, kind, photo: keepPhoto ? d.photo : null, location: d.location }));
+  }, []);
+
+  const applyScan = useCallback((result: ScanResult) => {
+    const s = result.suggestion;
+    setDraft((d) => ({
+      ...d,
+      scan: result,
+      kind: s?.type === 'GARMENT' ? 'garment' : 'item',
+      name: s?.name ?? d.name,
+      category: s?.category ? { iri: s.category.iri, name: s.category.name } : d.category,
+      // Une marque nouvelle (sans IRI) ne peut pas être enregistrée : l'API
+      // n'a pas de route pour créer une marque. On ne garde que les connues.
+      brand: s?.brand?.iri ? { iri: s.brand.iri, name: s.brand.name } : d.brand,
+      color: s?.colors[0] ? { iri: s.colors[0].iri, name: s.colors[0].name } : d.color,
+    }));
+  }, []);
+
+  const submit = useCallback(async (): Promise<Created> => {
+    const d = draft;
+    const loc = d.location;
+    if (!loc.room) throw new Error('Choisis au moins une pièce.');
+    const where = { room: loc.room.iri, ...(loc.storage ? { storage: loc.storage.iri } : {}), ...(loc.box ? { box: loc.box.iri } : {}) };
+    const common = { name: d.name.trim(), ...where, ...(d.condition ? { condition: d.condition } : {}), ...(d.notes.trim() ? { notes: d.notes.trim() } : {}) };
+
+    const body =
+      d.kind === 'item'
+        ? { ...common, ...(d.category ? { category: d.category.iri } : {}) }
+        : {
+            ...common,
+            category: d.category?.iri,
+            usage: d.usage,
+            ...(d.brand ? { brand: d.brand.iri } : {}),
+            ...(d.size ? { size: d.size.iri } : {}),
+            colors: d.color ? [d.color.iri] : [],
+            styles: d.styles.map((s) => s.iri),
+          };
+    const path = d.kind === 'item' ? '/api/items' : '/api/garments';
+    let saved: { id: string; name: string };
+    try {
+      saved = await apiRequest(path, { method: 'POST', body });
+    } catch (error) {
+      // La taille doit appartenir à l'échelle de la catégorie (règle de l'API).
+      // Pour un type « Autre » ou une catégorie venue du scan, l'app ne la
+      // connaît pas : on garde alors la taille en texte libre (sizeLabel).
+      if (!(error instanceof ApiError && error.violations.size && d.size && 'size' in body)) throw error;
+      const { size: _size, ...rest } = body;
+      saved = await apiRequest(path, { method: 'POST', body: { ...rest, sizeLabel: d.size.name } });
+    }
+    const count = await apiGet<{ totalItems?: number }>(path);
+    const result = { id: saved.id, name: saved.name, kind: d.kind, total: count.totalItems ?? 0 };
+    setCreated(result);
+    // L'accueil (compteurs, derniers ajouts) et les emplacements récents se rechargent.
+    await queryClient.invalidateQueries({ queryKey: ['inventory'] });
+
+    return result;
+  }, [draft, queryClient]);
+
+  const value = useMemo(() => ({ draft, update, reset, applyScan, submit, created }), [draft, update, reset, applyScan, submit, created]);
+
+  return <DraftContext value={value}>{children}</DraftContext>;
+}
+
+/** « Maison principale › Garage › Étagère 2 › Carton Bricolage » */
+export function locationPath(location: Location): string {
+  return [location.place, location.room, location.storage, location.box]
+    .filter((r): r is Ref => r !== null)
+    .map((r) => r.name)
+    .join(' › ');
+}

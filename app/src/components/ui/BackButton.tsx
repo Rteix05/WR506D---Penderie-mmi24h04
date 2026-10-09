@@ -8,12 +8,12 @@ import { E1 } from '@/components/ui/elevation';
  * 40 px, ombre e-1, glyphe « < », ou « X » pour fermer une modale). La zone
  * tactile est élargie à 44 px (hitSlop) pour la cible minimale RAAM.
  */
-export function BackButton({ close = false }: { close?: boolean }) {
+export function BackButton({ close = false, onPress }: { close?: boolean; onPress?: () => void }) {
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={close ? 'Fermer' : 'Retour'}
-      onPress={() => router.back()}
+      onPress={onPress ?? (() => router.back())}
       hitSlop={4}
       style={E1}
       className="h-10 w-10 items-center justify-center rounded-full bg-surface active:opacity-80 dark:bg-surface-night">

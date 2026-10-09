@@ -14,6 +14,7 @@ type Props = TextInputProps & {
  * Champ texte du DS v2, d'après la lib Figma (champSelect() : libellé
  * Luciole Bold 12 au-dessus, champ blanc de 48 px, rayon 12, ombre e-1).
  * Le libellé est toujours visible (jamais un simple placeholder, RAAM).
+ * En multiligne (Field/Textarea de Figma) : 88 de haut au minimum.
  * En erreur seulement, une bordure rouge ; l'erreur est rattachée au champ
  * pour le lecteur d'écran.
  */
@@ -29,7 +30,8 @@ export function TextField({ label, error, hint, ...input }: Props) {
         autoCapitalize="none"
         placeholderTextColor="#94A3B8"
         style={E1}
-        className={`h-12 rounded-sm bg-surface px-4 font-luciole text-body text-ink dark:bg-surface-night dark:text-ink-night ${error ? 'border border-error dark:border-error-night' : ''}`}
+        textAlignVertical={input.multiline ? 'top' : 'center'}
+        className={`${input.multiline ? 'min-h-[88px] py-3' : 'h-12'} rounded-sm bg-surface px-4 font-luciole text-body text-ink dark:bg-surface-night dark:text-ink-night ${error ? 'border border-error dark:border-error-night' : ''}`}
         {...input}
       />
       {help && <Text className={`font-luciole text-legend ${error ? 'text-error dark:text-error-night' : 'text-muted dark:text-muted-night'}`}>{help}</Text>}

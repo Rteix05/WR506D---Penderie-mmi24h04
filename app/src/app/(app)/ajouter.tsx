@@ -11,13 +11,13 @@ import { ScreenTitle } from '@/components/ui/ScreenTitle';
  * « Tu ajoutes quoi ? » (Figma « Accueil — Ajouter · Choix du type », node
  * 135:1928), ouvert par la bulle « Vêtements et Objets » du menu d'ajout.
  *
- * Destinations : dans le prototype, Objet mène au scan et Vêtement au
- * formulaire vêtement. Les formulaires d'ajout ne sont pas encore
- * construits : les deux cartes ouvrent le scan, qui reconnaît de lui-même
- * un vêtement ou un objet (suggestion.type).
+ * Destinations du prototype : Vêtement ouvre l'ajout d'un vêtement
+ * (« C'est quoi ? »), Objet et « Scanner à la place » ouvrent le scan
+ * (« Ajouter un objet »), d'où l'on peut aussi saisir à la main.
  */
 export default function AddChoiceScreen() {
-  const toScan = () => router.replace('/scan');
+  const toScan = () => router.replace('/ajout/scan');
+  const toGarment = () => router.replace('/ajout/vetement/type');
 
   return (
     <SafeAreaView className="flex-1 bg-bg dark:bg-bg-night">
@@ -30,7 +30,7 @@ export default function AddChoiceScreen() {
         </View>
 
         <View className="gap-3 px-5">
-          <TypeCard kind="tshirt" title="Vêtement" description="Il rejoint ton dressing : taille, marque, couleur, historique de port." onPress={toScan} />
+          <TypeCard kind="tshirt" title="Vêtement" description="Il rejoint ton dressing : taille, marque, couleur, historique de port." onPress={toGarment} />
           <TypeCard kind="pantalon" title="Objet" description="Il rejoint ton inventaire : catégorie, état, rangement précis." onPress={toScan} />
         </View>
 

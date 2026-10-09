@@ -83,6 +83,22 @@ D'après Figma (fichier « WR506D - Penderie », page « Maquette v2 ») : barre
 
 L'accueil (`(tabs)/index.tsx`) suit l'écran `Accueil — Tableau de bord` avec les vraies données de l'API (compteurs, derniers ajouts). Les illustrations de vêtements sont les SVG de Figma (`assets/images/figma/`).
 
+## Parcours d'ajout
+
+D'après Figma (parcours « Objet » et « Vêtement — Ajout ») : `app/(app)/ajout/`, une modale qui empile ses étapes et partage un brouillon (`lib/add-draft.tsx`). Rien n'est envoyé à l'API avant « Ajouter » à la vérification.
+
+```
+« + » → Scanner ─ scan › analyse ─┬─ resultat › objet/… ou vetement/infos (selon ce que l'IA voit)
+                                  └─ echec (réessayer, ou saisir à la main avec la photo)
+        Vêtements et Objets › « Tu ajoutes quoi ? » ─┬─ Objet    → scan
+                                                     └─ Vêtement → vetement/type › infos › emplacement › verification › confirmation
+objet/infos › emplacement › verification › confirmation
+```
+
+- Référentiels (catégories, marques, couleurs, styles, tailles) et emplacements : `lib/reference.ts`, toutes les pages lues (l'API sert 30 lignes par page).
+- « Où tu le ranges ? » (`components/add/LocationStep.tsx`) : Logement › Pièce › Rangement › Conteneur en cascade, création à la volée d'un niveau manquant, emplacements récents.
+- Écarts imposés par l'API, signalés dans chaque écran : pas de photo enregistrée (pas de route d'upload), pas de marque ni de souvenir pour un objet, un seul usage par vêtement.
+
 ## Structure
 
 ```
@@ -93,7 +109,8 @@ app/
 │   │   ├── (auth)/               connexion, inscription
 │   │   └── (app)/
 │   │       ├── (tabs)/           accueil (tableau de bord), mon profil
-│   │       └── scan.tsx          test du scan par IA (modale)
+│   │       ├── ajouter.tsx       « Tu ajoutes quoi ? »
+│   │       └── ajout/            parcours d'ajout (scan, objet, vêtement)
 │   ├── components/
 │   │   ├── home/ClothVisual.tsx  illustrations de vêtements (SVG Figma)
 │   │   ├── nav/                  barre, panneaux, icônes de la barre

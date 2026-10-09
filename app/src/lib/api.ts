@@ -217,8 +217,9 @@ function send(path: string, { method = 'GET', body, signal, accept = 'applicatio
     // Pas de Content-Type : fetch l'écrit lui-même avec la frontière (boundary).
     payload = body;
   } else if (body !== undefined) {
-    // API Platform exige merge-patch+json pour un PATCH.
-    headers['Content-Type'] = method === 'PATCH' ? 'application/merge-patch+json' : 'application/json';
+    // Formats d'entrée d'API Platform : JSON-LD pour POST/PUT (application/json
+    // est refusé en 415), merge-patch+json pour un PATCH.
+    headers['Content-Type'] = method === 'PATCH' ? 'application/merge-patch+json' : 'application/ld+json';
     payload = JSON.stringify(body);
   }
 

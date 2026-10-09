@@ -2,14 +2,15 @@ import { Stack } from 'expo-router';
 
 /**
  * L'app connectée : les onglets, et par-dessus les écrans qui s'ouvrent
- * depuis plusieurs onglets (le scan, plus tard les fiches objet…).
+ * depuis plusieurs endroits (choix du type, parcours d'ajout…).
  */
 export default function AppLayout() {
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="ajouter" options={{ presentation: 'modal' }} />
-      <Stack.Screen name="scan" options={{ presentation: 'modal' }} />
+      {/* Parcours d'ajout (scan, objet, vêtement) : une modale qui empile ses étapes. */}
+      <Stack.Screen name="ajout" options={{ presentation: 'modal' }} />
     </Stack>
   );
 }
