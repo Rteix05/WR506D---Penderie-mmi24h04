@@ -89,6 +89,13 @@ Toutes les autres routes `/api` exigent l'en-tête `Authorization: Bearer <token
 
 Les clés et la passphrase ne sont jamais commitées : `docker-entrypoint.sh` génère la passphrase dans `.env.local` et les paires de clés dans `config/jwt/` (dev) et `config/jwt/test/` (tests) au démarrage du conteneur.
 
+## Emplacement d'un objet
+
+Un objet ou un vêtement est rangé dans une cascade **pièce › rangement › conteneur** : la pièce est obligatoire, le reste facultatif.
+
+- À la **création** (`POST /api/items`, `POST /api/garments`), on peut donner `room`, `storage` et `box`. Le conteneur impose sa pièce et son rangement ; un rangement d'une autre pièce est refusé (422, `ValidLocation`) ; ranger dans la pièce de quelqu'un d'autre est refusé (403).
+- **Ensuite**, l'emplacement ne change que par un déplacement (`LocationMover`, qui écrit l'historique) : un `PATCH` ne le modifie pas.
+
 ## Partage et visibilité
 
 Tout est **privé par défaut**. Un partage ouvre l'accès, à trois niveaux : rien < **Lire** (`READ`) < **Modifier** (`EDIT`). Les règles sont dans `ResourceAccess` (décisions du 30/09, section « Qui voit quoi » du MDD) :

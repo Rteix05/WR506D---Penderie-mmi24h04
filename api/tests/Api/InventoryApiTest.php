@@ -71,6 +71,59 @@ final class InventoryApiTest extends ApiTestBase
     }
 
     /** Les listes de lieux ne montrent que les siens (logements dont on est membre, et ce qu'ils contiennent). */
+    /** L'app range un objet d'emblée dans un rangement et un conteneur (étape « Où tu le ranges ? »). */
+    public function testItemIsCreatedInAStorageAndABox(): void
+    {
+        $rafael = $this->signUp('rafael');
+        $room = $this->roomOf($rafael);
+        $storage = $this->call('POST', '/api/storages', $rafael, ['room' => $room, 'name' => 'Étagère 2', 'type' => 'SHELF'])->toArray()['@id'];
+        $box = $this->call('POST', '/api/boxes', $rafael, ['room' => $room, 'storage' => $storage, 'name' => 'Carton Bricolage', 'type' => 'CARTON'])->toArray()['@id'];
+
+        $item = $this->call('POST', '/api/items', $rafael, ['name' => 'Perceuse', 'room' => $room, 'storage' => $storage, 'box' => $box])->toArray();
+        self::assertResponseStatusCodeSame(201);
+        self::assertSame([$room, $storage, $box], [$item['room'], $item['storage'], $item['box']]);
+
+        // Le conteneur impose son rangement, même s'il n'est pas envoyé.
+        $other = $this->call('POST', '/api/items', $rafael, ['name' => 'Mèches', 'room' => $room, 'box' => $box])->toArray();
+        self::assertResponseStatusCodeSame(201);
+        self::assertSame($storage, $other['storage']);
+    }
+
+    public function testStorageMustBeInTheRoom(): void
+    {
+        $rafael = $this->signUp('rafael');
+        $room = $this->roomOf($rafael);
+        $elsewhere = $this->call('POST', '/api/rooms', $rafael, ['place' => $this->call('GET', $room, $rafael)->toArray()['place'], 'name' => 'Cave', 'type' => 'CELLAR'])->toArray()['@id'];
+        $storage = $this->call('POST', '/api/storages', $rafael, ['room' => $elsewhere, 'name' => 'Étagère', 'type' => 'SHELF'])->toArray()['@id'];
+
+        $this->call('POST', '/api/items', $rafael, ['name' => 'Perceuse', 'room' => $room, 'storage' => $storage]);
+        self::assertResponseStatusCodeSame(422);
+    }
+
+    public function testBoxOfSomeoneElseIsRefused(): void
+    {
+        $rafael = $this->signUp('rafael');
+        $thomas = $this->signUp('thomas');
+        $box = $this->call('POST', '/api/boxes', $thomas, ['room' => $this->roomOf($thomas), 'name' => 'Carton', 'type' => 'CARTON'])->toArray()['@id'];
+
+        // Le conteneur impose la pièce de Thomas : Rafael n'a pas le droit d'y ranger.
+        $this->call('POST', '/api/items', $rafael, ['name' => 'Intrus', 'room' => $this->roomOf($rafael), 'box' => $box]);
+        self::assertResponseStatusCodeSame(403);
+    }
+
+    /** Après la création, l'emplacement ne change que par un déplacement (LocationMover, historique). */
+    public function testPatchDoesNotMoveAnItem(): void
+    {
+        $rafael = $this->signUp('rafael');
+        $room = $this->roomOf($rafael);
+        $storage = $this->call('POST', '/api/storages', $rafael, ['room' => $room, 'name' => 'Armoire', 'type' => 'WARDROBE'])->toArray()['@id'];
+        $item = $this->call('POST', '/api/items', $rafael, ['name' => 'Perceuse', 'room' => $room])->toArray();
+
+        $patched = $this->call('PATCH', $item['@id'], $rafael, ['storage' => $storage])->toArray();
+        self::assertResponseIsSuccessful();
+        self::assertArrayNotHasKey('storage', $patched);
+    }
+
     public function testPlaceListsOnlyShowMine(): void
     {
         $rafael = $this->signUp('rafael');
