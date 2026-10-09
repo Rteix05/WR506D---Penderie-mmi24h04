@@ -1,4 +1,3 @@
-import { router } from 'expo-router';
 import { Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -22,6 +21,8 @@ type Props = {
   /** Panneau ouvert, pour l'état « déplié » annoncé au lecteur d'écran. */
   open: Section | null;
   onTabPress: (section: Section) => void;
+  /** Le « + » ouvre le menu d'ajout (AddMenu). */
+  onAddPress: () => void;
 };
 
 /**
@@ -32,7 +33,7 @@ type Props = {
  * Un onglet ne change pas de page : il déplie son panneau (le chevron
  * « ^ » le signale). C'est le panneau qui mène aux pages.
  */
-export function NavBar({ active, open, onTabPress }: Props) {
+export function NavBar({ active, open, onTabPress, onAddPress }: Props) {
   const insets = useSafeAreaInsets();
   const tabs = ORDER.map((section) => <Tab key={section} section={section} active={section === active} expanded={section === open} onPress={() => onTabPress(section)} />);
 
@@ -45,7 +46,7 @@ export function NavBar({ active, open, onTabPress }: Props) {
         {tabs[2]}
         {tabs[3]}
       </View>
-      <AddButton />
+      <AddButton onPress={onAddPress} />
     </View>
   );
 }
@@ -74,14 +75,14 @@ function Tab({ section, active, expanded, onPress }: { section: Section; active:
 /**
  * Le « + » central (composant Figma « Add activity ») : rond rose de 60 px,
  * liseré couleur du fond, croix de 29 px aux barres arrondies. Il ouvre
- * l'ajout (pour l'instant le scan ; le menu d'ajout radial viendra).
+ * le menu d'ajout.
  */
-function AddButton() {
+function AddButton({ onPress }: { onPress: () => void }) {
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel="Ajouter"
-      onPress={() => router.push('/scan')}
+      onPress={onPress}
       style={E2}
       className="absolute -top-6 left-1/2 -ml-[30px] h-[60px] w-[60px] items-center justify-center rounded-full border-[2.667px] border-bg bg-primary active:opacity-80 dark:border-bg-night">
       <View className="h-[29.333px] w-[29.333px]">

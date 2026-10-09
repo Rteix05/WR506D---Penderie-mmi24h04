@@ -4,6 +4,7 @@ import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ClothVisual, type ClothKind } from '@/components/home/ClothVisual';
+import { useOpenAddMenu } from '@/components/nav/AddMenu';
 import { Button } from '@/components/ui/Button';
 import { E1 } from '@/components/ui/elevation';
 import { useActiveProfile } from '@/lib/auth';
@@ -25,6 +26,7 @@ const plural = (n: number, one: string, many: string) => `${n} ${n > 1 ? many : 
 export default function HomeScreen() {
   const profile = useActiveProfile();
   const overview = useInventoryOverview();
+  const openAdd = useOpenAddMenu();
   const counts = overview.data ? `${plural(overview.data.items, 'objet', 'objets')} · ${plural(overview.data.garments, 'vêtement', 'vêtements')}` : ' ';
 
   return (
@@ -44,7 +46,7 @@ export default function HomeScreen() {
             <Button glyph="[ ]" label="Scanner" onPress={() => router.push('/scan')} />
           </View>
           <View className="flex-1">
-            <Button glyph="+" label="Ajouter" variant="secondary" onPress={() => router.push('/scan')} />
+            <Button glyph="+" label="Ajouter" variant="secondary" onPress={openAdd} />
           </View>
         </View>
 
