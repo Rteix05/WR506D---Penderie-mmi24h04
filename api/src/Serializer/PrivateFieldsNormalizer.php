@@ -22,7 +22,9 @@ use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
  *  - possession:location (pièce, rangement, conteneur) : en plus, le foyer
  *    et les colocs qui voient la pièce — pas une amie, un abonné, un lien ;
  *  - « access » : la case du tableau des droits pour celui qui regarde
- *    (ADMIN, EDIT, VIEW), pour que l'application affiche les bons gestes.
+ *    (ADMIN, EDIT, VIEW), pour que l'application affiche les bons gestes ;
+ *  - « photos » d'un bien : les URL de GET /api/media/{id}, qui exige un
+ *    jeton — donc absentes pour un lien public sans compte.
  */
 final class PrivateFieldsNormalizer implements NormalizerInterface, NormalizerAwareInterface
 {
@@ -52,6 +54,9 @@ final class PrivateFieldsNormalizer implements NormalizerInterface, NormalizerAw
         $normalized = $this->normalizer->normalize($data, $format, $context);
         if (\is_array($normalized) && null !== $viewer) {
             $normalized['access'] = $this->access->level($viewer, $data)->value;
+            if ($data instanceof AbstractPossession) {
+                $normalized['photos'] = $data->getPhotos();
+            }
         }
 
         return $normalized;

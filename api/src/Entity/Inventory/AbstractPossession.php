@@ -229,6 +229,14 @@ abstract class AbstractPossession
     }
 
     /**
+     * Les photos du bien (URL de GET /api/media/{id}), la principale
+     * d'abord. Ajoutées à la réponse par PrivateFieldsNormalizer.
+     *
+     * @return list<string>
+     */
+    abstract public function getPhotos(): array;
+
+    /**
      * Change l'emplacement, sans trace. Passer par LocationMover, qui écrit
      * l'historique et gère les déplacements en cascade.
      *

@@ -70,6 +70,20 @@ class Item extends AbstractPossession
         return $this;
     }
 
+    /**
+     * Les photos de l'objet, à lire par GET /api/media/{id} (avec le jeton) :
+     * la principale d'abord, puis dans l'ordre de la galerie.
+     *
+     * @return list<string>
+     */
+    public function getPhotos(): array
+    {
+        $links = $this->gallery->toArray();
+        usort($links, static fn (ItemMedia $a, ItemMedia $b) => [$b->isPrimary(), $a->getPosition()] <=> [$a->isPrimary(), $b->getPosition()]);
+
+        return array_map(static fn (ItemMedia $link) => '/api/media/'.$link->getMedia()->getId(), $links);
+    }
+
     /** @return Collection<int, ItemMedia> */
     public function getGallery(): Collection
     {
