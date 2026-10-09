@@ -7,7 +7,7 @@ Les choix techniques et leurs raisons sont détaillés dans `docs/PENDERIE_STACK
 
 - Node.js 22 (ou plus récent) et npm.
 - Sur le téléphone : l'app **Expo Go**, pour ouvrir le projet en scannant un QR code.
-- L'API lancée (voir `api/README.md`) pour que l'écran d'accueil affiche « Connectée ».
+- L'API lancée (voir `api/README.md`) : sans elle, on reste bloqué sur l'écran de connexion.
 
 ## Démarrer
 
@@ -54,21 +54,53 @@ Les écrans se stylent avec des classes Tailwind (`className="bg-bg px-5"`) que 
 
 NativeWind est en **v4.2.7** (Tailwind 3.4), la version stable. La v5 (Tailwind 4) est encore en release candidate.
 
+## Connexion et session
+
+L'app a deux mondes, séparés dans `src/app/_layout.tsx` par `Stack.Protected` :
+
+- **`(auth)`** — connexion (`/connexion`) et inscription (`/inscription`), visibles seulement déconnecté ;
+- **`(app)`** — l'app elle-même (onglets), visible seulement connecté.
+
+Quand l'état change (connexion, déconnexion, session expirée), Expo Router bascule seul vers le monde autorisé : aucun écran ne fait de redirection à la main.
+
+| Quoi | Où | Comment |
+|---|---|---|
+| Jetons | `lib/session.ts` | jeton d'accès (15 min) + jeton de rafraîchissement (30 j, usage unique) dans le trousseau chiffré (`expo-secure-store`) ; `localStorage` sur la version web, qui ne sert qu'au développement |
+| Requêtes | `lib/api.ts` → `apiRequest()` | ajoute `Authorization` et `X-Profile` ; sur un 401, rafraîchit le jeton **une seule fois pour toutes les requêtes en attente** (sinon le jeton à usage unique serait refusé au deuxième appel) puis rejoue la requête ; si le rafraîchissement est refusé, déconnexion |
+| État de connexion | `lib/auth.tsx` → `SessionProvider`, `useSessionStatus()` | `loading` (écran de démarrage affiché) → `signedIn` / `signedOut` |
+| Qui suis-je | `lib/auth.tsx` → `useMe()`, `useActiveProfile()` | `GET /api/me` : compte, profils, profil actif |
+| Profil actif | `useSwitchProfile()` | mémorise le profil, l'envoie en `X-Profile`, et vide le cache pour que chaque écran recharge ses données vues par ce profil. Si le profil mémorisé n'est plus utilisable (403), retour au profil par défaut |
+
+La déconnexion est locale (on oublie les jetons) : l'API n'a pas encore de route de révocation.
+
+## Navigation
+
+Barre de la maquette (`docs/accueil-final.png`) : **Accueil · Inventaire · [+] · Logements · Profil**. Le « + » central n'est pas un onglet : il ouvre l'ajout (pour l'instant l'écran de test du scan, en modale). Dans la maquette, Inventaire et Profil ouvrent un menu en panneau (`docs/nav-menu-*.png`) ; ici ce menu est le contenu de l'onglet, et ses entrées pas encore construites s'affichent « Bientôt ».
+
 ## Structure
 
 ```
 app/
 ├── src/
-│   ├── app/            écrans (expo-router : un fichier = une route)
-│   │   ├── _layout.tsx racine : fournisseur React Query, navigation
-│   │   └── index.tsx   écran provisoire : état de la connexion à l'API
+│   ├── app/                      écrans (expo-router : un fichier = une route)
+│   │   ├── _layout.tsx           racine : React Query, session, (auth) / (app)
+│   │   ├── (auth)/               connexion, inscription
+│   │   └── (app)/
+│   │       ├── (tabs)/           accueil, inventaire, [+], logements, profil
+│   │       └── scan.tsx          test du scan par IA (modale)
+│   ├── components/
+│   │   ├── nav/TabIcon.tsx       icônes de la barre (tracés de la maquette)
+│   │   └── ui/                   Button, TextField, MenuRow, ScreenTitle (DS v2)
 │   ├── lib/
-│   │   ├── api.ts          appels à l'API Symfony
-│   │   └── query-client.ts cache React Query (base du hors ligne)
-│   └── global.css      point d'entrée Tailwind
-├── assets/             icônes et splash (encore ceux d'Expo)
-├── app.json            configuration Expo (nom, schéma, plugins)
-└── tailwind.config.js  jetons du design system
+│   │   ├── api.ts                appels à l'API, jetons, rafraîchissement
+│   │   ├── auth.tsx              état de session, /api/me, profil actif
+│   │   ├── session.ts            stockage chiffré de la session
+│   │   ├── scan.ts               envoi d'une photo au scan
+│   │   └── query-client.ts       cache React Query (base du hors ligne)
+│   └── global.css                point d'entrée Tailwind
+├── assets/                       icônes et splash (encore ceux d'Expo)
+├── app.json                      configuration Expo (nom, schéma, plugins)
+└── tailwind.config.js            jetons du design system
 ```
 
 `AGENTS.md` et `CLAUDE.md` viennent du modèle Expo : ce sont des consignes pour les assistants IA, notamment « vérifier la doc de la version du SDK plutôt que se fier à sa mémoire ».

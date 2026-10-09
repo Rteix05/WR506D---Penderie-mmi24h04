@@ -1,75 +1,44 @@
 import { useMutation } from '@tanstack/react-query';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
-import { Link } from 'expo-router';
+import { router } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { isLoggedIn, login, logout } from '@/lib/api';
+import { Button } from '@/components/ui/Button';
+import { ScreenTitle } from '@/components/ui/ScreenTitle';
 import { analyzeImage, PICKER_OPTIONS, type ScanKind, type ScanResult } from '@/lib/scan';
 
 /**
- * Écran de TEST du scan par IA : se connecter, prendre ou choisir une photo,
- * l'envoyer à POST /api/scans/analyze et voir ce que le modèle a reconnu.
- * Il sera remplacé par le vrai parcours d'ajout de la maquette (scan →
- * fiche pré-remplie) ; d'ici là, il sert à mesurer la fiabilité du scan.
+ * Écran de TEST du scan par IA : prendre ou choisir une photo, l'envoyer à
+ * POST /api/scans/analyze et voir ce que le modèle a reconnu. Il sera
+ * remplacé par le vrai parcours d'ajout de la maquette (scan → fiche
+ * pré-remplie) ; d'ici là, il sert à mesurer la fiabilité du scan.
+ *
+ * Plus de formulaire de connexion ici : l'écran fait partie de l'app
+ * connectée, et une session expirée renvoie seule vers la connexion.
  */
 export default function ScanScreen() {
-  const [loggedIn, setLoggedIn] = useState(isLoggedIn());
-
   return (
     <SafeAreaView className="flex-1 bg-bg dark:bg-bg-night">
-      <ScrollView contentContainerClassName="gap-8 px-5 py-6" keyboardShouldPersistTaps="handled">
-        <View className="gap-2">
-          <Link href="/" className="text-body text-primary dark:text-primary-night">
-            ← Accueil
-          </Link>
-          <Text className="text-h3 font-bold text-ink dark:text-ink-night">Tester le scan</Text>
+      <ScrollView contentContainerClassName="gap-8 px-5 py-6">
+        <View className="items-start gap-3">
+          <Button label="← Fermer" variant="ghost" onPress={() => router.back()} />
+          <ScreenTitle title="Tester le scan" />
         </View>
-        {loggedIn ? (
-          <Scanner
-            onLogout={() => {
-              logout();
-              setLoggedIn(false);
-            }}
-          />
-        ) : (
-          <LoginForm onDone={() => setLoggedIn(true)} />
-        )}
+        <Scanner />
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-function LoginForm({ onDone }: { onDone: () => void }) {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const submit = useMutation({ mutationFn: () => login(email.trim(), password), onSuccess: onDone });
-
-  return (
-    <View className="gap-3 rounded-md bg-surface p-4 dark:bg-surface-night">
-      <Text className="text-body font-bold text-ink dark:text-ink-night">Connexion</Text>
-      <Text className="text-legend text-muted dark:text-muted-night">
-        Un compte de l&apos;API (créé par POST /api/auth/register ou par les tests manuels).
-      </Text>
-      <Field label="E-mail" value={email} onChangeText={setEmail} keyboardType="email-address" />
-      <Field label="Mot de passe" value={password} onChangeText={setPassword} secureTextEntry />
-      {submit.isError && <Text className="text-body text-error dark:text-error-night">{submit.error.message}</Text>}
-      <Button label={submit.isPending ? 'Connexion…' : 'Se connecter'} onPress={() => submit.mutate()} disabled={submit.isPending} />
-    </View>
-  );
-}
-
-function Scanner({ onLogout }: { onLogout: () => void }) {
+function Scanner() {
   const [kind, setKind] = useState<ScanKind>('PHOTO');
   const [photo, setPhoto] = useState<ImagePicker.ImagePickerAsset | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const scan = useMutation({
     mutationFn: (asset: ImagePicker.ImagePickerAsset) => analyzeImage(asset, kind),
-    onError: (error) => {
-      if (error.message.startsWith('Session expirée')) onLogout();
-    },
   });
 
   const pick = async (source: 'camera' | 'library') => {
@@ -95,7 +64,7 @@ function Scanner({ onLogout }: { onLogout: () => void }) {
       </View>
       <View className="gap-3">
         <Button label="Prendre une photo" onPress={() => pick('camera')} disabled={scan.isPending} />
-        <Button label="Choisir dans la galerie" onPress={() => pick('library')} disabled={scan.isPending} secondary />
+        <Button label="Choisir dans la galerie" onPress={() => pick('library')} disabled={scan.isPending} variant="secondary" />
       </View>
       {notice && <Text className="text-body text-error dark:text-error-night">{notice}</Text>}
 
@@ -111,9 +80,6 @@ function Scanner({ onLogout }: { onLogout: () => void }) {
       {scan.isError && <Text className="text-body text-error dark:text-error-night">{scan.error.message}</Text>}
       {scan.isSuccess && <ResultCard result={scan.data} />}
 
-      <Pressable accessibilityRole="button" onPress={onLogout} className="min-h-11 justify-center">
-        <Text className="text-body text-muted dark:text-muted-night">Se déconnecter</Text>
-      </Pressable>
     </View>
   );
 }
@@ -159,34 +125,7 @@ function ResultCard({ result }: { result: ScanResult }) {
   );
 }
 
-function Field(props: { label: string } & React.ComponentProps<typeof TextInput>) {
-  const { label, ...input } = props;
 
-  return (
-    <View className="gap-1">
-      <Text className="text-legend text-muted dark:text-muted-night">{label}</Text>
-      <TextInput
-        accessibilityLabel={label}
-        autoCapitalize="none"
-        className="min-h-11 rounded-sm border border-muted/30 px-3 text-body text-ink dark:text-ink-night"
-        {...input}
-      />
-    </View>
-  );
-}
-
-function Button({ label, onPress, disabled, secondary }: { label: string; onPress: () => void; disabled?: boolean; secondary?: boolean }) {
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityState={{ disabled }}
-      onPress={onPress}
-      disabled={disabled}
-      className={`min-h-11 items-center justify-center rounded-md px-4 ${secondary ? 'border border-primary' : 'bg-primary'} ${disabled ? 'opacity-50' : ''}`}>
-      <Text className={`text-body font-bold ${secondary ? 'text-primary dark:text-primary-night' : 'text-white'}`}>{label}</Text>
-    </Pressable>
-  );
-}
 
 function Choice({ label, active, onPress }: { label: string; active: boolean; onPress: () => void }) {
   return (
