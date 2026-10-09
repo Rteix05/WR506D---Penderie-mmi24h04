@@ -18,10 +18,11 @@ const PULSE =
 const PROFILE =
   'M16 0C18.1217 0 20.1566 0.842854 21.6569 2.34315C23.1571 3.84344 24 5.87827 24 8C24 10.1217 23.1571 12.1566 21.6569 13.6569C20.1566 15.1571 18.1217 16 16 16C13.8783 16 11.8434 15.1571 10.3431 13.6569C8.84285 12.1566 8 10.1217 8 8C8 5.87827 8.84285 3.84344 10.3431 2.34315C11.8434 0.842854 13.8783 0 16 0ZM16 20C24.84 20 32 23.58 32 28V32H0V28C0 23.58 7.16 20 16 20Z';
 
-export function TabIcon({ name, color, size = 22 }: { name: TabIconName; color: ColorValue; size?: number }) {
+/** Tailles de la maquette (Figma, calques « Icone » de la nav) : 20 × 20, l'onde 20 × 14,375. */
+export function TabIcon({ name, color, size = 20 }: { name: TabIconName; color: ColorValue; size?: number }) {
   if (name === 'inventory' || name === 'places') {
     return (
-      <Svg width={size} height={size} viewBox="0 -4.5 32 32" fill="none" accessible={false}>
+      <Svg width={size} height={(size * 23) / 32} viewBox="0 0 32 23" fill="none" accessible={false}>
         <Path d={PULSE} stroke={color} strokeWidth={2.86} strokeLinejoin="round" />
       </Svg>
     );
@@ -30,15 +31,6 @@ export function TabIcon({ name, color, size = 22 }: { name: TabIconName; color: 
   return (
     <Svg width={size} height={size} viewBox="0 0 32 32" fill="none" accessible={false}>
       <Path d={name === 'home' ? HOME : PROFILE} fill={color} />
-    </Svg>
-  );
-}
-
-/** Le « + » du bouton central (Nav / FAB). */
-export function PlusIcon({ color, size = 24 }: { color: string; size?: number }) {
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" accessible={false}>
-      <Path d="M12 3v18M3 12h18" stroke={color} strokeWidth={3.5} strokeLinecap="round" />
     </Svg>
   );
 }

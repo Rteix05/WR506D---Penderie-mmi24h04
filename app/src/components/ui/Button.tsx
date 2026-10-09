@@ -13,6 +13,8 @@ type Props = {
   variant?: 'primary' | 'secondary' | 'ghost';
   disabled?: boolean;
   loading?: boolean;
+  /** Pictogramme texte devant le libellé (maquette : « [ ] » Scanner, « + » Ajouter), rose sur un secondaire. */
+  glyph?: string;
 };
 
 const CONTAINER = {
@@ -32,18 +34,24 @@ const LABEL = {
  * Luciole Bold 16). Pendant le chargement il est désactivé et l'annonce au
  * lecteur d'écran (accessibilityState.busy).
  */
-export function Button({ label, onPress, variant = 'primary', disabled = false, loading = false }: Props) {
+export function Button({ label, onPress, variant = 'primary', disabled = false, loading = false, glyph }: Props) {
   const inactive = disabled || loading;
 
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityLabel={label}
       accessibilityState={{ disabled: inactive, busy: loading }}
       onPress={onPress}
       disabled={inactive}
       style={variant === 'primary' ? E2 : variant === 'secondary' ? E1 : undefined}
       className={`min-h-[52px] flex-row items-center justify-center gap-2 rounded-md px-4 ${CONTAINER[variant]} ${inactive ? 'opacity-50' : 'active:opacity-80'}`}>
       {loading && <ActivityIndicator color={variant === 'primary' ? '#FFFFFF' : '#D31D66'} />}
+      {glyph && !loading && (
+        <Text accessible={false} className={`font-luciole-bold text-body ${variant === 'primary' ? 'text-white' : 'text-primary dark:text-primary-night'}`}>
+          {glyph}
+        </Text>
+      )}
       <Text className={`font-luciole-bold text-body ${LABEL[variant]}`}>{label}</Text>
     </Pressable>
   );

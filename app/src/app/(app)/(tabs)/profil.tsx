@@ -4,7 +4,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { E1 } from '@/components/ui/elevation';
 import { Button } from '@/components/ui/Button';
-import { MenuRow } from '@/components/ui/MenuRow';
 import { ScreenTitle } from '@/components/ui/ScreenTitle';
 import { logout } from '@/lib/api';
 import { useMe, useSwitchProfile, type MeProfile, type ProfileType } from '@/lib/auth';
@@ -16,9 +15,11 @@ const TYPE_LABEL: Record<ProfileType, string> = {
 };
 
 /**
- * Le menu Profil de la maquette (docs/nav-menu-profil.png), précédé du
- * sélecteur de profil : un compte ouvre plusieurs profils (toi, tes
- * enfants, un proche), et tout ce que l'app affiche dépend du profil actif.
+ * « Mon profil » (entrée du panneau Profil) : le sélecteur de profil — un
+ * compte ouvre plusieurs profils (toi, tes enfants, un proche) et tout ce
+ * que l'app affiche dépend du profil actif —, le compte et la déconnexion.
+ * Les autres entrées du panneau (amis, partages, ventes, paramètres)
+ * auront leurs propres pages.
  */
 export default function ProfileScreen() {
   const me = useMe();
@@ -29,7 +30,7 @@ export default function ProfileScreen() {
   return (
     <SafeAreaView edges={['top']} className="flex-1 bg-bg dark:bg-bg-night">
       <ScrollView contentContainerClassName="gap-8 px-5 py-6">
-        <ScreenTitle title="Profil" legend="Toi et tes proches" />
+        <ScreenTitle title="Mon profil" legend="Informations et profils de la famille" />
 
         <View className="gap-3">
           <Text accessibilityRole="header" className="text-body font-luciole-bold text-ink dark:text-ink-night">
@@ -53,14 +54,6 @@ export default function ProfileScreen() {
           {me.data && <Text className="font-luciole text-legend text-muted dark:text-muted-night">Compte : {me.data.account.email}</Text>}
         </View>
 
-        <View className="gap-3">
-          <MenuRow title="Mon profil" subtitle="Informations et profils de la famille" />
-          <MenuRow title="Amis et abonnés" subtitle="Amis, abonnés, demandes" />
-          <MenuRow title="Mes partages" subtitle="Partages actifs" />
-          <MenuRow title="À vendre chez mes amis" subtitle="Annonces" />
-          <MenuRow title="Achats et ventes" subtitle="Commandes, livraisons, remboursements" />
-          <MenuRow title="Paramètres" subtitle="Notifications, confidentialité" />
-        </View>
 
         <Button label="Se déconnecter" variant="secondary" onPress={() => signOut.mutate()} loading={signOut.isPending} />
       </ScrollView>

@@ -75,7 +75,13 @@ La déconnexion est locale (on oublie les jetons) : l'API n'a pas encore de rout
 
 ## Navigation
 
-Barre de la maquette (`docs/accueil-final.png`) : **Accueil · Inventaire · [+] · Logements · Profil**. Le « + » central n'est pas un onglet : il ouvre l'ajout (pour l'instant l'écran de test du scan, en modale). Dans la maquette, Inventaire et Profil ouvrent un menu en panneau (`docs/nav-menu-*.png`) ; ici ce menu est le contenu de l'onglet, et ses entrées pas encore construites s'affichent « Bientôt ».
+D'après Figma (fichier « WR506D - Penderie », page « Maquette v2 ») : barre **Accueil · Inventaire · [+] · Logements · Profil**.
+
+- Un onglet ne change pas de page : il **déplie un panneau** (écrans `Accueil — Menu · <onglet>`, lot 28 du prototype) par-dessus la page, sur un voile. Le même onglet ou le voile le referme, un autre onglet bascule sur son panneau. Ce sont les lignes du panneau qui mènent aux pages ; celles qui ne sont pas encore construites portent « Bientôt ».
+- Le « + » central ouvre l'ajout (pour l'instant le test du scan, en modale).
+- Code : `components/nav/` — `sections.ts` (contenu des panneaux), `NavBar.tsx`, `NavMenu.tsx` ; `app/(app)/(tabs)/_layout.tsx` les assemble (la barre par défaut de `Tabs` est remplacée).
+
+L'accueil (`(tabs)/index.tsx`) suit l'écran `Accueil — Tableau de bord` avec les vraies données de l'API (compteurs, derniers ajouts). Les illustrations de vêtements sont les SVG de Figma (`assets/images/figma/`).
 
 ## Structure
 
@@ -86,14 +92,16 @@ app/
 │   │   ├── _layout.tsx           racine : React Query, session, (auth) / (app)
 │   │   ├── (auth)/               connexion, inscription
 │   │   └── (app)/
-│   │       ├── (tabs)/           accueil, inventaire, [+], logements, profil
+│   │       ├── (tabs)/           accueil (tableau de bord), mon profil
 │   │       └── scan.tsx          test du scan par IA (modale)
 │   ├── components/
-│   │   ├── nav/TabIcon.tsx       icônes de la barre (tracés de la maquette)
+│   │   ├── home/ClothVisual.tsx  illustrations de vêtements (SVG Figma)
+│   │   ├── nav/                  barre, panneaux, icônes de la barre
 │   │   └── ui/                   Button, TextField, MenuRow, ScreenTitle (DS v2)
 │   ├── lib/
 │   │   ├── api.ts                appels à l'API, jetons, rafraîchissement
 │   │   ├── auth.tsx              état de session, /api/me, profil actif
+│   │   ├── inventory.ts          compteurs et derniers ajouts de l'accueil
 │   │   ├── session.ts            stockage chiffré de la session
 │   │   ├── scan.ts               envoi d'une photo au scan
 │   │   └── query-client.ts       cache React Query (base du hors ligne)
