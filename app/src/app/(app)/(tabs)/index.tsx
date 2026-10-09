@@ -2,6 +2,7 @@ import { router } from 'expo-router';
 import { ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { E1 } from '@/components/ui/elevation';
 import { Button } from '@/components/ui/Button';
 import { ScreenTitle } from '@/components/ui/ScreenTitle';
 import { useActiveProfile } from '@/lib/auth';
@@ -28,9 +29,9 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        <View className="gap-3 rounded-md bg-surface p-4 dark:bg-surface-night">
-          <Text className="text-body font-bold text-ink dark:text-ink-night">Ton inventaire arrive bientôt</Text>
-          <Text className="text-body text-ink/70 dark:text-ink-night/70">
+        <View style={E1} className="gap-3 rounded-md bg-surface p-4 dark:bg-surface-night">
+          <Text className="text-body font-luciole-bold text-ink dark:text-ink-night">Ton inventaire arrive bientôt</Text>
+          <Text className="font-luciole text-body text-ink/70 dark:text-ink-night/70">
             Ici s&apos;afficheront tes objets, ton dressing et tes derniers ajouts. En attendant, le scan reconnaît déjà un vêtement ou une étiquette.
           </Text>
         </View>

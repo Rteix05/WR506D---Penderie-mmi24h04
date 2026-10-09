@@ -1,6 +1,7 @@
 import '../global.css';
 
 import { QueryClientProvider } from '@tanstack/react-query';
+import { useFonts } from 'expo-font';
 import { SplashScreen, Stack } from 'expo-router';
 import { useEffect } from 'react';
 
@@ -31,10 +32,23 @@ export default function RootLayout() {
 
 function RootNavigator() {
   const status = useSessionStatus();
+  // Polices du DS : chargées à l'exécution (useFonts marche dans Expo Go,
+  // contrairement au plugin de config qui exige un build natif).
+  const [fontsLoaded, fontError] = useFonts({
+    Typolio: require('@/assets/fonts/Typolio-Regular.ttf'),
+    Luciole: require('@/assets/fonts/Luciole-Regular.ttf'),
+    'Luciole-Bold': require('@/assets/fonts/Luciole-Bold.ttf'),
+  });
+  // Si une police ne charge pas, l'app s'ouvre quand même, en police système.
+  const ready = status !== 'loading' && (fontsLoaded || fontError !== null);
 
   useEffect(() => {
-    if (status !== 'loading') SplashScreen.hide();
-  }, [status]);
+    if (ready) SplashScreen.hide();
+  }, [ready]);
+
+  if (!ready) {
+    return null;
+  }
 
   return (
     <Stack screenOptions={{ headerShown: false }}>

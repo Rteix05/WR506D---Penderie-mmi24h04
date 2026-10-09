@@ -32,7 +32,7 @@ export default function TabsLayout() {
         headerShown: false,
         tabBarActiveTintColor: colors.active,
         tabBarInactiveTintColor: colors.inactive,
-        tabBarLabelStyle: { fontSize: 12, fontWeight: '700' },
+        tabBarLabelStyle: { fontSize: 12, fontFamily: 'Luciole-Bold' },
         tabBarStyle: {
           backgroundColor: colors.bar,
           borderTopWidth: 0,

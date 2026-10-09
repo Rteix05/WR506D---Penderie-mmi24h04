@@ -1,5 +1,7 @@
 import { Text, TextInput, View, type TextInputProps } from 'react-native';
 
+import { E1 } from '@/components/ui/elevation';
+
 type Props = TextInputProps & {
   label: string;
   /** Message d'erreur sous le champ (Field / Text, état Erreur). */
@@ -9,25 +11,28 @@ type Props = TextInputProps & {
 };
 
 /**
- * Champ texte du DS v2 : libellé visible au-dessus (jamais un simple
- * placeholder, RAAM), bordure ink 8 % (seuls les champs en ont une), rouge
- * en cas d'erreur. L'erreur est rattachée au champ pour le lecteur d'écran.
+ * Champ texte du DS v2, d'après la lib Figma (champSelect() : libellé
+ * Luciole Bold 12 au-dessus, champ blanc de 48 px, rayon 12, ombre e-1).
+ * Le libellé est toujours visible (jamais un simple placeholder, RAAM).
+ * En erreur seulement, une bordure rouge ; l'erreur est rattachée au champ
+ * pour le lecteur d'écran.
  */
 export function TextField({ label, error, hint, ...input }: Props) {
   const help = error ?? hint;
 
   return (
     <View className="gap-1">
-      <Text className="text-legend font-bold text-ink/70 dark:text-ink-night/70">{label}</Text>
+      <Text className="font-luciole-bold text-legend text-muted dark:text-muted-night">{label}</Text>
       <TextInput
         accessibilityLabel={label}
         accessibilityHint={help}
         autoCapitalize="none"
         placeholderTextColor="#94A3B8"
-        className={`min-h-11 rounded-sm border bg-surface px-3 text-body text-ink dark:bg-surface-night dark:text-ink-night ${error ? 'border-error dark:border-error-night' : 'border-ink/10 dark:border-ink-night/15'}`}
+        style={E1}
+        className={`h-12 rounded-sm bg-surface px-4 font-luciole text-body text-ink dark:bg-surface-night dark:text-ink-night ${error ? 'border border-error dark:border-error-night' : ''}`}
         {...input}
       />
-      {help && <Text className={`text-legend ${error ? 'text-error dark:text-error-night' : 'text-muted dark:text-muted-night'}`}>{help}</Text>}
+      {help && <Text className={`font-luciole text-legend ${error ? 'text-error dark:text-error-night' : 'text-muted dark:text-muted-night'}`}>{help}</Text>}
     </View>
   );
 }

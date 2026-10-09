@@ -2,6 +2,7 @@ import { useMutation } from '@tanstack/react-query';
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { E1 } from '@/components/ui/elevation';
 import { Button } from '@/components/ui/Button';
 import { MenuRow } from '@/components/ui/MenuRow';
 import { ScreenTitle } from '@/components/ui/ScreenTitle';
@@ -31,11 +32,11 @@ export default function ProfileScreen() {
         <ScreenTitle title="Profil" legend="Toi et tes proches" />
 
         <View className="gap-3">
-          <Text accessibilityRole="header" className="text-body font-bold text-ink dark:text-ink-night">
+          <Text accessibilityRole="header" className="text-body font-luciole-bold text-ink dark:text-ink-night">
             Profil actif
           </Text>
           {me.isPending && <ActivityIndicator />}
-          {me.isError && <Text className="text-body text-error dark:text-error-night">{me.error.message}</Text>}
+          {me.isError && <Text className="font-luciole text-body text-error dark:text-error-night">{me.error.message}</Text>}
           {me.data && (
             <View accessibilityRole="radiogroup" className="gap-2">
               {me.data.profiles.map((profile) => (
@@ -49,7 +50,7 @@ export default function ProfileScreen() {
               ))}
             </View>
           )}
-          {me.data && <Text className="text-legend text-muted dark:text-muted-night">Compte : {me.data.account.email}</Text>}
+          {me.data && <Text className="font-luciole text-legend text-muted dark:text-muted-night">Compte : {me.data.account.email}</Text>}
         </View>
 
         <View className="gap-3">
@@ -77,15 +78,16 @@ function ProfileOption({ profile, active, disabled, onPress }: { profile: MeProf
       accessibilityLabel={`${profile.displayName}, ${details}`}
       onPress={active ? undefined : onPress}
       disabled={disabled}
+      style={E1}
       className={`min-h-14 flex-row items-center gap-3 rounded-md px-4 py-3 ${active ? 'bg-primary/10' : 'bg-surface dark:bg-surface-night'} ${disabled && !active ? 'opacity-50' : ''}`}>
       <View className={`h-10 w-10 items-center justify-center rounded-full ${active ? 'bg-primary' : 'bg-cloth-light'}`}>
-        <Text className={`text-body font-bold ${active ? 'text-white' : 'text-cloth'}`}>{profile.displayName.charAt(0).toUpperCase()}</Text>
+        <Text className={`text-body font-luciole-bold ${active ? 'text-white' : 'text-cloth'}`}>{profile.displayName.charAt(0).toUpperCase()}</Text>
       </View>
       <View className="flex-1 gap-1">
-        <Text className={`text-body font-bold ${active ? 'text-primary dark:text-primary-night' : 'text-ink dark:text-ink-night'}`}>{profile.displayName}</Text>
-        <Text className="text-legend text-muted dark:text-muted-night">{details}</Text>
+        <Text className={`text-body font-luciole-bold ${active ? 'text-primary dark:text-primary-night' : 'text-ink dark:text-ink-night'}`}>{profile.displayName}</Text>
+        <Text className="font-luciole text-legend text-muted dark:text-muted-night">{details}</Text>
       </View>
-      {active && <Text className="text-legend font-bold text-primary dark:text-primary-night">Actif</Text>}
+      {active && <Text className="text-legend font-luciole-bold text-primary dark:text-primary-night">Actif</Text>}
     </Pressable>
   );
 }

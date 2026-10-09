@@ -1,11 +1,12 @@
 import { useMutation } from '@tanstack/react-query';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
-import { router } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { E1 } from '@/components/ui/elevation';
+import { BackButton } from '@/components/ui/BackButton';
 import { Button } from '@/components/ui/Button';
 import { ScreenTitle } from '@/components/ui/ScreenTitle';
 import { analyzeImage, PICKER_OPTIONS, type ScanKind, type ScanResult } from '@/lib/scan';
@@ -24,7 +25,7 @@ export default function ScanScreen() {
     <SafeAreaView className="flex-1 bg-bg dark:bg-bg-night">
       <ScrollView contentContainerClassName="gap-8 px-5 py-6">
         <View className="items-start gap-3">
-          <Button label="← Fermer" variant="ghost" onPress={() => router.back()} />
+          <BackButton close />
           <ScreenTitle title="Tester le scan" />
         </View>
         <Scanner />
@@ -66,18 +67,18 @@ function Scanner() {
         <Button label="Prendre une photo" onPress={() => pick('camera')} disabled={scan.isPending} />
         <Button label="Choisir dans la galerie" onPress={() => pick('library')} disabled={scan.isPending} variant="secondary" />
       </View>
-      {notice && <Text className="text-body text-error dark:text-error-night">{notice}</Text>}
+      {notice && <Text className="font-luciole text-body text-error dark:text-error-night">{notice}</Text>}
 
       {photo && <Image source={{ uri: photo.uri }} contentFit="contain" style={{ width: '100%', height: 256, borderRadius: 24 }} accessibilityLabel="Photo envoyée au scan" />}
       {scan.isPending && (
         <View className="flex-row items-center gap-3">
           <ActivityIndicator />
-          <Text className="text-body text-muted dark:text-muted-night">
+          <Text className="font-luciole text-body text-muted dark:text-muted-night">
             Analyse en cours… (jusqu&apos;à une minute si les premiers modèles sont saturés)
           </Text>
         </View>
       )}
-      {scan.isError && <Text className="text-body text-error dark:text-error-night">{scan.error.message}</Text>}
+      {scan.isError && <Text className="font-luciole text-body text-error dark:text-error-night">{scan.error.message}</Text>}
       {scan.isSuccess && <ResultCard result={scan.data} />}
 
     </View>
@@ -109,16 +110,16 @@ function ResultCard({ result }: { result: ScanResult }) {
     : [];
 
   return (
-    <View className="gap-3 rounded-md bg-surface p-4 dark:bg-surface-night">
-      <Text className={`text-body font-bold ${STATUS[result.status].className}`}>{STATUS[result.status].label}</Text>
-      {result.model && <Text className="text-legend text-muted dark:text-muted-night">Modèle : {result.model}</Text>}
-      {result.error && <Text className="text-body text-error dark:text-error-night">{result.error}</Text>}
+    <View style={E1} className="gap-3 rounded-md bg-surface p-4 dark:bg-surface-night">
+      <Text className={`text-body font-luciole-bold ${STATUS[result.status].className}`}>{STATUS[result.status].label}</Text>
+      {result.model && <Text className="font-luciole text-legend text-muted dark:text-muted-night">Modèle : {result.model}</Text>}
+      {result.error && <Text className="font-luciole text-body text-error dark:text-error-night">{result.error}</Text>}
       {rows
         .filter(([, value]) => value)
         .map(([label, value]) => (
           <View key={label} className="gap-1">
-            <Text className="text-legend text-muted dark:text-muted-night">{label}</Text>
-            <Text className="text-body text-ink dark:text-ink-night">{value}</Text>
+            <Text className="font-luciole text-legend text-muted dark:text-muted-night">{label}</Text>
+            <Text className="font-luciole text-body text-ink dark:text-ink-night">{value}</Text>
           </View>
         ))}
     </View>
@@ -134,7 +135,7 @@ function Choice({ label, active, onPress }: { label: string; active: boolean; on
       accessibilityState={{ selected: active }}
       onPress={onPress}
       className={`min-h-11 flex-1 items-center justify-center rounded-full border ${active ? 'border-primary bg-primary/10' : 'border-muted/30'}`}>
-      <Text className={`text-body ${active ? 'font-bold text-primary dark:text-primary-night' : 'text-ink dark:text-ink-night'}`}>{label}</Text>
+      <Text className={`text-body ${active ? 'font-luciole-bold text-primary dark:text-primary-night' : 'text-ink dark:text-ink-night'}`}>{label}</Text>
     </Pressable>
   );
 }

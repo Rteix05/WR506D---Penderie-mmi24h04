@@ -1,17 +1,17 @@
 import { Text, View } from 'react-native';
 
 /**
- * Titre d'écran (title h3, un seul par écran — DS §4) et sa légende. Les
- * majuscules de la maquette viennent de la police Typolio, chargée dans une
- * feature dédiée ; d'ici là, la police système.
+ * Titre de page de la lib Figma (titrePage() : Typolio 32 encre, légende
+ * Luciole 12 en dessous). Un seul par écran (DS §4). La maquette l'affiche
+ * en capitales.
  */
 export function ScreenTitle({ title, legend }: { title: string; legend?: string }) {
   return (
     <View className="gap-1">
-      <Text accessibilityRole="header" className="text-h3 font-bold uppercase text-ink dark:text-ink-night">
+      <Text accessibilityRole="header" className="font-typolio text-h3 uppercase text-ink dark:text-ink-night">
         {title}
       </Text>
-      {legend && <Text className="text-legend text-ink/70 dark:text-ink-night/70">{legend}</Text>}
+      {legend && <Text className="font-luciole text-legend text-muted dark:text-muted-night">{legend}</Text>}
     </View>
   );
 }

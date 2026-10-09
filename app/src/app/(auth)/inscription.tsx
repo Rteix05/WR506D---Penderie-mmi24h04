@@ -1,9 +1,9 @@
 import { useMutation } from '@tanstack/react-query';
-import { router } from 'expo-router';
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { BackButton } from '@/components/ui/BackButton';
 import { Button } from '@/components/ui/Button';
 import { ScreenTitle } from '@/components/ui/ScreenTitle';
 import { TextField } from '@/components/ui/TextField';
@@ -95,13 +95,13 @@ export default function RegisterScreen() {
   return (
     <SafeAreaView className="flex-1 bg-bg dark:bg-bg-night">
       <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView contentContainerClassName="gap-8 px-5 py-6" keyboardShouldPersistTaps="handled">
-          <View className="items-start gap-3">
-            <Button label="← Retour" variant="ghost" onPress={() => router.back()} />
-            <ScreenTitle title="Créer un compte" legend="Ton profil est privé par défaut : rien n'est visible sans ton accord." />
+        <ScrollView contentContainerClassName="gap-6 px-5 pb-10 pt-5" keyboardShouldPersistTaps="handled">
+          <View className="items-start gap-6">
+            <BackButton />
+            <ScreenTitle title="Créer un compte" legend="Ta penderie est privée : rien n'est visible tant que tu n'as rien partagé." />
           </View>
 
-          <View className="gap-4">
+          <View className="gap-5">
             <TextField label="Prénom" value={form.firstName} onChangeText={set('firstName')} error={errors.firstName} autoCapitalize="words" autoComplete="given-name" textContentType="givenName" />
             <TextField label="Nom" value={form.lastName} onChangeText={set('lastName')} error={errors.lastName} autoCapitalize="words" autoComplete="family-name" textContentType="familyName" />
             <TextField
@@ -123,7 +123,7 @@ export default function RegisterScreen() {
               keyboardType="numbers-and-punctuation"
               autoComplete="birthdate-full"
             />
-            <TextField label="E-mail" value={form.email} onChangeText={set('email')} error={errors.email} keyboardType="email-address" autoComplete="email" textContentType="emailAddress" />
+            <TextField label="Adresse e-mail" value={form.email} onChangeText={set('email')} error={errors.email} keyboardType="email-address" autoComplete="email" textContentType="emailAddress" />
             <TextField
               label="Mot de passe"
               value={form.password}
@@ -135,11 +135,11 @@ export default function RegisterScreen() {
               textContentType="newPassword"
             />
             {generalError && (
-              <Text accessibilityRole="alert" className="text-body text-error dark:text-error-night">
+              <Text accessibilityRole="alert" className="font-luciole text-body text-error dark:text-error-night">
                 {generalError}
               </Text>
             )}
-            <Button label="Créer mon compte" onPress={onSubmit} loading={submit.isPending} />
+            <Button label="CRÉER MON COMPTE" onPress={onSubmit} loading={submit.isPending} />
           </View>
         </ScrollView>
       </KeyboardAvoidingView>

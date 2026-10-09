@@ -44,8 +44,16 @@ module.exports = {
         // « Vendu », « Terminé », neutre inactif, texte secondaire.
         muted: { DEFAULT: '#475569', night: '#9BA7B8' },
       },
-      // Échelle typographique du DS (section 4). Les polices Typolio (titres)
-      // et Luciole (texte) seront chargées dans une feature dédiée.
+      // Polices du DS (section 4), chargées par useFonts dans src/app/_layout.tsx.
+      // Sur React Native, fontWeight ne choisit PAS le fichier gras d'une police
+      // personnalisée : chaque graisse est une famille à part. D'où
+      // font-luciole-bold au lieu de font-bold.
+      fontFamily: {
+        typolio: ['Typolio'], // titres (h1, h3, h4), capitales
+        luciole: ['Luciole'], // texte courant, légendes
+        'luciole-bold': ['Luciole-Bold'], // titres de carte, libellés de bouton, labels
+      },
+      // Échelle typographique du DS (section 4).
       fontSize: {
         h1: ['48px', { lineHeight: '52px' }], // splash, onboarding
         h3: ['32px', { lineHeight: '38px' }], // titre d'écran, un seul par écran
