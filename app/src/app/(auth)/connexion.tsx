@@ -2,7 +2,7 @@ import { useMutation } from '@tanstack/react-query';
 import { Image } from 'expo-image';
 import { Link } from 'expo-router';
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, Text, View } from 'react-native';
+import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/ui/Button';
@@ -10,14 +10,23 @@ import { TextField } from '@/components/ui/TextField';
 import { login } from '@/lib/api';
 
 /**
+ * L'API n'a pas encore de réinitialisation par e-mail (il faudra un envoi
+ * d'e-mails, Mailpit en dev). Le lien de la maquette est là, il explique.
+ */
+function forgotPassword() {
+  Alert.alert('Mot de passe oublié', 'La réinitialisation par e-mail arrive bientôt. En attendant, demande à un administrateur de Penderie.');
+}
+
+/**
  * Connexion, d'après la maquette « Authentification — Connexion »
  * (design/figma-plugin/lots/14-final.body.js) : bandeau rose à 6 % avec le
  * logo, PENDERIE et la phrase d'accroche ; e-mail, mot de passe ;
  * SE CONNECTER ; lien vers l'inscription.
  *
- * Absents volontairement : « Mot de passe oublié ? » (l'API n'a pas encore
- * de réinitialisation par e-mail) et les « comptes de démonstration » (des
- * raccourcis du prototype Figma, pas des fonctions de l'app).
+ * Écran Figma de référence : node 135:1776 de la page « Maquette v2 ».
+ * Absents volontairement : les « comptes de démonstration » (raccourcis du
+ * prototype Figma, pas une fonction de l'app) et le chevron « v » des
+ * champs (la maquette y a posé le composant liste déroulante par erreur).
  *
  * En cas de succès, la session change et la racine bascule seule vers
  * l'app : pas de navigation à faire ici.
@@ -63,6 +72,12 @@ export default function LoginScreen() {
             returnKeyType="go"
             onSubmitEditing={() => canSubmit && submit.mutate()}
           />
+        </View>
+
+        <View className="items-end px-5">
+          <Pressable accessibilityRole="link" onPress={forgotPassword} hitSlop={12} className="py-1">
+            <Text className="font-luciole text-legend text-primary dark:text-primary-night">Mot de passe oublié ?</Text>
+          </Pressable>
         </View>
 
         <View className="gap-3 px-5">
