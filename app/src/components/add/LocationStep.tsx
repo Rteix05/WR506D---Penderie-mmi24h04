@@ -40,7 +40,9 @@ export function LocationStep({ kind, location, onChange }: Props) {
 
   const rooms = data?.rooms.filter((r) => r.place === location.place?.iri) ?? [];
   const storages = data?.storages.filter((s) => s.room === location.room?.iri) ?? [];
-  const boxes = data?.boxes.filter((b) => b.room === location.room?.iri && (b.storage === null || b.storage === location.storage?.iri)) ?? [];
+  // Règle de l'API (ValidLocation) : le conteneur est sur le rangement choisi,
+  // ou posé dans la pièce si aucun rangement n'est choisi.
+  const boxes = data?.boxes.filter((b) => b.room === location.room?.iri && b.storage === (location.storage?.iri ?? null)) ?? [];
 
   const created = async (level: 'place' | 'room' | 'storage' | 'box', name: string) => {
     const ref = await createLocation(level, name, { place: location.place?.iri, room: location.room?.iri, storage: location.storage?.iri ?? null });
