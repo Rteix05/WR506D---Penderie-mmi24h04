@@ -36,7 +36,7 @@ export default function GarmentDoneScreen() {
           ['Le vendre', 'Visible par tes amis'],
         ]}
       />
-      <ActionBar>
+      <ActionBar note={created?.photoSaved === false ? "La photo n'a pas pu être enregistrée : tu pourras l'ajouter depuis la fiche." : undefined}>
         <Button label="Retour à l'accueil" onPress={closeFlow} />
         <Button
           label="Ajouter un autre vêtement"

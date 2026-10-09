@@ -3,6 +3,8 @@ import { Text, View } from 'react-native';
 const TONE = {
   success: { box: 'bg-main-tint dark:bg-main-night/15', dot: 'bg-main', glyph: 'v' },
   error: { box: 'bg-error/10 dark:bg-error-night/15', dot: 'bg-error', glyph: 'i' },
+  // Information neutre (« Pré-rempli par le scan ») : la teinte de l'accent.
+  info: { box: 'bg-primary/[0.08]', dot: 'bg-primary', glyph: 'i' },
 } as const;
 
 /**

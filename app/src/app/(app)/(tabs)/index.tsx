@@ -7,6 +7,7 @@ import { ClothVisual, type ClothKind } from '@/components/home/ClothVisual';
 import { useOpenAddMenu } from '@/components/nav/AddMenu';
 import { Button } from '@/components/ui/Button';
 import { E1 } from '@/components/ui/elevation';
+import { mediaSource } from '@/lib/api';
 import { useActiveProfile } from '@/lib/auth';
 import { relativeDay, useInventoryOverview, type RecentEntry } from '@/lib/inventory';
 
@@ -132,7 +133,7 @@ function Preview({ title, meta, tint, art }: { title: string; meta: string; tint
   );
 }
 
-/** Carte d'objet (Figma « Card/Object ») : 140 de large, vignette 124 × 162, nom, pièce, date. */
+/** Carte d'objet (Figma « Card/Object ») : 140 de large, vignette 124 × 162 (la photo, sinon l'illustration), nom, pièce, date. */
 function RecentCard({ entry }: { entry: RecentEntry }) {
   const when = relativeDay(entry.createdAt);
 
@@ -143,7 +144,11 @@ function RecentCard({ entry }: { entry: RecentEntry }) {
       style={E1}
       className="w-[140px] gap-2 rounded-md bg-surface px-2 pb-3 pt-2 dark:bg-surface-night">
       <View className={`h-[162px] w-[124px] items-center justify-center overflow-hidden rounded-sm ${entry.kind === 'garment' ? 'bg-cloth/[0.08]' : 'bg-primary/[0.08]'}`}>
-        <ClothVisual kind={entry.kind === 'garment' ? 'tshirt' : 'baskets'} scale={1.968} />
+        {entry.photo ? (
+          <Image source={mediaSource(entry.photo)} style={{ width: 124, height: 162 }} contentFit="cover" accessible={false} />
+        ) : (
+          <ClothVisual kind={entry.kind === 'garment' ? 'tshirt' : 'baskets'} scale={1.968} />
+        )}
       </View>
       <View className="gap-0.5 px-1">
         <Text numberOfLines={1} className="font-luciole-bold text-legend text-ink dark:text-ink-night">

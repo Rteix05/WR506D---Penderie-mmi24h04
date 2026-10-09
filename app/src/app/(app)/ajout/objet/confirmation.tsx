@@ -1,3 +1,4 @@
+import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { Text, View } from 'react-native';
 
@@ -31,7 +32,11 @@ export default function ItemDoneScreen() {
 
       <View style={E1} className="mx-5 flex-row items-center gap-3 rounded-md bg-surface p-4 dark:bg-surface-night">
         <View className="h-14 w-14 items-center justify-center overflow-hidden rounded-sm bg-ink/[0.04]">
-          <ClothVisual kind="pantalon" scale={0.89} />
+          {draft.photo ? (
+            <Image source={{ uri: draft.photo.uri }} style={{ width: 56, height: 56 }} contentFit="cover" accessible={false} />
+          ) : (
+            <ClothVisual kind="pantalon" scale={0.89} />
+          )}
         </View>
         <View className="flex-1 gap-0.5">
           <Text className="font-luciole-bold text-body text-ink dark:text-ink-night">{created?.name ?? draft.name}</Text>
@@ -49,7 +54,7 @@ export default function ItemDoneScreen() {
         ]}
       />
 
-      <ActionBar>
+      <ActionBar note={created?.photoSaved === false ? "La photo n'a pas pu être enregistrée : tu pourras l'ajouter depuis la fiche." : undefined}>
         <Button label="Retour à l'accueil" onPress={closeFlow} />
         <Button
           label="Ajouter un autre objet"

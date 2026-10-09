@@ -13,7 +13,7 @@ function total(collection: Collection<unknown>): number {
   return collection.totalItems ?? collection['hydra:totalItems'] ?? 0;
 }
 
-type Possession = { '@id': string; id: string; name: string; room?: string };
+type Possession = { '@id': string; id: string; name: string; room?: string; photos?: string[] };
 type Room = { '@id': string; name: string };
 
 export type RecentEntry = {
@@ -23,6 +23,8 @@ export type RecentEntry = {
   /** Nom de la pièce, si l'emplacement est visible (objet à soi ou partagé avec l'emplacement). */
   room: string | null;
   createdAt: Date;
+  /** Photo principale (GET /api/media/{id}), s'il y en a une. */
+  photo: string | null;
 };
 
 export type InventoryOverview = {
@@ -72,7 +74,7 @@ export function useInventoryOverview() {
       ]);
       const roomName = new Map(members(rooms).map((room) => [room['@id'], room.name]));
       const entries = (list: Possession[], kind: RecentEntry['kind']): RecentEntry[] =>
-        list.map((p) => ({ id: p.id, kind, name: p.name, room: p.room ? (roomName.get(p.room) ?? null) : null, createdAt: uuidV7Date(p.id) }));
+        list.map((p) => ({ id: p.id, kind, name: p.name, room: p.room ? (roomName.get(p.room) ?? null) : null, createdAt: uuidV7Date(p.id), photo: p.photos?.[0] ?? null }));
       const recent = [...entries(members(items), 'item'), ...entries(members(garments), 'garment')]
         .sort((a, b) => (a.id < b.id ? 1 : -1))
         .slice(0, RECENT);

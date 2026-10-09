@@ -26,6 +26,7 @@ export default function ItemReviewScreen() {
         title="L'objet"
         rows={[
           ['Nom', draft.name.trim()],
+          ['Description', draft.description.trim()],
           ['Catégorie', draft.category?.name],
           ['État', CONDITIONS.find((c) => c.value === draft.condition)?.label],
         ]}

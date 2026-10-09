@@ -20,6 +20,8 @@ type Props = {
   createLabel?: string;
   disabled?: boolean;
   loading?: boolean;
+  /** Aide sous le champ (ex. « Rempli par le scan »). */
+  hint?: string;
 };
 
 /**
@@ -28,7 +30,7 @@ type Props = {
  * dans une feuille qui monte du bas, avec une recherche dès 8 options et,
  * si prévu, la création d'une nouvelle valeur.
  */
-export function SelectField({ label, value, placeholder = 'Choisir', options, onSelect, clearable = false, onCreate, createLabel, disabled = false, loading = false }: Props) {
+export function SelectField({ label, value, placeholder = 'Choisir', options, onSelect, clearable = false, onCreate, createLabel, disabled = false, loading = false, hint }: Props) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -47,6 +49,7 @@ export function SelectField({ label, value, placeholder = 'Choisir', options, on
         </Text>
         <Text className="font-luciole-bold text-legend text-muted/[0.85] dark:text-muted-night">v</Text>
       </Pressable>
+      {hint && <Text className="font-luciole text-legend text-muted dark:text-muted-night">{hint}</Text>}
       {open && (
         <PickerSheet
           title={label}

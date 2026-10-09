@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, Text, View } from 'react-native';
 
 import { ActionBar, FlowScreen } from '@/components/add/FlowScreen';
@@ -7,17 +7,27 @@ import { PhotoZone } from '@/components/add/PhotoZone';
 import { StepHeader } from '@/components/add/StepHeader';
 import { Chips } from '@/components/form/Chips';
 import { SelectField } from '@/components/form/SelectField';
+import { Banner } from '@/components/ui/Banner';
 import { Button } from '@/components/ui/Button';
 import { TextField } from '@/components/ui/TextField';
-import { CONDITIONS, USAGES, useDraft } from '@/lib/add-draft';
+import { CONDITIONS, USAGES, useDraft, type Draft } from '@/lib/add-draft';
 import { pickPhoto } from '@/lib/photo';
 import { useBrands, useColors, useGarmentCategories, useSizes, useStyles } from '@/lib/reference';
 import { analyzeImage } from '@/lib/scan';
 
+const SCANNED = 'Rempli par le scan, modifiable.';
+
 /**
  * « Ton vêtement », étape 2 sur 4 (Figma « Vêtement — Ajout · Informations »,
- * 135:2981) : photo (ou étiquette scannée, qui pré-remplit marque, taille et
- * couleur), nom, marque, taille, couleur, usage, style, état.
+ * 135:2981) : photo (ou étiquette scannée), nom, description, marque,
+ * taille, couleur, usage, style, état.
+ *
+ * Pré-remplissage : après le scan d'une photo, ou en scannant l'étiquette
+ * depuis la zone photo. Tout reste modifiable ; l'étiquette ne remplit que
+ * les champs encore vides. Composition, entretien et pays de fabrication
+ * vont dans la description (le modèle n'a pas de champ pour eux). Une
+ * taille lue qui ne correspond à aucune valeur du référentiel est gardée
+ * telle quelle (sizeLabel), sauf si on en choisit une.
  *
  * Écarts avec la maquette, imposés par l'API :
  *  - « Usages (plusieurs choix) » devient « Usage », un seul : le modèle
@@ -28,38 +38,38 @@ import { analyzeImage } from '@/lib/scan';
  *  - « Voir les catégories de style » n'a pas encore d'écran.
  */
 export default function GarmentInfoScreen() {
-  const { draft, update } = useDraft();
+  const { draft, update, applyScan } = useDraft();
   const brands = useBrands();
   const colors = useColors();
   const styles = useStyles();
   const sizes = useSizes();
   const categories = useGarmentCategories();
   const [reading, setReading] = useState(false);
+  const hint = (field: keyof Draft) => (draft.fromScan.includes(field) ? SCANNED : undefined);
 
   const system = draft.garmentType?.sizes ?? 'ALPHA';
-  const sizeOptions = sizes.data?.get(system) ?? [];
+  const sizeOptions = useMemo(() => sizes.data?.get(system) ?? [], [sizes.data, system]);
   // Type « Autre », ou vêtement venu du scan : la catégorie se choisit ici.
   const askCategory = !draft.garmentType?.slug;
 
-  /** Étiquette scannée : on reprend marque, taille et couleur, sans écraser ce qui est déjà saisi. */
+  // Taille lue par le scan (« M », « 42 ») : si elle existe dans l'échelle du type, on la coche.
+  useEffect(() => {
+    if (draft.size || !draft.sizeLabel) return;
+    const match = sizeOptions.find((v) => v.name.toLowerCase() === draft.sizeLabel.trim().toLowerCase());
+    if (match) update({ size: match, sizeLabel: '' });
+  }, [draft.size, draft.sizeLabel, sizeOptions, update]);
+
   const readLabel = async () => {
     const photo = await pickPhoto('camera');
     if (!photo) return;
-    update({ photo });
+    update({ photo: draft.photo ?? photo });
     setReading(true);
     try {
-      const s = (await analyzeImage(photo, 'LABEL_OCR')).suggestion;
-      if (!s) throw new Error();
-      const size = s.size ? sizeOptions.find((v) => v.name.toLowerCase() === s.size?.toLowerCase()) : undefined;
-      update({
-        photo,
-        name: draft.name || (s.name ?? ''),
-        brand: draft.brand ?? (s.brand?.iri ? { iri: s.brand.iri, name: s.brand.name } : null),
-        size: draft.size ?? size ?? null,
-        color: draft.color ?? (s.colors[0] ? { iri: s.colors[0].iri, name: s.colors[0].name } : null),
-      });
+      const result = await analyzeImage(photo, 'LABEL_OCR');
+      if (!result.suggestion) throw new Error();
+      applyScan(result, { onlyEmpty: true });
     } catch {
-      Alert.alert('Étiquette', "On n'a pas réussi à lire l'étiquette. Ta photo est gardée, remplis le reste à la main.");
+      Alert.alert('Étiquette', "On n'a pas réussi à lire l'étiquette. Remplis le reste à la main.");
     } finally {
       setReading(false);
     }
@@ -76,6 +86,7 @@ export default function GarmentInfoScreen() {
   return (
     <FlowScreen>
       <StepHeader step={2} title="Ton vêtement" />
+      {draft.scan && <Banner tone="info" title="Pré-rempli par le scan" text="Vérifie et corrige si besoin : rien n'est enregistré avant la fin." />}
       <PhotoZone photo={draft.photo} art={draft.garmentType?.art ?? 'tshirt'} caption="Prendre une photo ou scanner l'étiquette" onPress={photoMenu} />
       {reading && (
         <View className="flex-row items-center gap-3 px-5">
@@ -87,12 +98,13 @@ export default function GarmentInfoScreen() {
       )}
 
       <View className="gap-5 px-5">
-        <TextField label="Nom" value={draft.name} onChangeText={(name) => update({ name })} placeholder="T-shirt Nike" autoCapitalize="sentences" />
+        <TextField label="Nom" value={draft.name} onChangeText={(name) => update({ name })} placeholder="T-shirt Nike" autoCapitalize="sentences" hint={hint('name')} />
         {askCategory && (
           <SelectField
             label="Catégorie"
             value={draft.category?.name ?? null}
             loading={categories.isPending}
+            hint={hint('category')}
             options={(categories.data ?? []).map((c) => ({ key: c.iri, label: c.name }))}
             onSelect={(iri) => update({ category: categories.data?.find((c) => c.iri === iri) ?? null })}
           />
@@ -103,16 +115,24 @@ export default function GarmentInfoScreen() {
           value={draft.brand?.name ?? null}
           loading={brands.isPending}
           clearable
+          hint={hint('brand')}
           options={(brands.data ?? []).map((b) => ({ key: b.iri, label: b.name }))}
           onSelect={(iri) => update({ brand: brands.data?.find((b) => b.iri === iri) ?? null })}
         />
         {sizeOptions.length > 0 && (
-          <Chips
-            label="Taille"
-            options={sizeOptions.map((v) => ({ value: v.iri, label: v.name }))}
-            selected={draft.size ? [draft.size.iri] : []}
-            onToggle={(iri) => update({ size: draft.size?.iri === iri ? null : (sizeOptions.find((v) => v.iri === iri) ?? null) })}
-          />
+          <View className="gap-1">
+            <Chips
+              label="Taille"
+              options={sizeOptions.map((v) => ({ value: v.iri, label: v.name }))}
+              selected={draft.size ? [draft.size.iri] : []}
+              onToggle={(iri) => update({ size: draft.size?.iri === iri ? null : (sizeOptions.find((v) => v.iri === iri) ?? null), sizeLabel: '' })}
+            />
+            {!draft.size && draft.sizeLabel !== '' && (
+              <Text className="font-luciole text-legend text-muted dark:text-muted-night">
+                Lue sur l&apos;étiquette : « {draft.sizeLabel} ». Gardée telle quelle si tu n&apos;en choisis pas une.
+              </Text>
+            )}
+          </View>
         )}
         <SelectField
           label="Couleur"
@@ -120,6 +140,7 @@ export default function GarmentInfoScreen() {
           value={draft.color?.name ?? null}
           loading={colors.isPending}
           clearable
+          hint={hint('color')}
           options={(colors.data ?? []).map((c) => ({ key: c.iri, label: c.name, swatch: c.hex }))}
           onSelect={(iri) => update({ color: colors.data?.find((c) => c.iri === iri) ?? null })}
         />
@@ -136,6 +157,15 @@ export default function GarmentInfoScreen() {
           />
         )}
         <Chips label="État" options={CONDITIONS} selected={draft.condition ? [draft.condition] : []} onToggle={(condition) => update({ condition: draft.condition === condition ? null : condition })} />
+        <TextField
+          label="Description (facultatif)"
+          value={draft.description}
+          onChangeText={(description) => update({ description })}
+          placeholder="Coton bio, coupe ample."
+          multiline
+          autoCapitalize="sentences"
+          hint={hint('description')}
+        />
       </View>
 
       <ActionBar>

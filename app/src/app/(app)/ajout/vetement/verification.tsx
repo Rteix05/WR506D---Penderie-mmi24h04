@@ -20,7 +20,7 @@ export default function GarmentReviewScreen() {
   const { draft, submit } = useDraft();
   const save = useMutation({ mutationFn: submit, onSuccess: () => router.replace('/ajout/vetement/confirmation') });
   const tags = [
-    draft.size && `Taille ${draft.size.name}`,
+    (draft.size || draft.sizeLabel) && `Taille ${draft.size?.name ?? draft.sizeLabel}`,
     draft.color?.name,
     USAGES.find((u) => u.value === draft.usage)?.label,
     ...draft.styles.map((s) => s.name),
@@ -46,6 +46,7 @@ export default function GarmentReviewScreen() {
           ['Nom', draft.name.trim()],
           ['Marque', draft.brand?.name],
           ['Catégorie', draft.category?.name],
+          ['Description', draft.description.trim()],
         ]}
       />
       <PathCard title="Localisation" path={locationPath(draft.location)} />

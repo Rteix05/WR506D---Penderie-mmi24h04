@@ -14,7 +14,8 @@ import { useDraft } from '@/lib/add-draft';
  * « On a reconnu » (Figma « Objet — Résultat du scan », node 135:1969) :
  * ce que l'IA a trouvé, à vérifier. Continuer et Modifier mènent tous deux
  * au formulaire, pré-rempli ; un vêtement reconnu part vers le formulaire
- * vêtement (taille, couleur…), un objet vers le formulaire objet.
+ * vêtement (taille, couleur…), un objet vers le formulaire objet. Tout ce
+ * qui est montré ici arrive pré-rempli dans le formulaire, modifiable.
  */
 export default function ResultScreen() {
   const { draft } = useDraft();
@@ -48,6 +49,9 @@ export default function ResultScreen() {
           ['Catégorie', s?.category?.name],
           ['Couleur', s?.colors.map((c) => c.name).join(', ')],
           ['Taille', s?.size],
+          ['Composition', s?.composition.map((p) => (p.percent === null ? p.material : `${p.percent} % ${p.material}`)).join(', ')],
+          ['Entretien', s?.care.join(', ')],
+          ['Fabriqué en', s?.madeIn],
         ]}
       />
 

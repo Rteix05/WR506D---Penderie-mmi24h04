@@ -226,6 +226,21 @@ function send(path: string, { method = 'GET', body, signal, accept = 'applicatio
   return fetch(`${API_URL}${path}`, { method, headers, body: payload, signal });
 }
 
+/**
+ * Source d'image pour expo-image : une photo de l'API (GET /api/media/{id})
+ * est privée, elle part donc avec le jeton et le profil actif. Le téléphone
+ * la garde en cache (Cache-Control: private côté API).
+ */
+export function mediaSource(path: string): { uri: string; headers: Record<string, string> } {
+  const headers: Record<string, string> = {};
+  if (session !== null) {
+    headers.Authorization = `Bearer ${session.token}`;
+    if (session.profileId !== null) headers['X-Profile'] = session.profileId;
+  }
+
+  return { uri: `${API_URL}${path}`, headers };
+}
+
 export function apiGet<T>(path: string, signal?: AbortSignal): Promise<T> {
   return apiRequest<T>(path, { signal });
 }
