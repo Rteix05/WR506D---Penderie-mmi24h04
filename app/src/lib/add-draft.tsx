@@ -4,7 +4,7 @@ import { createContext, use, useCallback, useMemo, useState, type PropsWithChild
 
 import type { ClothKind } from '@/components/home/ClothVisual';
 import { ApiError, apiGet, apiRequest, apiUpload } from '@/lib/api';
-import type { Ref } from '@/lib/reference';
+import { createBrand, type Ref } from '@/lib/reference';
 import { imageFormData, type ScanResult } from '@/lib/scan';
 
 /** État à l'ajout (enum Condition de l'API, sans « Abîmé », absent de la maquette). */
@@ -46,6 +46,13 @@ export const GARMENT_TYPES: GarmentType[] = [
   { label: 'Autre', slug: null, art: 'cintre', sizes: 'ALPHA' },
 ];
 
+/**
+ * Une marque choisie. iri null : une marque lue par le scan mais absente de
+ * la liste ; elle est ajoutée (POST /api/brands) à l'enregistrement, pas
+ * avant : un scan abandonné ne crée rien.
+ */
+export type BrandChoice = { iri: string | null; name: string };
+
 export type Location = { place: Ref | null; room: Ref | null; storage: Ref | null; box: Ref | null };
 const NO_LOCATION: Location = { place: null, room: null, storage: null, box: null };
 
@@ -64,7 +71,7 @@ export type Draft = {
   fromScan: (keyof Draft)[];
   // Vêtement
   garmentType: GarmentType | null;
-  brand: Ref | null;
+  brand: BrandChoice | null;
   size: Ref | null;
   /** Taille lue par le scan, en texte, tant qu'elle ne correspond à aucune valeur du référentiel. */
   sizeLabel: string;
@@ -165,9 +172,9 @@ export function DraftProvider({ children }: PropsWithChildren) {
       ...(s.name ? { name: s.name } : {}),
       ...(description ? { description } : {}),
       ...(s.category ? { category: { iri: s.category.iri, name: s.category.name } } : {}),
-      // Une marque nouvelle (sans IRI) ne peut pas être enregistrée : l'API
-      // n'a pas de route pour créer une marque. On ne garde que les connues.
-      ...(s.brand?.iri ? { brand: { iri: s.brand.iri, name: s.brand.name } } : {}),
+      // Une marque absente de la liste (sans IRI) est gardée par son nom :
+      // elle sera ajoutée à l'enregistrement.
+      ...(s.brand?.name ? { brand: { iri: s.brand.iri ?? null, name: s.brand.name } } : {}),
       ...(s.colors[0] ? { color: { iri: s.colors[0].iri, name: s.colors[0].name } } : {}),
       ...(s.size ? { sizeLabel: s.size } : {}),
     };
@@ -193,6 +200,15 @@ export function DraftProvider({ children }: PropsWithChildren) {
       ...(d.notes.trim() ? { notes: d.notes.trim() } : {}),
     };
 
+    // Marque lue par le scan, absente de la liste : on l'ajoute maintenant.
+    // Si l'API la refuse (nom illisible), le vêtement est enregistré sans.
+    let brand = d.kind === 'garment' ? (d.brand?.iri ?? null) : null;
+    if (d.kind === 'garment' && d.brand && !d.brand.iri) {
+      brand = await createBrand(queryClient, d.brand.name).then(
+        (created) => created.iri,
+        () => null,
+      );
+    }
     const body =
       d.kind === 'item'
         ? { ...common, ...(d.category ? { category: d.category.iri } : {}) }
@@ -200,12 +216,13 @@ export function DraftProvider({ children }: PropsWithChildren) {
             ...common,
             category: d.category?.iri,
             usage: d.usage,
-            ...(d.brand ? { brand: d.brand.iri } : {}),
+            ...(brand ? { brand } : {}),
             ...(d.size ? { size: d.size.iri } : d.sizeLabel.trim() ? { sizeLabel: d.sizeLabel.trim().slice(0, 20) } : {}),
             colors: d.color ? [d.color.iri] : [],
             styles: d.styles.map((s) => s.iri),
           };
     const path = d.kind === 'item' ? '/api/items' : '/api/garments';
+
     let saved: { id: string; name: string };
     try {
       saved = await apiRequest(path, { method: 'POST', body });

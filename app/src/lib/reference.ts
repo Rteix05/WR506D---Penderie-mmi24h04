@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, type QueryClient } from '@tanstack/react-query';
 
 import { apiGet, apiRequest } from '@/lib/api';
 
@@ -57,8 +57,22 @@ export function useItemCategories() {
   });
 }
 
+/** Les marques vérifiées, plus celles que le profil actif a ajoutées. */
 export function useBrands() {
   return useQuery({ queryKey: ['reference', 'brands'], queryFn: async ({ signal }) => (await apiGetAll<Named>('/api/brands', signal)).map(toRef), ...REFERENCE });
+}
+
+/**
+ * Ajoute une marque absente de la liste (POST /api/brands). L'API trouve ou
+ * crée : « TRAPSTAR » renvoie la Trapstar existante ; sinon la marque naît
+ * « non vérifiée », en attente de validation par l'admin. La liste des
+ * marques est rechargée pour la proposer ensuite.
+ */
+export async function createBrand(queryClient: QueryClient, name: string): Promise<Ref> {
+  const brand = await apiRequest<Named>('/api/brands', { method: 'POST', body: { name } });
+  await queryClient.invalidateQueries({ queryKey: ['reference', 'brands'] });
+
+  return toRef(brand);
 }
 
 export type ColorRef = Ref & { hex: string | null };

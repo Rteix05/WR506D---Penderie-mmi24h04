@@ -1,3 +1,4 @@
+import { useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, Text, View } from 'react-native';
@@ -12,7 +13,7 @@ import { Button } from '@/components/ui/Button';
 import { TextField } from '@/components/ui/TextField';
 import { CONDITIONS, USAGES, useDraft, type Draft } from '@/lib/add-draft';
 import { pickPhoto } from '@/lib/photo';
-import { useBrands, useColors, useGarmentCategories, useSizes, useStyles } from '@/lib/reference';
+import { createBrand, useBrands, useColors, useGarmentCategories, useSizes, useStyles } from '@/lib/reference';
 import { analyzeImage } from '@/lib/scan';
 
 const SCANNED = 'Rempli par le scan, modifiable.';
@@ -33,13 +34,14 @@ const SCANNED = 'Rempli par le scan, modifiable.';
  *  - « Usages (plusieurs choix) » devient « Usage », un seul : le modèle
  *    n'en garde qu'un (enum GarmentUsage : quotidien, travail, sport, soirée) ;
  *  - les styles sont ceux du référentiel de l'API (décontracté, sport…) ;
- *  - une marque inconnue du référentiel ne peut pas être enregistrée (pas de
- *    route de création de marque) : on choisit dans la liste ;
+ *  - une marque absente de la liste s'ajoute depuis le sélecteur ; celle
+ *    lue par le scan est ajoutée à l'enregistrement (POST /api/brands) ;
  *  - « Voir les catégories de style » n'a pas encore d'écran.
  */
 export default function GarmentInfoScreen() {
   const { draft, update, applyScan } = useDraft();
   const brands = useBrands();
+  const queryClient = useQueryClient();
   const colors = useColors();
   const styles = useStyles();
   const sizes = useSizes();
@@ -115,9 +117,11 @@ export default function GarmentInfoScreen() {
           value={draft.brand?.name ?? null}
           loading={brands.isPending}
           clearable
-          hint={hint('brand')}
+          hint={draft.brand && !draft.brand.iri ? `${SCANNED} Nouvelle marque : elle sera ajoutée à l'enregistrement.` : hint('brand')}
           options={(brands.data ?? []).map((b) => ({ key: b.iri, label: b.name }))}
           onSelect={(iri) => update({ brand: brands.data?.find((b) => b.iri === iri) ?? null })}
+          createLabel="Pas dans la liste ? Ajoute ta marque"
+          onCreate={async (name) => update({ brand: await createBrand(queryClient, name) })}
         />
         {sizeOptions.length > 0 && (
           <View className="gap-1">
