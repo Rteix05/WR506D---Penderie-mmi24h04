@@ -41,7 +41,8 @@
           "cameraPermission": "Penderie utilise l'appareil photo pour scanner un objet ou une étiquette.",
           "microphonePermission": false
         }
-      ]
+      ],
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true,

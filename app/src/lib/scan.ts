@@ -77,11 +77,14 @@ export const PICKER_OPTIONS: ImagePicker.ImagePickerOptions = {
   preferredAssetRepresentationMode: ImagePicker.UIImagePickerPreferredAssetRepresentationMode.Compatible,
 };
 
-export async function analyzeImage(asset: ImagePicker.ImagePickerAsset, kind: ScanKind): Promise<ScanResult> {
+/**
+ * Le formulaire multipart d'une photo (champ « image »), réduite et en JPEG.
+ * Sert au scan et à l'envoi des photos d'un objet (POST /api/items/{id}/photos).
+ */
+export async function imageFormData(asset: ImagePicker.ImagePickerAsset): Promise<FormData> {
   const file = await prepareOrOriginal(asset.uri, asset.width, asset.mimeType);
-  const name = file.type === 'image/png' ? 'scan.png' : 'scan.jpg';
+  const name = file.type === 'image/png' ? 'photo.png' : 'photo.jpg';
   const form = new FormData();
-  form.append('kind', kind);
   if (Platform.OS === 'web') {
     // Sur le web, l'URI est un blob: ou data: : on envoie le fichier lui-même.
     form.append('image', await (await fetch(file.uri)).blob(), name);
@@ -91,6 +94,13 @@ export async function analyzeImage(asset: ImagePicker.ImagePickerAsset, kind: Sc
     // un Blob, ce qu'est le File d'expo-file-system.
     form.append('image', new File(file.uri), name);
   }
+
+  return form;
+}
+
+export async function analyzeImage(asset: ImagePicker.ImagePickerAsset, kind: ScanKind): Promise<ScanResult> {
+  const form = await imageFormData(asset);
+  form.append('kind', kind);
 
   return apiUpload<ScanResult>('/api/scans/analyze', form);
 }
