@@ -77,14 +77,17 @@ abstract class AbstractPossession
     #[Groups(['possession:location', 'possession:create'])]
     protected Room $room;
 
+    // Rangement et conteneur s'écrivent à la création (possession:create),
+    // comme la pièce : l'app range l'objet d'emblée « Garage › Étagère 2 ›
+    // Carton ». Ensuite, on ne les change plus que par LocationMover.
     #[ORM\ManyToOne(targetEntity: Storage::class)]
     #[ORM\JoinColumn(nullable: true, onDelete: 'RESTRICT')]
-    #[Groups(['possession:location'])]
+    #[Groups(['possession:location', 'possession:create'])]
     protected ?Storage $storage = null;
 
     #[ORM\ManyToOne(targetEntity: Box::class)]
     #[ORM\JoinColumn(nullable: true, onDelete: 'RESTRICT')]
-    #[Groups(['possession:location'])]
+    #[Groups(['possession:location', 'possession:create'])]
     protected ?Box $box = null;
 
     #[ORM\Column(type: Types::DATE_IMMUTABLE, nullable: true)]
@@ -235,6 +238,35 @@ abstract class AbstractPossession
      * Le conteneur impose sa pièce et son rangement : ranger un objet dans
      * un carton, c'est le ranger là où est le carton.
      */
+    /**
+     * Rangement donné à la création (POST). Le groupe possession:create le
+     * réserve à la création : un PATCH ne l'écrit pas, un déplacement passe
+     * par LocationMover. La cohérence avec la pièce est vérifiée par
+     * ValidLocation (422 sinon).
+     */
+    public function setStorage(?Storage $storage): static
+    {
+        $this->storage = $storage;
+
+        return $this;
+    }
+
+    /**
+     * Conteneur donné à la création (POST). Comme placeAt() : le conteneur
+     * impose sa pièce et son rangement. Les droits sont vérifiés ensuite sur
+     * la pièce finale (securityPostDenormalize : EDIT sur object.getRoom()).
+     */
+    public function setBox(?Box $box): static
+    {
+        if (null !== $box) {
+            $this->room = $box->getRoom();
+            $this->storage = $box->getStorage();
+        }
+        $this->box = $box;
+
+        return $this;
+    }
+
     public function placeAt(Room $room, ?Storage $storage = null, ?Box $box = null): static
     {
         if (null !== $box) {
