@@ -3,6 +3,7 @@ import { FlatList, KeyboardAvoidingView, Modal, Platform, Pressable, Text, TextI
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/ui/Button';
+import { Heading } from '@/components/ui/Heading';
 import { E1 } from '@/components/ui/elevation';
 
 export type SelectOption = { key: string; label: string; hint?: string; swatch?: string | null };
@@ -113,9 +114,9 @@ function PickerSheet({
         <Pressable accessibilityRole="button" accessibilityLabel="Fermer" onPress={onClose} className="absolute inset-0 bg-ink/[0.55]" />
         <View style={{ paddingBottom: insets.bottom + 16, maxHeight: '80%' }} className="gap-3 rounded-t-lg bg-bg px-5 pt-5 dark:bg-bg-night">
           <View className="flex-row items-center justify-between">
-            <Text accessibilityRole="header" className="font-typolio text-h4 uppercase text-ink dark:text-ink-night">
+            <Heading level="h4" accessibilityRole="header" className="uppercase text-ink dark:text-ink-night">
               {title}
-            </Text>
+            </Heading>
             <Pressable accessibilityRole="button" onPress={onClose} hitSlop={12}>
               <Text className="font-luciole-bold text-legend text-primary dark:text-primary-night">Fermer</Text>
             </Pressable>

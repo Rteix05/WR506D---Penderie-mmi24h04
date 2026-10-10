@@ -6,6 +6,7 @@ import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, Vie
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/ui/Button';
+import { Heading } from '@/components/ui/Heading';
 import { TextField } from '@/components/ui/TextField';
 import { login } from '@/lib/api';
 
@@ -44,9 +45,9 @@ export default function LoginScreen() {
         <View className="items-center gap-4 bg-primary/[0.06] px-5 pb-14" style={{ paddingTop: insets.top + 48 }}>
           <Image source={require('@/assets/images/logo.png')} style={{ width: 72, height: 66 }} contentFit="contain" accessibilityLabel="Logo Penderie" />
           <View className="items-center gap-2">
-            <Text accessibilityRole="header" className="font-typolio text-h3 text-ink dark:text-ink-night">
+            <Heading level="h3" accessibilityRole="header" className="text-ink dark:text-ink-night">
               PENDERIE
-            </Text>
+            </Heading>
             <Text className="text-center font-luciole text-body text-muted dark:text-muted-night">Range, retrouve, prête. Entre amis, et sans rien publier.</Text>
           </View>
         </View>

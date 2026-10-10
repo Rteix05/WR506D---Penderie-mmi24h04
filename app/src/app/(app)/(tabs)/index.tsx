@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ClothVisual, type ClothKind } from '@/components/home/ClothVisual';
 import { useOpenAddMenu } from '@/components/nav/AddMenu';
 import { Button } from '@/components/ui/Button';
+import { Heading } from '@/components/ui/Heading';
 import { E1 } from '@/components/ui/elevation';
 import { mediaSource } from '@/lib/api';
 import { useActiveProfile } from '@/lib/auth';
@@ -36,9 +37,9 @@ export default function HomeScreen() {
         <TopBar initial={profile?.displayName.charAt(0).toUpperCase() ?? ''} />
 
         <View className="gap-1 px-5">
-          <Text accessibilityRole="header" className="font-typolio text-h3 uppercase text-ink dark:text-ink-night">
+          <Heading level="h3" accessibilityRole="header" className="uppercase text-ink dark:text-ink-night">
             {profile ? `Bonjour ${profile.displayName}` : 'Bonjour'}
-          </Text>
+          </Heading>
           <Text className="font-luciole text-legend text-muted dark:text-muted-night">{counts}</Text>
         </View>
 

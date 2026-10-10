@@ -4,6 +4,7 @@ import { Alert, BackHandler, Pressable, StyleSheet, Text, View } from 'react-nat
 import Animated, { FadeIn, FadeOut, ZoomIn } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { Heading } from '@/components/ui/Heading';
 import { E2 } from '@/components/ui/elevation';
 
 /**
@@ -80,9 +81,9 @@ export function AddMenu({ onClose }: { onClose: () => void }) {
       <Pressable accessibilityRole="button" accessibilityLabel="Fermer le menu d'ajout" onPress={onClose} className="absolute inset-0 bg-ink/[0.58]" />
 
       <View accessibilityViewIsModal pointerEvents="box-none" className="absolute left-0 right-0 items-center gap-6" style={{ bottom: fabBottom + 60 + 6 }}>
-        <Text accessibilityRole="header" className="w-[353px] text-center font-typolio text-h4 uppercase text-white">
+        <Heading level="h4" accessibilityRole="header" className="w-[353px] text-center uppercase text-white">
           Qu&apos;est-ce que tu ajoutes ?
-        </Text>
+        </Heading>
         <View className="w-[311px] gap-[21px]">
           <View className="flex-row gap-[31px]">
             <BubbleCard bubble={BUBBLES[0]} index={0} onPress={choose} />
