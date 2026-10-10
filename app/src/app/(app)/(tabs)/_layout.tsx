@@ -39,6 +39,8 @@ export default function TabsLayout() {
         <View className="flex-1">
           <Tabs tabBar={() => null} screenOptions={{ headerShown: false }}>
             <Tabs.Screen name="index" />
+            <Tabs.Screen name="objets" />
+            <Tabs.Screen name="dressing" />
             <Tabs.Screen name="profil" />
           </Tabs>
           {open && <NavMenu section={open} onClose={close} />}

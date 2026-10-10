@@ -97,7 +97,17 @@ objet/infos › emplacement › verification › confirmation
 
 - Référentiels (catégories, marques, couleurs, styles, tailles) et emplacements : `lib/reference.ts`, toutes les pages lues (l'API sert 30 lignes par page).
 - « Où tu le ranges ? » (`components/add/LocationStep.tsx`) : Logement › Pièce › Rangement › Conteneur en cascade, création à la volée d'un niveau manquant, emplacements récents.
-- Écarts imposés par l'API, signalés dans chaque écran : pas de photo enregistrée (pas de route d'upload), pas de marque ni de souvenir pour un objet, un seul usage par vêtement.
+- Écarts imposés par l'API, signalés dans chaque écran : pas de marque ni de souvenir pour un objet, un seul usage par vêtement. La photo est envoyée juste après la création (`POST …/{id}/photos`).
+
+## Inventaire
+
+D'après Figma (« Objet — Mes objets », « Vêtement — Dressing », les fiches et « Vêtement — Modification ») :
+
+- **Mes objets** (`(tabs)/objets.tsx`) et **Mon dressing** (`(tabs)/dressing.tsx`) : recherche, puces de catégorie (les catégories de premier niveau réellement utilisées), statut, tri (récents, anciens, A → Z), grille de cartes ; quinconce 230 / 170 pour le dressing. On y arrive par le panneau Inventaire ou les cartes de l'accueil.
+- **Fiches** (`objet/[id].tsx`, `vetement/[id].tsx`) : photo ou illustration, statut, attributs, emplacement complet, détails, notes (propriétaire seulement).
+- **Modifier** (`modifier.tsx`, modale) : PATCH en merge-patch ; la taille d'un vêtement se choisit dans l'échelle de sa catégorie (`sizeSystem`). **Supprimer** : suppression douce côté API, après confirmation.
+- L'API n'a ni recherche ni filtre sur `/api/items` et `/api/garments` : l'app lit toutes les pages et filtre elle-même (`lib/possessions.ts`).
+- En attente de routes d'API (une alerte « bientôt » le dit) : Prêter, Partager, Vendre, Déplacer ; l'historique des prêts et de port n'est pas affiché.
 
 ## Structure
 
@@ -108,17 +118,21 @@ app/
 │   │   ├── _layout.tsx           racine : React Query, session, (auth) / (app)
 │   │   ├── (auth)/               connexion, inscription
 │   │   └── (app)/
-│   │       ├── (tabs)/           accueil (tableau de bord), mon profil
+│   │       ├── (tabs)/           accueil, mes objets, mon dressing, mon profil
 │   │       ├── ajouter.tsx       « Tu ajoutes quoi ? »
-│   │       └── ajout/            parcours d'ajout (scan, objet, vêtement)
+│   │       ├── ajout/            parcours d'ajout (scan, objet, vêtement)
+│   │       ├── objet/[id].tsx    fiche objet ; vetement/[id].tsx : fiche vêtement
+│   │       └── modifier.tsx      modification d'un objet ou d'un vêtement
 │   ├── components/
 │   │   ├── home/ClothVisual.tsx  illustrations de vêtements (SVG Figma)
+│   │   ├── inventory/            cartes, recherche, puces, blocs de fiche
 │   │   ├── nav/                  barre, panneaux, icônes de la barre
 │   │   └── ui/                   Button, TextField, MenuRow, ScreenTitle (DS v2)
 │   ├── lib/
 │   │   ├── api.ts                appels à l'API, jetons, rafraîchissement
 │   │   ├── auth.tsx              état de session, /api/me, profil actif
 │   │   ├── inventory.ts          compteurs et derniers ajouts de l'accueil
+│   │   ├── possessions.ts        listes, fiches, modification, suppression
 │   │   ├── session.ts            stockage chiffré de la session
 │   │   ├── scan.ts               envoi d'une photo au scan
 │   │   └── query-client.ts       cache React Query (base du hors ligne)

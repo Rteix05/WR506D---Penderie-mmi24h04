@@ -11,6 +11,10 @@ export default function AppLayout() {
       <Stack.Screen name="ajouter" options={{ presentation: 'modal' }} />
       {/* Parcours d'ajout (scan, objet, vêtement) : une modale qui empile ses étapes. */}
       <Stack.Screen name="ajout" options={{ presentation: 'modal' }} />
+      {/* Fiches de l'inventaire, et leur modification par-dessus. */}
+      <Stack.Screen name="objet/[id]" />
+      <Stack.Screen name="vetement/[id]" />
+      <Stack.Screen name="modifier" options={{ presentation: 'modal' }} />
     </Stack>
   );
 }

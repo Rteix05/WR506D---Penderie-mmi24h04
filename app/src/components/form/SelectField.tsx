@@ -69,10 +69,15 @@ export function SelectField({ label, value, placeholder = 'Choisir', options, on
   );
 }
 
-function PickerSheet({
+/**
+ * La feuille de choix seule, pour un bouton qui n'est pas un champ (tri et
+ * statut des listes de l'inventaire). selected : la valeur actuelle, cochée.
+ */
+export function PickerSheet({
   title,
   options,
-  clearable,
+  clearable = false,
+  selected,
   onCreate,
   createLabel,
   onClose,
@@ -80,7 +85,8 @@ function PickerSheet({
 }: {
   title: string;
   options: SelectOption[];
-  clearable: boolean;
+  clearable?: boolean;
+  selected?: string | null;
   onCreate?: (name: string) => Promise<void>;
   createLabel?: string;
   onClose: () => void;
@@ -147,12 +153,17 @@ function PickerSheet({
               ) : null
             }
             renderItem={({ item }) => (
-              <Pressable accessibilityRole="button" onPress={() => onSelect(item.key)} className="flex-row items-center gap-3 rounded-md bg-ink/[0.03] px-4 py-3 active:bg-ink/[0.07] dark:bg-ink-night/[0.06]">
+              <Pressable
+                accessibilityRole="button"
+                accessibilityState={{ selected: item.key === selected }}
+                onPress={() => onSelect(item.key)}
+                className="flex-row items-center gap-3 rounded-md bg-ink/[0.03] px-4 py-3 active:bg-ink/[0.07] dark:bg-ink-night/[0.06]">
                 {item.swatch !== undefined && <View style={{ backgroundColor: item.swatch ?? '#E2E8F0' }} className="h-5 w-5 rounded-full border border-ink/10" />}
                 <View className="flex-1">
                   <Text className="font-luciole-bold text-body text-ink dark:text-ink-night">{item.label}</Text>
                   {item.hint && <Text className="font-luciole text-legend text-muted dark:text-muted-night">{item.hint}</Text>}
                 </View>
+                {item.key === selected && <Text className="font-luciole-bold text-body text-primary dark:text-primary-night">v</Text>}
               </Pressable>
             )}
           />

@@ -31,12 +31,20 @@ const toRef = (row: Named): Ref => ({ iri: row['@id'], name: row.name });
 // Référentiels : ils changent rarement, on les garde une heure.
 const REFERENCE = { staleTime: 60 * 60 * 1000 };
 
-export type Category = Ref & { slug: string };
+/**
+ * Catégorie du référentiel. parent : IRI de la catégorie mère (« Hauts »
+ * pour « T-shirts »), null pour une catégorie de premier niveau.
+ * sizeSystem (vêtements) : IRI de l'échelle de tailles imposée par l'API.
+ */
+export type Category = Ref & { slug: string; parent: string | null; sizeSystem: string | null };
+
+type CategoryRow = Named & { parent?: { '@id': string } | null; sizeSystem?: string | null };
+const toCategory = (r: CategoryRow): Category => ({ ...toRef(r), slug: r.slug ?? '', parent: r.parent?.['@id'] ?? null, sizeSystem: r.sizeSystem ?? null });
 
 export function useGarmentCategories() {
   return useQuery({
     queryKey: ['reference', 'garment_categories'],
-    queryFn: async ({ signal }) => (await apiGetAll<Named>('/api/garment_categories', signal)).map((r) => ({ ...toRef(r), slug: r.slug ?? '' })),
+    queryFn: async ({ signal }) => (await apiGetAll<CategoryRow>('/api/garment_categories', signal)).map(toCategory),
     ...REFERENCE,
   });
 }
@@ -44,7 +52,7 @@ export function useGarmentCategories() {
 export function useItemCategories() {
   return useQuery({
     queryKey: ['reference', 'item_categories'],
-    queryFn: async ({ signal }) => (await apiGetAll<Named>('/api/item_categories', signal)).map((r) => ({ ...toRef(r), slug: r.slug ?? '' })),
+    queryFn: async ({ signal }) => (await apiGetAll<CategoryRow>('/api/item_categories', signal)).map(toCategory),
     ...REFERENCE,
   });
 }
@@ -69,7 +77,12 @@ export function useStyles() {
 
 export type SizeSystemCode = 'EU_SHOE' | 'ALPHA' | 'WAIST_LENGTH' | 'FR_NUMERIC' | 'COLLAR' | 'BELT_CM' | 'ONE_SIZE' | 'KIDS_AGE';
 
-/** Les valeurs de taille, groupées par système (Taille lettre, Pointure…), dans l'ordre du référentiel. */
+/**
+ * Les valeurs de taille, groupées par système (Taille lettre, Pointure…),
+ * dans l'ordre du référentiel. Chaque échelle est rangée deux fois : sous
+ * son code (« ALPHA », parcours d'ajout) et sous son IRI (sizeSystem d'une
+ * catégorie, écran de modification).
+ */
 export function useSizes() {
   return useQuery({
     queryKey: ['reference', 'sizes'],
@@ -78,15 +91,14 @@ export function useSizes() {
         apiGetAll<{ '@id': string; code: SizeSystemCode }>('/api/size_systems', signal),
         apiGetAll<{ '@id': string; sizeSystem: string; label: string; sortOrder: number }>('/api/size_values', signal),
       ]);
-      const bySystem = new Map<SizeSystemCode, Ref[]>();
+      const bySystem = new Map<SizeSystemCode | string, Ref[]>();
       for (const system of systems) {
-        bySystem.set(
-          system.code,
-          values
-            .filter((v) => v.sizeSystem === system['@id'])
-            .sort((a, b) => a.sortOrder - b.sortOrder)
-            .map((v) => ({ iri: v['@id'], name: v.label })),
-        );
+        const scale = values
+          .filter((v) => v.sizeSystem === system['@id'])
+          .sort((a, b) => a.sortOrder - b.sortOrder)
+          .map((v) => ({ iri: v['@id'], name: v.label }));
+        bySystem.set(system.code, scale);
+        bySystem.set(system['@id'], scale);
       }
 
       return bySystem;

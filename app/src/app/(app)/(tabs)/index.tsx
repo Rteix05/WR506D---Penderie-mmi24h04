@@ -53,8 +53,8 @@ export default function HomeScreen() {
         </View>
 
         <View className="flex-row gap-3 px-5">
-          <Preview title="Inventaire" meta={overview.data ? plural(overview.data.items, 'objet', 'objets') : ' '} tint="bg-primary/[0.08]" art={['baskets', 'casquette', 'pantalon', 'veste']} />
-          <Preview title="Dressing" meta={overview.data ? plural(overview.data.garments, 'vêtement', 'vêtements') : ' '} tint="bg-cloth/[0.08]" art={['tshirt', 'veste', 'robe', 'casquette']} />
+          <Preview title="Inventaire" meta={overview.data ? plural(overview.data.items, 'objet', 'objets') : ' '} tint="bg-primary/[0.08]" art={['baskets', 'casquette', 'pantalon', 'veste']} onPress={() => router.navigate('/objets')} />
+          <Preview title="Dressing" meta={overview.data ? plural(overview.data.garments, 'vêtement', 'vêtements') : ' '} tint="bg-cloth/[0.08]" art={['tshirt', 'veste', 'robe', 'casquette']} onPress={() => router.navigate('/dressing')} />
         </View>
 
         <View className="gap-3">
@@ -113,7 +113,7 @@ function TopBar({ initial }: { initial: string }) {
 }
 
 /** Carte d'aperçu (Figma « Card/Apercu ») : mosaïque 2 × 2 de vignettes de 63, titre et compteur. */
-function Preview({ title, meta, tint, art }: { title: string; meta: string; tint: string; art: ClothKind[] }) {
+function Preview({ title, meta, tint, art, onPress }: { title: string; meta: string; tint: string; art: ClothKind[]; onPress: () => void }) {
   const tile = (kind: ClothKind, i: number) => (
     <View key={i} className={`h-[63px] w-[63px] items-center justify-center overflow-hidden rounded-xs ${tint}`}>
       <ClothVisual kind={kind} />
@@ -121,7 +121,12 @@ function Preview({ title, meta, tint, art }: { title: string; meta: string; tint
   );
 
   return (
-    <View accessible accessibilityLabel={`${title}, ${meta}`} style={E1} className="flex-1 gap-3 rounded-md bg-surface p-3 dark:bg-surface-night">
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={`${title}, ${meta}`}
+      onPress={onPress}
+      style={E1}
+      className="flex-1 gap-3 rounded-md bg-surface p-3 active:opacity-80 dark:bg-surface-night">
       <View className="gap-1.5">
         <View className="flex-row gap-1.5">{art.slice(0, 2).map(tile)}</View>
         <View className="flex-row gap-1.5">{art.slice(2, 4).map((k, i) => tile(k, i + 2))}</View>
@@ -130,7 +135,7 @@ function Preview({ title, meta, tint, art }: { title: string; meta: string; tint
         <Text className="font-luciole-bold text-body text-ink dark:text-ink-night">{title}</Text>
         <Text className="font-luciole text-legend text-muted dark:text-muted-night">{meta}</Text>
       </View>
-    </View>
+    </Pressable>
   );
 }
 
@@ -139,11 +144,12 @@ function RecentCard({ entry }: { entry: RecentEntry }) {
   const when = relativeDay(entry.createdAt);
 
   return (
-    <View
-      accessible
+    <Pressable
+      accessibilityRole="button"
       accessibilityLabel={[entry.name, entry.room, when].filter(Boolean).join(', ')}
+      onPress={() => router.push({ pathname: entry.kind === 'item' ? '/objet/[id]' : '/vetement/[id]', params: { id: entry.id } })}
       style={E1}
-      className="w-[140px] gap-2 rounded-md bg-surface px-2 pb-3 pt-2 dark:bg-surface-night">
+      className="w-[140px] gap-2 rounded-md bg-surface px-2 pb-3 pt-2 active:opacity-80 dark:bg-surface-night">
       <View className={`h-[162px] w-[124px] items-center justify-center overflow-hidden rounded-sm ${entry.kind === 'garment' ? 'bg-cloth/[0.08]' : 'bg-primary/[0.08]'}`}>
         {entry.photo ? (
           <Image source={mediaSource(entry.photo)} style={{ width: 124, height: 162 }} contentFit="cover" accessible={false} />
@@ -162,6 +168,6 @@ function RecentCard({ entry }: { entry: RecentEntry }) {
         )}
         <Text className="font-luciole text-legend text-muted/[0.60] dark:text-muted-night/[0.60]">{when}</Text>
       </View>
-    </View>
+    </Pressable>
   );
 }
