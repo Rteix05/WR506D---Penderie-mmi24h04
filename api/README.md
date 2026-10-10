@@ -96,6 +96,19 @@ Un objet ou un vêtement est rangé dans une cascade **pièce › rangement › 
 - À la **création** (`POST /api/items`, `POST /api/garments`), on peut donner `room`, `storage` et `box`. Le conteneur impose sa pièce et son rangement ; un rangement d'une autre pièce est refusé (422, `ValidLocation`) ; ranger dans la pièce de quelqu'un d'autre est refusé (403).
 - **Ensuite**, l'emplacement ne change que par un déplacement (`LocationMover`, qui écrit l'historique) : un `PATCH` ne le modifie pas.
 
+## Photos
+
+Une photo appartient à un objet ou à un vêtement (galerie : `ItemMedia`, `GarmentMedia`).
+
+| Route | Qui | Ce que ça fait |
+|---|---|---|
+| `POST /api/items/{id}/photos`, `POST /api/garments/{id}/photos` | qui peut **modifier** le bien (propriétaire, tuteur) | multipart, champ `image` : JPEG, PNG ou WebP, 8 Mo au plus, 12 photos par bien. Le type est lu dans les octets. La première photo devient la principale. |
+| `GET /api/media/{id}` | qui peut **voir** un bien qui l'utilise | le fichier, en cache **privé** (jamais sur un proxy). Pour les autres : 404, on ne révèle pas qu'une photo existe. |
+
+Chaque bien renvoie `photos` : les URL de `GET /api/media/{id}`, la principale d'abord. Le champ est absent pour un lien public sans compte, puisque la lecture exige un jeton.
+
+Les fichiers sont sur le disque, dans `MEDIA_DIR` (`var/media` en dev, `var/test-media` en test), un dossier par mois. La base ne garde que le chemin : passer à un stockage objet (S3, MinIO) ne touchera que `MediaStorage`.
+
 ## Partage et visibilité
 
 Tout est **privé par défaut**. Un partage ouvre l'accès, à trois niveaux : rien < **Lire** (`READ`) < **Modifier** (`EDIT`). Les règles sont dans `ResourceAccess` (décisions du 30/09, section « Qui voit quoi » du MDD) :
