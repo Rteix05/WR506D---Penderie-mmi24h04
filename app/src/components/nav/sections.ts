@@ -23,8 +23,8 @@ export const SECTIONS: Record<Section, { legend: string; entries: MenuEntry[] }>
   Inventaire: {
     legend: 'Tout ce que tu possèdes',
     entries: [
-      { title: 'Mes objets', subtitle: 'Tes objets et leurs états' },
-      { title: 'Mon dressing', subtitle: 'Tes vêtements' },
+      { title: 'Mes objets', subtitle: 'Tes objets et leurs états', href: '/objets' },
+      { title: 'Mon dressing', subtitle: 'Tes vêtements', href: '/dressing' },
       { title: 'Mes tenues', subtitle: 'Suggestions et tenues enregistrées' },
       { title: 'Mes collections', subtitle: 'Tableaux privés par défaut' },
       { title: 'Mes prêts', subtitle: 'Prêtés et empruntés' },
@@ -57,6 +57,7 @@ export const ORDER: Section[] = ['Accueil', 'Inventaire', 'Logements', 'Profil']
 /** L'onglet allumé quand aucun panneau n'est ouvert : celui de la page affichée. */
 export function sectionOf(pathname: string): Section {
   if (pathname.startsWith('/profil')) return 'Profil';
+  if (pathname.startsWith('/objets') || pathname.startsWith('/dressing')) return 'Inventaire';
 
   return 'Accueil';
 }

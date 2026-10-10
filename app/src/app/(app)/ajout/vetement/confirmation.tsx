@@ -11,8 +11,7 @@ import { locationPath, useDraft } from '@/lib/add-draft';
 
 /**
  * « Vêtement ajouté ! » (Figma « Vêtement — Ajout · Confirmation »,
- * 135:3164). Écart : « Voir le vêtement » attend la fiche vêtement, pas
- * encore construite ; on revient à l'accueil, où il apparaît.
+ * 135:3164). « Voir le vêtement » ferme le parcours et ouvre sa fiche.
  */
 export default function GarmentDoneScreen() {
   const { draft, created, reset } = useDraft();
@@ -37,7 +36,15 @@ export default function GarmentDoneScreen() {
         ]}
       />
       <ActionBar note={created?.photoSaved === false ? "La photo n'a pas pu être enregistrée : tu pourras l'ajouter depuis la fiche." : undefined}>
-        <Button label="Retour à l'accueil" onPress={closeFlow} />
+        {created && (
+          <Button
+            label="Voir le vêtement"
+            onPress={() => {
+              closeFlow();
+              router.push({ pathname: '/vetement/[id]', params: { id: created.id } });
+            }}
+          />
+        )}
         <Button
           label="Ajouter un autre vêtement"
           variant="secondary"
@@ -46,6 +53,7 @@ export default function GarmentDoneScreen() {
             router.dismissTo('/ajout/vetement/type');
           }}
         />
+        <Button label="Retour à l'accueil" variant="ghost" onPress={closeFlow} />
       </ActionBar>
     </FlowScreen>
   );
