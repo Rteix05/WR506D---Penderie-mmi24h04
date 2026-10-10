@@ -14,7 +14,7 @@ import { TextField } from '@/components/ui/TextField';
 import { USAGES, type Usage } from '@/lib/add-draft';
 import { ApiError } from '@/lib/api';
 import { CONDITION_LABEL, deletePossession, locationOf, updatePossession, usePossession, type ConditionValue, type Kind, type Possession } from '@/lib/possessions';
-import { useBrands, useColors, useGarmentCategories, useItemCategories, useLocations, useSizes, useStyles } from '@/lib/reference';
+import { createBrand, useBrands, useColors, useGarmentCategories, useItemCategories, useLocations, useSizes, useStyles } from '@/lib/reference';
 
 /**
  * « Modifier » (Figma « Vêtement — Modification », 135:3534), pour un objet
@@ -65,6 +65,8 @@ function EditForm({ kind, initial }: { kind: Kind; initial: Possession }) {
   const [condition, setCondition] = useState<ConditionValue | null>(initial.condition ?? null);
   const [category, setCategory] = useState<string | null>(initial.category ?? null);
   const [brand, setBrand] = useState<string | null>(initial.brand ?? null);
+  // Marque ajoutée ici : affichée avant que la liste rechargée ne la contienne.
+  const [addedBrand, setAddedBrand] = useState<{ iri: string; name: string } | null>(null);
   const [size, setSize] = useState<string | null>(initial.size ?? null);
   const [color, setColor] = useState<string | null>(initial.colors?.[0] ?? null);
   const [usage, setUsage] = useState<Usage>(initial.usage ?? 'EVERYDAY');
@@ -151,11 +153,17 @@ function EditForm({ kind, initial }: { kind: Kind; initial: Possession }) {
             <SelectField
               label="Marque"
               placeholder="Facultatif"
-              value={nameOf(brands.data, brand)}
+              value={nameOf(brands.data, brand) ?? (addedBrand?.iri === brand ? addedBrand.name : null)}
               loading={brands.isPending}
               clearable
               options={(brands.data ?? []).map((b) => ({ key: b.iri, label: b.name }))}
               onSelect={setBrand}
+              createLabel="Pas dans la liste ? Ajoute ta marque"
+              onCreate={async (typed) => {
+                const created = await createBrand(queryClient, typed);
+                setAddedBrand(created);
+                setBrand(created.iri);
+              }}
             />
             {scale.length > 0 && (
               <View className="gap-1">
