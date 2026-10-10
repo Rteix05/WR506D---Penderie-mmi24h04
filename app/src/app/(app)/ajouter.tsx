@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ClothVisual, type ClothKind } from '@/components/home/ClothVisual';
 import { BackButton } from '@/components/ui/BackButton';
+import { Heading } from '@/components/ui/Heading';
 import { E1 } from '@/components/ui/elevation';
 import { ScreenTitle } from '@/components/ui/ScreenTitle';
 
@@ -75,7 +76,7 @@ function TypeCard({ kind, title, description, onPress }: { kind: ClothKind; titl
         <ClothVisual kind={kind} scale={1.143} />
       </View>
       <View className="flex-1 gap-1">
-        <Text className="font-typolio text-h4 uppercase text-ink dark:text-ink-night">{title}</Text>
+        <Heading level="h4" className="uppercase text-ink dark:text-ink-night">{title}</Heading>
         <Text className="max-w-[190px] font-luciole text-legend leading-4 text-muted dark:text-muted-night">{description}</Text>
       </View>
     </Pressable>

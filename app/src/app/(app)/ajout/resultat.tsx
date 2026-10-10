@@ -6,6 +6,7 @@ import { PhotoZone } from '@/components/add/PhotoZone';
 import { StepHeader } from '@/components/add/StepHeader';
 import { Pill } from '@/components/ui/Banner';
 import { Button } from '@/components/ui/Button';
+import { Heading } from '@/components/ui/Heading';
 import { E1 } from '@/components/ui/elevation';
 import { InfoCard } from '@/components/ui/InfoCard';
 import { useDraft } from '@/lib/add-draft';
@@ -30,7 +31,7 @@ export default function ResultScreen() {
 
       <View style={E1} className="mx-5 flex-row items-center gap-3 rounded-md bg-surface p-4 dark:bg-surface-night">
         <View className="flex-1 gap-1">
-          <Text className="font-typolio text-h4 uppercase text-ink dark:text-ink-night">{s?.name ?? 'Sans nom'}</Text>
+          <Heading level="h4" className="uppercase text-ink dark:text-ink-night">{s?.name ?? 'Sans nom'}</Heading>
           {subtitle !== '' && (
             <Text numberOfLines={2} className="font-luciole text-legend text-muted dark:text-muted-night">
               {subtitle}
