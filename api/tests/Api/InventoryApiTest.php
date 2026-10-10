@@ -228,7 +228,8 @@ final class InventoryApiTest extends ApiTestBase
         self::assertGreaterThan(0, $categories['totalItems']);
         $this->call('GET', '/api/brands', $rafael);
         self::assertResponseIsSuccessful();
-        $this->call('POST', '/api/brands', $rafael, ['name' => 'Pirate']);
+        // Les marques sont l'exception : on peut ajouter la sienne (BrandApiTest).
+        $this->call('POST', '/api/colors', $rafael, ['name' => 'Pirate']);
         self::assertResponseStatusCodeSame(405, 'les référentiels sont en lecture seule');
     }
 }

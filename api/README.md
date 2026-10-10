@@ -109,6 +109,13 @@ Chaque bien renvoie `photos` : les URL de `GET /api/media/{id}`, la principale d
 
 Les fichiers sont sur le disque, dans `MEDIA_DIR` (`var/media` en dev, `var/test-media` en test), un dossier par mois. La base ne garde que le chemin : passer à un stockage objet (S3, MinIO) ne touchera que `MediaStorage`.
 
+## Marques
+
+La liste des marques est prédéfinie et vérifiée (`app:reference-data:load`), mais on peut ajouter la sienne :
+
+- `POST /api/brands` `{ "name": "Trapstar" }` : **trouver ou créer**. Si une marque de même slug existe (« TRAPSTAR », « Trap Star »), elle est renvoyée (200). Sinon, elle est créée **non vérifiée** et rattachée au profil actif (201). Nom vide, sans lettre ni chiffre, ou de plus de 80 caractères : 422.
+- `GET /api/brands` : la liste vérifiée, plus les marques que le profil actif a ajoutées. Celles des autres n'y figurent pas tant que l'admin ne les a pas validées, mais elles restent lisibles par leur IRI sur un vêtement.
+
 ## Partage et visibilité
 
 Tout est **privé par défaut**. Un partage ouvre l'accès, à trois niveaux : rien < **Lire** (`READ`) < **Modifier** (`EDIT`). Les règles sont dans `ResourceAccess` (décisions du 30/09, section « Qui voit quoi » du MDD) :

@@ -13,6 +13,7 @@ use App\Entity\Place\Place;
 use App\Entity\Place\PlaceMember;
 use App\Entity\Place\Room;
 use App\Entity\Place\Storage;
+use App\Entity\Reference\Brand;
 use App\Entity\Reference\GarmentCategory;
 use App\Entity\Reference\ItemCategory;
 use App\Security\CurrentProfile;
@@ -49,6 +50,15 @@ final class OwnedByCurrentProfileExtension implements QueryCollectionExtensionIn
         if (Profile::class === $resourceClass) {
             $account = $queryNameGenerator->generateParameterName('account');
             $queryBuilder->andWhere("$alias.account = :$account")->setParameter($account, $this->current->account()->getId(), 'uuid');
+
+            return;
+        }
+
+        // Les marques : la liste vérifiée, plus celles que le profil actif a
+        // ajoutées (en attente de validation, proposées à leur seul créateur).
+        if (Brand::class === $resourceClass) {
+            $me = $queryNameGenerator->generateParameterName('me');
+            $queryBuilder->andWhere("$alias.isVerified = true OR $alias.createdBy = :$me")->setParameter($me, $this->current->get()->getId(), 'uuid');
 
             return;
         }
