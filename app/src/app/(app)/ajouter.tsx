@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -15,10 +15,15 @@ import { ScreenTitle } from '@/components/ui/ScreenTitle';
  * Destinations du prototype : Vêtement ouvre l'ajout d'un vêtement
  * (« C'est quoi ? »), Objet et « Scanner à la place » ouvrent le scan
  * (« Ajouter un objet »), d'où l'on peut aussi saisir à la main.
+ *
+ * at : emplacement déjà choisi (« Ajouter un objet » d'un carton), passé
+ * tel quel au parcours d'ajout.
  */
 export default function AddChoiceScreen() {
-  const toScan = () => router.replace('/ajout/scan');
-  const toGarment = () => router.replace('/ajout/vetement/type');
+  const { at } = useLocalSearchParams<{ at?: string }>();
+  const params = at ? { at } : {};
+  const toScan = () => router.replace({ pathname: '/ajout/scan', params });
+  const toGarment = () => router.replace({ pathname: '/ajout/vetement/type', params });
 
   return (
     <SafeAreaView className="flex-1 bg-bg dark:bg-bg-night">

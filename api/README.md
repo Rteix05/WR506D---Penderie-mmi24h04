@@ -205,6 +205,24 @@ Les modèles sont essayés dans l'ordre de `OPENROUTER_SCAN_MODELS` (`.env`) : q
 
 Pour tester depuis le téléphone : écran **Tester le scan** de l'app (`app/src/app/scan.tsx`).
 
+## Look du jour
+
+Une photo de soi (`DailyLook`, une par profil et par jour), et sur cette photo un point par vêtement porté (`LookTag`). Pour chaque point, l'app découpe un gros plan autour du point et l'envoie ; l'IA du scan (même chaîne de modèles gratuits) reçoit ce gros plan et la liste numérotée des vêtements du dressing (texte : nom, catégorie, couleurs, marque). Elle répond soit avec le numéro d'un vêtement reconnu (`MATCHED`), soit avec la description d'un vêtement nouveau, au format de la suggestion du scan (`NEW`), ce qui pré-remplit son ajout. Si elle ne dit rien d'exploitable, le point est `UNKNOWN`. L'utilisateur confirme ou corrige ensuite chaque point (`CONFIRMED`).
+
+Le look est destiné à un post Instagram en deux images (la photo avec ses points, puis les vêtements). L'API ne publie rien : elle tient l'état du look, `TAGGING` › `READY` › `POSTED`. Pour passer à `READY`, chaque point doit désigner un vêtement. Le passage à `READY` note aussi le port de chaque vêtement ce jour-là (`WearLog`), ce que le moteur de suggestion utilise. Un look `POSTED` ne se modifie plus.
+
+| Route | Rôle |
+| --- | --- |
+| `GET /api/looks/today` | `{look}` : le look du jour du profil, ou `null` |
+| `GET /api/looks` | ses looks, du plus récent au plus ancien |
+| `POST /api/looks` | multipart, champ `image` : crée le look du jour. Répond 409 s'il en existe déjà un |
+| `GET`, `PATCH`, `DELETE /api/looks/{id}` | `PATCH {status?, caption?}` change l'état ou la légende (2 200 caractères au plus). `DELETE` supprime aussi la photo |
+| `POST /api/looks/{id}/tags` | multipart : `x`, `y` (de 0 à 1 depuis le coin haut gauche) et `image` (le gros plan). L'IA répond pendant la requête. 12 points au plus |
+| `PATCH /api/looks/{id}/tags/{tagId}` | `{garment: "/api/garments/{id}"}` : le vêtement du point. Il peut être emprunté, il suffit de pouvoir le voir |
+| `DELETE /api/looks/{id}/tags/{tagId}` | retire le point |
+
+Un look n'est visible que par son propriétaire et son tuteur : les autres reçoivent 404, sa photo comprise. Un point ne se modifie que lorsque le look est en préparation (`TAGGING`).
+
 ## Tests
 
 La suite PHPUnit tourne sur la base de test `penderie_test`, migrée et chargée de ses référentiels (voir « Base de données ») :

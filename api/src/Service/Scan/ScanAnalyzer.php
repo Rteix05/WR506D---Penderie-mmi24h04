@@ -95,6 +95,37 @@ final class ScanAnalyzer
     }
 
     /**
+     * La suggestion d'une photo de vêtement ou d'objet, au format du scan.
+     * Sert aussi aux points d'un look du jour (LookTagDetector).
+     *
+     * @param array<string, mixed> $answer la réponse du modèle
+     *
+     * @return array<string, mixed>
+     */
+    public function photoSuggestion(array $answer): array
+    {
+        return $this->suggestion($answer, ScanKind::Photo);
+    }
+
+    /**
+     * Les listes que le modèle doit respecter : nos slugs de catégories et
+     * nos couleurs. Sans elles, il invente des catégories qu'on ne sait pas
+     * traduire en ressources de l'API.
+     */
+    public static function catalogue(): string
+    {
+        $garments = self::leaves(GarmentCategories::tree());
+        $items = self::leaves(ItemCategories::tree());
+        $colors = implode(', ', array_column(Colors::all(), 'name'));
+
+        return <<<TEXT
+            Slugs des catégories de vêtements (GARMENT) : {$garments}
+            Slugs des catégories d'objets (ITEM) : {$items}
+            Couleurs : {$colors}
+            TEXT;
+    }
+
+    /**
      * Ne garde de la réponse que des valeurs du bon type, et traduit
      * catégorie, marque et couleurs en ressources de l'API.
      *
@@ -181,9 +212,7 @@ final class ScanAnalyzer
 
     private function prompt(ScanKind $kind): string
     {
-        $garments = self::leaves(GarmentCategories::tree());
-        $items = self::leaves(ItemCategories::tree());
-        $colors = implode(', ', array_column(Colors::all(), 'name'));
+        $catalogue = self::catalogue();
         $task = ScanKind::Photo === $kind
             ? "Identifie l'objet principal de la photo. S'il se porte (vêtement, chaussure, accessoire de mode), type = \"GARMENT\" ; sinon type = \"ITEM\". Ne remplis composition, care et madeIn que si une étiquette est lisible."
             : "La photo montre l'étiquette cousue d'un vêtement. Recopie ce qui y est écrit : marque, taille, composition (matière et pourcentage), consignes d'entretien (en mots, pas en symboles), pays de fabrication. type = \"GARMENT\".";
@@ -208,9 +237,7 @@ final class ScanAnalyzer
             }
             N'invente rien : une information absente ou illisible vaut null (ou une liste vide).
 
-            Slugs des catégories de vêtements (GARMENT) : {$garments}
-            Slugs des catégories d'objets (ITEM) : {$items}
-            Couleurs : {$colors}
+            {$catalogue}
             PROMPT;
     }
 
