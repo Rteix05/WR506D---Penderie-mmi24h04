@@ -37,8 +37,8 @@ type Bubble = {
 // logement, scan.
 const BUBBLES: Bubble[] = [
   { letters: ['V', 'O'], title: 'Vêtements et Objets', description: 'Un sweat, un CD', href: '/ajouter' },
-  { letters: ['C'], title: 'Cartons', description: 'Créer un carton de rangement' },
-  { letters: ['L'], title: 'Logement', description: 'Maison, Appart, bureau' },
+  { letters: ['C'], title: 'Cartons', description: 'Créer un carton de rangement', href: '/nouveau-carton/infos' },
+  { letters: ['L'], title: 'Logement', description: 'Maison, Appart, bureau', href: '/nouveau-logement/type' },
   { letters: ['S'], title: 'Scanner', description: 'Scanne pour remplir', href: '/ajout/scan' },
 ];
 

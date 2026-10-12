@@ -2,6 +2,7 @@
 
 namespace App\Security;
 
+use App\Entity\Dressing\DailyLook;
 use App\Entity\Dressing\Outfit;
 use App\Entity\Dressing\OutfitGarment;
 use App\Entity\Identity\Profile;
@@ -437,7 +438,7 @@ final class ResourceAccess
     public static function ownerOf(object $resource): ?Profile
     {
         return match (true) {
-            $resource instanceof AbstractPossession, $resource instanceof Place, $resource instanceof Outfit,
+            $resource instanceof AbstractPossession, $resource instanceof Place, $resource instanceof Outfit, $resource instanceof DailyLook,
             $resource instanceof Collection, $resource instanceof Room, $resource instanceof Storage,
             $resource instanceof Box, $resource instanceof AbstractCategory => $resource->getOwner(),
             $resource instanceof Loan => $resource->getLender(),

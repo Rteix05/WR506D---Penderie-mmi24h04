@@ -8,8 +8,9 @@ use Symfony\Contracts\HttpClient\ResponseInterface;
 /**
  * Un faux OpenRouter pour les tests fonctionnels : le premier modèle de la
  * chaîne est toujours « à court de quota » (429), ce qui fait passer chaque
- * scan par le fallback ; le suivant répond selon la consigne (photo ou
- * étiquette). Avec $down, tous les modèles sont en panne.
+ * scan par le fallback ; le suivant répond selon la consigne (photo,
+ * étiquette, ou point d'un look du jour). Avec $down, tous les modèles
+ * sont en panne.
  */
 final class OpenRouterMock
 {
@@ -24,16 +25,29 @@ final class OpenRouterMock
             return new MockResponse(json_encode(['error' => ['code' => 429, 'message' => 'Rate limit exceeded: free-models-per-min']]), ['http_code' => 429]);
         }
         $prompt = $request['messages'][0]['content'][0]['text'] ?? '';
-        $answer = str_contains($prompt, 'étiquette cousue')
-            ? ['type' => 'GARMENT', 'name' => null, 'brand' => 'Levi\'s', 'size' => 'W32 L34', 'colors' => [],
-                'composition' => [['material' => 'coton', 'percent' => 99], ['material' => 'élasthanne', 'percent' => 1]],
-                'care' => ['lavage à 30 °C'], 'madeIn' => 'Turquie', 'confidence' => 0.9]
-            : ['type' => 'GARMENT', 'name' => 'Jean slim bleu', 'description' => 'Un jean bleu brut.', 'category' => 'jeans',
-                'brand' => null, 'colors' => ['Bleu marine', 'Couleur inventée'], 'size' => null, 'composition' => [], 'care' => [], 'confidence' => 0.8];
+        $answer = match (true) {
+            // Un point de look du jour : le 1er vêtement du dressing s'il y en a un, sinon un vêtement nouveau.
+            str_contains($prompt, 'gros plan découpé') => str_contains($prompt, '(le dressing est vide)')
+                ? ['match' => null, 'name' => 'Veste en jean', 'description' => 'Une veste en jean délavée.', 'category' => 'jeans',
+                    'brand' => null, 'colors' => ['Bleu marine'], 'confidence' => 0.7]
+                : ['match' => 1, 'name' => null, 'colors' => [], 'confidence' => 0.8],
+            default => $this->scanAnswer($prompt),
+        };
 
         return new MockResponse(json_encode([
             'model' => $model,
             'choices' => [['message' => ['role' => 'assistant', 'content' => "```json\n".json_encode($answer)."\n```"]]],
         ]), ['http_code' => 200]);
+    }
+
+    /** @return array<string, mixed> */
+    private function scanAnswer(string $prompt): array
+    {
+        return str_contains($prompt, 'étiquette cousue')
+            ? ['type' => 'GARMENT', 'name' => null, 'brand' => 'Levi\'s', 'size' => 'W32 L34', 'colors' => [],
+                'composition' => [['material' => 'coton', 'percent' => 99], ['material' => 'élasthanne', 'percent' => 1]],
+                'care' => ['lavage à 30 °C'], 'madeIn' => 'Turquie', 'confidence' => 0.9]
+            : ['type' => 'GARMENT', 'name' => 'Jean slim bleu', 'description' => 'Un jean bleu brut.', 'category' => 'jeans',
+                'brand' => null, 'colors' => ['Bleu marine', 'Couleur inventée'], 'size' => null, 'composition' => [], 'care' => [], 'confidence' => 0.8];
     }
 }

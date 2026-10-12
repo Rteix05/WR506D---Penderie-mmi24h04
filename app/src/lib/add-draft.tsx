@@ -1,5 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query';
 import type { ImagePickerAsset } from 'expo-image-picker';
+import { useGlobalSearchParams } from 'expo-router';
 import { createContext, use, useCallback, useMemo, useState, type PropsWithChildren } from 'react';
 
 import type { ClothKind } from '@/components/home/ClothVisual';
@@ -147,7 +148,10 @@ export function useDraft(): DraftApi {
  * tant que tu n'as pas terminé » (maquette, résultat du scan).
  */
 export function DraftProvider({ children }: PropsWithChildren) {
-  const [draft, setDraft] = useState<Draft>(EMPTY);
+  // Emplacement déjà choisi à l'ouverture du parcours (paramètre at, JSON) :
+  // « Ajouter un objet » depuis la fiche d'un carton.
+  const { at } = useGlobalSearchParams<{ at?: string }>();
+  const [draft, setDraft] = useState<Draft>(() => ({ ...EMPTY, location: parseLocation(at) ?? NO_LOCATION }));
   const [created, setCreated] = useState<Created | null>(null);
   const queryClient = useQueryClient();
 
@@ -263,6 +267,17 @@ export function DraftProvider({ children }: PropsWithChildren) {
   const value = useMemo(() => ({ draft, update, reset, applyScan, submit, created }), [draft, update, reset, applyScan, submit, created]);
 
   return <DraftContext value={value}>{children}</DraftContext>;
+}
+
+function parseLocation(at: string | undefined): Location | null {
+  if (!at) return null;
+  try {
+    const parsed = JSON.parse(at) as Location;
+
+    return parsed.room ? parsed : null;
+  } catch {
+    return null;
+  }
 }
 
 /** « Maison principale › Garage › Étagère 2 › Carton Bricolage » */
