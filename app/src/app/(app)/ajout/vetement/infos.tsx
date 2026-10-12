@@ -49,8 +49,14 @@ export default function GarmentInfoScreen() {
   const [reading, setReading] = useState(false);
   const hint = (field: keyof Draft) => (draft.fromScan.includes(field) ? SCANNED : undefined);
 
-  const system = draft.garmentType?.sizes ?? 'ALPHA';
-  const sizeOptions = useMemo(() => sizes.data?.get(system) ?? [], [sizes.data, system]);
+  // L'échelle de tailles vient de la catégorie (Baskets → pointures), comme
+  // à la modification et comme l'API la vérifie. Le type choisi à l'étape 1
+  // ne sert que si la catégorie n'en impose pas : un vêtement venu du scan
+  // n'a pas de type, et des baskets proposaient alors S, M, L.
+  const scale = categories.data?.find((c) => c.iri === draft.category?.iri)?.sizeSystem ?? draft.garmentType?.sizes ?? 'ALPHA';
+  const sizeOptions = useMemo(() => sizes.data?.get(scale) ?? [], [sizes.data, scale]);
+  // useSizes range chaque échelle sous son code ET son IRI : même tableau.
+  const shoes = sizes.data !== undefined && sizeOptions === sizes.data.get('EU_SHOE');
   // Type « Autre », ou vêtement venu du scan : la catégorie se choisit ici.
   const askCategory = !draft.garmentType?.slug;
 
@@ -108,7 +114,8 @@ export default function GarmentInfoScreen() {
             loading={categories.isPending}
             hint={hint('category')}
             options={(categories.data ?? []).map((c) => ({ key: c.iri, label: c.name }))}
-            onSelect={(iri) => update({ category: categories.data?.find((c) => c.iri === iri) ?? null })}
+            // Une autre catégorie peut changer d'échelle (pull → baskets) : la taille choisie ne vaut plus.
+            onSelect={(iri) => update({ category: categories.data?.find((c) => c.iri === iri) ?? null, size: null })}
           />
         )}
         <SelectField
@@ -126,7 +133,7 @@ export default function GarmentInfoScreen() {
         {sizeOptions.length > 0 && (
           <View className="gap-1">
             <Chips
-              label="Taille"
+              label={shoes ? 'Pointure' : 'Taille'}
               options={sizeOptions.map((v) => ({ value: v.iri, label: v.name }))}
               selected={draft.size ? [draft.size.iri] : []}
               onToggle={(iri) => update({ size: draft.size?.iri === iri ? null : (sizeOptions.find((v) => v.iri === iri) ?? null), sizeLabel: '' })}
