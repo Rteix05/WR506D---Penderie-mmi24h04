@@ -176,3 +176,17 @@ Règles suivies avec l'outil de développement :
   - 7 tests ; suite complète à 203 tests OK.
 - **Produit (app, #38)** : Changer de profil, fiche d'un profil, Nouveau profil, Modifier, Autorisations, et le nouvel écran « Mon profil ».
 - **Pas vérifié** : les écrans sur téléphone.
+
+### 12/10 — Conflits de merge, suivi Asana, réseau (PR #32 à #38)
+
+- **Prompts** :
+  - « tout est testable sur l'app ? » : l'IA a répondu que non, les PR #32 à #38 n'étant pas mergées, et a listé ce qui l'était déjà ;
+  - « j'ai merge 33 et 34 a un conflit , regle le conflit puis fais les merge » ;
+  - « c'est mergé, coche Asana et remplis le journal + regarde l'ip du partage de co ».
+- **Conflits résolus par l'IA**, tous en gardant les deux côtés :
+  - #34 contre l'onglet Logements (#32) : la liste des écrans de l'app (`_layout.tsx`) et le README ;
+  - #37 contre le look du jour (#33) : la liste des routes dans `ControllerErrorSubscriber` (les deux préfixes gardés). Suite API complète après fusion : 210 tests OK ;
+  - #38 : résolue d'avance contre la branche de #34, pour qu'elle se merge sans conflit après elle.
+- **Merges** : l'IA a voulu lancer `gh pr merge`, mais les permissions de la session l'ont bloqué ; l'étudiant merge lui-même.
+- **Asana** : 13 tâches couvertes par l'onglet Logements (#32) cochées (logements, pièces, rangements, cartons). Aucune tâche Asana ne correspond au look du jour.
+- **Réseau** : sur le partage de connexion de l'iPhone, le PC est en `172.20.10.2` (déjà dans `app/.env.local`). Le profil Wi-Fi est resté « Public » sous Windows, ce qui bloque le téléphone ; l'étudiant doit le passer en « Privé » lui-même (droits administrateur).
