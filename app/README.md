@@ -141,6 +141,22 @@ Une photo de soi, un point par vêtement porté, l'IA qui reconnaît chaque vêt
   - l'app ne publie rien : « Marquer comme posté » fait passer le look à l'état `POSTED`. Les états sont `TAGGING` › `READY` › `POSTED`.
 - **Données** : `lib/look.ts`. La photo envoyée reste en mémoire pour découper les gros plans ; après un redémarrage, elle est retéléchargée avec le jeton.
 
+## Profils du compte
+
+Un compte, c'est une connexion et plusieurs profils, chacun avec sa penderie (MDD). Il y a l'adulte inscrit, ses enfants (sous tutelle) et les proches qu'il gère. Les écrans suivent la section « 12 · Compte » de Figma.
+
+- **Mon profil** (`(tabs)/profil.tsx`) : le profil actif, « Changer de profil », les autres profils du compte et « Ajouter un profil » (pour un adulte).
+- **Changer de profil** (`profils/index.tsx`, modale) : une carte par profil (« Profil enfant · 9 ans · 18 objets »), « Gérer », « Continuer ». Changer de profil vide le cache, et toute l'app repart du profil choisi (en-tête `X-Profile`).
+- **Fiche d'un profil** (`profils/[id]`) : ce qu'il peut faire, sa penderie (objets, vêtements, prêts en cours), puis Utiliser, Modifier, Autorisations et Supprimer (réservé au tuteur).
+- **Nouveau profil** (`profils/nouveau.tsx`) : prénom, date de naissance, type (Enfant ou Famille), puis on enchaîne sur les autorisations du profil créé.
+- **Modifier** (`profils/[id]/modifier.tsx`) : le tuteur change tout ; un profil qui se modifie lui-même ne change que son nom affiché et sa bio. Un enfant devenu majeur peut passer profil famille.
+- **Autorisations** (`profils/[id]/autorisations.tsx`) : chaque permission en trois modes, Oui, Avec mon accord ou Non. La maquette montre des interrupteurs, mais le modèle de données a trois modes. Le profil lui-même les voit sans pouvoir les changer.
+- **Données** : `lib/profiles.ts` (API `/api/account/profiles`).
+- **Écarts avec la maquette** :
+  - pas d'avatar photo (initiale) ;
+  - pas de « Qui est-ce ? » ni de « Partager les logements / les amis », qui n'ont pas d'équivalent dans le modèle de données ;
+  - le code parent et les demandes de l'enfant viendront ensuite.
+
 ## Structure
 
 ```
@@ -159,7 +175,8 @@ app/
 │   │       ├── carton/[id]/      fiche et contenu d'un carton
 │   │       ├── nouveau-logement/ parcours « Ajouter un logement »
 │   │       ├── nouveau-carton/   parcours « Créer un carton »
-│   │       └── nouvel-emplacement.tsx  ajout rapide d'une pièce ou d'un rangement
+│   │       ├── nouvel-emplacement.tsx  ajout rapide d'une pièce ou d'un rangement
+│   │       └── profils/          profils du compte : changer, créer, modifier, autorisations
 │   ├── components/
 │   │   ├── home/ClothVisual.tsx  illustrations de vêtements (SVG Figma)
 │   │   ├── inventory/            cartes, recherche, puces, blocs de fiche
@@ -175,6 +192,7 @@ app/
 │   │   ├── possessions.ts        listes, fiches, modification, suppression
 │   │   ├── places.ts             logements : libellés, compteurs, créations, suppressions
 │   │   ├── place-draft.tsx       brouillon « Ajouter un logement » ; box-draft.tsx : « Créer un carton »
+│   │   ├── profiles.ts           profils du compte et leurs autorisations
 │   │   ├── session.ts            stockage chiffré de la session
 │   │   ├── scan.ts               envoi d'une photo au scan
 │   │   └── query-client.ts       cache React Query (base du hors ligne)

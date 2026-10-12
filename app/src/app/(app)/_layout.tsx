@@ -23,6 +23,8 @@ export default function AppLayout() {
       <Stack.Screen name="nouveau-logement" options={{ presentation: 'modal' }} />
       <Stack.Screen name="nouveau-carton" options={{ presentation: 'modal' }} />
       <Stack.Screen name="nouvel-emplacement" options={{ presentation: 'modal' }} />
+      {/* Profils du compte : changer, créer, modifier, autorisations. */}
+      <Stack.Screen name="profils" options={{ presentation: 'modal' }} />
     </Stack>
   );
 }
