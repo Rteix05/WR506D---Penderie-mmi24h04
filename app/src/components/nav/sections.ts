@@ -33,10 +33,10 @@ export const SECTIONS: Record<Section, { legend: string; entries: MenuEntry[] }>
   Logements: {
     legend: 'Où sont rangées tes affaires',
     entries: [
-      { title: 'Mes logements', subtitle: 'Logements et pièces' },
-      { title: 'Logement principal', subtitle: 'Ses pièces et ses objets' },
-      { title: 'Mes cartons', subtitle: 'Cartons actifs' },
-      { title: 'Créer un carton', subtitle: 'Étiquette, emplacement, contenu' },
+      { title: 'Mes logements', subtitle: 'Logements et pièces', href: '/logements' },
+      { title: 'Logement principal', subtitle: 'Ses pièces et ses objets', href: '/logements/principal' },
+      { title: 'Mes cartons', subtitle: 'Cartons actifs', href: '/logements/cartons' },
+      { title: 'Créer un carton', subtitle: 'Étiquette, emplacement', href: '/nouveau-carton/infos' },
     ],
   },
   Profil: {
@@ -58,6 +58,7 @@ export const ORDER: Section[] = ['Accueil', 'Inventaire', 'Logements', 'Profil']
 export function sectionOf(pathname: string): Section {
   if (pathname.startsWith('/profil')) return 'Profil';
   if (pathname.startsWith('/objets') || pathname.startsWith('/dressing')) return 'Inventaire';
+  if (pathname.startsWith('/logements')) return 'Logements';
 
   return 'Accueil';
 }
