@@ -4,6 +4,7 @@ namespace App\Service\Identity;
 
 use App\Entity\Identity\Profile;
 use App\Entity\Loan\Loan;
+use App\Enum\Identity\ProfileType;
 use App\Enum\Loan\LoanStatus;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
@@ -28,6 +29,9 @@ use Symfony\Component\Security\Core\Exception\AccessDeniedException;
  * de filet : une référence oubliée ici fait échouer la suppression au
  * lieu de passer en silence.
  *
+ * Un proche géré par le compte (RELATIVE, avec un tuteur) suit la même
+ * procédure : ses biens reviennent à son tuteur.
+ *
  * Supprimer un profil ADULTE n'est pas encore défini : à qui iraient ses
  * biens ? Décision produit en attente, le service le refuse.
  */
@@ -44,12 +48,14 @@ final class ProfileDeleter
         if ($child->isGhost()) {
             throw new \LogicException('Le profil fantôme ne se supprime pas.');
         }
-        if (!$child->isChild() || null === $child->getGuardian()) {
-            throw new \LogicException('Seule la suppression d\'un profil enfant est définie pour l\'instant.');
+        // Un proche (RELATIVE) créé par le compte a un tuteur, comme un enfant :
+        // ses biens reviennent de même à celui qui le gère.
+        if (!\in_array($child->getType(), [ProfileType::Child, ProfileType::Relative], true) || null === $child->getGuardian()) {
+            throw new \LogicException('Seule la suppression d\'un profil enfant ou d\'un proche géré par le compte est définie pour l\'instant.');
         }
         $guardian = $child->getGuardian();
         if (!$actor->getId()->equals($guardian->getId())) {
-            throw new AccessDeniedException('Seul le tuteur supprime un profil enfant.');
+            throw new AccessDeniedException('Seul le tuteur supprime ce profil.');
         }
 
         $this->em->wrapInTransaction(function () use ($child, $guardian): void {
