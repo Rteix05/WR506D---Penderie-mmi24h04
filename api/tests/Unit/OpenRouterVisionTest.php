@@ -89,6 +89,28 @@ final class OpenRouterVisionTest extends TestCase
         self::vision(array_fill(0, 4, new MockResponse('', ['http_code' => 503])))->ask('?', 'img', 'image/jpeg');
     }
 
+    /** Le budget est commun : un modèle lent ne laisse pas la requête dépasser les 30 s de PHP. */
+    public function testStopsWhenTheTotalBudgetIsSpent(): void
+    {
+        $calls = [];
+        $client = new MockHttpClient(static function (string $method, string $url, array $options) use (&$calls) {
+            $calls[] = $options['max_duration'];
+            usleep(1_500_000); // un modèle lent, qui finit en panne
+
+            return new MockResponse('{"error": {"message": "Provider returned error"}}', ['http_code' => 502]);
+        }, 'https://openrouter.ai/api/v1/');
+
+        try {
+            (new OpenRouterVision($client, self::MODELS, timeout: 20.0, budget: 4.0))->ask('?', 'img', 'image/jpeg');
+            self::fail('VisionUnavailable attendue');
+        } catch (VisionUnavailable $e) {
+            self::assertCount(1, $calls, 'après 1,5 s il reste moins de 3 s : les autres modèles ne sont pas appelés');
+            self::assertLessThanOrEqual(4.0, $calls[0], 'un modèle n\'a jamais plus que le budget restant');
+            self::assertCount(4, $e->attempts);
+            self::assertStringContainsString('délai total', $e->attempts[1]['error']);
+        }
+    }
+
     public function testSendsTheImageAsDataUrl(): void
     {
         $sent = null;
