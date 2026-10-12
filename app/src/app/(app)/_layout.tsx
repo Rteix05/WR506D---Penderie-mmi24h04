@@ -15,6 +15,8 @@ export default function AppLayout() {
       <Stack.Screen name="objet/[id]" />
       <Stack.Screen name="vetement/[id]" />
       <Stack.Screen name="modifier" options={{ presentation: 'modal' }} />
+      {/* Look du jour : photo, points sur les vêtements, post Instagram. */}
+      <Stack.Screen name="look" />
     </Stack>
   );
 }
