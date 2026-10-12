@@ -125,12 +125,24 @@ export function useSizes() {
 // Emplacements : logement › pièce › rangement › conteneur
 // ---------------------------------------------------------------------------
 
-export type Place = Ref & { primary: boolean };
-export type Room = Ref & { place: string };
-export type Storage = Ref & { room: string };
-export type Box = Ref & { room: string; storage: string | null };
+/** Un emplacement tel que l'app le garde : son IRI, son nom, son identifiant (routes) et son type d'API. */
+type Located = Ref & { id: string; type: string };
+
+/** address : privée, renvoyée seulement aux membres du logement. */
+export type Place = Located & { primary: boolean; address: string | null };
+export type Room = Located & { place: string; position: number };
+export type Storage = Located & { room: string; position: number };
+/**
+ * reference : le code ou l'étiquette collée dessus. sealed : carton fermé
+ * (l'API ne l'envoie pas encore : toujours false pour l'instant).
+ */
+export type Box = Located & { room: string; storage: string | null; reference: string | null; sealed: boolean };
 
 export type Locations = { places: Place[]; rooms: Room[]; storages: Storage[]; boxes: Box[] };
+
+type LocatedRow = Named & { id: string; type: string };
+const toLocated = (row: LocatedRow) => ({ ...toRef(row), id: row.id, type: row.type });
+const byPosition = <T extends { position: number; name: string }>(a: T, b: T) => a.position - b.position || a.name.localeCompare(b.name, 'fr');
 
 /** Tous les emplacements visibles du profil, en une requête par niveau. */
 export function useLocations() {
@@ -138,17 +150,18 @@ export function useLocations() {
     queryKey: ['locations'],
     queryFn: async ({ signal }): Promise<Locations> => {
       const [places, rooms, storages, boxes] = await Promise.all([
-        apiGetAll<Named & { primary?: boolean }>('/api/places', signal),
-        apiGetAll<Named & { place: string }>('/api/rooms', signal),
-        apiGetAll<Named & { room: string }>('/api/storages', signal),
-        apiGetAll<Named & { room: string; storage?: string | null }>('/api/boxes', signal),
+        apiGetAll<LocatedRow & { primary?: boolean; address?: string | null }>('/api/places', signal),
+        apiGetAll<LocatedRow & { place: string; position?: number }>('/api/rooms', signal),
+        apiGetAll<LocatedRow & { room: string; position?: number }>('/api/storages', signal),
+        apiGetAll<LocatedRow & { room: string; storage?: string | null; reference?: string | null; isSealed?: boolean; sealed?: boolean }>('/api/boxes', signal),
       ]);
 
       return {
-        places: places.map((p) => ({ ...toRef(p), primary: p.primary ?? false })),
-        rooms: rooms.map((r) => ({ ...toRef(r), place: r.place })),
-        storages: storages.map((s) => ({ ...toRef(s), room: s.room })),
-        boxes: boxes.map((b) => ({ ...toRef(b), room: b.room, storage: b.storage ?? null })),
+        // Le logement principal d'abord, puis dans l'ordre de création.
+        places: places.map((p) => ({ ...toLocated(p), primary: p.primary ?? false, address: p.address ?? null })).sort((a, b) => Number(b.primary) - Number(a.primary)),
+        rooms: rooms.map((r) => ({ ...toLocated(r), place: r.place, position: r.position ?? 0 })).sort(byPosition),
+        storages: storages.map((s) => ({ ...toLocated(s), room: s.room, position: s.position ?? 0 })).sort(byPosition),
+        boxes: boxes.map((b) => ({ ...toLocated(b), room: b.room, storage: b.storage ?? null, reference: b.reference ?? null, sealed: b.isSealed ?? b.sealed ?? false })),
       };
     },
   });

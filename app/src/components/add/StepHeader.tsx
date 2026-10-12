@@ -7,8 +7,10 @@ import { ScreenTitle } from '@/components/ui/ScreenTitle';
 type Props = {
   title: string;
   legend?: string;
-  /** Étape 1 à 4 : affiche la jauge (Figma « Jauge ») et « Étape N sur 4 ». */
+  /** Étape 1 à total : affiche la jauge (Figma « Jauge ») et « Étape N sur total ». */
   step?: number;
+  /** Nombre d'étapes du parcours (4 par défaut, comme l'ajout d'objet). */
+  total?: number;
   /** « X » au lieu de « < » : premier écran du parcours, qui le ferme. */
   close?: boolean;
   onClose?: () => void;
@@ -18,10 +20,10 @@ type Props = {
 
 /**
  * En-tête des écrans d'ajout (Figma, parcours objet et vêtement) : barre
- * haute de 44 avec le bouton rond, la jauge de 4 segments (4 px, rose
+ * haute de 44 avec le bouton rond, la jauge d'un segment par étape (4 px, rose
  * pour les étapes faites, encre 10 % sinon), puis le titre de page.
  */
-export function StepHeader({ title, legend, step, close = false, onClose, banner }: Props) {
+export function StepHeader({ title, legend, step, total = 4, close = false, onClose, banner }: Props) {
   return (
     <View className="gap-6">
       <View className="h-11 flex-row items-center px-5">
@@ -29,14 +31,14 @@ export function StepHeader({ title, legend, step, close = false, onClose, banner
       </View>
       {banner}
       {step !== undefined && (
-        <View accessible accessibilityLabel={`Étape ${step} sur 4`} className="flex-row gap-1 px-5">
-          {[1, 2, 3, 4].map((n) => (
+        <View accessible accessibilityLabel={`Étape ${step} sur ${total}`} className="flex-row gap-1 px-5">
+          {Array.from({ length: total }, (_, i) => i + 1).map((n) => (
             <View key={n} className={`h-1 flex-1 rounded-full ${n <= step ? 'bg-primary' : 'bg-ink/10 dark:bg-ink-night/15'}`} />
           ))}
         </View>
       )}
       <View className="px-5">
-        <ScreenTitle title={title} legend={legend ?? (step !== undefined ? `Étape ${step} sur 4` : undefined)} />
+        <ScreenTitle title={title} legend={legend ?? (step !== undefined ? `Étape ${step} sur ${total}` : undefined)} />
       </View>
     </View>
   );
