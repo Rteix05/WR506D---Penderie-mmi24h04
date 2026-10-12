@@ -109,6 +109,38 @@ D'après Figma (« Objet — Mes objets », « Vêtement — Dressing », les fi
 - L'API n'a ni recherche ni filtre sur `/api/items` et `/api/garments` : l'app lit toutes les pages et filtre elle-même (`lib/possessions.ts`).
 - En attente de routes d'API (une alerte « bientôt » le dit) : Prêter, Partager, Vendre, Déplacer ; l'historique des prêts et de port n'est pas affiché.
 
+## Logements
+
+D'après Figma (section « 04 · Logements & rangements ») : on descend **logement › pièce › rangement › carton**. Les pages de l'onglet (`(tabs)/logements/`) forment une pile dans l'onglet : la barre reste en dessous, le retour remonte d'un niveau, le fil d'Ariane permet de sauter plusieurs niveaux.
+
+- **Mes logements** (`logements/index.tsx`) : grille des logements (le principal d'abord), pièces et objets de chacun, « Ajouter un logement ».
+- **Vue logement** (`logements/[id].tsx`, `principal` ouvre le logement principal) : grille des pièces, « Ajouter une pièce ».
+- **Vue pièce** (`logements/piece/[id].tsx`) : rangements, cartons, objets posés sans rangement, « Ajouter un rangement ».
+- **Vue rangement** (`logements/rangement/[id].tsx`) : ses cartons et tout ce qui y est rangé.
+- **Mes cartons**, **Tous mes cartons** (`logements/cartons/`) : derniers cartons, puis recherche (nom, code, pièce, et nom des objets dedans) et puces par pièce.
+- **Fiche carton** (`carton/[id]/index.tsx`) et **contenu** (`carton/[id]/contenu.tsx`) : nombre d'objets, aperçu, « Ajouter un objet » (le parcours d'ajout s'ouvre avec l'emplacement du carton déjà choisi, paramètre `at`).
+- Parcours **Ajouter un logement** (`nouveau-logement/`, 4 étapes : type, nom et adresse, pièces, vérification) et **Créer un carton** (`nouveau-carton/`, 3 étapes : étiquette, emplacement, vérification). Ajout rapide d'une pièce ou d'un rangement : `nouvel-emplacement.tsx`.
+- Supprimer un logement, une pièce, un rangement ou un carton : seulement s'il est vide (l'API refuse sinon).
+- L'API ne fournit pas de compteurs : `lib/places.ts` réunit les emplacements et tous les biens et compte lui-même.
+- En attente de routes d'API : déplacer un carton, partager une pièce, inviter des colocataires (« Qui y a accès »).
+
+## Look du jour
+
+Une photo de soi, un point par vêtement porté, l'IA qui reconnaît chaque vêtement. Le tout prépare un post Instagram en 2 images. Il n'y a pas d'écran Figma pour cette fonctionnalité : les écrans reprennent les blocs existants (titre, cartes, barre d'actions).
+
+- **Entrée** : la carte « Look du jour » de l'accueil. Elle mène à `look/index.tsx` : on prend la photo, ou on la choisit dans la galerie. Il y a un look par jour, et s'il existe déjà, on le reprend.
+- **Les points** (`look/[id]/index.tsx`) :
+  - toucher un vêtement sur la photo y pose un point ;
+  - l'app découpe un gros plan carré autour du point avec `expo-image-manipulator` et l'envoie avec la position. L'IA répond pendant la requête : « reconnu dans ton dressing », « pas dans ton dressing » ou « pas reconnu » ;
+  - chaque point se confirme, se désigne dans le dressing (`look/[id]/choisir.tsx`) ou s'ajoute au dressing ;
+  - l'ajout passe par le parcours habituel, pré-rempli par l'IA, avec le gros plan comme photo (`ajout/look.tsx`, `Draft.lookLink`). Le vêtement créé est désigné pour le point, puis l'app revient au look.
+- **Le post** (`look/[id]/post.tsx`) :
+  - image 1 : la photo avec ses points numérotés ;
+  - image 2 : les vêtements, avec les mêmes numéros ;
+  - on peut écrire une légende ;
+  - l'app ne publie rien : « Marquer comme posté » fait passer le look à l'état `POSTED`. Les états sont `TAGGING` › `READY` › `POSTED`.
+- **Données** : `lib/look.ts`. La photo envoyée reste en mémoire pour découper les gros plans ; après un redémarrage, elle est retéléchargée avec le jeton.
+
 ## Profils du compte
 
 Un compte, c'est une connexion et plusieurs profils, chacun avec sa penderie (MDD). Il y a l'adulte inscrit, ses enfants (sous tutelle) et les proches qu'il gère. Les écrans suivent la section « 12 · Compte » de Figma.
@@ -134,22 +166,32 @@ app/
 │   │   ├── _layout.tsx           racine : React Query, session, (auth) / (app)
 │   │   ├── (auth)/               connexion, inscription
 │   │   └── (app)/
-│   │       ├── (tabs)/           accueil, mes objets, mon dressing, mon profil
+│   │       ├── (tabs)/           accueil, mes objets, mon dressing, logements (pile), mon profil
 │   │       ├── ajouter.tsx       « Tu ajoutes quoi ? »
 │   │       ├── ajout/            parcours d'ajout (scan, objet, vêtement)
 │   │       ├── objet/[id].tsx    fiche objet ; vetement/[id].tsx : fiche vêtement
+│   │       ├── look/             look du jour : photo, points, post
 │   │       ├── modifier.tsx      modification d'un objet ou d'un vêtement
+│   │       ├── carton/[id]/      fiche et contenu d'un carton
+│   │       ├── nouveau-logement/ parcours « Ajouter un logement »
+│   │       ├── nouveau-carton/   parcours « Créer un carton »
+│   │       ├── nouvel-emplacement.tsx  ajout rapide d'une pièce ou d'un rangement
 │   │       └── profils/          profils du compte : changer, créer, modifier, autorisations
 │   ├── components/
 │   │   ├── home/ClothVisual.tsx  illustrations de vêtements (SVG Figma)
 │   │   ├── inventory/            cartes, recherche, puces, blocs de fiche
+│   │   ├── look/                 photo du look et ses points numérotés
 │   │   ├── nav/                  barre, panneaux, icônes de la barre
+│   │   ├── places/               cartes à initiale, lignes, fil d'Ariane (logements)
 │   │   └── ui/                   Button, TextField, MenuRow, ScreenTitle (DS v2)
 │   ├── lib/
 │   │   ├── api.ts                appels à l'API, jetons, rafraîchissement
 │   │   ├── auth.tsx              état de session, /api/me, profil actif
 │   │   ├── inventory.ts          compteurs et derniers ajouts de l'accueil
+│   │   ├── look.ts               look du jour : photo, gros plans, points, états
 │   │   ├── possessions.ts        listes, fiches, modification, suppression
+│   │   ├── places.ts             logements : libellés, compteurs, créations, suppressions
+│   │   ├── place-draft.tsx       brouillon « Ajouter un logement » ; box-draft.tsx : « Créer un carton »
 │   │   ├── profiles.ts           profils du compte et leurs autorisations
 │   │   ├── session.ts            stockage chiffré de la session
 │   │   ├── scan.ts               envoi d'une photo au scan

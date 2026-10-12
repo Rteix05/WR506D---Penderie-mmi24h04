@@ -82,7 +82,16 @@ export const PICKER_OPTIONS: ImagePicker.ImagePickerOptions = {
  * Sert au scan et à l'envoi des photos d'un objet (POST /api/items/{id}/photos).
  */
 export async function imageFormData(asset: ImagePicker.ImagePickerAsset): Promise<FormData> {
-  const file = await prepareOrOriginal(asset.uri, asset.width, asset.mimeType);
+  return fileFormData(await preparePhoto(asset));
+}
+
+/** La photo réduite et en JPEG, prête à partir (ou l'originale si la conversion échoue). */
+export function preparePhoto(asset: ImagePicker.ImagePickerAsset): Promise<{ uri: string; type: string }> {
+  return prepareOrOriginal(asset.uri, asset.width, asset.mimeType);
+}
+
+/** Le formulaire multipart (champ « image ») d'un fichier déjà prêt. */
+export async function fileFormData(file: { uri: string; type: string }): Promise<FormData> {
   const name = file.type === 'image/png' ? 'photo.png' : 'photo.jpg';
   const form = new FormData();
   if (Platform.OS === 'web') {

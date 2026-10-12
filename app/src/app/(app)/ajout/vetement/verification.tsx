@@ -1,4 +1,4 @@
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { Text, View } from 'react-native';
 
@@ -9,16 +9,36 @@ import { Button } from '@/components/ui/Button';
 import { E1 } from '@/components/ui/elevation';
 import { InfoCard, PathCard } from '@/components/ui/InfoCard';
 import { CONDITIONS, locationPath, USAGES, useDraft } from '@/lib/add-draft';
+import { confirmTag } from '@/lib/look';
 
 /**
  * « Vérifie ton vêtement », étape 4 sur 4 (Figma « Vêtement — Ajout ·
  * Vérification », 135:3108) : les puces de résumé (taille, couleur, usage,
  * état), puis le vêtement, sa localisation et ce qui se passe à l'ajout.
  * « Ajouter » crée le vêtement (POST /api/garments), privé par défaut.
+ * Lancé depuis un point du look du jour, il est ensuite désigné pour ce
+ * point et on revient au look, sans passer par la confirmation.
  */
 export default function GarmentReviewScreen() {
-  const { draft, submit } = useDraft();
-  const save = useMutation({ mutationFn: submit, onSuccess: () => router.replace('/ajout/vetement/confirmation') });
+  const { draft, submit, created: done } = useDraft();
+  const queryClient = useQueryClient();
+  const save = useMutation({
+    mutationFn: async () => {
+      // Après un échec de la désignation, on ne recrée pas le vêtement : il existe déjà.
+      const created = done ?? (await submit());
+      // Ajouté depuis un point du look du jour : le vêtement est désigné pour ce point.
+      if (draft.lookLink) await confirmTag(queryClient, draft.lookLink.look, draft.lookLink.tag, `/api/garments/${created.id}`);
+
+      return created;
+    },
+    onSuccess: () => {
+      if (draft.lookLink) {
+        router.dismissTo({ pathname: '/look/[id]', params: { id: draft.lookLink.look } });
+      } else {
+        router.replace('/ajout/vetement/confirmation');
+      }
+    },
+  });
   const tags = [
     (draft.size || draft.sizeLabel) && `Taille ${draft.size?.name ?? draft.sizeLabel}`,
     draft.color?.name,

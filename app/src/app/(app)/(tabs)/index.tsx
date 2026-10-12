@@ -11,6 +11,7 @@ import { E1 } from '@/components/ui/elevation';
 import { mediaSource } from '@/lib/api';
 import { useActiveProfile } from '@/lib/auth';
 import { relativeDay, useInventoryOverview, type RecentEntry } from '@/lib/inventory';
+import { LOOK_STATUS, useTodayLook } from '@/lib/look';
 
 const plural = (n: number, one: string, many: string) => `${n} ${n > 1 ? many : one}`;
 
@@ -51,6 +52,8 @@ export default function HomeScreen() {
             <Button glyph="+" label="Ajouter" variant="secondary" onPress={openAdd} />
           </View>
         </View>
+
+        <LookCard />
 
         <View className="flex-row gap-3 px-5">
           <Preview title="Inventaire" meta={overview.data ? plural(overview.data.items, 'objet', 'objets') : ' '} tint="bg-primary/[0.08]" art={['baskets', 'casquette', 'pantalon', 'veste']} onPress={() => router.navigate('/objets')} />
@@ -109,6 +112,43 @@ function TopBar({ initial }: { initial: string }) {
         </Pressable>
       </View>
     </View>
+  );
+}
+
+/**
+ * Le look du jour (hors maquette : la fonctionnalité est venue après) :
+ * l'invitation à prendre la photo, puis où en est le look du jour.
+ */
+function LookCard() {
+  const today = useTodayLook();
+  const look = today.data;
+  const pending = look ? look.tags.filter((t) => t.status !== 'CONFIRMED').length : 0;
+  const text = !look
+    ? "Prends-toi en photo : l'IA retrouve tes vêtements"
+    : look.status !== 'TAGGING'
+      ? `${LOOK_STATUS[look.status]} · ${plural(look.tags.length, 'vêtement', 'vêtements')}`
+      : look.tags.length === 0
+        ? 'Pointe les vêtements sur ta photo'
+        : pending > 0
+          ? `${plural(pending, 'vêtement', 'vêtements')} à vérifier`
+          : 'Tout est vérifié : prépare le post';
+
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={`Look du jour, ${text}`}
+      onPress={() => router.push(look ? { pathname: '/look/[id]', params: { id: look.id } } : '/look')}
+      style={E1}
+      className="mx-5 flex-row items-center gap-3 rounded-md bg-surface p-3 active:opacity-80 dark:bg-surface-night">
+      <View className="h-14 w-14 items-center justify-center overflow-hidden rounded-xs bg-cloth/[0.08]">
+        {look ? <Image source={mediaSource(look.photo.url)} style={{ width: 56, height: 56 }} contentFit="cover" accessible={false} /> : <ClothVisual kind="veste" />}
+      </View>
+      <View className="flex-1 gap-0.5">
+        <Text className="font-luciole-bold text-body text-ink dark:text-ink-night">Look du jour</Text>
+        <Text className="font-luciole text-legend text-muted dark:text-muted-night">{text}</Text>
+      </View>
+      <Text className="font-luciole-bold text-body text-muted dark:text-muted-night">{'>'}</Text>
+    </Pressable>
   );
 }
 

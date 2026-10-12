@@ -41,6 +41,7 @@ export default function TabsLayout() {
             <Tabs.Screen name="index" />
             <Tabs.Screen name="objets" />
             <Tabs.Screen name="dressing" />
+            <Tabs.Screen name="logements" />
             <Tabs.Screen name="profil" />
           </Tabs>
           {open && <NavMenu section={open} onClose={close} />}

@@ -9,7 +9,8 @@ import { locationPath, type Draft, type Location } from '@/lib/add-draft';
 import { apiGetAll, createLocation, useLocations, type Locations, type Ref } from '@/lib/reference';
 
 type Props = {
-  kind: Draft['kind'];
+  /** box : on range un carton, pas un objet (pas de niveau Conteneur). */
+  kind: Draft['kind'] | 'box';
   location: Location;
   onChange: (location: Location) => void;
 };
@@ -24,7 +25,10 @@ const find = (list: Ref[], iri: string | null | undefined): Ref | null => (iri ?
  *
  * Chaque liste permet de créer la valeur manquante (« Nouvelle pièce… ») :
  * sans logement ni pièce, on ne pourrait rien ranger, et le parcours
- * complet de création de logement n'existe pas encore dans l'app.
+ * complet de création de logement est ailleurs (onglet Logements).
+ *
+ * Pour un carton (Figma « Rangement — Création · Emplacement », 172:24413) :
+ * pas de niveau Conteneur, et les emplacements récents comptent les cartons.
  */
 export function LocationStep({ kind, location, onChange }: Props) {
   const locations = useLocations();
@@ -88,17 +92,19 @@ export function LocationStep({ kind, location, onChange }: Props) {
           onCreate={async (name) => onChange({ ...location, storage: await created('storage', name), box: null })}
           createLabel="Nouveau rangement"
         />
-        <SelectField
-          label={boxLabel}
-          placeholder="Facultatif"
-          value={location.box?.name ?? null}
-          disabled={!location.room}
-          clearable
-          options={boxes.map((b) => ({ key: b.iri, label: b.name }))}
-          onSelect={(iri) => onChange({ ...location, box: find(boxes, iri) })}
-          onCreate={async (name) => onChange({ ...location, box: await created('box', name) })}
-          createLabel={kind === 'garment' ? 'Nouvelle étagère' : 'Nouveau conteneur'}
-        />
+        {kind !== 'box' && (
+          <SelectField
+            label={boxLabel}
+            placeholder="Facultatif"
+            value={location.box?.name ?? null}
+            disabled={!location.room}
+            clearable
+            options={boxes.map((b) => ({ key: b.iri, label: b.name }))}
+            onSelect={(iri) => onChange({ ...location, box: find(boxes, iri) })}
+            onCreate={async (name) => onChange({ ...location, box: await created('box', name) })}
+            createLabel={kind === 'garment' ? 'Nouvelle étagère' : 'Nouveau conteneur'}
+          />
+        )}
       </View>
 
       {data && <RecentPlaces kind={kind} locations={data} onPick={onChange} />}
@@ -113,15 +119,18 @@ type Possession = { room?: string; storage?: string | null; box?: string | null 
  * d'objets (ou de vêtements), avec leur nombre. Toucher en remplit tous
  * les niveaux d'un coup.
  */
-function RecentPlaces({ kind, locations, onPick }: { kind: Draft['kind']; locations: Locations; onPick: (l: Location) => void }) {
+function RecentPlaces({ kind, locations, onPick }: { kind: Draft['kind'] | 'box'; locations: Locations; onPick: (l: Location) => void }) {
   const possessions = useQuery({
     queryKey: ['inventory', 'locations', kind],
     queryFn: ({ signal }) => apiGetAll<Possession>(kind === 'item' ? '/api/items' : '/api/garments', signal),
+    enabled: kind !== 'box',
   });
 
   const recents = useMemo(() => {
     const counts = new Map<string, number>();
-    for (const p of possessions.data ?? []) {
+    // Pour un carton : là où sont posés les autres cartons (sans conteneur).
+    const placed: Possession[] = kind === 'box' ? locations.boxes.map((b) => ({ room: b.room, storage: b.storage })) : (possessions.data ?? []);
+    for (const p of placed) {
       if (!p.room) continue;
       const key = [p.room, p.storage ?? '', p.box ?? ''].join('|');
       counts.set(key, (counts.get(key) ?? 0) + 1);
@@ -145,10 +154,14 @@ function RecentPlaces({ kind, locations, onPick }: { kind: Draft['kind']; locati
         return { location, count };
       })
       .filter((r): r is { location: Location; count: number } => r !== null);
-  }, [possessions.data, locations]);
+  }, [kind, possessions.data, locations]);
 
   if (recents.length === 0) return null;
-  const unit = kind === 'item' ? ['objet rangé ici', 'objets rangés ici'] : ['vêtement rangé ici', 'vêtements rangés ici'];
+  const unit = {
+    item: ['objet rangé ici', 'objets rangés ici'],
+    garment: ['vêtement rangé ici', 'vêtements rangés ici'],
+    box: ['carton déjà posé ici', 'cartons déjà posés ici'],
+  }[kind];
 
   return (
     <View className="gap-3 px-5">

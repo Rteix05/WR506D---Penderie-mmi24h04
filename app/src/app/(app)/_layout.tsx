@@ -15,6 +15,14 @@ export default function AppLayout() {
       <Stack.Screen name="objet/[id]" />
       <Stack.Screen name="vetement/[id]" />
       <Stack.Screen name="modifier" options={{ presentation: 'modal' }} />
+      {/* Look du jour : photo, points sur les vêtements, post Instagram. */}
+      <Stack.Screen name="look" />
+      {/* Logements : fiche et contenu d'un carton, et les parcours de création. */}
+      <Stack.Screen name="carton/[id]/index" />
+      <Stack.Screen name="carton/[id]/contenu" />
+      <Stack.Screen name="nouveau-logement" options={{ presentation: 'modal' }} />
+      <Stack.Screen name="nouveau-carton" options={{ presentation: 'modal' }} />
+      <Stack.Screen name="nouvel-emplacement" options={{ presentation: 'modal' }} />
       {/* Profils du compte : changer, créer, modifier, autorisations. */}
       <Stack.Screen name="profils" options={{ presentation: 'modal' }} />
     </Stack>
