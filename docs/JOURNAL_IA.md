@@ -150,3 +150,29 @@ Règles suivies avec l'outil de développement :
   - « quand t'as fini ca lance la fonctionnalité du multi-compte » (à faire ensuite) ;
   - « pense a tenir le ASANA à jour et à remplir le journal d'utilisation de l'IA avec les prompts etc ». Ce journal a été créé à cette occasion, et 18 tâches Asana déjà livrées ont été cochées ;
   - « petite erreur UX qu'il faudra corriger après ; quand on ajoute des baskets c'est les tailles vetements qui sont proposé au lieu des pointures » (à corriger ensuite).
+
+### 12/10 — Pointures des chaussures (PR #36)
+
+- **Prompt** :
+
+  > petite erreur UX qu'il faudra corriger après ; quand on ajoute des baskets c'est les tailles vetements qui sont proposé au lieu des pointures
+
+- **Cause trouvée par l'IA** : l'échelle de tailles venait du « type » choisi à la première étape. Un vêtement reconnu par le scan saute cette étape, et l'app retombait alors sur les tailles en lettres.
+- **Correction** : l'échelle vient maintenant de la catégorie, qui porte la sienne côté API. Le champ s'intitule « Pointure » pour des chaussures.
+- **Vérifié** : `tsc` et lint. Pas testé sur téléphone.
+
+### 12/10 — Profils du compte, « multi-compte » (PR #37 API, #38 app)
+
+- **Prompts** :
+  - « quand t'as fini ca lance la fonctionnalité du multi-compte »
+  - Précision demandée par l'IA, réponse de l'étudiant : « le système de compte qu'on a établi dans le mdd avec les sous comptes , les comptes adultes qui sont aussi géré par nous etc ». Périmètre choisi : profils et autorisations ; le code parent et les demandes de l'enfant viendront plus tard.
+- **Analyse de l'IA avant de coder** :
+  - le MDD et les entités existaient déjà : `Profile` (ADULT, CHILD, RELATIVE), la tutelle, `ProfilePermission`, la politique par défaut, le voter ;
+  - l'API n'exposait que la liste des profils et la suppression d'un enfant ;
+  - les 5 écrans Figma de la section « Compte » ont été comparés au MDD. Écart retenu : la maquette montre des interrupteurs, mais le MDD a trois modes (autorisé, avec accord, interdit), et l'app les propose tous les trois.
+- **Produit (API, #37)** :
+  - `/api/account/profiles` : liste, création d'un enfant ou d'un proche, modification, lecture et réglage des autorisations ;
+  - la suppression d'un proche suit la même procédure que celle d'un enfant ;
+  - 7 tests ; suite complète à 203 tests OK.
+- **Produit (app, #38)** : Changer de profil, fiche d'un profil, Nouveau profil, Modifier, Autorisations, et le nouvel écran « Mon profil ».
+- **Pas vérifié** : les écrans sur téléphone.
