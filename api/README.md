@@ -167,9 +167,23 @@ Le tableau des droits complet (propriétaire, coloc, profil +18 / −18 du même
 
 Codes : 409 « Situation bloquante » (pas vide, décision requise), 422 règle refusée, 403 sans droit.
 
+## Profils du compte
+
+Un compte, c'est une connexion et plusieurs identités (MDD). Il y a l'adulte qui s'est inscrit, ses enfants (`CHILD`, sous tutelle) et les proches qu'il gère (`RELATIVE`, majeurs). Chaque profil a sa propre penderie, et l'app choisit le profil actif par l'en-tête `X-Profile`.
+
+| Route | Qui | Rôle |
+| --- | --- | --- |
+| `GET /api/account/profiles` | tout profil du compte | les profils du compte : identité, tuteur, compteurs (objets, vêtements, prêts en cours), et `canManage` / `canDelete` pour le profil actif |
+| `POST /api/account/profiles` | un adulte | `{type: CHILD \| RELATIVE, firstName, dateOfBirth, lastName?, displayName?, username?}`. Le créateur devient le tuteur. Sans nom, le profil prend celui du tuteur ; sans identifiant, l'API en propose un libre (`noe.4821`). Un enfant est mineur, un proche est majeur |
+| `PATCH /api/account/profiles/{id}` | un adulte du compte ; le profil lui-même pour `displayName` et `bio` | identité. `type` : seul un enfant devenu majeur passe proche |
+| `GET /api/account/profiles/{id}/permissions` | tout profil du compte | le mode de chaque permission, sa valeur par défaut, et `custom` s'il s'agit d'une exception |
+| `PUT /api/account/profiles/{id}/permissions` | un adulte du compte, jamais le profil lui-même | `{modes: {SELL: "DENIED", …}}`. Une permission remise à la valeur par défaut de son type perd son exception |
+
+« Un adulte du compte » vient du MDD : les permissions se règlent par « le tuteur du profil, ou un profil ADULT du même compte ». Les deux parents gèrent donc l'enfant. Un autre compte reçoit 404.
+
 ## Supprimer un profil
 
-`DELETE /api/profiles/{id}` : le tuteur supprime le profil d'un enfant (`ProfileDeleter`, procédure du MDD).
+`DELETE /api/profiles/{id}` : le tuteur supprime le profil d'un enfant ou d'un proche géré par le compte (`ProfileDeleter`, procédure du MDD).
 
 - **Au tuteur** : objets, vêtements, médias, logements, collections, tenues, catégories personnelles (fusionnées si le tuteur en a une de même nom).
 - **Au profil fantôme** : ce qui concerne des tiers — prêts terminés, commandes, commentaires, publications, annonces, et leurs journaux.
