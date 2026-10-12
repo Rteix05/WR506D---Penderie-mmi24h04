@@ -201,7 +201,21 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
     return undefined as T;
   }
 
-  return response.json() as Promise<T>;
+  return readJson<T>(response);
+}
+
+/**
+ * Lit une réponse JSON. Si l'API (ou un proxy devant elle) renvoie autre
+ * chose, typiquement une page d'erreur HTML, on lève une ApiError lisible
+ * plutôt que « JSON Parse error: Unexpected character: < ».
+ */
+async function readJson<T>(response: Response): Promise<T> {
+  const text = await response.text();
+  try {
+    return JSON.parse(text) as T;
+  } catch {
+    throw new ApiError(response.status, 'Le serveur a répondu de façon inattendue. Réessaie dans un instant.');
+  }
 }
 
 function send(path: string, { method = 'GET', body, signal, accept = 'application/ld+json' }: RequestOptions): Promise<Response> {
