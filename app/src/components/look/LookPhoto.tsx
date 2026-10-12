@@ -1,0 +1,77 @@
+import { Image } from 'expo-image';
+import { useState } from 'react';
+import { ActivityIndicator, Pressable, Text, View, type GestureResponderEvent, type LayoutChangeEvent } from 'react-native';
+
+import { mediaSource } from '@/lib/api';
+import type { Look, LookTag, LookTagStatus } from '@/lib/look';
+
+/** Couleur d'un point : vert confirmé, violet reconnu (à confirmer), rose nouveau, gris inconnu. */
+export const DOT: Record<LookTagStatus, string> = {
+  CONFIRMED: 'bg-main',
+  MATCHED: 'bg-cloth',
+  NEW: 'bg-primary',
+  UNKNOWN: 'bg-muted',
+};
+
+/** Rond d'un point, 28 px, numéroté à partir de 1 (comme dans la liste en dessous). */
+export function Dot({ tag, size = 28 }: { tag: Pick<LookTag, 'position' | 'status'>; size?: number }) {
+  return (
+    <View
+      style={{ width: size, height: size, borderRadius: size / 2 }}
+      className={`items-center justify-center border-2 border-white ${DOT[tag.status]}`}>
+      <Text className="font-luciole-bold text-legend text-white">{tag.position + 1}</Text>
+    </View>
+  );
+}
+
+type Props = {
+  look: Look;
+  /** Touche sur la photo : position relative (0 à 1). Sans onPlace, la photo est en lecture seule. */
+  onPlace?: (x: number, y: number) => void;
+  /** Le point en cours d'analyse par l'IA. */
+  pending?: { x: number; y: number } | null;
+  /** Arrondi des coins (la 1re image du post est carrée de bord à bord). */
+  rounded?: boolean;
+};
+
+/**
+ * La photo du look, à son format, avec un rond numéroté par vêtement.
+ * En préparation, toucher la photo pose un point à cet endroit.
+ */
+export function LookPhoto({ look, onPlace, pending, rounded = true }: Props) {
+  const [width, setWidth] = useState(0);
+  const ratio = look.photo.width && look.photo.height ? look.photo.height / look.photo.width : 4 / 3;
+  const height = width * ratio;
+
+  const onLayout = (e: LayoutChangeEvent) => setWidth(e.nativeEvent.layout.width);
+  const place = (e: GestureResponderEvent) => {
+    if (!onPlace || width === 0) return;
+    const x = Math.min(Math.max(e.nativeEvent.locationX / width, 0), 1);
+    const y = Math.min(Math.max(e.nativeEvent.locationY / height, 0), 1);
+    onPlace(x, y);
+  };
+
+  return (
+    <View onLayout={onLayout} className={`w-full overflow-hidden bg-ink/[0.04] dark:bg-ink-night/[0.06] ${rounded ? 'rounded-lg' : ''}`} style={{ height: height || undefined, aspectRatio: height ? undefined : 1 / ratio }}>
+      <Pressable
+        accessibilityRole={onPlace ? 'button' : 'image'}
+        accessibilityLabel={onPlace ? 'Ta photo : touche un vêtement pour y poser un point' : `Ta photo, ${look.tags.length} vêtements pointés`}
+        disabled={!onPlace || Boolean(pending)}
+        onPress={place}
+        style={{ width: '100%', height: '100%' }}>
+        <Image source={mediaSource(look.photo.url)} style={{ width: '100%', height: '100%' }} contentFit="cover" accessible={false} />
+      </Pressable>
+      {width > 0 &&
+        look.tags.map((tag) => (
+          <View key={tag.id} pointerEvents="none" style={{ position: 'absolute', left: tag.x * width - 14, top: tag.y * height - 14 }}>
+            <Dot tag={tag} />
+          </View>
+        ))}
+      {width > 0 && pending && (
+        <View pointerEvents="none" style={{ position: 'absolute', left: pending.x * width - 16, top: pending.y * height - 16 }} className="h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-ink/60">
+          <ActivityIndicator color="#FFFFFF" size="small" />
+        </View>
+      )}
+    </View>
+  );
+}

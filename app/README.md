@@ -124,6 +124,23 @@ D'après Figma (section « 04 · Logements & rangements ») : on descend **logem
 - L'API ne fournit pas de compteurs : `lib/places.ts` réunit les emplacements et tous les biens et compte lui-même.
 - En attente de routes d'API : déplacer un carton, partager une pièce, inviter des colocataires (« Qui y a accès »).
 
+## Look du jour
+
+Une photo de soi, un point par vêtement porté, l'IA qui reconnaît chaque vêtement. Le tout prépare un post Instagram en 2 images. Il n'y a pas d'écran Figma pour cette fonctionnalité : les écrans reprennent les blocs existants (titre, cartes, barre d'actions).
+
+- **Entrée** : la carte « Look du jour » de l'accueil. Elle mène à `look/index.tsx` : on prend la photo, ou on la choisit dans la galerie. Il y a un look par jour, et s'il existe déjà, on le reprend.
+- **Les points** (`look/[id]/index.tsx`) :
+  - toucher un vêtement sur la photo y pose un point ;
+  - l'app découpe un gros plan carré autour du point avec `expo-image-manipulator` et l'envoie avec la position. L'IA répond pendant la requête : « reconnu dans ton dressing », « pas dans ton dressing » ou « pas reconnu » ;
+  - chaque point se confirme, se désigne dans le dressing (`look/[id]/choisir.tsx`) ou s'ajoute au dressing ;
+  - l'ajout passe par le parcours habituel, pré-rempli par l'IA, avec le gros plan comme photo (`ajout/look.tsx`, `Draft.lookLink`). Le vêtement créé est désigné pour le point, puis l'app revient au look.
+- **Le post** (`look/[id]/post.tsx`) :
+  - image 1 : la photo avec ses points numérotés ;
+  - image 2 : les vêtements, avec les mêmes numéros ;
+  - on peut écrire une légende ;
+  - l'app ne publie rien : « Marquer comme posté » fait passer le look à l'état `POSTED`. Les états sont `TAGGING` › `READY` › `POSTED`.
+- **Données** : `lib/look.ts`. La photo envoyée reste en mémoire pour découper les gros plans ; après un redémarrage, elle est retéléchargée avec le jeton.
+
 ## Structure
 
 ```
@@ -137,6 +154,7 @@ app/
 │   │       ├── ajouter.tsx       « Tu ajoutes quoi ? »
 │   │       ├── ajout/            parcours d'ajout (scan, objet, vêtement)
 │   │       ├── objet/[id].tsx    fiche objet ; vetement/[id].tsx : fiche vêtement
+│   │       ├── look/             look du jour : photo, points, post
 │   │       ├── modifier.tsx      modification d'un objet ou d'un vêtement
 │   │       ├── carton/[id]/      fiche et contenu d'un carton
 │   │       ├── nouveau-logement/ parcours « Ajouter un logement »
@@ -145,6 +163,7 @@ app/
 │   ├── components/
 │   │   ├── home/ClothVisual.tsx  illustrations de vêtements (SVG Figma)
 │   │   ├── inventory/            cartes, recherche, puces, blocs de fiche
+│   │   ├── look/                 photo du look et ses points numérotés
 │   │   ├── nav/                  barre, panneaux, icônes de la barre
 │   │   ├── places/               cartes à initiale, lignes, fil d'Ariane (logements)
 │   │   └── ui/                   Button, TextField, MenuRow, ScreenTitle (DS v2)
@@ -152,6 +171,7 @@ app/
 │   │   ├── api.ts                appels à l'API, jetons, rafraîchissement
 │   │   ├── auth.tsx              état de session, /api/me, profil actif
 │   │   ├── inventory.ts          compteurs et derniers ajouts de l'accueil
+│   │   ├── look.ts               look du jour : photo, gros plans, points, états
 │   │   ├── possessions.ts        listes, fiches, modification, suppression
 │   │   ├── places.ts             logements : libellés, compteurs, créations, suppressions
 │   │   ├── place-draft.tsx       brouillon « Ajouter un logement » ; box-draft.tsx : « Créer un carton »
