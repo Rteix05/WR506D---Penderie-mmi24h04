@@ -15,6 +15,8 @@ export default function AppLayout() {
       <Stack.Screen name="objet/[id]" />
       <Stack.Screen name="vetement/[id]" />
       <Stack.Screen name="modifier" options={{ presentation: 'modal' }} />
+      {/* Profils du compte : changer, créer, modifier, autorisations. */}
+      <Stack.Screen name="profils" options={{ presentation: 'modal' }} />
     </Stack>
   );
 }
