@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { ActivityIndicator, Pressable, Text, View, type GestureResponderEvent, type LayoutChangeEvent } from 'react-native';
 
 import { mediaSource } from '@/lib/api';
-import type { Look, LookBox, LookTag, LookTagStatus } from '@/lib/look';
+import type { Look, LookTag, LookTagStatus } from '@/lib/look';
 
 /** Couleur d'un point : vert confirmé, violet reconnu (à confirmer), rose nouveau, gris inconnu. */
 export const DOT: Record<LookTagStatus, string> = {
@@ -38,27 +38,14 @@ type Props = {
   /** Toucher un point : une mention, dans le fil. tagLabel le décrit au lecteur d'écran. */
   onTagPress?: (tag: PhotoTag) => void;
   tagLabel?: (tag: PhotoTag) => string;
-  /** Le contour de chaque vêtement délimité par l'IA, dessiné sous les points. */
-  outlines?: Outline[];
-};
-
-/** Un contour : le rectangle du vêtement sur la photo (de 0 à 1), à la couleur de son point. */
-export type Outline = { key: string; box: LookBox; status: LookTagStatus };
-
-const OUTLINE: Record<LookTagStatus, string> = {
-  CONFIRMED: 'border-main bg-main/10',
-  MATCHED: 'border-cloth bg-cloth/10',
-  NEW: 'border-primary bg-primary/10',
-  UNKNOWN: 'border-muted bg-muted/10',
 };
 
 /**
- * La photo du look, à son format, avec un rond numéroté par vêtement et,
- * autour, le contour du vêtement que l'IA a délimité. En préparation,
- * toucher la photo pose un point à cet endroit ; dans le fil, toucher un
- * point ouvre sa mention.
+ * La photo du look, à son format, avec un rond numéroté par vêtement.
+ * En préparation, toucher la photo pose un point à cet endroit ; dans le
+ * fil, toucher un point ouvre sa mention.
  */
-export function LookPhoto({ look, onPlace, pending, rounded = true, onTagPress, tagLabel, outlines = [] }: Props) {
+export function LookPhoto({ look, onPlace, pending, rounded = true, onTagPress, tagLabel }: Props) {
   const [width, setWidth] = useState(0);
   const ratio = look.photo.width && look.photo.height ? look.photo.height / look.photo.width : 4 / 3;
   const height = width * ratio;
@@ -81,15 +68,6 @@ export function LookPhoto({ look, onPlace, pending, rounded = true, onTagPress, 
         style={{ width: '100%', height: '100%' }}>
         <Image source={mediaSource(look.photo.url)} style={{ width: '100%', height: '100%' }} contentFit="cover" accessible={false} />
       </Pressable>
-      {width > 0 &&
-        outlines.map(({ key, box, status }) => (
-          <View
-            key={key}
-            pointerEvents="none"
-            className={`rounded-md border-2 border-dashed ${OUTLINE[status]}`}
-            style={{ position: 'absolute', left: box.x0 * width, top: box.y0 * height, width: (box.x1 - box.x0) * width, height: (box.y1 - box.y0) * height }}
-          />
-        ))}
       {width > 0 &&
         look.tags.map((tag) =>
           onTagPress ? (

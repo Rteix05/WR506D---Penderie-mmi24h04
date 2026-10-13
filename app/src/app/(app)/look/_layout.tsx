@@ -3,12 +3,12 @@ import { Stack } from 'expo-router';
 /**
  * Le look du jour :
  *
- *   index (prendre la photo) › [id] (poser les points) ─┬─ [id]/choisir (désigner un vêtement)
+ *   index (prendre la photo) › [id] (poser les points) ─┬─ [id]/choisir (quel vêtement pour ce point)
  *                                                        └─ [id]/post (les 2 images du post, l'état)
  *                                                             └─ [id]/publier (le publier dans le fil de Penderie)
  *
- * Un vêtement absent du dressing s'ajoute par le parcours d'ajout,
- * pré-rempli par l'IA (ajout/look), puis revient au look.
+ * Un vêtement absent du dressing s'ajoute d'un titre depuis [id]/choisir,
+ * « à compléter » plus tard (écran completer).
  */
 export default function LookLayout() {
   return (

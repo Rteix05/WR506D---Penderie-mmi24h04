@@ -9,7 +9,6 @@ import { DraftProvider } from '@/lib/add-draft';
  *         │           └─ echec     └─ vetement/infos (si le scan voit un vêtement)
  *         └─ « Ajouter manuellement » → objet/infos
  *   vetement/type › infos › emplacement › verification › confirmation
- *   look (point du look du jour) › vetement/infos › … › verification › retour au look
  *
  * Toutes les étapes partagent un brouillon (DraftProvider) : rien n'est
  * envoyé à l'API avant « Ajouter » à la vérification.
