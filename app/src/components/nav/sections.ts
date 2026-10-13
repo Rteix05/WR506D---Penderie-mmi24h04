@@ -15,7 +15,7 @@ export const SECTIONS: Record<Section, { legend: string; entries: MenuEntry[] }>
     legend: 'Tout ce qui se passe',
     entries: [
       { title: 'Tableau de bord', subtitle: "Ta penderie en un coup d'œil", href: '/' },
-      { title: "Fil d'actualité", subtitle: "Ce que tes amis t'ont montré" },
+      { title: "Fil d'actualité", subtitle: "Ce que tes amis t'ont montré", href: '/fil' },
       { title: 'Notifications', subtitle: 'Prêts, ventes, partages, demandes' },
       { title: 'Recherche', subtitle: 'Un objet, une pièce, un ami' },
     ],
