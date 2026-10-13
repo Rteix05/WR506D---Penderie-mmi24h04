@@ -48,6 +48,8 @@ export type Look = {
   postedAt: string | null;
   photo: { url: string; width: number | null; height: number | null };
   tags: LookTag[];
+  /** Sa publication dans le fil de Penderie, si elle est en ligne. */
+  post: { id: string; audience: 'FRIENDS' | 'FOLLOWERS' | 'SPECIFIC' } | null;
 };
 
 export const MAX_TAGS = 12;
