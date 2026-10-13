@@ -40,6 +40,27 @@ npx expo lint               # ESLint
 npx expo-doctor             # diagnostic des dépendances et de la configuration
 ```
 
+## Version web et Lighthouse
+
+La version web est exportée en **une seule page** (`web.output: "single"` dans `app.json`), et le routage se fait dans le navigateur :
+- l'app est derrière une connexion, donc le pré-rendu de chaque page (`static`) n'apporte rien ;
+- de plus, il échoue avec Expo 57.0.28 (`Platform` indéfini pendant le rendu côté serveur).
+
+Les écrans se chargent à la demande sur le web (`asyncRoutes` d'expo-router, réservé au web : le bundle natif ne change pas). Le fichier initial passe ainsi de 2,5 Mo à 1,1 Mo. `public/index.html` (page en français, description) et `public/robots.txt` sont copiés tels quels dans l'export.
+
+```bash
+npm run web:build    # export dans dist/
+npm run web:serve    # le sert sur http://localhost:4173 (dans un autre terminal)
+npm run lighthouse   # audit Lighthouse, ouvert dans le navigateur à la fin
+```
+
+Résultats du 13/10/2026, page de connexion :
+
+| Profil | Performance | Accessibilité | Bonnes pratiques | SEO |
+| --- | --- | --- | --- | --- |
+| Mobile (simulé, processeur ralenti 4 ×) | 50 | 100 | 100 | 100 |
+| Ordinateur | 98 | 100 | 100 | 100 |
+
 ## Styles : NativeWind et design system
 
 Les écrans se stylent avec des classes Tailwind (`className="bg-bg px-5"`) que NativeWind convertit en styles natifs. Les jetons du DS v2 sont dans `tailwind.config.js` :
