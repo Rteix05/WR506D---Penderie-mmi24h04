@@ -190,3 +190,34 @@ Règles suivies avec l'outil de développement :
 - **Merges** : l'IA a voulu lancer `gh pr merge`, mais les permissions de la session l'ont bloqué ; l'étudiant merge lui-même.
 - **Asana** : 13 tâches couvertes par l'onglet Logements (#32) cochées (logements, pièces, rangements, cartons). Aucune tâche Asana ne correspond au look du jour.
 - **Réseau** : sur le partage de connexion de l'iPhone, le PC est en `172.20.10.2` (déjà dans `app/.env.local`). Le profil Wi-Fi est resté « Public » sous Windows, ce qui bloque le téléphone ; l'étudiant doit le passer en « Privé » lui-même (droits administrateur).
+
+### 12/10 — Merges, données de test, présentation orale
+
+- **Prompts** :
+  - « comment je pourrais montrer mon écran iPhone depuis l'ordi pour les présentations orals » : l'IA a comparé câble HDMI direct, carte d'acquisition HDMI vers le PC, et AirPlay (déconseillé sur eduroam), et conseillé une vidéo de secours ;
+  - « créer des sous comptes au compte scantest pour que je vois comment ca rend , fais des fausses données pour toute les fonctionnalités sauf des objets , comme ca je testerai moi meme » ;
+  - « ou sont les sous comptes ? », « comment je crée le look du jour depuis l'accueil ».
+- **Données de test**, en local, sur le compte scantest : 4 profils (2 enfants, 1 proche, 1 second adulte) avec des autorisations variées, 3 logements avec pièces, rangements et cartons, et 31 vêtements. Ni objet ni look, à la demande de l'étudiant. Les profils sont créés en base ; le reste passe par l'API, avec un script, pour respecter ses règles. Un jean a d'abord été refusé (sa taille doit être en W/L) puis recréé.
+- **Asana** : après les merges, 6 tâches « Comptes & profils » cochées.
+
+### 13/10 — Erreur JSON sur un point du look, fil d'actualité (PR #39 à #42)
+
+- **Prompt** :
+
+  > j'ai des erreurs json quand je place un point à certains moment (JSON Parse error: unexpected character: <) et aussi le post doit aussi apparaitre dans le feed de Penderie ducoup en + de Instagram (qu'on ajoutera plus tard) et le point sur le post doit agir comme une mention instagram (quand on clique on voit le titre de la pièce et si l'objet est publique on doit pouvoir le voir sur le compte de la personne
+
+- **Diagnostic de l'erreur** : l'IA a lu les journaux de l'API et y a trouvé « Maximum execution time of 30 seconds exceeded ». La chaîne de 4 modèles gratuits avait 30 s par modèle, autant que la limite de PHP pour toute la requête : PHP coupait la requête et renvoyait une page HTML, que l'app lisait comme du JSON.
+- **Corrections** :
+  - #39 (API) : un budget de 24 s commun à toute la chaîne de modèles. Quand il est épuisé, le point est « pas reconnu » au lieu de faire planter la requête. Un test ajouté ;
+  - #40 (app) : un message lisible si l'API répond autre chose que du JSON.
+- **Questions de l'IA avant de coder le fil**, réponses de l'étudiant (toutes les options recommandées) :
+  - périmètre : le fil et le look publié avec ses mentions ; commentaires et signalement plus tard ;
+  - un vêtement « public » est celui que la publication partage ;
+  - audience au choix, amis ou abonnés ;
+  - une page de profil simple.
+- **Analyse** : le MDD prévoyait déjà qu'une publication porte le partage de la ressource qu'elle met en avant. L'IA a donc fait du look une tenue (`Outfit`) partagée par la publication, et les droits existants rendent ses vêtements lisibles par l'audience, sans nouvelle règle.
+- **Produit** :
+  - #41 (API) : publier un look, le fil, une publication, la page d'un profil ; 4 tests, suite à 214 OK ;
+  - #42 (app) : le fil (d'après les écrans Figma du lot 16), « Publier dans Penderie », les points-mentions, la page d'un profil.
+- **Erreur de l'IA corrigée** : la description de la PR #39 contenait la signature « Generated with Claude Code », contraire à la consigne de l'étudiant (aucune attribution). L'IA l'a retirée aussitôt.
+- **Pas vérifié** : les écrans du fil sur téléphone.
