@@ -8,6 +8,7 @@ use App\Entity\Inventory\GarmentMedia;
 use App\Entity\Inventory\Item;
 use App\Entity\Inventory\ItemMedia;
 use App\Entity\Media\Media;
+use App\Entity\Sharing\PostMedia;
 use App\Security\CurrentProfile;
 use App\Service\Media\MediaStorage;
 use Doctrine\ORM\EntityManagerInterface;
@@ -30,9 +31,10 @@ use Symfony\Component\Routing\Requirement\Requirement;
  *    principale. Le fichier va sur le disque (MediaStorage), la base garde
  *    un Media et son lien de galerie (ItemMedia / GarmentMedia).
  *  - GET /api/media/{id} : le fichier lui-même, pour qui peut VOIR un bien
- *    qui l'utilise (ou son propriétaire). Les photos sont privées comme les
- *    objets : jamais de lien public, 404 pour les autres (on ne révèle pas
- *    qu'une photo existe).
+ *    qui l'utilise, une publication du fil qui la montre, ou son
+ *    propriétaire. Les photos sont privées comme les objets : jamais de
+ *    lien public, 404 pour les autres (on ne révèle pas qu'une photo
+ *    existe).
  */
 final class PhotoController extends AbstractController
 {
@@ -150,6 +152,12 @@ final class PhotoController extends AbstractController
         }
         foreach ($this->em->getRepository(GarmentMedia::class)->findBy(['media' => $media]) as $link) {
             if (null === $link->getGarment()->getDeletedAt() && $this->isGranted('VIEW', $link->getGarment())) {
+                return true;
+            }
+        }
+        // Une image d'une publication du fil (la photo d'un look publié) : son audience.
+        foreach ($this->em->getRepository(PostMedia::class)->findBy(['media' => $media]) as $link) {
+            if ($this->isGranted('VIEW', $link->getPost())) {
                 return true;
             }
         }

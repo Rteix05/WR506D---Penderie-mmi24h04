@@ -21,6 +21,7 @@ final class LookApiTest extends ApiTestBase
     protected function tearDown(): void
     {
         OpenRouterMock::$down = false;
+        OpenRouterMock::$box = [0.25, 0.25, 0.75, 0.75];
         parent::tearDown();
     }
 
@@ -116,6 +117,50 @@ final class LookApiTest extends ApiTestBase
         self::assertResponseStatusCodeSame(422, 'un look posté ne se modifie plus');
         $this->call('PATCH', $look['@id'], $alice, ['status' => 'TAGGING']);
         self::assertResponseStatusCodeSame(422);
+    }
+
+    /** L'IA délimite le vêtement du point ; son contour revient sur la photo du look. */
+    public function testTheGarmentUnderThePointIsOutlined(): void
+    {
+        $alice = $this->signUp('alice');
+        $look = $this->upload($alice, '/api/looks')->toArray();
+
+        // Gros plan découpé à (0,2 ; 0,1), 40 % de côté : le point (0,4 ; 0,3) en est le centre.
+        $crop = ['cropX' => '0.2', 'cropY' => '0.1', 'cropW' => '0.4', 'cropH' => '0.4'];
+        $tag = $this->upload($alice, $look['@id'].'/tags', ['x' => '0.4', 'y' => '0.3'] + $crop)->toArray();
+        self::assertResponseStatusCodeSame(201);
+        self::assertStringContainsString('au CENTRE exact', OpenRouterMock::$lastPrompt);
+        self::assertSame('NEW', $tag['status']);
+        self::assertFalse($tag['offTarget']);
+        // [0,25 ; 0,75] du gros plan = [0,3 ; 0,5] en largeur et [0,2 ; 0,4] en hauteur sur la photo.
+        self::assertEqualsWithDelta(['x0' => 0.3, 'y0' => 0.2, 'x1' => 0.5, 'y1' => 0.4], $tag['box'], 0.0001);
+
+        // Près du bord gauche, le gros plan est décalé : la consigne donne la vraie position du point.
+        $this->upload($alice, $look['@id'].'/tags', ['x' => '0.1', 'y' => '0.3', 'cropX' => '0', 'cropY' => '0.1', 'cropW' => '0.4', 'cropH' => '0.4']);
+        self::assertStringContainsString('à 25 % de la largeur depuis la gauche et 50 % de la hauteur', OpenRouterMock::$lastPrompt);
+
+        // Sans la découpe (ancienne version de l'app) : point supposé au centre, pas de contour.
+        $tag = $this->upload($alice, $look['@id'].'/tags', ['x' => '0.6', 'y' => '0.6'])->toArray();
+        self::assertNull($tag['box']);
+        self::assertSame('NEW', $tag['status']);
+
+        $this->upload($alice, $look['@id'].'/tags', ['x' => '0.6', 'y' => '0.6', 'cropX' => '2', 'cropY' => '0', 'cropW' => '0.4', 'cropH' => '0.4']);
+        self::assertResponseStatusCodeSame(400);
+    }
+
+    /** Un contour qui ne contient pas le point : l'IA a regardé le vêtement d'à côté, on écarte sa réponse. */
+    public function testAnAnswerAboutAnotherGarmentIsDiscarded(): void
+    {
+        $alice = $this->signUp('alice');
+        $look = $this->upload($alice, '/api/looks')->toArray();
+        OpenRouterMock::$box = [0.0, 0.0, 0.2, 0.2]; // le coin haut gauche, loin du centre
+
+        $tag = $this->upload($alice, $look['@id'].'/tags', ['x' => '0.4', 'y' => '0.3', 'cropX' => '0.2', 'cropY' => '0.1', 'cropW' => '0.4', 'cropH' => '0.4'])->toArray();
+        self::assertResponseStatusCodeSame(201);
+        self::assertSame('UNKNOWN', $tag['status'], 'à désigner à la main plutôt que le mauvais vêtement');
+        self::assertTrue($tag['offTarget']);
+        self::assertNull($tag['suggestion']);
+        self::assertNull($tag['box']);
     }
 
     public function testGarmentFromTheDressingIsRecognised(): void

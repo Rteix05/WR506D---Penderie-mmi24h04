@@ -26,6 +26,7 @@ use App\Entity\Sharing\GarmentShare;
 use App\Entity\Sharing\ItemShare;
 use App\Entity\Sharing\OutfitShare;
 use App\Entity\Sharing\PlaceShare;
+use App\Entity\Sharing\Post;
 use App\Entity\Sharing\RoomShare;
 use App\Entity\Sharing\Share;
 use App\Entity\Sharing\StorageShare;
@@ -151,6 +152,7 @@ final class ResourceAccess
             $resource instanceof Loan => $this->memberHasRoom($viewer, $possession->getRoom())
                 || $this->friendships->areFriends($resource->getLender(), $viewer),
             $resource instanceof Listing => $this->canReadListing($viewer, $resource),
+            $resource instanceof Post => $this->canReadPost($viewer, $resource),
             $resource instanceof AbstractCategory => false,
             default => $this->memberSees($viewer, $resource) || $this->sharedWith($viewer, $resource),
         };
@@ -334,6 +336,26 @@ final class ResourceAccess
             || (ListingAudience::FriendsAndFollowers === $listing->getAudience() && $this->follows($viewer, $seller));
     }
 
+    /**
+     * Une publication du fil : son audience, vérifiée à la lecture (retirer
+     * un ami la lui cache aussitôt). « Abonnés » inclut les amis ; une
+     * audience SPECIFIC est celle du partage qu'elle porte.
+     */
+    private function canReadPost(Profile $viewer, Post $post): bool
+    {
+        if (null !== $post->getDeletedAt()) {
+            return false;
+        }
+        $author = $post->getAuthor();
+
+        return match ($post->getAudience()) {
+            ShareAudience::Friends => $this->friendships->areFriends($author, $viewer),
+            ShareAudience::Followers => $this->follows($viewer, $author) || $this->friendships->areFriends($author, $viewer),
+            ShareAudience::Specific => null !== $post->getShare() && $this->appliesTo($post->getShare(), $viewer),
+            ShareAudience::Link => false,
+        };
+    }
+
     private function follows(Profile $follower, Profile $followed): bool
     {
         return null !== $this->em->getRepository(Follow::class)->findOneBy(['follower' => $follower, 'following' => $followed]);
@@ -443,6 +465,7 @@ final class ResourceAccess
             $resource instanceof Box, $resource instanceof AbstractCategory => $resource->getOwner(),
             $resource instanceof Loan => $resource->getLender(),
             $resource instanceof Listing => $resource->getSeller(),
+            $resource instanceof Post => $resource->getAuthor(),
             default => null,
         };
     }

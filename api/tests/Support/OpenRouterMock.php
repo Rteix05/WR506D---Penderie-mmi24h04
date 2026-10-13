@@ -16,6 +16,10 @@ final class OpenRouterMock
 {
     public static bool $down = false;
 
+    /** Le contour rendu pour un point de look (sur le gros plan), et la dernière consigne reçue. */
+    public static ?array $box = [0.25, 0.25, 0.75, 0.75];
+    public static string $lastPrompt = '';
+
     /** @param array<string, mixed> $options */
     public function __invoke(string $method, string $url, array $options): ResponseInterface
     {
@@ -25,12 +29,13 @@ final class OpenRouterMock
             return new MockResponse(json_encode(['error' => ['code' => 429, 'message' => 'Rate limit exceeded: free-models-per-min']]), ['http_code' => 429]);
         }
         $prompt = $request['messages'][0]['content'][0]['text'] ?? '';
+        self::$lastPrompt = $prompt;
         $answer = match (true) {
             // Un point de look du jour : le 1er vêtement du dressing s'il y en a un, sinon un vêtement nouveau.
-            str_contains($prompt, 'gros plan découpé') => str_contains($prompt, '(le dressing est vide)')
+            str_contains($prompt, 'gros plan découpé') => ['box' => self::$box] + (str_contains($prompt, '(le dressing est vide)')
                 ? ['match' => null, 'name' => 'Veste en jean', 'description' => 'Une veste en jean délavée.', 'category' => 'jeans',
                     'brand' => null, 'colors' => ['Bleu marine'], 'confidence' => 0.7]
-                : ['match' => 1, 'name' => null, 'colors' => [], 'confidence' => 0.8],
+                : ['match' => 1, 'name' => null, 'colors' => [], 'confidence' => 0.8]),
             default => $this->scanAnswer($prompt),
         };
 

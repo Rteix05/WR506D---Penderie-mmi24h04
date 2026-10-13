@@ -35,7 +35,9 @@ use Symfony\Component\Routing\Requirement\Requirement;
  *  - GET, PATCH, DELETE /api/looks/{id} : PATCH change l'état
  *    (TAGGING › READY › POSTED, voir LookStatus) et la légende.
  *  - POST /api/looks/{id}/tags : multipart x, y (0 à 1) et image, le gros
- *    plan découpé par l'app autour du point. L'IA répond dans la foulée.
+ *    plan découpé par l'app autour du point, et cropX, cropY, cropW, cropH
+ *    (facultatifs, de 0 à 1) : où il a été découpé dans la photo. L'IA
+ *    répond dans la foulée, avec le contour du vêtement (box).
  *  - PATCH /api/looks/{id}/tags/{tagId} : {garment: IRI} confirme le
  *    vêtement du point. DELETE retire le point.
  *
@@ -143,6 +145,10 @@ final class LookController extends AbstractController
     public function delete(string $id): JsonResponse
     {
         $look = $this->look($id);
+        if (null !== $look->getPost()) {
+            // Sa photo est celle de la publication (et une publication supprimée reste en base).
+            throw new \DomainException('Ce look a été publié dans le fil : il ne se supprime plus.');
+        }
         $photo = $look->getPhoto();
         $path = $photo->getPath();
         $this->em->remove($look);
@@ -164,9 +170,10 @@ final class LookController extends AbstractController
             throw new BadRequestHttpException('Les champs « x » et « y » donnent la position du point (de 0 à 1).');
         }
         [$bytes, $mimeType] = $this->readImage($request);
+        $crop = $this->readCrop($request);
 
         $tag = $look->addTag((float) $x, (float) $y);
-        $this->detector->detect($tag, $bytes, $mimeType);
+        $this->detector->detect($tag, $bytes, $mimeType, $crop);
         $this->em->persist($tag);
         $this->em->flush();
 
@@ -237,6 +244,34 @@ final class LookController extends AbstractController
     }
 
     /**
+     * Où le gros plan a été découpé dans la photo du look, si l'app le dit
+     * (une ancienne version ne l'envoie pas : on suppose alors le point au
+     * centre du gros plan, sans contour).
+     *
+     * @return array{x: float, y: float, w: float, h: float}|null
+     */
+    private function readCrop(Request $request): ?array
+    {
+        $fields = ['x' => 'cropX', 'y' => 'cropY', 'w' => 'cropW', 'h' => 'cropH'];
+        $crop = [];
+        foreach ($fields as $key => $field) {
+            $value = $request->request->get($field);
+            if (null === $value) {
+                return null;
+            }
+            if (!is_numeric($value) || (float) $value < 0 || (float) $value > 1) {
+                throw new BadRequestHttpException(\sprintf('« %s » est une part de la photo, de 0 à 1.', $field));
+            }
+            $crop[$key] = (float) $value;
+        }
+        if ($crop['w'] <= 0 || $crop['h'] <= 0) {
+            throw new BadRequestHttpException('Le gros plan a une largeur et une hauteur (cropW, cropH).');
+        }
+
+        return $crop;
+    }
+
+    /**
      * La photo envoyée, vérifiée : octets, type lu dans les octets, largeur, hauteur.
      *
      * @return array{0: string, 1: string, 2: int, 3: int}
@@ -274,6 +309,8 @@ final class LookController extends AbstractController
             'postedAt' => $look->getPostedAt()?->format(\DATE_ATOM),
             'photo' => ['url' => '/api/media/'.$photo->getId(), 'width' => $photo->getWidth(), 'height' => $photo->getHeight()],
             'tags' => array_map($this->describeTag(...), $look->getTags()->toArray()),
+            // La publication dans le fil de Penderie, s'il y en a une en ligne.
+            'post' => $look->isPublished() ? ['id' => (string) $look->getPost()->getId(), 'audience' => $look->getPost()->getAudience()->value] : null,
         ];
     }
 
@@ -298,6 +335,9 @@ final class LookController extends AbstractController
             ],
             'suggestion' => $tag->getSuggestion(),
             'model' => $tag->getDetection()['model'] ?? null,
+            // Le contour du vêtement selon l'IA, sur la photo du look ; et si elle a regardé à côté du point.
+            'box' => $tag->getBox(),
+            'offTarget' => $tag->getDetection()['offTarget'] ?? false,
         ];
     }
 }

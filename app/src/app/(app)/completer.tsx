@@ -62,16 +62,10 @@ export default function CompleteGarmentScreen() {
       </View>
       {garment.isPending && <ActivityIndicator className="py-10" />}
       {garment.isError && <Text className="px-5 font-luciole text-body text-error dark:text-error-night">{garment.error.message}</Text>}
-      {garment.data && !garment.data.incomplete && (
-        <View className="px-5">
-          <Banner tone="success" title="Déjà complet" text="Ce vêtement a sa catégorie et son emplacement." />
-        </View>
-      )}
+      {garment.data && !garment.data.incomplete && <Banner tone="success" title="Déjà complet" text="Ce vêtement a sa catégorie et son emplacement." />}
       {garment.data?.incomplete && (
         <>
-          <View className="px-5">
-            <Banner tone="info" title="Ajouté depuis ton look" text="Donne-lui une catégorie et range-le : il rejoindra tes logements et les suggestions de tenues." />
-          </View>
+          <Banner tone="info" title="Ajouté depuis ton look" text="Donne-lui une catégorie et range-le : il rejoindra tes logements et les suggestions de tenues." />
           <View className="px-5">
             <SelectField
               label="Catégorie"

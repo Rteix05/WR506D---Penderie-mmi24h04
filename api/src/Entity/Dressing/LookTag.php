@@ -18,8 +18,12 @@ use Symfony\Component\Uid\Uuid;
  *  - elle voit un vêtement absent du dressing : suggestion décrit ce
  *    qu'elle voit (mêmes champs que le scan), de quoi pré-remplir l'ajout,
  *    NEW ;
- *  - elle ne dit rien d'exploitable : UNKNOWN.
+ *  - elle ne dit rien d'exploitable, ou elle a regardé un autre vêtement
+ *    que celui du point : UNKNOWN.
  * L'utilisateur confirme ou corrige ensuite : CONFIRMED.
+ *
+ * L'IA délimite aussi le vêtement du point (box : le rectangle qui
+ * l'entoure, sur la photo du look) ; l'app le dessine autour du point.
  */
 #[ORM\Entity(repositoryClass: LookTagRepository::class)]
 class LookTag
@@ -68,6 +72,15 @@ class LookTag
     #[ORM\Column(type: Types::JSON, nullable: true)]
     private ?array $detection = null;
 
+    /**
+     * Le contour du vêtement selon l'IA : {x0, y0, x1, y1}, de 0 à 1 sur la
+     * photo du look (coin haut gauche, coin bas droit). Il contient le point.
+     *
+     * @var array{x0: float, y0: float, x1: float, y1: float}|null
+     */
+    #[ORM\Column(type: Types::JSON, nullable: true)]
+    private ?array $box = null;
+
     /** @internal Par DailyLook::addTag(). */
     public function __construct(DailyLook $look, float $x, float $y, int $position)
     {
@@ -84,14 +97,16 @@ class LookTag
     /**
      * Le verdict de l'IA.
      *
-     * @param array<string, mixed>|null $suggestion
-     * @param array<string, mixed>      $detection
+     * @param array<string, mixed>|null                              $suggestion
+     * @param array<string, mixed>                                   $detection
+     * @param array{x0: float, y0: float, x1: float, y1: float}|null $box
      */
-    public function detected(?Garment $match, ?array $suggestion, array $detection): void
+    public function detected(?Garment $match, ?array $suggestion, array $detection, ?array $box = null): void
     {
         $this->garment = $match;
         $this->suggestion = $suggestion;
         $this->detection = $detection;
+        $this->box = $box;
         $this->status = match (true) {
             null !== $match => LookTagStatus::Matched,
             null !== ($suggestion['name'] ?? null) => LookTagStatus::New,
@@ -155,5 +170,11 @@ class LookTag
     public function getDetection(): ?array
     {
         return $this->detection;
+    }
+
+    /** @return array{x0: float, y0: float, x1: float, y1: float}|null */
+    public function getBox(): ?array
+    {
+        return $this->box;
     }
 }

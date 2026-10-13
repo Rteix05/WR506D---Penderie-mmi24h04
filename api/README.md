@@ -209,6 +209,8 @@ Pour tester depuis le téléphone : écran **Tester le scan** de l'app (`app/src
 
 Une photo de soi (`DailyLook`, une par profil et par jour), et sur cette photo un point par vêtement porté (`LookTag`). Pour chaque point, l'app découpe un gros plan autour du point et l'envoie ; l'IA du scan (même chaîne de modèles gratuits) reçoit ce gros plan et la liste numérotée des vêtements du dressing (texte : nom, catégorie, couleurs, marque). Elle répond soit avec le numéro d'un vêtement reconnu (`MATCHED`), soit avec la description d'un vêtement nouveau, au format de la suggestion du scan (`NEW`), ce qui pré-remplit son ajout. Si elle ne dit rien d'exploitable, le point est `UNKNOWN`. L'utilisateur confirme ou corrige ensuite chaque point (`CONFIRMED`).
 
+**Rester sur le vêtement du point.** L'app envoie aussi où elle a découpé le gros plan (`cropX`, `cropY`, `cropW`, `cropH`) : la consigne donne au modèle la position exacte du point, et lui demande de n'identifier QUE le vêtement sous ce point (pas la veste par-dessus le t-shirt visé) et de le délimiter (`box` : le rectangle qui l'entoure). Si ce rectangle ne contient pas le point, le modèle a regardé le vêtement d'à côté : sa réponse est écartée, le point est `UNKNOWN` (`offTarget: true`) plutôt que de proposer le mauvais vêtement. Sinon, le contour est ramené sur la photo du look et renvoyé dans `box` (`{x0, y0, x1, y1}`, de 0 à 1) ; l'app le dessine autour du point.
+
 Le look est destiné à un post Instagram en deux images (la photo avec ses points, puis les vêtements). L'API ne publie rien : elle tient l'état du look, `TAGGING` › `READY` › `POSTED`. Pour passer à `READY`, chaque point doit désigner un vêtement. Le passage à `READY` note aussi le port de chaque vêtement ce jour-là (`WearLog`), ce que le moteur de suggestion utilise. Un look `POSTED` ne se modifie plus.
 
 | Route | Rôle |
@@ -217,11 +219,28 @@ Le look est destiné à un post Instagram en deux images (la photo avec ses poin
 | `GET /api/looks` | ses looks, du plus récent au plus ancien |
 | `POST /api/looks` | multipart, champ `image` : crée le look du jour. Répond 409 s'il en existe déjà un |
 | `GET`, `PATCH`, `DELETE /api/looks/{id}` | `PATCH {status?, caption?}` change l'état ou la légende (2 200 caractères au plus). `DELETE` supprime aussi la photo |
-| `POST /api/looks/{id}/tags` | multipart : `x`, `y` (de 0 à 1 depuis le coin haut gauche) et `image` (le gros plan). L'IA répond pendant la requête. 12 points au plus |
+| `POST /api/looks/{id}/tags` | multipart : `x`, `y` (de 0 à 1 depuis le coin haut gauche), `image` (le gros plan) et, facultatifs, `cropX`, `cropY`, `cropW`, `cropH` (où il a été découpé). L'IA répond pendant la requête, avec `box` et `offTarget`. 12 points au plus |
 | `PATCH /api/looks/{id}/tags/{tagId}` | `{garment: "/api/garments/{id}"}` : le vêtement du point. Il peut être emprunté, il suffit de pouvoir le voir |
 | `DELETE /api/looks/{id}/tags/{tagId}` | retire le point |
 
-Un look n'est visible que par son propriétaire et son tuteur : les autres reçoivent 404, sa photo comprise. Un point ne se modifie que lorsque le look est en préparation (`TAGGING`).
+Un look n'est visible que par son propriétaire et son tuteur : les autres reçoivent 404, sa photo comprise, sauf s'il est publié dans le fil (ci-dessous). Un point ne se modifie que lorsque le look est en préparation (`TAGGING`).
+
+## Fil d'actualité
+
+Le fil de Penderie (maquette, section « 16 — Fil d'actualité »), commencé par le look du jour. Une publication (`Post`) s'adresse à des amis (`FRIENDS`) ou à des abonnés, amis compris (`FOLLOWERS`). Les abonnés ne commentent pas (MDD).
+
+**Publier un look.** Comme le prévoit le MDD, une publication met en avant une ressource et crée le partage qui y donne accès. Pour un look, cette ressource est une tenue (`Outfit`) faite de ses vêtements. Ses vêtements deviennent donc visibles, en lecture, par l'audience de la publication (`ResourceAccess` : « un look partagé qui le porte »), et seulement par elle. Supprimer la publication révoque ce partage : les vêtements redeviennent privés.
+
+**Les points sont des mentions.** Comme sur Instagram, chaque point donne le nom du vêtement ; `canView` dit si on peut ouvrir sa fiche. Les détails (marque, taille, couleurs, photo) ne sont envoyés qu'à ceux qui peuvent l'ouvrir.
+
+| Route | Rôle |
+| --- | --- |
+| `POST /api/looks/{id}/publish` | `{audience: FRIENDS \| FOLLOWERS, body?}` : publie un look prêt (`READY` ou `POSTED`), une seule fois. Le texte reprend la légende du look par défaut |
+| `GET /api/feed?before=` | `{posts, next}` : les publications que je peux voir (les miennes, celles de mon foyer, de mes amis, des comptes que je suis), 20 par page. `next` se passe en `before` pour la page suivante |
+| `GET`, `DELETE /api/posts/{id}` | une publication ; seul son auteur la supprime (le texte reste en base, la publication disparaît du fil) |
+| `GET /api/profiles/{id}/page` | la page d'un profil vue par moi : `relation` (moi, foyer, ami, abonné), ses publications visibles, et les vêtements qu'elles me montrent |
+
+L'audience est vérifiée à chaque lecture : retirer un ami lui cache aussitôt les publications et les vêtements. La photo d'un look publié se lit par l'audience de la publication (`GET /api/media/{id}`). Un look publié ne repasse plus en préparation ; un look qui a été publié ne se supprime plus (sa photo est celle de la publication).
 
 ## Tests
 

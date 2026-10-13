@@ -78,10 +78,10 @@ export default function GarmentScreen() {
         </SafeAreaView>
         <DetailTitle name={p.name} meta={[find(brands.data, p.brand), root?.name ?? category, size].filter(Boolean).join(' · ')} status={status} />
         <Attributes values={attributes} />
-        {p.incomplete && (
-          <View className="gap-3 px-5">
-            <Banner tone="info" title="À compléter" text="Ajouté d'un simple titre depuis ton look du jour : donne-lui une catégorie et range-le." />
-            {owner && <Button label="Compléter ce vêtement" onPress={() => router.push({ pathname: '/completer', params: { id: p.id } })} />}
+        {p.incomplete && <Banner tone="info" title="À compléter" text="Ajouté d'un simple titre depuis ton look du jour : donne-lui une catégorie et range-le." />}
+        {p.incomplete && owner && (
+          <View className="px-5">
+            <Button label="Compléter ce vêtement" onPress={() => router.push({ pathname: '/completer', params: { id: p.id } })} />
           </View>
         )}
 
