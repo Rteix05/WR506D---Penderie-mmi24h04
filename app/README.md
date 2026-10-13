@@ -131,7 +131,8 @@ Une photo de soi, un point par vêtement porté, l'IA qui reconnaît chaque vêt
 - **Entrée** : la carte « Look du jour » de l'accueil. Elle mène à `look/index.tsx` : on prend la photo, ou on la choisit dans la galerie. Il y a un look par jour, et s'il existe déjà, on le reprend.
 - **Les points** (`look/[id]/index.tsx`) :
   - toucher un vêtement sur la photo y pose un point ;
-  - l'app découpe un gros plan carré autour du point avec `expo-image-manipulator` et l'envoie avec la position. L'IA répond pendant la requête : « reconnu dans ton dressing », « pas dans ton dressing » ou « pas reconnu » ;
+  - l'app découpe un gros plan carré autour du point avec `expo-image-manipulator` et l'envoie avec la position, et l'endroit où elle l'a découpé (`cropX`…`cropH`). L'IA répond pendant la requête : « reconnu dans ton dressing », « pas dans ton dressing » ou « pas reconnu » ;
+  - l'IA délimite le vêtement sous le point : son contour (pointillés, à la couleur du point) s'affiche autour du point pendant la préparation. Si elle a décrit le vêtement d'à côté, sa réponse est écartée et le point indique « L'IA a regardé à côté du point : choisis le vêtement » ;
   - chaque point se confirme, se désigne dans le dressing (`look/[id]/choisir.tsx`) ou s'ajoute au dressing ;
   - l'ajout passe par le parcours habituel, pré-rempli par l'IA, avec le gros plan comme photo (`ajout/look.tsx`, `Draft.lookLink`). Le vêtement créé est désigné pour le point, puis l'app revient au look.
 - **Le post** (`look/[id]/post.tsx`) :
