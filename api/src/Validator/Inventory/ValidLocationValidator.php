@@ -23,6 +23,11 @@ final class ValidLocationValidator extends ConstraintValidator
         $storage = $value->getStorage();
         $box = $value->getBox();
 
+        // Un vêtement à compléter n'est pas encore rangé : rien à vérifier.
+        if (null === $room) {
+            return;
+        }
+
         if (null !== $storage && !$storage->getRoom()->getId()->equals($room->getId())) {
             $this->context->buildViolation($constraint->storageElsewhere)->atPath('storage')->addViolation();
         }

@@ -9,7 +9,9 @@ use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\Patch;
 use ApiPlatform\Metadata\Post;
 use App\Entity\Identity\Profile;
+use App\Entity\Place\Box;
 use App\Entity\Place\Room;
+use App\Entity\Place\Storage;
 use App\Entity\Reference\Brand;
 use App\Entity\Reference\Color;
 use App\Entity\Reference\GarmentCategory;
@@ -33,6 +35,12 @@ use Symfony\Component\Validator\Constraints as Assert;
  *
  * La catégorie est obligatoire : c'est elle qui déclare l'échelle de
  * tailles et la chaleur par défaut.
+ *
+ * Exception : un vêtement « à compléter » (incomplete), créé d'un simple
+ * titre en pointant un vêtement du look du jour qui n'était pas encore
+ * dans le dressing (Garment::sketch). Il n'a ni catégorie ni pièce ; on le
+ * termine plus tard (POST /api/garments/{id}/complete, puis la
+ * modification habituelle).
  */
 #[ORM\Entity(repositoryClass: GarmentRepository::class)]
 #[ORM\Index(name: 'idx_garment_owner_category_size', columns: ['owner_id', 'category_id', 'size_id'])]
@@ -53,10 +61,11 @@ use Symfony\Component\Validator\Constraints as Assert;
 )]
 class Garment extends AbstractPossession
 {
+    /** Nulle seulement pour un vêtement à compléter ; la création par l'API l'exige (constructeur). */
     #[ORM\ManyToOne(targetEntity: GarmentCategory::class)]
-    #[ORM\JoinColumn(nullable: false, onDelete: 'RESTRICT')]
+    #[ORM\JoinColumn(nullable: true, onDelete: 'RESTRICT')]
     #[Groups(['garment:read', 'garment:create'])]
-    private GarmentCategory $category;
+    private ?GarmentCategory $category = null;
 
     /** RESTRICT : une marque utilisée se fusionne, elle ne se supprime pas. */
     #[ORM\ManyToOne(targetEntity: Brand::class)]
@@ -119,7 +128,42 @@ class Garment extends AbstractPossession
         $this->gallery = new ArrayCollection();
     }
 
-    public function getCategory(): GarmentCategory
+    /**
+     * Un vêtement à compléter : un titre seulement, ni catégorie ni pièce.
+     * Le constructeur, lui, reste strict : l'API ne crée jamais un vêtement
+     * incomplet par POST /api/garments.
+     */
+    public static function sketch(Profile $owner, string $name): self
+    {
+        $garment = (new \ReflectionClass(self::class))->newInstanceWithoutConstructor();
+        $garment->initialize($owner, $name, null);
+        $garment->colors = new ArrayCollection();
+        $garment->styles = new ArrayCollection();
+        $garment->gallery = new ArrayCollection();
+
+        return $garment;
+    }
+
+    /** Termine un vêtement à compléter : sa catégorie et l'endroit où il est rangé. */
+    public function complete(GarmentCategory $category, Room $room, ?Storage $storage = null, ?Box $box = null): static
+    {
+        if (!$this->isIncomplete()) {
+            throw new \DomainException('Ce vêtement est déjà complet : modifie-le, ou déplace-le.');
+        }
+        $this->category = $category;
+        $this->placeAt($room, $storage, $box);
+
+        return $this;
+    }
+
+    /** À compléter : créé d'un titre depuis le look du jour, sans catégorie ni pièce. */
+    #[Groups(['garment:read'])]
+    public function isIncomplete(): bool
+    {
+        return null === $this->category || null === $this->room;
+    }
+
+    public function getCategory(): ?GarmentCategory
     {
         return $this->category;
     }
@@ -208,7 +252,7 @@ class Garment extends AbstractPossession
     /** La chaleur propre, sinon celle de la catégorie : ce que lit la suggestion. */
     public function getEffectiveWarmth(): ?Warmth
     {
-        return $this->warmth ?? $this->category->getDefaultWarmth();
+        return $this->warmth ?? $this->category?->getDefaultWarmth();
     }
 
     public function isWaterResistant(): bool

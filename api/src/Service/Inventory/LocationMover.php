@@ -37,6 +37,10 @@ final class LocationMover
         Profile $movedBy,
         MoveReason $reason = MoveReason::ManualMove,
     ): void {
+        if (null === $possession->getRoom()) {
+            // Pas encore rangé : il n'y a pas d'emplacement quitté à inscrire dans l'historique.
+            throw new \DomainException('Ce vêtement est à compléter : range-le d\'abord en le complétant.');
+        }
         $this->em->wrapInTransaction(function () use ($possession, $room, $storage, $box, $movedBy, $reason): void {
             $this->relocate($possession, $room, $storage, $box, $movedBy, $reason);
         });
@@ -98,7 +102,7 @@ final class LocationMover
      */
     private function sameLocation(AbstractPossession $p, Room $room, ?Storage $storage, ?Box $box): bool
     {
-        return $p->getRoom()->getId()->equals($room->getId())
+        return null !== $p->getRoom() && $p->getRoom()->getId()->equals($room->getId())
             && $p->getStorage()?->getId()->toRfc4122() === $storage?->getId()->toRfc4122()
             && $p->getBox()?->getId()->toRfc4122() === $box?->getId()->toRfc4122();
     }

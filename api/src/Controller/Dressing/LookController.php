@@ -10,7 +10,6 @@ use App\Entity\Inventory\Garment;
 use App\Entity\Media\Media;
 use App\Enum\Dressing\LookStatus;
 use App\Security\CurrentProfile;
-use App\Service\Dressing\LookTagDetector;
 use App\Service\Media\MediaStorage;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -25,8 +24,10 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\Requirement\Requirement;
 
 /**
- * Le look du jour : une photo de soi, un point par vêtement porté, et l'IA
- * qui reconnaît chaque vêtement (DailyLook, LookTag).
+ * Le look du jour : une photo de soi, et un point par vêtement porté, qui
+ * désigne un vêtement du dressing (DailyLook, LookTag). Pas d'IA : on
+ * choisit soi-même ; un vêtement absent du dressing s'ajoute d'un simple
+ * titre, « à compléter » plus tard.
  *
  *  - GET  /api/looks/today : le look du jour du profil, ou null.
  *  - GET  /api/looks : ses looks, du plus récent au plus ancien.
@@ -34,16 +35,13 @@ use Symfony\Component\Routing\Requirement\Requirement;
  *    409 s'il existe déjà (on le reprend, ou on le supprime d'abord).
  *  - GET, PATCH, DELETE /api/looks/{id} : PATCH change l'état
  *    (TAGGING › READY › POSTED, voir LookStatus) et la légende.
- *  - POST /api/looks/{id}/tags : multipart x, y (0 à 1) et image, le gros
- *    plan découpé par l'app autour du point, et cropX, cropY, cropW, cropH
- *    (facultatifs, de 0 à 1) : où il a été découpé dans la photo. L'IA
- *    répond dans la foulée, avec le contour du vêtement (box).
- *  - PATCH /api/looks/{id}/tags/{tagId} : {garment: IRI} confirme le
+ *  - POST /api/looks/{id}/tags : {x, y (0 à 1), garment: IRI} ou
+ *    {x, y, name} pour un vêtement à ajouter (créé « à compléter »).
+ *  - PATCH /api/looks/{id}/tags/{tagId} : {garment: IRI} change le
  *    vêtement du point. DELETE retire le point.
  *
  * Réservé au propriétaire du look et à son tuteur (EDIT). Le look n'est
- * pas une ressource API Platform : la photo arrive en multipart et l'IA
- * répond pendant la requête, comme pour le scan.
+ * pas une ressource API Platform : la photo arrive en multipart.
  */
 final class LookController extends AbstractController
 {
@@ -55,7 +53,6 @@ final class LookController extends AbstractController
         private readonly EntityManagerInterface $em,
         private readonly CurrentProfile $current,
         private readonly MediaStorage $storage,
-        private readonly LookTagDetector $detector,
         private readonly IriConverterInterface $iris,
     ) {
     }
@@ -161,43 +158,68 @@ final class LookController extends AbstractController
     }
 
     #[Route('/api/looks/{id}/tags', name: 'api_look_tag_add', methods: ['POST'], requirements: ['id' => Requirement::UUID])]
+    /**
+     * Corps : {x, y, garment: "/api/garments/{id}"} pour un vêtement du
+     * dressing, ou {x, y, name: "Veste kaki"} pour un vêtement qui n'y est
+     * pas encore : il est créé « à compléter » (un titre, ni catégorie ni
+     * pièce), à terminer plus tard. Le point est confirmé tout de suite.
+     */
     public function addTag(string $id, Request $request): JsonResponse
     {
         $look = $this->look($id);
-        $x = $request->request->get('x');
-        $y = $request->request->get('y');
+        $body = $request->toArray();
+        $x = $body['x'] ?? null;
+        $y = $body['y'] ?? null;
         if (!is_numeric($x) || !is_numeric($y)) {
-            throw new BadRequestHttpException('Les champs « x » et « y » donnent la position du point (de 0 à 1).');
+            throw new BadRequestHttpException('« x » et « y » donnent la position du point (de 0 à 1).');
         }
-        [$bytes, $mimeType] = $this->readImage($request);
-        $crop = $this->readCrop($request);
+        $name = \is_string($body['name'] ?? null) ? trim($body['name']) : null;
+        if (isset($body['garment']) === (null !== $name && '' !== $name)) {
+            throw new BadRequestHttpException('Donne soit « garment » (un vêtement de ton dressing), soit « name » (le titre d\'un vêtement à ajouter).');
+        }
 
+        if (isset($body['garment'])) {
+            $garment = $this->garmentFrom($body['garment']);
+        } else {
+            // Ajouté au dressing de celui qui porte le look, à compléter plus tard.
+            $this->denyAccessUnlessGranted('GARMENT_MANAGE');
+            if (mb_strlen($name) > 120) {
+                throw new \DomainException('Le titre fait 120 caractères au plus.');
+            }
+            $garment = Garment::sketch($look->getOwner(), $name);
+            $this->em->persist($garment);
+        }
         $tag = $look->addTag((float) $x, (float) $y);
-        $this->detector->detect($tag, $bytes, $mimeType, $crop);
+        $tag->confirm($garment);
         $this->em->persist($tag);
         $this->em->flush();
 
         return $this->json($this->describeTag($tag), Response::HTTP_CREATED);
     }
 
-    /** Corps : {garment: "/api/garments/{id}"}. */
+    /** Corps : {garment: "/api/garments/{id}"} : change le vêtement du point. */
     #[Route('/api/looks/{id}/tags/{tagId}', name: 'api_look_tag_update', methods: ['PATCH'], requirements: ['id' => Requirement::UUID, 'tagId' => Requirement::UUID])]
     public function updateTag(string $id, string $tagId, Request $request): JsonResponse
     {
         $tag = $this->tag($this->look($id), $tagId);
-        $iri = $request->toArray()['garment'] ?? null;
+        $tag->confirm($this->garmentFrom($request->toArray()['garment'] ?? null));
+        $this->em->flush();
+
+        return $this->json($this->describeTag($tag));
+    }
+
+    /** Un vêtement désigné par son IRI. Un vêtement emprunté se porte aussi : il suffit de pouvoir le voir. */
+    private function garmentFrom(mixed $iri): Garment
+    {
         if (!\is_string($iri) || 1 !== preg_match('#^/api/garments/('.Requirement::UUID.')$#', $iri, $m)) {
             throw new BadRequestHttpException('« garment » doit être l\'IRI d\'un vêtement (/api/garments/{id}).');
         }
         $garment = $this->em->find(Garment::class, $m[1]);
-        // Un vêtement emprunté se porte aussi : il suffit de pouvoir le voir.
         if (null === $garment || $garment->isDeleted() || !$this->isGranted('VIEW', $garment)) {
             throw new NotFoundHttpException('Vêtement introuvable.');
         }
-        $tag->confirm($garment);
-        $this->em->flush();
 
-        return $this->json($this->describeTag($tag));
+        return $garment;
     }
 
     #[Route('/api/looks/{id}/tags/{tagId}', name: 'api_look_tag_delete', methods: ['DELETE'], requirements: ['id' => Requirement::UUID, 'tagId' => Requirement::UUID])]
@@ -241,34 +263,6 @@ final class LookController extends AbstractController
                 $this->em->persist(new WearLog($garment, $look->getOwner(), $look->getWornOn()));
             }
         }
-    }
-
-    /**
-     * Où le gros plan a été découpé dans la photo du look, si l'app le dit
-     * (une ancienne version ne l'envoie pas : on suppose alors le point au
-     * centre du gros plan, sans contour).
-     *
-     * @return array{x: float, y: float, w: float, h: float}|null
-     */
-    private function readCrop(Request $request): ?array
-    {
-        $fields = ['x' => 'cropX', 'y' => 'cropY', 'w' => 'cropW', 'h' => 'cropH'];
-        $crop = [];
-        foreach ($fields as $key => $field) {
-            $value = $request->request->get($field);
-            if (null === $value) {
-                return null;
-            }
-            if (!is_numeric($value) || (float) $value < 0 || (float) $value > 1) {
-                throw new BadRequestHttpException(\sprintf('« %s » est une part de la photo, de 0 à 1.', $field));
-            }
-            $crop[$key] = (float) $value;
-        }
-        if ($crop['w'] <= 0 || $crop['h'] <= 0) {
-            throw new BadRequestHttpException('Le gros plan a une largeur et une hauteur (cropW, cropH).');
-        }
-
-        return $crop;
     }
 
     /**
@@ -329,15 +323,13 @@ final class LookController extends AbstractController
                 '@id' => $this->iris->getIriFromResource($garment),
                 'id' => (string) $garment->getId(),
                 'name' => $garment->getName(),
-                'category' => $garment->getCategory()->getName(),
+                'category' => $garment->getCategory()?->getName(),
+                'incomplete' => $garment->isIncomplete(),
                 'brand' => $garment->getBrand()?->getName(),
                 'photo' => $garment->getPhotos()[0] ?? null,
             ],
             'suggestion' => $tag->getSuggestion(),
             'model' => $tag->getDetection()['model'] ?? null,
-            // Le contour du vêtement selon l'IA, sur la photo du look ; et si elle a regardé à côté du point.
-            'box' => $tag->getBox(),
-            'offTarget' => $tag->getDetection()['offTarget'] ?? false,
         ];
     }
 }

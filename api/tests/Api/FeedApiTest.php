@@ -62,8 +62,8 @@ final class FeedApiTest extends ApiTestBase
             'category' => $this->garmentCategoryIri('jeans'),
         ])->toArray();
         $look = $this->upload($this->alice, '/api/looks')->toArray();
-        $tag = $this->upload($this->alice, $look['@id'].'/tags', ['x' => '0.4', 'y' => '0.3'])->toArray();
-        $this->call('PATCH', $look['@id'].'/tags/'.$tag['id'], $this->alice, ['garment' => $veste['@id']]);
+        $this->call('POST', $look['@id'].'/tags', $this->alice, ['x' => 0.4, 'y' => 0.3, 'garment' => $veste['@id']]);
+        self::assertResponseStatusCodeSame(201);
         $this->call('PATCH', $look['@id'], $this->alice, ['status' => 'READY', 'caption' => 'Lundi en jean']);
         self::assertResponseIsSuccessful();
 
@@ -156,6 +156,21 @@ final class FeedApiTest extends ApiTestBase
 
         $this->call('DELETE', $look['@id'], $this->alice);
         self::assertResponseStatusCodeSame(422, 'sa photo reste celle de la publication');
+    }
+
+    /** Un vêtement ajouté d'un titre (à compléter) se mentionne aussi : sans catégorie. */
+    public function testAnIncompleteGarmentIsMentionedWithoutCategory(): void
+    {
+        $look = $this->upload($this->alice, '/api/looks')->toArray();
+        $this->call('POST', $look['@id'].'/tags', $this->alice, ['x' => 0.5, 'y' => 0.2, 'name' => 'Bonnet rayé']);
+        $this->call('PATCH', $look['@id'], $this->alice, ['status' => 'READY']);
+        $post = $this->call('POST', $look['@id'].'/publish', $this->alice, ['audience' => 'FRIENDS'])->toArray();
+        self::assertResponseStatusCodeSame(201);
+
+        $mention = $this->call('GET', '/api/posts/'.$post['id'], $this->bruno)->toArray()['look']['tags'][0]['garment'];
+        self::assertSame('Bonnet rayé', $mention['name']);
+        self::assertNull($mention['category']);
+        self::assertTrue($mention['canView']);
     }
 
     public function testOnlyAReadyLookIsPublished(): void
