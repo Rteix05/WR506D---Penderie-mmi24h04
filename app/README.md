@@ -126,20 +126,20 @@ D'après Figma (section « 04 · Logements & rangements ») : on descend **logem
 
 ## Look du jour
 
-Une photo de soi, un point par vêtement porté, l'IA qui reconnaît chaque vêtement. Le tout prépare un post Instagram en 2 images. Il n'y a pas d'écran Figma pour cette fonctionnalité : les écrans reprennent les blocs existants (titre, cartes, barre d'actions).
+Une photo de soi et un point par vêtement porté. Le tout prépare un post Instagram en 2 images. Il n'y a pas d'écran Figma pour cette fonctionnalité : les écrans reprennent les blocs existants (titre, cartes, barre d'actions).
 
 - **Entrée** : la carte « Look du jour » de l'accueil. Elle mène à `look/index.tsx` : on prend la photo, ou on la choisit dans la galerie. Il y a un look par jour, et s'il existe déjà, on le reprend.
 - **Les points** (`look/[id]/index.tsx`) :
-  - toucher un vêtement sur la photo y pose un point ;
-  - l'app découpe un gros plan carré autour du point avec `expo-image-manipulator` et l'envoie avec la position. L'IA répond pendant la requête : « reconnu dans ton dressing », « pas dans ton dressing » ou « pas reconnu » ;
-  - chaque point se confirme, se désigne dans le dressing (`look/[id]/choisir.tsx`) ou s'ajoute au dressing ;
-  - l'ajout passe par le parcours habituel, pré-rempli par l'IA, avec le gros plan comme photo (`ajout/look.tsx`, `Draft.lookLink`). Le vêtement créé est désigné pour le point, puis l'app revient au look.
+  - toucher un vêtement sur la photo ouvre « Quel vêtement ? » pour cet endroit (`look/[id]/choisir.tsx`) : on le choisit dans son dressing, avec une recherche. Il n'y a pas d'IA : les modèles gratuits étaient trop lents et trop souvent saturés ;
+  - un vêtement qui n'est pas dans le dressing s'ajoute d'un simple titre (« Pas dans ton dressing ? ») : il est créé « à compléter », sans catégorie ni pièce, et le point le désigne tout de suite ;
+  - chaque point se change ou se retire ; un vêtement à compléter propose « Compléter ».
+- **Vêtement à compléter** : badge « À compléter » dans Mon dressing et sur la fiche. « Compléter » (`completer.tsx`, modale) demande la catégorie et l'emplacement (même cascade Logement › Pièce › Rangement › Conteneur que l'ajout), puis propose d'ajouter les détails par « Modifier ».
 - **Le post** (`look/[id]/post.tsx`) :
   - image 1 : la photo avec ses points numérotés ;
   - image 2 : les vêtements, avec les mêmes numéros ;
   - on peut écrire une légende ;
   - l'app ne publie rien : « Marquer comme posté » fait passer le look à l'état `POSTED`. Les états sont `TAGGING` › `READY` › `POSTED`.
-- **Données** : `lib/look.ts`. La photo envoyée reste en mémoire pour découper les gros plans ; après un redémarrage, elle est retéléchargée avec le jeton.
+- **Données** : `lib/look.ts` (`addTag` avec un vêtement ou un titre), `completeGarment` dans `lib/possessions.ts`.
 
 ## Profils du compte
 

@@ -80,11 +80,6 @@ export type Draft = {
   usage: Usage;
   styles: Ref[];
   location: Location;
-  /**
-   * Ajout lancé depuis un point du look du jour (ajout/look) : une fois
-   * créé, le vêtement est désigné pour ce point, et on revient au look.
-   */
-  lookLink: { look: string; tag: string } | null;
 };
 
 const EMPTY: Draft = {
@@ -105,7 +100,6 @@ const EMPTY: Draft = {
   usage: 'EVERYDAY',
   styles: [],
   location: NO_LOCATION,
-  lookLink: null,
 };
 
 export type Created = {

@@ -124,7 +124,7 @@ function LookCard() {
   const look = today.data;
   const pending = look ? look.tags.filter((t) => t.status !== 'CONFIRMED').length : 0;
   const text = !look
-    ? "Prends-toi en photo : l'IA retrouve tes vêtements"
+    ? 'Prends-toi en photo et pointe tes vêtements'
     : look.status !== 'TAGGING'
       ? `${LOOK_STATUS[look.status]} · ${plural(look.tags.length, 'vêtement', 'vêtements')}`
       : look.tags.length === 0

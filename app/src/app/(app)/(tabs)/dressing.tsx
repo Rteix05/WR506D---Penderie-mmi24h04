@@ -101,8 +101,8 @@ export default function DressingScreen() {
         photo={p.photos?.[0]}
         art={artOf('garment', p, categories.data)}
         photoHeight={height}
-        // Comme dans la maquette, un vêtement disponible n'a pas de pastille.
-        badge={p.availability === 'AVAILABLE' ? undefined : { label: state.label, className: state.solid }}
+        // Comme dans la maquette, un vêtement disponible n'a pas de pastille ; un vêtement ajouté depuis le look est « À compléter ».
+        badge={p.incomplete ? { label: 'À compléter', className: 'bg-primary' } : p.availability === 'AVAILABLE' ? undefined : { label: state.label, className: state.solid }}
         onPress={() => router.push({ pathname: '/vetement/[id]', params: { id: p.id } })}
       />
     );

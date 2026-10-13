@@ -6,6 +6,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Attributes, confirmDelete, DetailActions, DetailHero, DetailTitle, Section, soon } from '@/components/inventory/Detail';
 import { BackButton } from '@/components/ui/BackButton';
+import { Banner } from '@/components/ui/Banner';
+import { Button } from '@/components/ui/Button';
 import { artOf, AVAILABILITY, CONDITION_LABEL, deletePossession, locationOf, rootCategory, usePossession, USAGE_LABEL } from '@/lib/possessions';
 import { useBrands, useColors, useGarmentCategories, useLocations, useSizes, useStyles } from '@/lib/reference';
 
@@ -76,6 +78,12 @@ export default function GarmentScreen() {
         </SafeAreaView>
         <DetailTitle name={p.name} meta={[find(brands.data, p.brand), root?.name ?? category, size].filter(Boolean).join(' · ')} status={status} />
         <Attributes values={attributes} />
+        {p.incomplete && (
+          <View className="gap-3 px-5">
+            <Banner tone="info" title="À compléter" text="Ajouté d'un simple titre depuis ton look du jour : donne-lui une catégorie et range-le." />
+            {owner && <Button label="Compléter ce vêtement" onPress={() => router.push({ pathname: '/completer', params: { id: p.id } })} />}
+          </View>
+        )}
 
         <View className="gap-3 px-5">
           {p.room && (

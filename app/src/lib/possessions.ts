@@ -33,6 +33,8 @@ export type Possession = {
   /** Droits de celui qui regarde : ADMIN = propriétaire (modifier, supprimer). */
   access?: 'ADMIN' | 'EDIT' | 'VIEW';
   // Vêtement
+  /** À compléter : créé d'un titre depuis le look du jour, sans catégorie ni pièce. */
+  incomplete?: boolean;
   brand?: string | null;
   size?: string | null;
   sizeLabel?: string | null;
@@ -63,6 +65,18 @@ export async function updatePossession(queryClient: QueryClient, kind: Kind, id:
   await queryClient.invalidateQueries({ queryKey: ['inventory'] });
 
   return saved;
+}
+
+/**
+ * Termine un vêtement « à compléter » (créé d'un titre depuis le look du
+ * jour) : sa catégorie et l'endroit où il est rangé. Le reste (taille,
+ * couleurs…) se modifie ensuite comme d'habitude.
+ */
+export async function completeGarment(queryClient: QueryClient, id: string, body: { category: string; room: string; storage?: string; box?: string }): Promise<void> {
+  await apiRequest(`/api/garments/${id}/complete`, { method: 'POST', body, accept: 'application/json' });
+  await queryClient.invalidateQueries({ queryKey: ['inventory'] });
+  await queryClient.invalidateQueries({ queryKey: ['locations'] });
+  await queryClient.invalidateQueries({ queryKey: ['look'] });
 }
 
 /** Suppression douce côté API (deletedAt) : l'objet disparaît des listes. */
