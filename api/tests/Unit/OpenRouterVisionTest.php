@@ -21,7 +21,11 @@ final class OpenRouterVisionTest extends TestCase
         return new MockResponse(json_encode(['choices' => [['message' => ['content' => $content]]]]));
     }
 
-    /** @param list<MockResponse> $responses */
+    /**
+     * @param list<MockResponse> $responses
+     *
+     * @param list<string> $models
+     */
     private static function vision(array $responses, array &$models = []): OpenRouterVision
     {
         $client = new MockHttpClient(static function (string $method, string $url, array $options) use (&$responses, &$models) {

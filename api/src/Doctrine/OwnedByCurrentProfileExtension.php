@@ -32,11 +32,8 @@ use Doctrine\ORM\QueryBuilder;
  */
 final class OwnedByCurrentProfileExtension implements QueryCollectionExtensionInterface
 {
-    /** Chemin de la jointure jusqu'au propriétaire, par classe. */
-    private const OWNER_PATHS = [
-        Item::class => [],
-        Garment::class => [],
-    ];
+    /** Les biens : filtrés sur leur propriétaire (ou son tuteur), hors suppression douce. */
+    private const OWNED = [Item::class, Garment::class];
 
     public function __construct(private readonly CurrentProfile $current)
     {
@@ -96,27 +93,17 @@ final class OwnedByCurrentProfileExtension implements QueryCollectionExtensionIn
             return;
         }
 
-        if (!\array_key_exists($resourceClass, self::OWNER_PATHS)) {
+        if (!\in_array($resourceClass, self::OWNED, true)) {
             return;
-        }
-
-        $last = $alias;
-        foreach (self::OWNER_PATHS[$resourceClass] as $relation) {
-            $join = $queryNameGenerator->generateJoinAlias($relation);
-            $queryBuilder->join("$last.$relation", $join);
-            $last = $join;
         }
 
         $owner = $queryNameGenerator->generateJoinAlias('owner');
         $me = $queryNameGenerator->generateParameterName('me');
         $queryBuilder
-            ->join("$last.owner", $owner)
+            ->join("$alias.owner", $owner)
             ->andWhere("$owner = :$me OR $owner.guardian = :$me")
+            ->andWhere("$alias.deletedAt IS NULL")
             ->setParameter($me, $this->current->get()->getId(), 'uuid');
-
-        if (\in_array($resourceClass, [Item::class, Garment::class], true)) {
-            $queryBuilder->andWhere("$alias.deletedAt IS NULL");
-        }
     }
 
     /** « $placeId est un logement dont je suis membre (moi ou un enfant dont je suis le tuteur) ». */

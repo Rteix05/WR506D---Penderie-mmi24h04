@@ -1,0 +1,30 @@
+# Analyse statique de l'API (séance 15 : code quality).
+# Lancer : make phpstan (ou vendor/bin/phpstan analyse).
+#
+# Niveau 6 : types des paramètres et des retours vérifiés partout, tableaux
+# et génériques compris. Les extensions Symfony, Doctrine et PHPUnit
+# (installées par phpstan/extension-installer) apprennent à PHPStan ce que
+# renvoient le conteneur, les dépôts Doctrine et les assertions.
+parameters:
+    level: 6
+    paths:
+        - src
+        - tests
+    excludePaths:
+        - tests/bootstrap.php
+    # Le conteneur compilé de l'environnement de test (php bin/console cache:warmup --env=test).
+    symfony:
+        containerXmlPath: var/cache/test/App_KernelTestDebugContainer.xml
+    doctrine:
+        objectManagerLoader: tests/object-manager.php
+    tmpDir: var/cache/phpstan
+    ignoreErrors:
+        # Héritage à table unique (Share, Comment) : la colonne de la cible
+        # (item_id, room_id…) est commune à toutes les sous-classes, donc
+        # nullable en base ; chaque sous-classe, elle, a toujours sa cible.
+        # C'est le compromis assumé de ce mapping, pas un oubli.
+        -
+            identifier: doctrine.associationType
+            paths:
+                - src/Entity/Sharing/*Share.php
+                - src/Entity/Sharing/*Comment.php

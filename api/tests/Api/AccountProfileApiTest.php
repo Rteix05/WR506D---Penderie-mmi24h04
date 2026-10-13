@@ -7,14 +7,25 @@ namespace App\Tests\Api;
  * profil enfant ou proche dont il devient le tuteur, le modifie, règle ses
  * autorisations, le supprime. L'enfant ne touche ni à sa tutelle ni à ses
  * autorisations.
+ *
+ * @phpstan-import-type TestUser from ApiTestBase
  */
 final class AccountProfileApiTest extends ApiTestBase
 {
+    /**
+     * @param array<string, mixed> $body
+     * @param TestUser $user
+     * @return array<string, mixed>
+     */
     private function create(array $user, array $body, ?string $as = null): array
     {
         return $this->call('POST', '/api/account/profiles', $user, $body, $as)->toArray(false);
     }
 
+    /**
+     * @param TestUser $user
+     * @return array<string, mixed>
+     */
     private function child(array $user): array
     {
         $noe = $this->create($user, ['type' => 'CHILD', 'firstName' => 'Noé', 'dateOfBirth' => '2017-05-02']);
@@ -23,6 +34,10 @@ final class AccountProfileApiTest extends ApiTestBase
         return $noe;
     }
 
+    /**
+     * @param TestUser $user
+     * @return array<string, mixed>
+     */
     private function modes(array $user, string $profileId, ?string $as = null): array
     {
         $body = $this->call('GET', '/api/account/profiles/'.$profileId.'/permissions', $user, null, $as)->toArray();

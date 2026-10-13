@@ -25,7 +25,6 @@ final class ProfileDeletionProcessor implements ProcessorInterface
 
     public function process(mixed $data, Operation $operation, array $uriVariables = [], array $context = []): mixed
     {
-        \assert($data instanceof Profile);
         $this->deleter->deleteChild($data, $this->current->get());
 
         return null;

@@ -6,9 +6,14 @@ use App\Entity\Identity\Profile;
 use App\Enum\Identity\ProfileType;
 use Doctrine\ORM\EntityManagerInterface;
 
+/** @phpstan-import-type TestUser from ApiTestBase */
 final class ProfileDeletionApiTest extends ApiTestBase
 {
-    /** Ajoute Léa, profil enfant, au compte de $guardian ; renvoie son id. */
+    /**
+     * Ajoute Léa, profil enfant, au compte de $guardian ; renvoie son id.
+     *
+     * @param TestUser $guardian
+     */
     private function addChild(array $guardian): string
     {
         $em = static::getContainer()->get(EntityManagerInterface::class);

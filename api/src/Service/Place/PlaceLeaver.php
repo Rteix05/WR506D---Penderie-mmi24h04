@@ -3,7 +3,6 @@
 namespace App\Service\Place;
 
 use App\Entity\Identity\Profile;
-use App\Entity\Inventory\AbstractPossession;
 use App\Entity\Inventory\Garment;
 use App\Entity\Inventory\Item;
 use App\Entity\Place\Place;
@@ -81,7 +80,7 @@ final class PlaceLeaver
         });
     }
 
-    /** @param list<AbstractPossession> $possessions */
+    /** @param list<Item|Garment> $possessions */
     private function assertCanTake(Place $place, Profile $leaver, array $possessions, ?Room $destination): void
     {
         if ([] === $possessions) {
@@ -93,7 +92,7 @@ final class PlaceLeaver
         }
     }
 
-    /** @param list<AbstractPossession> $possessions */
+    /** @param list<Item|Garment> $possessions */
     private function assertCanTransfer(Place $place, Profile $leaver, array $possessions, ?Profile $heir): void
     {
         if (null === $heir || $heir->getId()->equals($leaver->getId()) || !$place->hasMember($heir)) {
@@ -109,7 +108,7 @@ final class PlaceLeaver
         }
     }
 
-    /** @return list<AbstractPossession> ses objets et vêtements rangés dans ce logement (supprimés en douceur compris) */
+    /** @return list<Item|Garment> ses objets et vêtements rangés dans ce logement (supprimés en douceur compris) */
     private function possessionsOf(Profile $owner, Place $place): array
     {
         $all = [];

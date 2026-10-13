@@ -12,6 +12,8 @@ use Symfony\Contracts\HttpClient\ResponseInterface;
 /**
  * POST /api/scans/analyze, avec un OpenRouter simulé (tests/Support/OpenRouterMock) :
  * le premier Gemma répond toujours 429, chaque scan passe donc par le fallback.
+ *
+ * @phpstan-import-type TestUser from ApiTestBase
  */
 final class ScanApiTest extends ApiTestBase
 {
@@ -24,6 +26,7 @@ final class ScanApiTest extends ApiTestBase
         parent::tearDown();
     }
 
+    /** @param TestUser $user */
     private function upload(array $user, string $kind, string $bytes): ResponseInterface
     {
         $path = tempnam(sys_get_temp_dir(), 'scan');

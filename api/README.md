@@ -261,6 +261,24 @@ docker compose exec php php bin/phpunit --filter SaleTest  # un domaine
 
 La CI GitHub Actions (`.github/workflows/api.yml`) rejoue tout sur chaque push et chaque PR qui touche `api/` : migrations (et leur retour à zéro), référentiels, validation du schéma, PHPUnit.
 
+## Qualité du code
+
+Un `Makefile` réunit les commandes. Sur le poste, elles passent par le conteneur PHP, qui contient `make` (pas besoin de l'installer sous Windows) :
+
+```bash
+docker compose exec php make help          # la liste
+docker compose exec php make quality EXEC= # linters, PHPStan, audit
+docker compose exec php make ci EXEC=      # qualité puis tests, comme la CI
+```
+
+| Commande | Contenu |
+| --- | --- |
+| `make lint` | `lint:container`, `lint:yaml`, `lint:twig`, `doctrine:schema:validate --skip-sync` |
+| `make phpstan` | PHPStan **niveau 6** sur `src/` et `tests/`, avec les extensions Symfony, Doctrine et PHPUnit (`phpstan.dist.neon`) |
+| `make audit` | `composer validate --strict` et `composer audit` |
+
+La CI les lance dans un job « Qualité », en parallèle des tests. Un job « Sécurité (Snyk) » s'active quand le secret `SNYK_TOKEN` existe dans le dépôt. Le bilan complet est dans `audit.md`, à la racine du dépôt.
+
 ## Structure
 
 ```

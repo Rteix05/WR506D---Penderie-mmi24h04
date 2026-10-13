@@ -46,7 +46,7 @@ class GarmentCategory extends AbstractCategory
     #[Groups(['category:read'])]
     private ?Warmth $defaultWarmth = null;
 
-    public function getParent(): ?static
+    public function getParent(): ?self
     {
         return $this->parent;
     }

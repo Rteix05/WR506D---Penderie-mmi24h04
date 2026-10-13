@@ -13,14 +13,20 @@ use Symfony\Contracts\HttpClient\ResponseInterface;
  * Le fil : un look du jour publié, vu par l'audience choisie, avec ses
  * points comme mentions. Amitiés et abonnements posés en base (pas encore
  * de route) : Bruno est ami d'Alice, Chloé la suit, Damien ne la connaît pas.
+ *
+ * @phpstan-import-type TestUser from ApiTestBase
  */
 final class FeedApiTest extends ApiTestBase
 {
     private const PNG = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
 
+    /** @var TestUser */
     private array $alice;
+    /** @var TestUser */
     private array $bruno;
+    /** @var TestUser */
     private array $chloe;
+    /** @var TestUser */
     private array $damien;
 
     protected function setUp(): void
@@ -38,7 +44,11 @@ final class FeedApiTest extends ApiTestBase
         $em->flush();
     }
 
-    /** @param array<string, string> $fields */
+    /**
+     * @param array<string, string> $fields
+     *
+     * @param TestUser $user
+     */
     private function upload(array $user, string $url, array $fields = []): ResponseInterface
     {
         $path = tempnam(sys_get_temp_dir(), 'look');
@@ -53,7 +63,11 @@ final class FeedApiTest extends ApiTestBase
         ]);
     }
 
-    /** Un look prêt d'Alice : un point sur sa veste en jean. @return array{0: array, 1: array} le look et la veste */
+    /**
+     * Un look prêt d'Alice : un point sur sa veste en jean. @return array{0: array, 1: array} le look et la veste
+     *
+     * @return array{0: array<string, mixed>, 1: array<string, mixed>}
+     */
     private function readyLook(): array
     {
         $veste = $this->call('POST', '/api/garments', $this->alice, [
@@ -70,7 +84,11 @@ final class FeedApiTest extends ApiTestBase
         return [$look, $veste];
     }
 
-    /** @return list<string> les identifiants des publications du fil */
+    /**
+     * @return list<string> les identifiants des publications du fil
+     *
+     * @param TestUser $user
+     */
     private function feed(array $user): array
     {
         $feed = $this->call('GET', '/api/feed', $user)->toArray();

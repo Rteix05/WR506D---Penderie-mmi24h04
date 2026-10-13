@@ -128,7 +128,8 @@ abstract class AbstractCategory
         return $this;
     }
 
-    abstract public function getParent(): ?static;
+    /** Chaque sous-classe renvoie une catégorie de son propre type (covariance). */
+    abstract public function getParent(): ?self;
 
     /** Profondeur dans l'arbre : 1 pour une racine. */
     public function getDepth(): int

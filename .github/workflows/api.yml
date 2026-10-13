@@ -86,3 +86,73 @@ jobs:
 
       - name: PHPUnit
         run: php bin/phpunit
+
+  # Séance 15 : la qualité du code, en parallèle des tests. Les mêmes
+  # commandes que sur le poste (make quality), sans base de données.
+  quality:
+    name: Qualité (PHPStan, linters, audit)
+    runs-on: ubuntu-latest
+
+    env:
+      APP_ENV: test
+      # Lu au démarrage du noyau, jamais contacté : aucune requête en base.
+      DATABASE_URL: postgresql://penderie:penderie@127.0.0.1:5432/penderie?serverVersion=17&charset=utf8
+
+    defaults:
+      run:
+        working-directory: api
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: pdo_pgsql
+          coverage: none
+
+      - name: Cache Composer
+        uses: actions/cache@v4
+        with:
+          path: ~/.composer/cache
+          key: composer-${{ hashFiles('api/composer.lock') }}
+          restore-keys: composer-
+
+      - name: Dépendances
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Clés JWT de test
+        run: php bin/console lexik:jwt:generate-keypair --skip-if-exists --no-interaction
+
+      - name: Linters Symfony (conteneur, YAML, Twig, mapping)
+        run: make lint EXEC=
+
+      - name: PHPStan niveau 6
+        run: make phpstan EXEC=
+
+      - name: Audit des dépendances (composer validate, composer audit)
+        run: make audit EXEC=
+
+  # Snyk (failles connues des dépendances, base plus large que composer audit).
+  # Il faut un compte snyk.io et un secret SNYK_TOKEN dans le dépôt
+  # (Settings › Secrets and variables › Actions) ; sans lui, l'étape est sautée.
+  snyk:
+    name: Sécurité (Snyk)
+    runs-on: ubuntu-latest
+    env:
+      SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Snyk non configuré
+        if: env.SNYK_TOKEN == ''
+        run: echo "::notice::Ajouter le secret SNYK_TOKEN pour activer l'analyse Snyk."
+
+      - uses: actions/setup-node@v4
+        if: env.SNYK_TOKEN != ''
+        with:
+          node-version: '22'
+
+      - name: Analyse Snyk de l'API (composer.lock)
+        if: env.SNYK_TOKEN != ''
+        run: npx --yes snyk test --file=api/composer.lock --severity-threshold=high

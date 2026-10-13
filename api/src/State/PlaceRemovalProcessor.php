@@ -42,7 +42,6 @@ final class PlaceRemovalProcessor implements ProcessorInterface
 
             return null;
         }
-        \assert($data instanceof Room);
         if ($data->isClosed()) {
             if (!$data->getCreatedBy()->getId()->equals($me->getId())) {
                 throw new AccessDeniedException('Seul celui qui a créé une pièce fermée la supprime.');
