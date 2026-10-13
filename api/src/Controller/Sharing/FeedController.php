@@ -274,7 +274,7 @@ final class FeedController extends AbstractController
         return [
             'id' => (string) $garment->getId(),
             'name' => $garment->getName(),
-            'category' => $garment->getCategory()->getName(),
+            'category' => $garment->getCategory()?->getName(),
             'canView' => $canView && !$removed,
         ] + ($canView && !$removed ? [
             'brand' => $garment->getBrand()?->getName(),
