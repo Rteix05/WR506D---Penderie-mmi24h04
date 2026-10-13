@@ -25,6 +25,8 @@ use Symfony\Component\Validator\Constraints as Assert;
  *
  * L'emplacement est une cascade Room ▸ Storage ▸ Box : la pièce est
  * obligatoire, le reste facultatif, et l'ensemble cohérent (ValidLocation).
+ * Seule exception : un vêtement « à compléter », créé d'un simple titre
+ * depuis le look du jour (Garment::sketch), n'est pas encore rangé.
  * Déplacer est une action (voir LocationMover), jamais un statut.
  */
 #[ORM\MappedSuperclass]
@@ -71,11 +73,15 @@ abstract class AbstractPossession
     #[Groups(['possession:read', 'possession:write'])]
     protected ?Condition $condition = null;
 
-    /** RESTRICT : une pièce qui contient des objets ne se supprime pas (MDD). */
+    /**
+     * RESTRICT : une pièce qui contient des objets ne se supprime pas (MDD).
+     * Nulle seulement pour un vêtement à compléter (pas encore rangé) ; la
+     * création par l'API l'exige toujours (constructeur).
+     */
     #[ORM\ManyToOne(targetEntity: Room::class)]
-    #[ORM\JoinColumn(nullable: false, onDelete: 'RESTRICT')]
+    #[ORM\JoinColumn(nullable: true, onDelete: 'RESTRICT')]
     #[Groups(['possession:location', 'possession:create'])]
-    protected Room $room;
+    protected ?Room $room = null;
 
     // Rangement et conteneur s'écrivent à la création (possession:create),
     // comme la pièce : l'app range l'objet d'emblée « Garage › Étagère 2 ›
@@ -127,6 +133,12 @@ abstract class AbstractPossession
     protected ?\DateTimeImmutable $deletedAt = null;
 
     public function __construct(Profile $owner, string $name, Room $room)
+    {
+        $this->initialize($owner, $name, $room);
+    }
+
+    /** @internal Le constructeur, et Garment::sketch() pour un vêtement pas encore rangé. */
+    protected function initialize(Profile $owner, string $name, ?Room $room): void
     {
         $this->id = Uuid::v7();
         $this->owner = $owner;
@@ -216,7 +228,8 @@ abstract class AbstractPossession
         return $this;
     }
 
-    public function getRoom(): Room
+    /** Nulle seulement pour un vêtement à compléter. */
+    public function getRoom(): ?Room
     {
         return $this->room;
     }

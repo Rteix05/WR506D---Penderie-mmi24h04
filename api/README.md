@@ -207,7 +207,11 @@ Pour tester depuis le téléphone : écran **Tester le scan** de l'app (`app/src
 
 ## Look du jour
 
-Une photo de soi (`DailyLook`, une par profil et par jour), et sur cette photo un point par vêtement porté (`LookTag`). Pour chaque point, l'app découpe un gros plan autour du point et l'envoie ; l'IA du scan (même chaîne de modèles gratuits) reçoit ce gros plan et la liste numérotée des vêtements du dressing (texte : nom, catégorie, couleurs, marque). Elle répond soit avec le numéro d'un vêtement reconnu (`MATCHED`), soit avec la description d'un vêtement nouveau, au format de la suggestion du scan (`NEW`), ce qui pré-remplit son ajout. Si elle ne dit rien d'exploitable, le point est `UNKNOWN`. L'utilisateur confirme ou corrige ensuite chaque point (`CONFIRMED`).
+Une photo de soi (`DailyLook`, une par profil et par jour), et sur cette photo un point par vêtement porté (`LookTag`). Chaque point désigne un vêtement du dressing, choisi par l'utilisateur ; il n'y a pas d'IA. Les modèles gratuits étaient trop lents et trop souvent saturés pour un geste aussi fréquent.
+
+Un vêtement porté qui n'est pas encore dans le dressing s'ajoute d'un simple titre : il est créé « à compléter » (`Garment::sketch`, `incomplete: true`), sans catégorie ni pièce, et se termine plus tard (voir ci-dessous). Un point est confirmé (`CONFIRMED`) dès sa création ; les états `MATCHED`, `NEW` et `UNKNOWN` ne servent plus qu'aux points des anciens looks.
+
+**Vêtement à compléter.** C'est la seule exception à la règle « une catégorie et une pièce » : la création par `POST /api/garments` les exige toujours. Il apparaît dans `GET /api/garments` avec `incomplete: true`, `category` et `room` nuls. `POST /api/garments/{id}/complete {category, room, storage?, box?}` lui donne sa catégorie et le range : ce sont les deux informations qu'un `PATCH` n'écrit pas. Le reste (taille, couleurs, marque…) passe ensuite par le `PATCH` habituel. Il ne se déplace pas avant d'être rangé, et un vêtement déjà complet ne se « complète » pas (422).
 
 Le look est destiné à un post Instagram en deux images (la photo avec ses points, puis les vêtements). L'API ne publie rien : elle tient l'état du look, `TAGGING` › `READY` › `POSTED`. Pour passer à `READY`, chaque point doit désigner un vêtement. Le passage à `READY` note aussi le port de chaque vêtement ce jour-là (`WearLog`), ce que le moteur de suggestion utilise. Un look `POSTED` ne se modifie plus.
 
@@ -217,7 +221,7 @@ Le look est destiné à un post Instagram en deux images (la photo avec ses poin
 | `GET /api/looks` | ses looks, du plus récent au plus ancien |
 | `POST /api/looks` | multipart, champ `image` : crée le look du jour. Répond 409 s'il en existe déjà un |
 | `GET`, `PATCH`, `DELETE /api/looks/{id}` | `PATCH {status?, caption?}` change l'état ou la légende (2 200 caractères au plus). `DELETE` supprime aussi la photo |
-| `POST /api/looks/{id}/tags` | multipart : `x`, `y` (de 0 à 1 depuis le coin haut gauche) et `image` (le gros plan). L'IA répond pendant la requête. 12 points au plus |
+| `POST /api/looks/{id}/tags` | `{x, y, garment}` (de 0 à 1 depuis le coin haut gauche ; un vêtement visible, même emprunté) ou `{x, y, name}` (crée un vêtement à compléter). 12 points au plus |
 | `PATCH /api/looks/{id}/tags/{tagId}` | `{garment: "/api/garments/{id}"}` : le vêtement du point. Il peut être emprunté, il suffit de pouvoir le voir |
 | `DELETE /api/looks/{id}/tags/{tagId}` | retire le point |
 

@@ -25,6 +25,8 @@ use Symfony\Component\Serializer\Attribute\Groups;
  * sont des index sur expression, que Doctrine ne sait pas déclarer.
  */
 #[ORM\Entity(repositoryClass: ItemRepository::class)]
+// Un objet est toujours rangé : seul un vêtement peut attendre sa pièce (Garment::sketch).
+#[ORM\AssociationOverrides([new ORM\AssociationOverride(name: 'room', joinColumns: [new ORM\JoinColumn(name: 'room_id', nullable: false, onDelete: 'RESTRICT')])])]
 #[ORM\Index(name: 'idx_item_owner_availability', columns: ['owner_id', 'availability'])]
 #[ORM\Index(name: 'idx_item_room', columns: ['room_id'])]
 #[ORM\Index(name: 'idx_item_box', columns: ['box_id'])]

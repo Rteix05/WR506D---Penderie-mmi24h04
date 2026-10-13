@@ -24,7 +24,7 @@ use Symfony\Component\HttpKernel\KernelEvents;
  */
 final class ControllerErrorSubscriber implements EventSubscriberInterface
 {
-    private const ROUTES = ['api_share_', 'api_link_', 'api_contribution_', 'api_flatshare_', 'api_scan_', 'api_look_', 'api_account_profile_'];
+    private const ROUTES = ['api_share_', 'api_link_', 'api_contribution_', 'api_flatshare_', 'api_scan_', 'api_look_', 'api_account_profile_', 'api_garment_complete'];
 
     public static function getSubscribedEvents(): array
     {

@@ -96,7 +96,6 @@ final class ScanAnalyzer
 
     /**
      * La suggestion d'une photo de vêtement ou d'objet, au format du scan.
-     * Sert aussi aux points d'un look du jour (LookTagDetector).
      *
      * @param array<string, mixed> $answer la réponse du modèle
      *

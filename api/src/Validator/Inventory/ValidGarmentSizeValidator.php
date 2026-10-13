@@ -19,6 +19,14 @@ final class ValidGarmentSizeValidator extends ConstraintValidator
             throw new UnexpectedValueException($value, Garment::class);
         }
 
+        // Un vêtement à compléter n'a pas de catégorie : pas d'échelle, la taille attendra.
+        if (null === $value->getCategory()) {
+            if (null !== $value->getSize()) {
+                $this->context->buildViolation($constraint->noScale)->atPath('size')->addViolation();
+            }
+
+            return;
+        }
         $scale = $value->getCategory()->getSizeSystem();
         $size = $value->getSize();
 
