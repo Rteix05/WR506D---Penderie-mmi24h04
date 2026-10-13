@@ -95,7 +95,9 @@ final class VisibilityApiTest extends ApiTestBase
         self::assertSame([], $this->call('GET', '/api/shares/received', $this->paul)->toArray());
         // 5. Aucune fuite dans ce qu'on reçoit de SA liste.
         $raw = $this->call('GET', '/api/items', $this->paul)->getContent();
-        foreach (['Tente', '1234', '350', $this->camille['profileId'], 'camille'] as $secret) {
+        // Des valeurs reconnaissables : « 350 » ou « 1234 » seuls se retrouvent parfois dans un UUID v7
+        // (son début est l'heure courante en hexadécimal), ce qui faisait échouer le test selon l'heure.
+        foreach (['Tente', 'cadenas : 1234', '350.00', $this->camille['profileId'], 'camille'] as $secret) {
             self::assertStringNotContainsString($secret, $raw);
         }
         // Et on ne partage pas ce qu'on ne possède pas.

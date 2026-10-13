@@ -112,8 +112,12 @@ final class InventoryTest extends DatabaseTestCase
         self::assertSame($armoire, $jean->getStorage());
 
         $mover->move($jean, $chambre, null, null, $rafael);
-        $last = $this->em->getRepository(LocationHistory::class)->findOneBy(['garment' => $jean], ['movedAt' => 'DESC', 'id' => 'DESC']);
-        self::assertSame(MoveReason::ManualMove, $last->getReason());
+        // Les deux déplacements tombent dans la même seconde, et l'ordre des UUID v7 n'est pas garanti
+        // dans la même milliseconde : on vérifie l'ensemble de l'historique, pas « le dernier ».
+        $reasons = array_map(static fn (LocationHistory $h) => $h->getReason(), $this->em->getRepository(LocationHistory::class)->findBy(['garment' => $jean]));
+        self::assertCount(2, $reasons);
+        self::assertContains(MoveReason::BoxMoved, $reasons, 'le déplacement de l\'armoire (noté comme celui d\'un contenant)');
+        self::assertContains(MoveReason::ManualMove, $reasons, 'puis le déplacement du jean lui-même');
     }
 
     public function testFuzzyAndFullTextSearch(): void
