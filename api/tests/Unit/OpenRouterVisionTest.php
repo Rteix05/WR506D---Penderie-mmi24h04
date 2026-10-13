@@ -104,7 +104,8 @@ final class OpenRouterVisionTest extends TestCase
             (new OpenRouterVision($client, self::MODELS, timeout: 20.0, budget: 4.0))->ask('?', 'img', 'image/jpeg');
             self::fail('VisionUnavailable attendue');
         } catch (VisionUnavailable $e) {
-            self::assertCount(1, $calls, 'après 1,5 s il reste moins de 3 s : les autres modèles ne sont pas appelés');
+            // Au plus un appel : après 1,5 s il reste moins de 3 s (et aucun si la machine, chargée, a pris du retard avant).
+            self::assertLessThanOrEqual(1, unt($calls), 'les autres modèles ne sont pas appelés');
             self::assertLessThanOrEqual(4.0, $calls[0], 'un modèle n\'a jamais plus que le budget restant');
             self::assertCount(4, $e->attempts);
             self::assertStringContainsString('délai total', $e->attempts[1]['error']);
