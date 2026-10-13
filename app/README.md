@@ -131,7 +131,8 @@ Une photo de soi, un point par vêtement porté, l'IA qui reconnaît chaque vêt
 - **Entrée** : la carte « Look du jour » de l'accueil. Elle mène à `look/index.tsx` : on prend la photo, ou on la choisit dans la galerie. Il y a un look par jour, et s'il existe déjà, on le reprend.
 - **Les points** (`look/[id]/index.tsx`) :
   - toucher un vêtement sur la photo y pose un point ;
-  - l'app découpe un gros plan carré autour du point avec `expo-image-manipulator` et l'envoie avec la position. L'IA répond pendant la requête : « reconnu dans ton dressing », « pas dans ton dressing » ou « pas reconnu » ;
+  - l'app découpe un gros plan carré autour du point avec `expo-image-manipulator` et l'envoie avec la position, et l'endroit où elle l'a découpé (`cropX`…`cropH`). L'IA répond pendant la requête : « reconnu dans ton dressing », « pas dans ton dressing » ou « pas reconnu » ;
+  - l'IA délimite le vêtement sous le point : son contour (pointillés, à la couleur du point) s'affiche autour du point pendant la préparation. Si elle a décrit le vêtement d'à côté, sa réponse est écartée et le point indique « L'IA a regardé à côté du point : choisis le vêtement » ;
   - chaque point se confirme, se désigne dans le dressing (`look/[id]/choisir.tsx`) ou s'ajoute au dressing ;
   - l'ajout passe par le parcours habituel, pré-rempli par l'IA, avec le gros plan comme photo (`ajout/look.tsx`, `Draft.lookLink`). Le vêtement créé est désigné pour le point, puis l'app revient au look.
 - **Le post** (`look/[id]/post.tsx`) :
@@ -140,6 +141,19 @@ Une photo de soi, un point par vêtement porté, l'IA qui reconnaît chaque vêt
   - on peut écrire une légende ;
   - l'app ne publie rien : « Marquer comme posté » fait passer le look à l'état `POSTED`. Les états sont `TAGGING` › `READY` › `POSTED`.
 - **Données** : `lib/look.ts`. La photo envoyée reste en mémoire pour découper les gros plans ; après un redémarrage, elle est retéléchargée avec le jeton.
+- **Publier dans Penderie** (`look/[id]/publier.tsx`, depuis le post) : voir « Fil d'actualité ».
+
+## Fil d'actualité
+
+D'après Figma (section « 16 — Fil d'actualité »), commencé par le look du jour. Entrée : la ligne « Fil d'actualité » du menu Accueil.
+
+- **Fil** (`fil/index.tsx`) : « Fil | Mes publications ». Le fil montre ce que les amis et les comptes suivis ont choisi de montrer, par pages ; « Mes publications » reprend la page de son propre profil. L'état vide suit la maquette (« Ton fil est calme »).
+- **Publier un look** (`look/[id]/publier.tsx`, modale) : un message facultatif (la légende par défaut) et « Qui peut voir » : Amis (ils pourront commenter) ou Abonnés (amis compris, lecture seule). Publier rend les vêtements pointés visibles, en lecture, par ces personnes.
+- **Les points sont des mentions** (`components/feed/PostCard.tsx`) : comme un tag Instagram, toucher un point ouvre une feuille avec le nom du vêtement. Si la publication le montre, on voit aussi marque, taille et couleurs, et « Voir sur le profil de … » ; sinon, il reste privé. Pour ses propres publications : « Voir dans mon dressing ».
+- **Publication** (`fil/[id].tsx`) : la carte et la liste numérotée des vêtements ; son auteur peut la supprimer (les vêtements redeviennent privés, le look reste).
+- **Page d'un profil** (`fil/profil/[id].tsx`, d'après « Amis — Profil ami », version simple) : la relation (ami, abonné, foyer), les vêtements que ses publications te montrent (celui de la mention en premier, encadré), puis ses publications.
+- **Données** : `lib/feed.ts` (API `/api/feed`, `/api/posts`, `/api/profiles/{id}/page`).
+- **Pas encore** : commentaires, signalement, publier autre chose qu'un look (collection, objet), photo de profil (initiale).
 
 ## Profils du compte
 
@@ -170,6 +184,7 @@ app/
 │   │       ├── ajouter.tsx       « Tu ajoutes quoi ? »
 │   │       ├── ajout/            parcours d'ajout (scan, objet, vêtement)
 │   │       ├── objet/[id].tsx    fiche objet ; vetement/[id].tsx : fiche vêtement
+│   │       ├── fil/              fil d'actualité : publications, mentions, page d'un profil
 │   │       ├── look/             look du jour : photo, points, post
 │   │       ├── modifier.tsx      modification d'un objet ou d'un vêtement
 │   │       ├── carton/[id]/      fiche et contenu d'un carton
@@ -178,6 +193,7 @@ app/
 │   │       ├── nouvel-emplacement.tsx  ajout rapide d'une pièce ou d'un rangement
 │   │       └── profils/          profils du compte : changer, créer, modifier, autorisations
 │   ├── components/
+│   │   ├── feed/PostCard.tsx     publication du fil, points-mentions, feuille du vêtement
 │   │   ├── home/ClothVisual.tsx  illustrations de vêtements (SVG Figma)
 │   │   ├── inventory/            cartes, recherche, puces, blocs de fiche
 │   │   ├── look/                 photo du look et ses points numérotés
@@ -188,6 +204,7 @@ app/
 │   │   ├── api.ts                appels à l'API, jetons, rafraîchissement
 │   │   ├── auth.tsx              état de session, /api/me, profil actif
 │   │   ├── inventory.ts          compteurs et derniers ajouts de l'accueil
+│   │   ├── feed.ts               fil d'actualité : publications, publier un look, page d'un profil
 │   │   ├── look.ts               look du jour : photo, gros plans, points, états
 │   │   ├── possessions.ts        listes, fiches, modification, suppression
 │   │   ├── places.ts             logements : libellés, compteurs, créations, suppressions

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { ActivityIndicator, Alert, Pressable, Text, View } from 'react-native';
 
 import { ActionBar, FlowScreen } from '@/components/add/FlowScreen';
-import { Dot, LookPhoto } from '@/components/look/LookPhoto';
+import { Dot, LookPhoto, type Outline } from '@/components/look/LookPhoto';
 import { Pill } from '@/components/ui/Banner';
 import { BackButton } from '@/components/ui/BackButton';
 import { Button } from '@/components/ui/Button';
@@ -109,7 +109,7 @@ function LookBody({ look }: { look: Look }) {
   return (
     <>
       <View className="gap-2 px-5">
-        <LookPhoto look={look} onPlace={tagging && !full ? place : undefined} pending={pending} />
+        <LookPhoto look={look} onPlace={tagging && !full ? place : undefined} pending={pending} outlines={tagging ? outlinesOf(look) : []} />
         <Text className="font-luciole text-legend text-muted dark:text-muted-night">{hint}</Text>
       </View>
 
@@ -195,4 +195,9 @@ function Chip({ label, onPress, strong = false, disabled }: { label: string; onP
       <Text className={`font-luciole-bold text-legend ${strong ? 'text-white' : 'text-ink dark:text-ink-night'}`}>{label}</Text>
     </Pressable>
   );
+}
+
+/** Le contour de chaque vêtement délimité par l'IA : on voit ce qu'elle a compris de chaque point. */
+function outlinesOf(look: Look): Outline[] {
+  return look.tags.flatMap((tag) => (tag.box ? [{ key: tag.id, box: tag.box, status: tag.status }] : []));
 }

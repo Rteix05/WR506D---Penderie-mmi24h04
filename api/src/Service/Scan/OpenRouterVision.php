@@ -17,14 +17,24 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
  *
  * Gemma n'accepte pas de message « system » chez tous les hébergeurs :
  * la consigne part dans le message utilisateur, avec l'image.
+ *
+ * Tout tient dans un BUDGET de temps commun à la chaîne : PHP coupe une
+ * requête au bout de 30 s (max_execution_time) et renvoie alors une page
+ * d'erreur HTML au lieu de JSON. Chaque modèle reçoit au plus ce qui reste
+ * du budget ; quand il ne reste plus assez, on s'arrête sur
+ * VisionUnavailable, que les appelants savent traiter (« pas reconnu »).
  */
 final class OpenRouterVision
 {
+    /** En dessous, un modèle n'a pas le temps de répondre : inutile de l'appeler. */
+    private const MIN_ATTEMPT = 3.0;
+
     /** @param list<string> $models */
     public function __construct(
         private readonly HttpClientInterface $openrouterClient,
         private readonly array $models,
-        private readonly float $timeout = 30.0,
+        private readonly float $timeout = 20.0,
+        private readonly float $budget = 24.0,
     ) {
     }
 
@@ -45,8 +55,14 @@ final class OpenRouterVision
         }
         $image = 'data:'.$mimeType.';base64,'.base64_encode($imageBytes);
         $attempts = [];
+        $deadline = microtime(true) + $this->budget;
 
         foreach ($models as $model) {
+            $left = $deadline - microtime(true);
+            if ($left < self::MIN_ATTEMPT) {
+                $attempts[] = ['model' => $model, 'error' => 'non essayé : délai total dépassé'];
+                continue;
+            }
             try {
                 $response = $this->openrouterClient->request('POST', 'chat/completions', [
                     'json' => [
@@ -58,7 +74,7 @@ final class OpenRouterVision
                         'temperature' => 0.1,
                         'max_tokens' => 2000,
                     ],
-                    'max_duration' => $this->timeout,
+                    'max_duration' => min($this->timeout, $left),
                 ]);
                 $status = $response->getStatusCode();
                 $body = $response->toArray(false);

@@ -213,6 +213,7 @@ Un vêtement porté qui n'est pas encore dans le dressing s'ajoute d'un simple t
 
 **Vêtement à compléter.** C'est la seule exception à la règle « une catégorie et une pièce » : la création par `POST /api/garments` les exige toujours. Il apparaît dans `GET /api/garments` avec `incomplete: true`, `category` et `room` nuls. `POST /api/garments/{id}/complete {category, room, storage?, box?}` lui donne sa catégorie et le range : ce sont les deux informations qu'un `PATCH` n'écrit pas. Le reste (taille, couleurs, marque…) passe ensuite par le `PATCH` habituel. Il ne se déplace pas avant d'être rangé, et un vêtement déjà complet ne se « complète » pas (422).
 
+
 Le look est destiné à un post Instagram en deux images (la photo avec ses points, puis les vêtements). L'API ne publie rien : elle tient l'état du look, `TAGGING` › `READY` › `POSTED`. Pour passer à `READY`, chaque point doit désigner un vêtement. Le passage à `READY` note aussi le port de chaque vêtement ce jour-là (`WearLog`), ce que le moteur de suggestion utilise. Un look `POSTED` ne se modifie plus.
 
 | Route | Rôle |

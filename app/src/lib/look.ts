@@ -30,7 +30,14 @@ export type LookTag = {
   /** Ce que l'IA a vu, au format du scan : pré-remplit l'ajout d'un vêtement nouveau. */
   suggestion: ScanSuggestion | null;
   model: string | null;
+  /** Le contour du vêtement délimité par l'IA, sur la photo (de 0 à 1). */
+  box: LookBox | null;
+  /** L'IA a décrit un autre vêtement que celui du point : sa réponse a été écartée. */
+  offTarget: boolean;
 };
+
+/** Un rectangle sur la photo : coin haut gauche (x0, y0), coin bas droit (x1, y1), de 0 à 1. */
+export type LookBox = { x0: number; y0: number; x1: number; y1: number };
 
 export type Look = {
   id: string;
@@ -41,6 +48,8 @@ export type Look = {
   postedAt: string | null;
   photo: { url: string; width: number | null; height: number | null };
   tags: LookTag[];
+  /** Sa publication dans le fil de Penderie, si elle est en ligne. */
+  post: { id: string; audience: 'FRIENDS' | 'FOLLOWERS' | 'SPECIFIC' } | null;
 };
 
 export const MAX_TAGS = 12;
@@ -61,7 +70,7 @@ export function tagLine(tag: LookTag): string {
     case 'NEW':
       return 'Pas dans ton dressing : ajoute-le';
     default:
-      return 'Pas reconnu : choisis le vêtement';
+      return tag.offTarget ? "L'IA a regardé à côté du point : choisis le vêtement" : 'Pas reconnu : choisis le vêtement';
   }
 }
 
@@ -149,8 +158,10 @@ async function cropAround(uri: string, size: { width: number; height: number }, 
   if (side > 640) context.resize({ width: 640 });
   const image = await context.renderAsync();
   const saved = await image.saveAsync({ format: SaveFormat.JPEG, compress: 0.8 });
+  // Où le gros plan a été découpé, en part de la photo : l'API en déduit où tombe le point dessus.
+  const area = { x: originX / size.width, y: originY / size.height, w: side / size.width, h: side / size.height };
 
-  return { uri: saved.uri, width: saved.width, height: saved.height };
+  return { image: { uri: saved.uri, width: saved.width, height: saved.height }, area };
 }
 
 // ---------------------------------------------------------------------------
@@ -174,12 +185,16 @@ export async function createLook(queryClient: QueryClient, asset: ImagePickerAss
 export async function addTag(queryClient: QueryClient, look: Look, x: number, y: number): Promise<LookTag> {
   const uri = await localPhoto(look);
   const size = look.photo.width && look.photo.height ? { width: look.photo.width, height: look.photo.height } : await measure(uri);
-  const crop = await cropAround(uri, size, x, y);
-  const form = await fileFormData({ uri: crop.uri, type: 'image/jpeg' });
+  const { image, area } = await cropAround(uri, size, x, y);
+  const form = await fileFormData({ uri: image.uri, type: 'image/jpeg' });
   form.append('x', x.toFixed(4));
   form.append('y', y.toFixed(4));
+  form.append('cropX', area.x.toFixed(4));
+  form.append('cropY', area.y.toFixed(4));
+  form.append('cropW', area.w.toFixed(4));
+  form.append('cropH', area.h.toFixed(4));
   const tag = await apiUpload<LookTag>(`/api/looks/${look.id}/tags`, form);
-  crops.set(tag.id, crop);
+  crops.set(tag.id, image);
   patchTag(queryClient, look.id, tag);
 
   return tag;

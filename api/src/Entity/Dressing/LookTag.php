@@ -13,13 +13,10 @@ use Symfony\Component\Uid\Uuid;
 /**
  * Un point posé sur la photo d'un look, sur un vêtement porté.
  *
- * L'IA regarde la zone autour du point (l'app la découpe et l'envoie) :
- *  - elle reconnaît un vêtement du dressing : garment est rempli, MATCHED ;
- *  - elle voit un vêtement absent du dressing : suggestion décrit ce
- *    qu'elle voit (mêmes champs que le scan), de quoi pré-remplir l'ajout,
- *    NEW ;
- *  - elle ne dit rien d'exploitable : UNKNOWN.
- * L'utilisateur confirme ou corrige ensuite : CONFIRMED.
+ * Il désigne un vêtement du dressing, choisi par l'utilisateur
+ * (CONFIRMED dès sa création). Les états MATCHED, NEW et UNKNOWN, et les
+ * champs suggestion et detection, ne concernent que les points des
+ * anciens looks, quand l'IA les analysait.
  */
 #[ORM\Entity(repositoryClass: LookTagRepository::class)]
 class LookTag
@@ -81,25 +78,7 @@ class LookTag
         $this->position = $position;
     }
 
-    /**
-     * Le verdict de l'IA.
-     *
-     * @param array<string, mixed>|null $suggestion
-     * @param array<string, mixed>      $detection
-     */
-    public function detected(?Garment $match, ?array $suggestion, array $detection): void
-    {
-        $this->garment = $match;
-        $this->suggestion = $suggestion;
-        $this->detection = $detection;
-        $this->status = match (true) {
-            null !== $match => LookTagStatus::Matched,
-            null !== ($suggestion['name'] ?? null) => LookTagStatus::New,
-            default => LookTagStatus::Unknown,
-        };
-    }
-
-    /** L'utilisateur désigne le vêtement : celui de l'IA, un autre, ou celui qu'il vient de créer. */
+    /** Le vêtement du point : un vêtement du dressing, ou celui qu'on vient d'ajouter d'un titre. */
     public function confirm(Garment $garment): void
     {
         $this->look->assertEditable();
