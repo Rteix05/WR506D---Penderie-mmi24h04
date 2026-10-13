@@ -8,3 +8,7 @@ lexik_jwt_authentication:
     token_ttl: 900
     # Identifiant de l'utilisateur dans le jeton : l'email du compte.
     user_id_claim: email
+    # Tolérance d'horloge : sous Docker Desktop (WSL2), l'horloge du conteneur peut reculer
+    # de quelques millisecondes ; un jeton paraissait alors « émis dans le futur » et était
+    # refusé (401 « Invalid JWT Token » au hasard, dans les tests comme dans l'app).
+    clock_skew: 5
