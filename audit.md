@@ -17,7 +17,7 @@ Penderie, c'est une API Symfony 7.4 / API Platform 4 (PHP 8.4, PostgreSQL 17) et
 | `npm audit` (app) | failles connues des dépendances JS | 39 (1 critique, 23 hautes) | **36 (0 critique, 21 hautes)** |
 | ESLint + `tsc` (app) | règles Expo / React, typage | OK | OK, et maintenant en CI |
 | PHPUnit | 216 tests | ~1 lancement sur 3 en échec au hasard | **stable** (3 causes corrigées) |
-| Snyk | failles (base plus large) | — | prêt en CI, en attente du jeton |
+| Snyk | failles (base plus large) | — | **0** : 110 dépendances PHP testées, aucun chemin vulnérable |
 
 ## Outils mis en place
 
@@ -38,10 +38,10 @@ Le conteneur PHP contient déjà `make` : sous Windows, `docker compose exec php
 | --- | --- | --- |
 | `api.yml` | Migrations et tests | PostgreSQL 17 réel, migrations jouées puis rejouées dans les deux sens, référentiels, schéma, PHPUnit (existant) |
 | `api.yml` | **Qualité** | `make lint`, `make phpstan`, `make audit` (nouveau, en parallèle des tests) |
-| `api.yml` | **Sécurité (Snyk)** | `snyk test` sur `composer.lock`, seuil « haute » ; sauté tant que le secret `SNYK_TOKEN` n'existe pas |
+| `api.yml` | **Sécurité (Snyk)** | `snyk test` sur `composer.lock`, seuil « haute » ; actif (secret `SNYK_TOKEN` ajouté le 13/10) |
 | `app.yml` | **ESLint et TypeScript** | `npm ci`, `expo lint`, `tsc --noEmit`, `npm audit` bloquant si critique (nouveau) |
 
-Pour activer Snyk : créer un compte sur snyk.io, copier le jeton (Account settings › Auth Token), puis l'ajouter dans GitHub (Settings › Secrets and variables › Actions › `SNYK_TOKEN`).
+Snyk est activé : compte snyk.io, jeton (Account settings › Auth Token) enregistré dans GitHub comme secret `SNYK_TOKEN`. Premier passage : 110 dépendances PHP testées, aucun chemin vulnérable.
 
 ## 1. Qualité du code PHP
 
@@ -183,7 +183,7 @@ Manques et scénarios à automatiser :
 
 | Priorité | Action |
 | --- | --- |
-| Haute | Activer Snyk (jeton) ; ajouter des tests de bout en bout pour l'app (5 parcours ci-dessus) |
+| Haute | Ajouter des tests de bout en bout pour l'app (5 parcours ci-dessus) ; étendre Snyk à l'app (`package-lock.json`) |
 | Haute | Appliquer les autorisations des profils enfants (lot 25) |
 | Moyenne | Factoriser la vérification d'image (3 contrôleurs) ; déclarer les routes à la main sans liste manuelle |
 | Moyenne | Monter Expo / React Native à la prochaine version majeure (21 failles hautes de l'outillage) |
