@@ -72,7 +72,7 @@ function PostBody({ look }: { look: Look }) {
       {posted ? (
         <Banner tone="success" title="Look posté !" text={look.postedAt ? `Le ${new Date(look.postedAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}.` : undefined} />
       ) : (
-        <Banner tone="info" title="Prêt à poster" text="Publie ces 2 images sur Instagram, puis marque le look comme posté." />
+        <Banner tone="info" title="Prêt à poster" text="Publie ces 2 images sur Instagram, puis marque le look comme posté. Tu peux aussi le montrer à tes amis dans Penderie." />
       )}
 
       <View className="gap-3">
@@ -137,20 +137,29 @@ function PostBody({ look }: { look: Look }) {
             {error}
           </Text>
         )}
+        {/* Le fil de Penderie, en plus d'Instagram : les points y deviennent des mentions. */}
+        {look.post ? (
+          <Button label="Voir la publication dans le fil" variant="secondary" onPress={() => router.push({ pathname: '/fil/[id]', params: { id: look.post!.id } })} />
+        ) : (
+          <Button label="Publier dans Penderie" variant="secondary" onPress={() => router.push({ pathname: '/look/[id]/publier', params: { id: look.id } })} disabled={saving} />
+        )}
         {!posted && (
           <>
             {/* La légende part avec l'état : un seul envoi. */}
             <Button label="Marquer comme posté" onPress={() => save({ status: 'POSTED', ...(captionChanged ? { caption: caption.trim() || null } : {}) })} loading={saving} />
             {captionChanged && <Button label="Enregistrer la légende" variant="secondary" onPress={() => save({ caption: caption.trim() || null })} disabled={saving} />}
-            <Button
-              label="Modifier les points"
-              variant="ghost"
-              onPress={async () => {
-                await save({ status: 'TAGGING' });
-                router.back();
-              }}
-              disabled={saving}
-            />
+            {/* Un look publié dans le fil ne repasse plus en préparation (règle de l'API). */}
+            {!look.post && (
+              <Button
+                label="Modifier les points"
+                variant="ghost"
+                onPress={async () => {
+                  await save({ status: 'TAGGING' });
+                  router.back();
+                }}
+                disabled={saving}
+              />
+            )}
           </>
         )}
         {posted && <Button label="Retour à l'accueil" variant="secondary" onPress={() => router.dismissTo('/')} />}

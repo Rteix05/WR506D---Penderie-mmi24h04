@@ -17,6 +17,8 @@ export default function AppLayout() {
       <Stack.Screen name="modifier" options={{ presentation: 'modal' }} />
       {/* Look du jour : photo, points sur les vêtements, post Instagram. */}
       <Stack.Screen name="look" />
+      {/* Fil d'actualité : publications, mentions, page d'un profil. */}
+      <Stack.Screen name="fil" />
       {/* Logements : fiche et contenu d'un carton, et les parcours de création. */}
       <Stack.Screen name="carton/[id]/index" />
       <Stack.Screen name="carton/[id]/contenu" />
