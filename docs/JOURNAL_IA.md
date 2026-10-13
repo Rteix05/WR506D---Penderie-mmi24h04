@@ -238,3 +238,33 @@ Règles suivies avec l'outil de développement :
 - **Tests** : 2 tests d'API et 1 test unitaire ajoutés. Pendant les essais, l'IA a repéré un « Invalid JWT Token » intermittent dans la suite de tests. Elle a vérifié qu'il existait déjà sur develop, puis l'a signalé à part sans le corriger.
 - **Conflit** : #45 et #42 modifient le même composant photo ; résolu en gardant les deux (points cliquables et contours).
 - **Pas vérifié** : la précision des contours avec les vrais modèles gratuits, sur téléphone.
+
+### 13/10 — Réseau, look du jour sans IA, tests instables, fil peuplé (PR #46 à #49)
+
+- **Prompts** :
+  - « check l'ip j'ai mis partage de co », « ca bug , recheck l'ip », « ca time out encore » ;
+  - « le scan look du jour renvoi toujours des erreur json , faudrait au lieu que l'IA scan le vetement , juste on l'identifie depuis nos vetements , et si c'est un vetement qui et pas du dressing on lui met un titre seulement pour le look , puis sa créer un objet/vetement incomplet a terminer nous meme plus tard » ;
+  - « le scan de code barre / étiquette fonctionne ? » ;
+  - « pense a intégrer les maquettes pour le fil d'actualité pour que je test ».
+- **Réseau** :
+  - le conteneur PHP de l'API s'était arrêté (« zend_mm_heap corrupted ») ; l'IA l'a redémarré ;
+  - le pare-feu de Windows n'autorisait Docker et Node que sur un réseau **Public**. Le conseil donné plus tôt par l'IA, passer le Wi-Fi en Privé, était donc faux : il bloquait le téléphone. L'IA l'a reconnu et a donné les deux corrections possibles, que l'étudiant applique lui-même.
+- **Scan** :
+  - le code-barres n'est pas fait dans l'app (le mode existe seulement dans le modèle de données) ;
+  - l'étiquette échouait pour deux raisons : la limite de 30 s de PHP (corrigée par #39) et les 4 modèles gratuits saturés ce jour-là (429, quotas dépassés).
+- **Look du jour sans IA** (#46 API, #48 app). Questions posées par l'IA, réponses de l'étudiant : « titre seul » et « IA retirée du look ».
+  - Toucher la photo ouvre « Quel vêtement ? » : un vêtement du dressing, ou un titre.
+  - Le titre crée un vêtement « à compléter », sans catégorie ni pièce : seule exception à la règle du modèle, la création par l'API restant stricte.
+  - « Compléter » donne ensuite la catégorie et l'emplacement (nouvelle route `POST /api/garments/{id}/complete`).
+  - Le contour délimité par l'IA (#44, #45, mergés entre-temps) est retiré, avec sa colonne en base.
+- **Tests instables trouvés et corrigés** :
+  - un 401 « Invalid JWT Token » au hasard : l'horloge du conteneur Docker (WSL2) recule parfois de quelques millisecondes. La tolérance `clock_skew: 5` le règle (#47) : 3 lancements sur 3 verts, contre 1 à 2 échecs par lancement sans ;
+  - trois tests qui échouaient sans défaut dans le code (#49) : le budget de l'IA sur une machine chargée ; un « secret » (350) retrouvé dans un UUID v7, dont le début est l'heure courante ; l'ordre de deux UUID créés dans la même milliseconde.
+- **Erreurs de l'IA, corrigées** :
+  - un remplacement automatique (sed) a abîmé une ligne de test, poussée telle quelle sur la branche de #39 ; l'IA l'a vue au lancement suivant et corrigée ;
+  - une correction poussée sur #41 et #39 juste après leur merge n'est pas entrée dans develop ; elle a été reportée dans #46 et #49.
+- **Fil d'actualité, comme la maquette** :
+  - trois comptes de démonstration (Thomas et Camille, amis de scantest ; Julie, suivie) ont chacun un dressing et un look publié (« il y a 2 h », « hier », « il y a 2 j ») ;
+  - les photos sont des silhouettes générées par un script, aux couleurs des vêtements pointés ;
+  - tout passe par l'API.
+- **Vérifié** : sur une branche locale réunissant toutes les PR ouvertes, 216 tests verts sur deux lancements, et `tsc` et lint de l'app. **Pas encore testé sur téléphone.**
