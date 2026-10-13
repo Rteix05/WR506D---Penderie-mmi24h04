@@ -268,3 +268,23 @@ Règles suivies avec l'outil de développement :
   - les photos sont des silhouettes générées par un script, aux couleurs des vêtements pointés ;
   - tout passe par l'API.
 - **Vérifié** : sur une branche locale réunissant toutes les PR ouvertes, 216 tests verts sur deux lancements, et `tsc` et lint de l'app. **Pas encore testé sur téléphone.**
+
+### 13/10 — Séance 15 : qualité du code, CI (PR #51 à #53)
+
+- **Prompt** : le sujet de la séance collé tel quel (PHPStan niveau 6, Makefile, Snyk, linter Symfony, Composer audit, inspections manuelle et visuelle, A11Y, écoconception, UX, testabilité, livrable `audit.md`), avec « fais ça en attendant, c'est pour les tests CI/CD sur git ».
+- **Produit** :
+  - PHPStan niveau 6 avec les extensions Symfony, Doctrine et PHPUnit, sur `src/` et `tests/` : **de 163 erreurs à 0**. Une seule règle est ignorée, avec sa justification (héritage à table unique) ;
+  - un Makefile ;
+  - des jobs CI « Qualité » et « Sécurité (Snyk) » côté API, un workflow pour l'app (ESLint, TypeScript, audit npm) ;
+  - `audit.md`.
+- **Choix de l'IA** :
+  - corriger plutôt qu'ignorer. 86 erreurs venaient d'un seul trait (dates nullables) : propriétés non nulles, mais des getters qui renvoient toujours `null` avant l'enregistrement, parce qu'un validateur s'en sert ;
+  - pour les tests, un type partagé `TestUser` plutôt que des centaines de `array<string, mixed>` ;
+  - les ratios de contraste de l'audit sont calculés avec la formule WCAG sur le vrai fond de l'app. Une première estimation (4,9:1) était fausse : c'est 4,85:1 sur le fond, et 5,08:1 sur blanc.
+- **Erreurs de l'IA, corrigées** :
+  - `npm audit fix --omit=dev` a retiré ESLint de `node_modules` (dont dépend aussi le serveur Expo du poste). L'IA l'a vu au lancement suivant, a tout réinstallé, puis a vérifié le bundle iOS complet ;
+  - des remplacements `sed` avec des barres obliques inverses ont échoué plusieurs fois (Git Bash) : l'IA est passée aux éditions directes.
+- **Vérifié** :
+  - `make quality` dans le conteneur ;
+  - 216 tests ;
+  - les checks GitHub tous verts sur les PR (tests, qualité, Snyk sauté sans jeton, ESLint et TypeScript).
