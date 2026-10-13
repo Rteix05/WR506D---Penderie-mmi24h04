@@ -61,7 +61,11 @@ final class BrandController extends AbstractController
         return $this->json($this->normalize($brand), Response::HTTP_CREATED);
     }
 
-    /** Même forme que GET /api/brands/{id} (groupe brand:read), avec l'IRI. */
+    /**
+     * Même forme que GET /api/brands/{id} (groupe brand:read), avec l'IRI.
+     *
+     * @return array<string, mixed>
+     */
     private function normalize(Brand $brand): array
     {
         return [

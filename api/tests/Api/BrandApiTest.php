@@ -2,6 +2,7 @@
 
 namespace App\Tests\Api;
 
+/** @phpstan-import-type TestUser from ApiTestBase */
 final class BrandApiTest extends ApiTestBase
 {
     /** Une marque absente de la liste : créée non vérifiée, utilisable tout de suite sur un vêtement. */
@@ -66,7 +67,11 @@ final class BrandApiTest extends ApiTestBase
         self::assertResponseStatusCodeSame(401);
     }
 
-    /** @return list<string> */
+    /**
+     * @return list<string>
+     *
+     * @param TestUser $user
+     */
     private function brandNames(array $user): array
     {
         $names = [];

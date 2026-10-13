@@ -49,7 +49,8 @@ final class ScanController extends AbstractController
             throw new BadRequestHttpException('Image trop lourde (8 Mo au plus).');
         }
         $bytes = (string) file_get_contents($file->getPathname());
-        $mimeType = @getimagesizefromstring($bytes)['mime'] ?? null;
+        $info = @getimagesizefromstring($bytes);
+        $mimeType = false === $info ? null : $info['mime'];
         if (!\in_array($mimeType, self::MIME_TYPES, true)) {
             throw new BadRequestHttpException('Formats acceptés : JPEG, PNG, WebP.');
         }

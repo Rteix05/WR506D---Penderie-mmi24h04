@@ -19,7 +19,11 @@ use PHPUnit\Framework\TestCase;
  */
 final class EnumRulesTest extends TestCase
 {
-    /** La matrice des permissions par défaut du MDD, ligne par ligne. */
+    /**
+     * La matrice des permissions par défaut du MDD, ligne par ligne.
+     *
+     * @return iterable<string, array{Permission, PermissionMode}>
+     */
     public static function childDefaults(): iterable
     {
         foreach ([Permission::ItemCreate, Permission::GarmentManage, Permission::CollectionCreate, Permission::MediaUpload] as $p) {
@@ -70,7 +74,9 @@ final class EnumRulesTest extends TestCase
     {
         $critical = array_filter(NotificationType::cases(), static fn (NotificationType $t) => $t->isSaleCritical());
         self::assertCount(4, $critical);
-        self::assertCount(19, NotificationType::cases());
+        // Garde-fou voulu : PHPStan connaît déjà ce nombre, mais un nouveau type de
+        // notification doit faire échouer ce test, pour décider s'il est critique.
+        self::assertCount(19, NotificationType::cases()); // @phpstan-ignore staticMethod.alreadyNarrowedType
     }
 
     public function testOnlySuspensionAndBanCanExpire(): void

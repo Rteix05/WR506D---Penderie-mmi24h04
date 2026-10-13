@@ -33,7 +33,7 @@ class ItemCategory extends AbstractCategory
     #[Groups(['category:read'])]
     private ?ItemCategory $parent = null;
 
-    public function getParent(): ?static
+    public function getParent(): ?self
     {
         return $this->parent;
     }

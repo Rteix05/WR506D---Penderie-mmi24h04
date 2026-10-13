@@ -281,7 +281,6 @@ final class AccountProfileController extends AbstractController
     {
         $me = $this->current->get();
         $guardian = $profile->getGuardian();
-        $count = fn (string $class) => $this->em->getRepository($class)->count(['owner' => $profile, 'deletedAt' => null]);
 
         return [
             'id' => (string) $profile->getId(),
@@ -299,8 +298,8 @@ final class AccountProfileController extends AbstractController
             'createdAt' => $profile->getCreatedAt()?->format(\DATE_ATOM),
             'guardian' => null === $guardian ? null : ['id' => (string) $guardian->getId(), 'displayName' => $guardian->getDisplayName()],
             'counts' => [
-                'items' => $count(Item::class),
-                'garments' => $count(Garment::class),
+                'items' => $this->countOwned(Item::class, $profile),
+                'garments' => $this->countOwned(Garment::class, $profile),
                 'activeLoans' => $this->em->getRepository(Loan::class)->count(['lender' => $profile, 'status' => LoanStatus::Active]),
             ],
             'active' => $profile->getId()->equals($me->getId()),
@@ -308,6 +307,16 @@ final class AccountProfileController extends AbstractController
             'canManage' => $this->manages($profile),
             'canDelete' => null !== $guardian && $guardian->getId()->equals($me->getId()) && \in_array($profile->getType(), [ProfileType::Child, ProfileType::Relative], true),
         ];
+    }
+
+    /**
+     * Ses objets ou ses vêtements, hors suppression douce.
+     *
+     * @param class-string<Item|Garment> $class
+     */
+    private function countOwned(string $class, Profile $profile): int
+    {
+        return $this->em->getRepository($class)->count(['owner' => $profile, 'deletedAt' => null]);
     }
 
     /** @return array<string, mixed> */

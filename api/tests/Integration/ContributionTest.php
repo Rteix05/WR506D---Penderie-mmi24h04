@@ -33,7 +33,13 @@ final class ContributionTest extends DatabaseTestCase
         $this->reviewer = new ContributionReviewer($this->em, $this->validator);
     }
 
-    /** @template T of \App\Entity\Sharing\Share @param T $share @return T */
+    /**
+     * @template T of \App\Entity\Sharing\Share
+     *
+     * @param T $share
+     *
+     * @return T
+     */
     private function grantTo(Profile $who, object $share): object
     {
         $share->addRecipient($who);
@@ -70,7 +76,7 @@ final class ContributionTest extends DatabaseTestCase
         $entry = Contribution::addToCollection($this->sophie, $grant, 'Tons sable');
         $rename = Contribution::editFields($this->sophie, $grant, $board, ['name' => 'Été 2026']);
         $this->persist($entry, $rename);
-        self::assertSame(0, $board->getEntries()->count());
+        self::assertCount(0, $board->getEntries());
         self::assertSame('Été', $board->getName());
 
         $this->reviewer->accept($entry, $this->camille);

@@ -14,12 +14,18 @@ use Doctrine\ORM\EntityManagerInterface;
  *
  * Il n'y a pas encore de route pour les amitiés et les abonnements : on
  * les pose directement en base.
+ *
+ * @phpstan-import-type TestUser from ApiTestBase
  */
 final class VisibilityApiTest extends ApiTestBase
 {
+    /** @var TestUser */
     private array $camille;
+    /** @var TestUser */
     private array $sophie;
+    /** @var TestUser */
     private array $hugo;
+    /** @var TestUser */
     private array $paul;
 
     protected function setUp(): void
@@ -42,7 +48,12 @@ final class VisibilityApiTest extends ApiTestBase
         return static::getContainer()->get(EntityManagerInterface::class);
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * @return array<string, mixed>
+     *
+     * @param array<string, mixed> $extra
+     * @param TestUser $user
+     */
     private function item(array $user, string $name, string $room, array $extra = []): array
     {
         $item = $this->call('POST', '/api/items', $user, ['name' => $name, 'room' => $room, ...$extra])->toArray();
@@ -51,12 +62,21 @@ final class VisibilityApiTest extends ApiTestBase
         return $item;
     }
 
+    /**
+     * @param array<string, mixed> $json
+     * @param TestUser $user
+     */
     private function code(string $method, string $url, array $user, ?array $json = null): int
     {
         return $this->call($method, $url, $user, $json)->getStatusCode();
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * @return array<string, mixed>
+     *
+     * @param array<string, mixed> $extra
+     * @param TestUser $user
+     */
     private function share(array $user, string $type, string $id, string $audience, array $extra = []): array
     {
         $share = $this->call('POST', '/api/shares', $user, ['targetType' => $type, 'targetId' => $id, 'audience' => $audience, ...$extra])->toArray();

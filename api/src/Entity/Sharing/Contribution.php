@@ -259,7 +259,8 @@ class Contribution
      * Corriger des champs d'une cible, dans la liste blanche : la cible
      * même du partage EDIT, ou (sans partage) un bien du foyer.
      *
-     * @param array<string, string> $changes
+     * @param array<mixed> $changes ce que propose le contributeur (corps de la requête) :
+     *                              vérifié ici, champ par champ (liste blanche, valeurs texte)
      */
     public static function editFields(Profile $contributor, ?Share $grant, object $target, array $changes): self
     {
@@ -271,15 +272,17 @@ class Contribution
         if ([] === $changes) {
             throw new \LogicException('Aucune correction proposée.');
         }
+        $checked = [];
         foreach ($changes as $field => $value) {
-            if (!\in_array($field, $allowed, true) || !\is_string($value)) {
+            if (!\is_string($field) || !\in_array($field, $allowed, true) || !\is_string($value)) {
                 throw new \LogicException(\sprintf('Le champ « %s » ne peut pas être corrigé ici.', $field));
             }
+            $checked[$field] = $value;
         }
 
         $owner = $target->getOwner() ?? throw new \LogicException('Les données de référence ne se corrigent pas ici.');
         $c = new self($contributor, $grant, $owner, ContributionKind::EditFields);
-        $c->changes = $changes;
+        $c->changes = $checked;
         $c->targetType = $type;
         $c->targetId = $target->getId();
 
@@ -298,6 +301,8 @@ class Contribution
             $grant instanceof BoxShare => Box::class,
             $grant instanceof CollectionShare => Collection::class,
             $grant instanceof OutfitShare => Outfit::class,
+            // Share n'est pas scellée : un nouveau type de partage doit être ajouté ici.
+            default => throw new \LogicException(\sprintf('Partage sans cible connue : %s.', $grant::class)),
         };
     }
 

@@ -5,6 +5,7 @@ namespace App\Tests\Api;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 
+/** @phpstan-import-type TestUser from ApiTestBase */
 final class PhotoApiTest extends ApiTestBase
 {
     /** Un PNG de 1 × 1 pixel : le plus petit fichier image valide. */
@@ -71,6 +72,7 @@ final class PhotoApiTest extends ApiTestBase
         self::assertResponseStatusCodeSame(400);
     }
 
+    /** @param TestUser $user */
     private function upload(string $url, array $user, ?string $bytes = null): ResponseInterface
     {
         $path = tempnam(sys_get_temp_dir(), 'photo');

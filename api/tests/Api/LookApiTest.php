@@ -11,13 +11,19 @@ use Symfony\Contracts\HttpClient\ResponseInterface;
  * Le look du jour (/api/looks) : chaque point désigne un vêtement du
  * dressing, ou en ajoute un d'un simple titre, « à compléter » plus tard.
  * Pas d'IA.
+ *
+ * @phpstan-import-type TestUser from ApiTestBase
  */
 final class LookApiTest extends ApiTestBase
 {
     /** Un PNG de 1 × 1 pixel. */
     private const PNG = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
 
-    /** @param array<string, string> $fields */
+    /**
+     * @param array<string, string> $fields
+     *
+     * @param TestUser $user
+     */
     private function upload(array $user, string $url, array $fields = []): ResponseInterface
     {
         $path = tempnam(sys_get_temp_dir(), 'look');
@@ -32,6 +38,10 @@ final class LookApiTest extends ApiTestBase
         ]);
     }
 
+    /**
+     * @param TestUser $user
+     * @return array<string, mixed>
+     */
     private function garment(array $user, string $name): array
     {
         $garment = $this->call('POST', '/api/garments', $user, [

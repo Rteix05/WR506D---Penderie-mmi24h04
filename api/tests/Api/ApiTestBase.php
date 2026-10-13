@@ -12,6 +12,9 @@ use Symfony\Contracts\HttpClient\ResponseInterface;
  * Base des tests fonctionnels : de vraies requêtes HTTP à travers tout le
  * noyau (pare-feu JWT, voters, extensions de requête, validation). Chaque
  * test tourne dans une transaction annulée (dama/doctrine-test-bundle).
+ *
+ * @phpstan-type TestUser array{token: string, profileId: string, email: string}
+ *               un compte inscrit par signUp() : son jeton, son profil, son e-mail
  */
 abstract class ApiTestBase extends ApiTestCase
 {
@@ -26,7 +29,11 @@ abstract class ApiTestBase extends ApiTestCase
         $this->client = static::createClient();
     }
 
-    /** Inscrit un compte et renvoie ['token' => …, 'profileId' => …, 'email' => …]. */
+    /**
+     * Inscrit un compte et renvoie ['token' => …, 'profileId' => …, 'email' => …].
+     *
+     * @return TestUser
+     */
     protected function signUp(string $username, string $birth = '1995-01-01'): array
     {
         $email = $username.'@exemple.fr';
@@ -51,7 +58,10 @@ abstract class ApiTestBase extends ApiTestCase
         return $response->toArray()['token'];
     }
 
-    /** @param array<string, mixed>|null $json */
+    /**
+     * @param TestUser                  $user
+     * @param array<string, mixed>|null $json
+     */
     protected function call(string $method, string $url, array $user, ?array $json = null, ?string $profileId = null): ResponseInterface
     {
         $headers = ['Authorization' => 'Bearer '.$user['token'], 'Accept' => 'application/ld+json'];
@@ -69,7 +79,11 @@ abstract class ApiTestBase extends ApiTestCase
         return $this->client->request($method, $url, $options);
     }
 
-    /** Crée logement + pièce pour ce compte, renvoie l'IRI de la pièce. */
+    /**
+     * Crée logement + pièce pour ce compte, renvoie l'IRI de la pièce.
+     *
+     * @param TestUser $user
+     */
     protected function roomOf(array $user, ?string $profileId = null): string
     {
         $place = $this->call('POST', '/api/places', $user, ['name' => 'Maison', 'type' => 'HOUSE'], $profileId)->toArray();

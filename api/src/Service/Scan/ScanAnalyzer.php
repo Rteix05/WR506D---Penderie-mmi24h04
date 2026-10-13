@@ -163,7 +163,11 @@ final class ScanAnalyzer
         return null === $category ? null : ['iri' => $this->iris->getIriFromResource($category), 'slug' => $category->getSlug(), 'name' => $category->getName()];
     }
 
-    /** Une marque inconnue reste en texte : l'app propose de la créer. */
+    /**
+     * Une marque inconnue reste en texte : l'app propose de la créer.
+     *
+     * @return array{iri: string|null, name: string}|null
+     */
     private function brand(?string $name): ?array
     {
         if (null === $name) {

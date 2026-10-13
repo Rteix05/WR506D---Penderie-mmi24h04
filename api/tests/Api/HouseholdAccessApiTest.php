@@ -11,11 +11,16 @@ use Doctrine\ORM\EntityManagerInterface;
  * Les colonnes « Coloc » et « Profil +18 / −18 » du tableau des droits,
  * par de vraies requêtes : colocation (invitation, pièce commune, pièce
  * fermée, suppression votée, départ), foyer, partage d'un rangement.
+ *
+ * @phpstan-import-type TestUser from ApiTestBase
  */
 final class HouseholdAccessApiTest extends ApiTestBase
 {
+    /** @var TestUser */
     private array $camille;
+    /** @var TestUser */
     private array $marc;
+    /** @var TestUser */
     private array $sophie;
 
     protected function setUp(): void
@@ -36,12 +41,21 @@ final class HouseholdAccessApiTest extends ApiTestBase
         return static::getContainer()->get(EntityManagerInterface::class);
     }
 
+    /**
+     * @param array<string, mixed> $json
+     * @param TestUser $user
+     */
     private function code(string $method, string $url, array $user, ?array $json = null, ?string $profileId = null): int
     {
         return $this->call($method, $url, $user, $json, $profileId)->getStatusCode();
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * @return array<string, mixed>
+     *
+     * @param array<string, mixed> $json
+     * @param TestUser $user
+     */
     private function post(string $url, array $user, array $json, int $expected = 201, ?string $profileId = null): array
     {
         $response = $this->call('POST', $url, $user, $json, $profileId);
@@ -50,7 +64,11 @@ final class HouseholdAccessApiTest extends ApiTestBase
         return $response->toArray(false);
     }
 
-    /** Camille crée l'appart et y fait entrer Marc (il accepte l'invitation). */
+    /**
+     * Camille crée l'appart et y fait entrer Marc (il accepte l'invitation).
+     *
+     * @return array<string, mixed>
+     */
     private function flatshare(): array
     {
         $appart = $this->post('/api/places', $this->camille, ['name' => 'Appart', 'type' => 'APARTMENT']);
