@@ -221,3 +221,20 @@ Règles suivies avec l'outil de développement :
   - #42 (app) : le fil (d'après les écrans Figma du lot 16), « Publier dans Penderie », les points-mentions, la page d'un profil.
 - **Erreur de l'IA corrigée** : la description de la PR #39 contenait la signature « Generated with Claude Code », contraire à la consigne de l'étudiant (aucune attribution). L'IA l'a retirée aussitôt.
 - **Pas vérifié** : les écrans du fil sur téléphone.
+
+### 13/10 — Le look du jour reste sur le vêtement du point (PR #44, #45)
+
+- **Prompt** :
+
+  > Scan look du jour, faudrait que l'IA essaye de délimiter le vetement ou on a placer le point pour qu'elle reste bien sur le vetement placé
+
+- **Analyse de l'IA** : le gros plan montre souvent plusieurs vêtements, et la consigne parlait seulement du « vêtement au centre ». Près d'un bord de la photo, le gros plan est décalé, donc le point n'y est même plus au centre.
+- **Produit** :
+  - l'app envoie où elle a découpé le gros plan ;
+  - la consigne donne la position exacte du point et demande de délimiter **seulement** le vêtement dessous (rectangle `box`) ;
+  - si ce rectangle ne contient pas le point, la réponse est écartée (« L'IA a regardé à côté du point ») plutôt que de proposer le mauvais vêtement ;
+  - l'app dessine le contour en pointillés autour du point ;
+  - les rectangles en pourcentages ou sur 1 000 sont aussi acceptés.
+- **Tests** : 2 tests d'API et 1 test unitaire ajoutés. Pendant les essais, l'IA a repéré un « Invalid JWT Token » intermittent dans la suite de tests. Elle a vérifié qu'il existait déjà sur develop, puis l'a signalé à part sans le corriger.
+- **Conflit** : #45 et #42 modifient le même composant photo ; résolu en gardant les deux (points cliquables et contours).
+- **Pas vérifié** : la précision des contours avec les vrais modèles gratuits, sur téléphone.
