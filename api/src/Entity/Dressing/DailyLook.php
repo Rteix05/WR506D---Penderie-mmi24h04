@@ -5,6 +5,7 @@ namespace App\Entity\Dressing;
 use App\Entity\Identity\Profile;
 use App\Entity\Inventory\Garment;
 use App\Entity\Media\Media;
+use App\Entity\Sharing\Post;
 use App\Entity\Trait\TimestampableTrait;
 use App\Enum\Dressing\LookStatus;
 use App\Enum\Dressing\LookTagStatus;
@@ -23,8 +24,12 @@ use Symfony\Component\Validator\Constraints as Assert;
  * les vêtements du dressing ou comme un vêtement nouveau.
  *
  * Un look par profil et par jour. Il est destiné à un post Instagram en
- * deux images (la photo, puis les vêtements) ; l'API ne publie rien, elle
- * tient seulement l'état du look (LookStatus).
+ * deux images (la photo, puis les vêtements) ; l'API ne publie rien sur
+ * Instagram, elle tient seulement l'état du look (LookStatus).
+ *
+ * Il peut aussi être publié dans le fil de Penderie (Post) : la
+ * publication met en avant une tenue faite de ses vêtements, et partage
+ * donc ces vêtements, en lecture, à l'audience choisie (MDD).
  */
 #[ORM\Entity(repositoryClass: DailyLookRepository::class)]
 #[ORM\HasLifecycleCallbacks]
@@ -63,6 +68,11 @@ class DailyLook
 
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
     private ?\DateTimeImmutable $postedAt = null;
+
+    /** La publication dans le fil. SET NULL : le look survit à sa publication. */
+    #[ORM\OneToOne(targetEntity: Post::class)]
+    #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
+    private ?Post $post = null;
 
     /** @var Collection<int, LookTag> */
     #[ORM\OneToMany(targetEntity: LookTag::class, mappedBy: 'look', cascade: ['persist', 'remove'], orphanRemoval: true)]
@@ -110,6 +120,9 @@ class DailyLook
         if ($next === $this->status) {
             return;
         }
+        if (LookStatus::Tagging === $next && $this->isPublished()) {
+            throw new \DomainException('Ce look est publié dans le fil : retire la publication pour modifier ses points.');
+        }
         if (!$this->status->canMoveTo($next)) {
             throw new \DomainException(LookStatus::Posted === $this->status ? 'Ce look est déjà posté : il ne se modifie plus.' : 'Le look doit d\'abord être prêt à poster.');
         }
@@ -147,6 +160,29 @@ class DailyLook
         if (LookStatus::Tagging !== $this->status) {
             throw new \DomainException('Repasse le look en préparation pour modifier ses points.');
         }
+    }
+
+    /** Publier dans le fil : seulement un look prêt (chaque point désigne un vêtement), une fois. */
+    public function publishIn(Post $post): void
+    {
+        if (LookStatus::Tagging === $this->status) {
+            throw new \DomainException('Le look doit d\'abord être prêt : chaque point désigne un vêtement.');
+        }
+        if ($this->isPublished()) {
+            throw new \DomainException('Ce look est déjà publié dans le fil.');
+        }
+        $this->post = $post;
+    }
+
+    public function getPost(): ?Post
+    {
+        return $this->post;
+    }
+
+    /** Une publication supprimée ne compte plus : le look peut être republié. */
+    public function isPublished(): bool
+    {
+        return null !== $this->post && null === $this->post->getDeletedAt();
     }
 
     public function getId(): Uuid

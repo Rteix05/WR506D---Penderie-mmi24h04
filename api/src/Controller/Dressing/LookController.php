@@ -143,6 +143,10 @@ final class LookController extends AbstractController
     public function delete(string $id): JsonResponse
     {
         $look = $this->look($id);
+        if (null !== $look->getPost()) {
+            // Sa photo est celle de la publication (et une publication supprimée reste en base).
+            throw new \DomainException('Ce look a été publié dans le fil : il ne se supprime plus.');
+        }
         $photo = $look->getPhoto();
         $path = $photo->getPath();
         $this->em->remove($look);
@@ -274,6 +278,8 @@ final class LookController extends AbstractController
             'postedAt' => $look->getPostedAt()?->format(\DATE_ATOM),
             'photo' => ['url' => '/api/media/'.$photo->getId(), 'width' => $photo->getWidth(), 'height' => $photo->getHeight()],
             'tags' => array_map($this->describeTag(...), $look->getTags()->toArray()),
+            // La publication dans le fil de Penderie, s'il y en a une en ligne.
+            'post' => $look->isPublished() ? ['id' => (string) $look->getPost()->getId(), 'audience' => $look->getPost()->getAudience()->value] : null,
         ];
     }
 

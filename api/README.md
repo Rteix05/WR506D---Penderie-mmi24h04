@@ -221,7 +221,24 @@ Le look est destiné à un post Instagram en deux images (la photo avec ses poin
 | `PATCH /api/looks/{id}/tags/{tagId}` | `{garment: "/api/garments/{id}"}` : le vêtement du point. Il peut être emprunté, il suffit de pouvoir le voir |
 | `DELETE /api/looks/{id}/tags/{tagId}` | retire le point |
 
-Un look n'est visible que par son propriétaire et son tuteur : les autres reçoivent 404, sa photo comprise. Un point ne se modifie que lorsque le look est en préparation (`TAGGING`).
+Un look n'est visible que par son propriétaire et son tuteur : les autres reçoivent 404, sa photo comprise, sauf s'il est publié dans le fil (ci-dessous). Un point ne se modifie que lorsque le look est en préparation (`TAGGING`).
+
+## Fil d'actualité
+
+Le fil de Penderie (maquette, section « 16 — Fil d'actualité »), commencé par le look du jour. Une publication (`Post`) s'adresse à des amis (`FRIENDS`) ou à des abonnés, amis compris (`FOLLOWERS`). Les abonnés ne commentent pas (MDD).
+
+**Publier un look.** Comme le prévoit le MDD, une publication met en avant une ressource et crée le partage qui y donne accès. Pour un look, cette ressource est une tenue (`Outfit`) faite de ses vêtements. Ses vêtements deviennent donc visibles, en lecture, par l'audience de la publication (`ResourceAccess` : « un look partagé qui le porte »), et seulement par elle. Supprimer la publication révoque ce partage : les vêtements redeviennent privés.
+
+**Les points sont des mentions.** Comme sur Instagram, chaque point donne le nom du vêtement ; `canView` dit si on peut ouvrir sa fiche. Les détails (marque, taille, couleurs, photo) ne sont envoyés qu'à ceux qui peuvent l'ouvrir.
+
+| Route | Rôle |
+| --- | --- |
+| `POST /api/looks/{id}/publish` | `{audience: FRIENDS \| FOLLOWERS, body?}` : publie un look prêt (`READY` ou `POSTED`), une seule fois. Le texte reprend la légende du look par défaut |
+| `GET /api/feed?before=` | `{posts, next}` : les publications que je peux voir (les miennes, celles de mon foyer, de mes amis, des comptes que je suis), 20 par page. `next` se passe en `before` pour la page suivante |
+| `GET`, `DELETE /api/posts/{id}` | une publication ; seul son auteur la supprime (le texte reste en base, la publication disparaît du fil) |
+| `GET /api/profiles/{id}/page` | la page d'un profil vue par moi : `relation` (moi, foyer, ami, abonné), ses publications visibles, et les vêtements qu'elles me montrent |
+
+L'audience est vérifiée à chaque lecture : retirer un ami lui cache aussitôt les publications et les vêtements. La photo d'un look publié se lit par l'audience de la publication (`GET /api/media/{id}`). Un look publié ne repasse plus en préparation ; un look qui a été publié ne se supprime plus (sa photo est celle de la publication).
 
 ## Tests
 
