@@ -288,3 +288,18 @@ Règles suivies avec l'outil de développement :
   - `make quality` dans le conteneur ;
   - 216 tests ;
   - les checks GitHub tous verts sur les PR (tests, qualité, Snyk sauté sans jeton, ESLint et TypeScript).
+
+### 13/10 — Export web et Lighthouse (PR #54, #55)
+
+- **Prompt** : « corrige l'export web pour lancer lighthouse ».
+- **Diagnostic de l'IA** :
+  - l'erreur venait du pré-rendu d'expo-router (`Platform` indéfini côté serveur), pas du code de l'app ;
+  - l'IA a refait l'export sur une copie à part du dépôt, avec l'ancien fichier de verrou : il passait. C'est donc **la mise à jour des dépendances qu'elle avait faite dans #52** qui l'avait cassé, par une régression d'Expo 57.0.28.
+- **Correction** :
+  - export web en une seule page, plutôt que revenir sur la mise à jour (qui corrige une faille critique) ;
+  - écrans chargés à la demande sur le web (fichier initial de 2,5 → 1,1 Mo, bundle natif inchangé) ;
+  - page en français avec une description ; `robots.txt`.
+- **Lighthouse** :
+  - mobile 50 / 100 / 100 / 100 (performance, accessibilité, bonnes pratiques, SEO ; SEO à 83 avant) ;
+  - ordinateur 98 / 100 / 100 / 100.
+  - Rapports dans `docs/lighthouse/`, résultats repris dans `audit.md`.
