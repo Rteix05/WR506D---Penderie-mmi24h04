@@ -1,0 +1,56 @@
+# Intégration continue de l'application mobile (Expo, React Native).
+#
+# Sur chaque push et chaque PR qui touche app/ : dépendances installées
+# comme sur le poste (npm ci), ESLint (règles Expo et React), puis le
+# typage TypeScript. Les types des routes (expo-router) sont générés par
+# le serveur Expo sur le poste ; en CI, sans eux, les routes sont typées
+# comme de simples chaînes : le reste du code est vérifié pareil.
+name: App
+
+on:
+  push:
+    branches: [main, develop, 'feature/**']
+    paths: ['app/**', '.github/workflows/app.yml']
+  pull_request:
+    paths: ['app/**', '.github/workflows/app.yml']
+
+concurrency:
+  group: app-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: ESLint et TypeScript
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: app
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - name: Dépendances
+        run: npm ci
+
+      - name: ESLint
+        run: npx expo lint
+
+      - name: TypeScript
+        run: npx tsc --noEmit
+
+      # Bloquant pour une faille critique. Les failles « hautes » restantes sont
+      # dans l'outillage de build (Metro, CLI Expo, Tailwind) et ne se corrigent
+      # qu'en montant de version majeure Expo / React Native : rapport sans blocage,
+      # suivi dans audit.md.
+      - name: Audit des dépendances (bloquant si critique)
+        run: npm audit --audit-level=critical
+
+      - name: Rapport complet des vulnérabilités (informatif)
+        run: npm audit || true
