@@ -24,21 +24,28 @@ export function Dot({ tag, size = 28 }: { tag: Pick<LookTag, 'position' | 'statu
   );
 }
 
+/** Ce qu'il faut d'un point pour le dessiner (un point du look, ou une mention du fil). */
+export type PhotoTag = Pick<LookTag, 'id' | 'x' | 'y' | 'position' | 'status'>;
+
 type Props = {
-  look: Look;
+  look: { photo: Look['photo']; tags: PhotoTag[] };
   /** Touche sur la photo : position relative (0 à 1). Sans onPlace, la photo est en lecture seule. */
   onPlace?: (x: number, y: number) => void;
   /** Le point en cours d'analyse par l'IA. */
   pending?: { x: number; y: number } | null;
   /** Arrondi des coins (la 1re image du post est carrée de bord à bord). */
   rounded?: boolean;
+  /** Toucher un point : une mention, dans le fil. tagLabel le décrit au lecteur d'écran. */
+  onTagPress?: (tag: PhotoTag) => void;
+  tagLabel?: (tag: PhotoTag) => string;
 };
 
 /**
  * La photo du look, à son format, avec un rond numéroté par vêtement.
- * En préparation, toucher la photo pose un point à cet endroit.
+ * En préparation, toucher la photo pose un point à cet endroit ; dans le
+ * fil, toucher un point ouvre sa mention.
  */
-export function LookPhoto({ look, onPlace, pending, rounded = true }: Props) {
+export function LookPhoto({ look, onPlace, pending, rounded = true, onTagPress, tagLabel }: Props) {
   const [width, setWidth] = useState(0);
   const ratio = look.photo.width && look.photo.height ? look.photo.height / look.photo.width : 4 / 3;
   const height = width * ratio;
@@ -62,11 +69,23 @@ export function LookPhoto({ look, onPlace, pending, rounded = true }: Props) {
         <Image source={mediaSource(look.photo.url)} style={{ width: '100%', height: '100%' }} contentFit="cover" accessible={false} />
       </Pressable>
       {width > 0 &&
-        look.tags.map((tag) => (
-          <View key={tag.id} pointerEvents="none" style={{ position: 'absolute', left: tag.x * width - 14, top: tag.y * height - 14 }}>
-            <Dot tag={tag} />
-          </View>
-        ))}
+        look.tags.map((tag) =>
+          onTagPress ? (
+            <Pressable
+              key={tag.id}
+              accessibilityRole="button"
+              accessibilityLabel={tagLabel?.(tag) ?? `Vêtement ${tag.position + 1}`}
+              onPress={() => onTagPress(tag)}
+              hitSlop={10}
+              style={{ position: 'absolute', left: tag.x * width - 14, top: tag.y * height - 14 }}>
+              <Dot tag={tag} />
+            </Pressable>
+          ) : (
+            <View key={tag.id} pointerEvents="none" style={{ position: 'absolute', left: tag.x * width - 14, top: tag.y * height - 14 }}>
+              <Dot tag={tag} />
+            </View>
+          ),
+        )}
       {width > 0 && pending && (
         <View pointerEvents="none" style={{ position: 'absolute', left: pending.x * width - 16, top: pending.y * height - 16 }} className="h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-ink/60">
           <ActivityIndicator color="#FFFFFF" size="small" />
