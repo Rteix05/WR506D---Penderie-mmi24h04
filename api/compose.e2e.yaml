@@ -1,0 +1,34 @@
+# Une seconde API, pour les tests de bout en bout (Cypress, dossier app/cypress)
+# et la démonstration : même image, même code, mais sa propre base
+# (penderie_e2e), remise à zéro et remplie par les fixtures à chaque campagne.
+# La base de développement (penderie) n'est jamais touchée.
+#
+#   docker compose -f compose.yaml -f compose.e2e.yaml up -d --wait php-e2e
+#   http://localhost:8090/api
+#
+# Lancé par « make e2e-api » (Makefile à la racine du dépôt).
+
+services:
+  php-e2e:
+    build: .
+    depends_on:
+      database:
+        condition: service_healthy
+    environment:
+      APP_ENV: dev
+      DATABASE_URL: postgresql://${POSTGRES_USER:-penderie}:${POSTGRES_PASSWORD:-penderie}@database:5432/penderie_e2e?serverVersion=${POSTGRES_VERSION:-17}&charset=utf8
+      # Les photos des fixtures et celles envoyées pendant les tests restent
+      # dans le conteneur, à part de celles du développement.
+      MEDIA_DIR: /app/var/media-e2e
+    volumes:
+      - ./:/app
+      # vendor/ partagé avec l'API de développement (même composer.lock) ;
+      # var/ séparé : deux caches écrits en même temps ne se mélangent pas.
+      - api_vendor:/app/vendor
+      - api_var_e2e:/app/var
+      - ./docker/php.ini:/usr/local/etc/php/conf.d/zz-penderie.ini:ro
+    ports:
+      - "${API_E2E_HTTP_PORT:-8090}:80"
+
+volumes:
+  api_var_e2e:
