@@ -1,0 +1,4 @@
+# Penderie : seule la page de connexion est publique ; tout le reste
+# demande d'être connecté, et les robots n'y ont rien à lire.
+User-agent: *
+Allow: /
