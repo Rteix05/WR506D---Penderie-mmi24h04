@@ -16,6 +16,11 @@ services:
         condition: service_healthy
     environment:
       APP_ENV: dev
+      # Sans débogage : le conteneur Symfony est compilé une fois, au lieu de
+      # revérifier à chaque requête des milliers de fichiers sur le montage
+      # (sous Windows, 15 à 30 s par requête en debug : les tests Cypress
+      # expiraient). make e2e-db vide le cache après chaque changement de code.
+      APP_DEBUG: "0"
       DATABASE_URL: postgresql://${POSTGRES_USER:-penderie}:${POSTGRES_PASSWORD:-penderie}@database:5432/penderie_e2e?serverVersion=${POSTGRES_VERSION:-17}&charset=utf8
       # Les photos des fixtures et celles envoyées pendant les tests restent
       # dans le conteneur, à part de celles du développement.
@@ -29,6 +34,13 @@ services:
       - ./docker/php.ini:/usr/local/etc/php/conf.d/zz-penderie.ini:ro
     ports:
       - "${API_E2E_HTTP_PORT:-8090}:80"
+    # Même vérification que l'image, avec un délai de grâce : le premier
+    # démarrage (volume var/ neuf, caches dev et test à construire) dépasse
+    # celui par défaut, et « docker compose up --wait » abandonnait.
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:2019/metrics || exit 1"]
+      interval: 5s
+      start_period: 600s
 
 volumes:
   api_var_e2e:

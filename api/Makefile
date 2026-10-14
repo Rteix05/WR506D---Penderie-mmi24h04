@@ -65,6 +65,7 @@ e2e-up: ## Démarre l'API des tests de bout en bout (http://localhost:8090)
 	$(E2E) up -d --wait --wait-timeout 600 --no-deps php-e2e
 
 e2e-db: e2e-up ## Remet la base penderie_e2e à zéro et la remplit (référentiels + fixtures)
+	$(E2E) exec -T php-e2e php bin/console cache:clear
 	$(E2E) exec -T php-e2e php bin/console doctrine:database:drop --force --if-exists --no-interaction
 	$(E2E) exec -T php-e2e php bin/console doctrine:database:create --no-interaction
 	$(E2E) exec -T php-e2e php bin/console doctrine:migrations:migrate --no-interaction
