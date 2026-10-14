@@ -85,7 +85,7 @@ function PublishBody({ look }: { look: Look }) {
               <Pressable
                 key={key}
                 accessibilityRole="radio"
-                accessibilityState={{ selected: on }}
+                aria-selected={on}
                 onPress={() => setAudience(key)}
                 style={E1}
                 className={`flex-row items-center gap-3 rounded-md bg-surface p-4 active:opacity-80 dark:bg-surface-night ${on ? 'border-2 border-primary' : ''}`}>

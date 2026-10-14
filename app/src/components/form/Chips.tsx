@@ -30,7 +30,8 @@ export function Chips<T extends string>({ label, options, selected, onToggle, mu
             <Pressable
               key={option.value}
               accessibilityRole={multiple ? 'checkbox' : 'radio'}
-              accessibilityState={multiple ? { checked: on } : { selected: on }}
+              aria-checked={multiple ? on : undefined}
+              aria-selected={multiple ? undefined : on}
               onPress={() => onToggle(option.value)}
               hitSlop={{ top: 6, bottom: 6 }}
               style={on ? undefined : E1}

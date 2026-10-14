@@ -40,7 +40,7 @@ export function SelectField({ label, value, placeholder = 'Choisir', options, on
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={`${label} : ${value ?? placeholder}`}
-        accessibilityState={{ disabled }}
+        aria-disabled={disabled}
         disabled={disabled}
         onPress={() => setOpen(true)}
         style={E1}
@@ -155,7 +155,7 @@ export function PickerSheet({
             renderItem={({ item }) => (
               <Pressable
                 accessibilityRole="button"
-                accessibilityState={{ selected: item.key === selected }}
+                aria-selected={item.key === selected}
                 onPress={() => onSelect(item.key)}
                 className="flex-row items-center gap-3 rounded-md bg-ink/[0.03] px-4 py-3 active:bg-ink/[0.07] dark:bg-ink-night/[0.06]">
                 {item.swatch !== undefined && <View style={{ backgroundColor: item.swatch ?? '#E2E8F0' }} className="h-5 w-5 rounded-full border border-ink/10" />}

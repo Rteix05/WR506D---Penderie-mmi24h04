@@ -18,7 +18,7 @@ export function MenuRow({ title, subtitle, onPress }: Props) {
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityState={{ disabled: soon }}
+      aria-disabled={soon}
       accessibilityLabel={soon ? `${title}, bientôt disponible` : `${title}, ${subtitle}`}
       onPress={onPress}
       disabled={soon}

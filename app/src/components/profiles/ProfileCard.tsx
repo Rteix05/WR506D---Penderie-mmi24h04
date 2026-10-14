@@ -27,7 +27,7 @@ export function ProfileCard({ profile, selected, onPress, aside }: { profile: Ac
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityState={{ selected }}
+      aria-selected={selected}
       accessibilityLabel={`${profile.displayName}, ${profileMeta(profile)}${profile.active ? ', actif' : ''}`}
       onPress={onPress}
       style={E1}

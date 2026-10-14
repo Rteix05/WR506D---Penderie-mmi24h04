@@ -80,7 +80,7 @@ function Segmented({ tab, onChange }: { tab: Tab; onChange: (tab: Tab) => void }
         <Pressable
           key={key}
           accessibilityRole="tab"
-          accessibilityState={{ selected: tab === key }}
+          aria-selected={tab === key}
           onPress={() => onChange(key)}
           className={`h-10 flex-1 items-center justify-center rounded-full ${tab === key ? 'bg-surface dark:bg-surface-night' : ''}`}>
           <Text className={`font-luciole-bold text-legend ${tab === key ? 'text-ink dark:text-ink-night' : 'text-muted dark:text-muted-night'}`}>{label}</Text>
