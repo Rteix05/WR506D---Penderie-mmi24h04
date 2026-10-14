@@ -42,7 +42,7 @@ export default function GarmentTypeScreen() {
             <Pressable
               key={type.label}
               accessibilityRole="radio"
-              accessibilityState={{ selected: on }}
+              aria-selected={on}
               accessibilityLabel={type.label}
               onPress={() => choose(type)}
               style={[{ width: cardWidth }, on ? undefined : E1]}

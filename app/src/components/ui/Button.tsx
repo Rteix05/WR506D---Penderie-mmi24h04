@@ -32,7 +32,7 @@ const LABEL = {
 /**
  * Bouton du DS v2, d'après la lib Figma (bouton() : hauteur 52, rayon 16,
  * Luciole Bold 16). Pendant le chargement il est désactivé et l'annonce au
- * lecteur d'écran (accessibilityState.busy).
+ * lecteur d'écran (aria-busy).
  */
 export function Button({ label, onPress, variant = 'primary', disabled = false, loading = false, glyph }: Props) {
   const inactive = disabled || loading;
@@ -41,7 +41,7 @@ export function Button({ label, onPress, variant = 'primary', disabled = false, 
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={label}
-      accessibilityState={{ disabled: inactive, busy: loading }}
+      aria-disabled={inactive} aria-busy={loading}
       onPress={onPress}
       disabled={inactive}
       style={variant === 'primary' ? E2 : variant === 'secondary' ? E1 : undefined}

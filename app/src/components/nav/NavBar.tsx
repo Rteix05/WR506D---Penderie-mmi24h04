@@ -59,7 +59,7 @@ function Tab({ section, active, expanded, onPress }: { section: Section; active:
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={`${section}, menu`}
-      accessibilityState={{ selected: active, expanded }}
+      aria-selected={active} aria-expanded={expanded}
       onPress={onPress}
       className="h-12 w-[68px] items-center justify-center gap-1">
       <TabIcon name={ICON[section]} color={iconColor} />

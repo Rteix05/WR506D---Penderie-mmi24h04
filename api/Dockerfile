@@ -15,12 +15,14 @@ WORKDIR /app
 #  - intl      : validation et formatage localisés (Symfony, API Platform)
 #  - opcache, apcu : performances (cache d'opcodes et cache applicatif)
 #  - zip       : utilisé par Composer pour décompresser les paquets
+#  - pcov      : mesure de la couverture des tests (éteinte par défaut, voir docker/php.ini)
 #  - @composer : installe le binaire Composer dans l'image
 RUN install-php-extensions \
         @composer \
         apcu \
         intl \
         opcache \
+        pcov \
         pdo_pgsql \
         zip
 

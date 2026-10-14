@@ -117,17 +117,6 @@ abstract class AbstractCategory
         return $this->isSystem;
     }
 
-    /** Transfert au tuteur à la suppression d'un profil enfant. */
-    public function transferTo(Profile $owner): static
-    {
-        if ($this->isSystem) {
-            throw new \LogicException('Une catégorie système n\'appartient à personne.');
-        }
-        $this->owner = $owner;
-
-        return $this;
-    }
-
     /** Chaque sous-classe renvoie une catégorie de son propre type (covariance). */
     abstract public function getParent(): ?self;
 

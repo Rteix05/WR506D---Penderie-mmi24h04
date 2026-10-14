@@ -303,3 +303,35 @@ Règles suivies avec l'outil de développement :
   - mobile 50 / 100 / 100 / 100 (performance, accessibilité, bonnes pratiques, SEO ; SEO à 83 avant) ;
   - ordinateur 98 / 100 / 100 / 100.
   - Rapports dans `docs/lighthouse/`, résultats repris dans `audit.md`.
+
+### 14/10 — Séance 16 : fixtures, campagne de tests, Cypress, Makefile (branche feat/test)
+
+- **Prompts** (mot pour mot) :
+  - « on a déja des fixtures pour tester non ? » (réponse de l'IA : non, chaque test crée ses données ; rien pour remplir une base de démonstration) ;
+  - le sujet de la séance collé tel quel (fixtures, campagne de test sur le métier à 100 %, `coverage.md`, Cypress en local, démonstration, Makefile, captures, `ci.md`), avec « fais les fixtures + suit cette démarche, et si tu estimes que la tache est faisable par les sous agents tu peut, à condition que tu vérifies dèrrière ce qu'ils ont fait » ;
+  - en cours de route : « tout doit etre sur une branche feat/test ».
+- **Produit** (détail : `docs/coverage.md`, `docs/ci.md`) :
+  - fixtures Doctrine (Camille, Thomas, Julie, Nina) chargées dans une base à part (`penderie_e2e`, API sur le port 8090), plus un test qui valide chaque entité du jeu ;
+  - tests PHPUnit : de 216 à 279 tests ; code métier couvert à 100 % (1 656 lignes), 87,6 % sur tout `src/` (82,3 % au départ) ; contrôle `bin/coverage-check`, exigé en CI ;
+  - 11 scénarios Cypress sur l'export web de l'app ;
+  - un Makefile à la racine ; des captures générées depuis les vraies sorties des commandes.
+- **Choix de l'IA** :
+  - « métier » = les dossiers des règles (services, droits, validateurs…) plus les méthodes d'entités qui décident (complexité ≥ 2), pas les accesseurs ni les contrôleurs ;
+  - tester les refus avec leur message exact, par les vrais gestes, jamais par réflexion sur une méthode privée ;
+  - supprimer le code mort plutôt que le tester (2 méthodes) ;
+  - Cypress cible l'app par ses étiquettes d'accessibilité, sans identifiant de test.
+- **Trouvé par les tests, corrigé** :
+  - sur le web, aucun état accessible (coché, sélectionné, désactivé) n'atteignait le lecteur d'écran : `accessibilityState` remplacé par les props `aria-*` dans 12 composants ;
+  - l'app web ne démarrait plus (Expo 57.0.28) : la PR #54 a été fusionnée dans la branche ;
+  - l'API de test mettait 15 à 30 s par requête en mode debug sous Windows : la passer en `APP_DEBUG=0` ramène ce temps à 0,5-3 s.
+- **Sous-agents (OpenCode, gratuit)** : deux lots de tests d'entités leur ont été délégués. Verdict : **refusés**.
+  - Les tests ne s'exécutaient pas : imports inexistants, constructeurs faux, appels de méthodes privées par réflexion, un lot incomplet.
+  - Un agent a lancé `docker compose` depuis sa copie du dépôt, ce qui a recréé les conteneurs de développement de l'étudiant sur cette copie. L'IA a arrêté les agents, remis les conteneurs sur le vrai dossier, vérifié que les données étaient intactes, puis réécrit les tests elle-même.
+- **Erreurs de l'IA, corrigées** :
+  - un commit a embarqué par erreur `package.json` et `tsconfig.json` ; il a été refait avant tout push ;
+  - un message de commit annonçait 280 tests au lieu de 279 ; il a été corrigé avant le push ;
+  - plusieurs remplacements `sed` ont de nouveau échoué sous Git Bash ; l'IA est repassée aux éditions directes.
+- **Vérifié** :
+  - `make coverage` : 279 tests verts, 100 % métier ;
+  - `make quality` : 0 erreur ;
+  - `make e2e` : 11 sur 11, sur plusieurs campagnes de suite, avec remise à zéro de la base.

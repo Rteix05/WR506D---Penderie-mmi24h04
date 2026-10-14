@@ -49,7 +49,7 @@ export function TileCard({
   return (
     <Pressable
       accessibilityRole={selected === undefined ? 'button' : 'radio'}
-      accessibilityState={selected === undefined ? undefined : { selected }}
+      aria-selected={selected}
       accessibilityLabel={[title, aside, meta].filter(Boolean).join(', ')}
       onPress={onPress}
       style={E1}

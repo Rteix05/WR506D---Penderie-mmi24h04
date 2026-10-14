@@ -113,7 +113,7 @@ export default function PermissionsScreen() {
                         <Pressable
                           key={m.value}
                           accessibilityRole="radio"
-                          accessibilityState={{ selected: on, disabled: !editable }}
+                          aria-selected={on} aria-disabled={!editable}
                           disabled={!editable}
                           onPress={() => setChanges((c) => ({ ...c, [item.key]: m.value }))}
                           hitSlop={{ top: 6, bottom: 6 }}

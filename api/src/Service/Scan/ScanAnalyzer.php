@@ -95,18 +95,6 @@ final class ScanAnalyzer
     }
 
     /**
-     * La suggestion d'une photo de vêtement ou d'objet, au format du scan.
-     *
-     * @param array<string, mixed> $answer la réponse du modèle
-     *
-     * @return array<string, mixed>
-     */
-    public function photoSuggestion(array $answer): array
-    {
-        return $this->suggestion($answer, ScanKind::Photo);
-    }
-
-    /**
      * Les listes que le modèle doit respecter : nos slugs de catégories et
      * nos couleurs. Sans elles, il invente des catégories qu'on ne sait pas
      * traduire en ressources de l'API.

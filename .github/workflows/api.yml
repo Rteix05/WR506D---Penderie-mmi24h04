@@ -2,7 +2,8 @@
 #
 # Sur chaque push et chaque PR qui touche api/ : PostgreSQL 17 réel, les
 # migrations jouées puis rejouées dans les deux sens, les référentiels
-# chargés, le schéma validé contre le mapping, puis la suite PHPUnit.
+# chargés, le schéma validé contre le mapping, puis la suite PHPUnit avec
+# couverture, et le contrôle du 100 % sur le code métier (bin/coverage-check).
 name: API
 
 on:
@@ -52,7 +53,12 @@ jobs:
         with:
           php-version: '8.4'
           extensions: pdo_pgsql
-          coverage: none
+          # Séance 16 : la couverture est mesurée, et le 100 % métier exigé.
+          coverage: pcov
+          # Les assert() du code s'exécutent pendant les tests, comme dans le
+          # conteneur de dev (par défaut, setup-php les retire : la ligne
+          # n'était alors jamais « exécutée », et le contrôle échouait).
+          ini-values: zend.assertions=1
 
       - name: Cache Composer
         uses: actions/cache@v4
@@ -84,8 +90,13 @@ jobs:
       - name: Schéma synchronisé avec le mapping
         run: php bin/console doctrine:schema:validate
 
-      - name: PHPUnit
-        run: php bin/phpunit
+      - name: PHPUnit, avec couverture
+        run: php bin/phpunit --coverage-clover var/coverage/clover.xml --coverage-text --only-summary-for-coverage-text
+
+      # Bloquant : une ligne de règle métier sans test fait échouer la CI
+      # (périmètre et justification : docs/coverage.md).
+      - name: Couverture du code métier (100 % exigé)
+        run: php bin/coverage-check var/coverage/clover.xml
 
   # Séance 15 : la qualité du code, en parallèle des tests. Les mêmes
   # commandes que sur le poste (make quality), sans base de données.

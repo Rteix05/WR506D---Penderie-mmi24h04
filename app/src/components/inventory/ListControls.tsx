@@ -44,7 +44,7 @@ export function FilterChips<T extends string>({ options, value, onChange }: { op
           <Pressable
             key={option.value}
             accessibilityRole="radio"
-            accessibilityState={{ selected: on }}
+            aria-selected={on}
             onPress={() => onChange(option.value)}
             style={on ? undefined : E1}
             className={`h-9 items-center justify-center rounded-full px-4 ${on ? 'bg-primary' : 'bg-surface active:opacity-80 dark:bg-surface-night'}`}>

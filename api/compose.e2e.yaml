@@ -1,0 +1,46 @@
+# Une seconde API, pour les tests de bout en bout (Cypress, dossier app/cypress)
+# et la démonstration : même image, même code, mais sa propre base
+# (penderie_e2e), remise à zéro et remplie par les fixtures à chaque campagne.
+# La base de développement (penderie) n'est jamais touchée.
+#
+#   docker compose -f compose.yaml -f compose.e2e.yaml up -d --wait php-e2e
+#   http://localhost:8090/api
+#
+# Lancé par « make e2e-api » (Makefile à la racine du dépôt).
+
+services:
+  php-e2e:
+    build: .
+    depends_on:
+      database:
+        condition: service_healthy
+    environment:
+      APP_ENV: dev
+      # Sans débogage : le conteneur Symfony est compilé une fois, au lieu de
+      # revérifier à chaque requête des milliers de fichiers sur le montage
+      # (sous Windows, 15 à 30 s par requête en debug : les tests Cypress
+      # expiraient). make e2e-db vide le cache après chaque changement de code.
+      APP_DEBUG: "0"
+      DATABASE_URL: postgresql://${POSTGRES_USER:-penderie}:${POSTGRES_PASSWORD:-penderie}@database:5432/penderie_e2e?serverVersion=${POSTGRES_VERSION:-17}&charset=utf8
+      # Les photos des fixtures et celles envoyées pendant les tests restent
+      # dans le conteneur, à part de celles du développement.
+      MEDIA_DIR: /app/var/media-e2e
+    volumes:
+      - ./:/app
+      # vendor/ partagé avec l'API de développement (même composer.lock) ;
+      # var/ séparé : deux caches écrits en même temps ne se mélangent pas.
+      - api_vendor:/app/vendor
+      - api_var_e2e:/app/var
+      - ./docker/php.ini:/usr/local/etc/php/conf.d/zz-penderie.ini:ro
+    ports:
+      - "${API_E2E_HTTP_PORT:-8090}:80"
+    # Même vérification que l'image, avec un délai de grâce : le premier
+    # démarrage (volume var/ neuf, caches dev et test à construire) dépasse
+    # celui par défaut, et « docker compose up --wait » abandonnait.
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:2019/metrics || exit 1"]
+      interval: 5s
+      start_period: 600s
+
+volumes:
+  api_var_e2e:
