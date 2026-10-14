@@ -13,6 +13,7 @@ use App\Entity\Sharing\Contribution;
 use App\Entity\Sharing\RoomShare;
 use App\Entity\Sharing\StorageShare;
 use App\Enum\Identity\ProfileType;
+use App\Enum\Inventory\Availability;
 use App\Enum\Place\PlaceDecisionStatus;
 use App\Enum\Sharing\ContributionBasis;
 use App\Enum\Sharing\ShareAudience as Au;
@@ -202,6 +203,71 @@ final class FlatshareTest extends DatabaseTestCase
         $this->leaver->leave($this->appart, $this->camille, PlaceLeaver::TRANSFER, heir: $this->marc);
         self::assertSame($this->marc, $canape->getOwner());
         self::assertSame($this->salon, $canape->getRoom(), 'le canapé reste dans le salon');
+    }
+
+    public function testAloneTheOccupantDecidesAtOnce(): void
+    {
+        // Sans vote du tout (DELETE d'un logement où l'on vit seul) : supprimé s'il est vide.
+        $garage = new Place($this->camille, 'Garage loué');
+        $this->persist($garage);
+        $garageId = $garage->getId();
+        $this->decisions->removeNow($garage);
+        self::assertNull($this->em->find(Place::class, $garageId));
+
+        // Seul membre : sa propre décision est déjà acceptée de tous, et appliquée.
+        // La décision part avec la pièce (ON DELETE CASCADE) : la réponse HTTP la décrit une dernière fois.
+        $cave = new Room($this->appart, 'Cave');
+        $this->persist($cave);
+        $decision = $this->decisions->deleteRoom($cave, $this->camille);
+        self::assertSame(PlaceDecisionStatus::Approved, $decision->getStatus());
+        self::assertSame(0, (int) $this->fetchOne("SELECT count(*) FROM room WHERE id = '{$cave->getId()}'"));
+    }
+
+    public function testALeaverDropsTheDecisionsTheyOpened(): void
+    {
+        $this->flatshareWithMarc();
+        $decision = $this->decisions->deleteRoom($this->salon, $this->marc);
+        self::assertSame(PlaceDecisionStatus::Pending, $decision->getStatus(), 'Camille n\'a pas voté');
+
+        $this->leaver->leave($this->appart, $this->marc, PlaceLeaver::TAKE);
+        self::assertSame(PlaceDecisionStatus::Cancelled, $decision->getStatus(), 'sa demande part avec lui');
+    }
+
+    public function testLeavingRulesAndAccessGrantedToTheLeaver(): void
+    {
+        foreach ([
+            'il faut être membre' => fn () => $this->leaver->leave($this->appart, $this->julie, PlaceLeaver::TAKE),
+        ] as $rule => $attempt) {
+            try {
+                $attempt();
+                self::fail("Règle non appliquée : $rule");
+            } catch (\LogicException) {
+                $this->addToAssertionCount(1);
+            }
+        }
+
+        $this->flatshareWithMarc();
+        $tv = (new Item($this->camille, 'Télé', $this->salon))->setAvailability(Availability::Lent);
+        $this->persist($tv);
+        foreach ([
+            'mode inconnu' => fn () => $this->leaver->leave($this->appart, $this->camille, 'PARTIR'),
+            'un héritier membre du logement' => fn () => $this->leaver->leave($this->appart, $this->camille, PlaceLeaver::TRANSFER),
+            'un objet prêté ne se transmet pas' => fn () => $this->leaver->leave($this->appart, $this->camille, PlaceLeaver::TRANSFER, heir: $this->marc),
+        ] as $rule => $attempt) {
+            try {
+                $attempt();
+                self::fail("Règle non appliquée : $rule");
+            } catch (\LogicException) {
+                $this->addToAssertionCount(1);
+            }
+        }
+
+        // Marc avait accès à la chambre fermée de Camille : il le perd en partant.
+        $chambre = (new Room($this->appart, 'Chambre de Camille', createdBy: $this->camille))->close($this->camille);
+        $chambre->allow($this->camille, $this->marc);
+        $this->persist($chambre);
+        $this->leaver->leave($this->appart, $this->marc, PlaceLeaver::TAKE);
+        self::assertCount(0, $chambre->getAllowedMembers());
     }
 
     public function testAPendingDecisionSettlesWhenTheHoldoutLeaves(): void

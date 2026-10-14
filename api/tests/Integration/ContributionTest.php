@@ -17,6 +17,7 @@ use App\Enum\Sharing\AccessLevel as A;
 use App\Enum\Sharing\ContributionStatus;
 use App\Enum\Sharing\ShareAudience as Au;
 use App\Service\Sharing\ContributionReviewer;
+use Symfony\Component\Uid\Uuid;
 
 final class ContributionTest extends DatabaseTestCase
 {
@@ -114,6 +115,36 @@ final class ContributionTest extends DatabaseTestCase
         self::assertSame('Robe rouge', $robe->getName());
         $this->expectException(\LogicException::class);
         $proposal->withdraw($this->sophie);
+    }
+
+    /** Une correction qui rendrait la fiche invalide (nom vide) n'est pas appliquée. */
+    public function testAcceptedCorrectionMustLeaveAValidTarget(): void
+    {
+        $robe = new Item($this->camille, 'Robe', $this->room($this->camille));
+        $this->persist($robe);
+        $grant = $this->grantTo($this->sophie, new ItemShare($this->camille, $robe, Au::Specific, A::Edit));
+        $proposal = Contribution::editFields($this->sophie, $grant, $robe, ['name' => '']);
+        $this->persist($proposal);
+
+        $this->expectException(\LogicException::class);
+        $this->expectExceptionMessage('La proposition ne respecte pas les règles');
+        $this->reviewer->accept($proposal, $this->camille);
+    }
+
+    /** La cible a disparu entre la proposition et la décision (supprimée par ailleurs). */
+    public function testCorrectionOfAVanishedTargetIsRefused(): void
+    {
+        $robe = new Item($this->camille, 'Robe', $this->room($this->camille));
+        $this->persist($robe);
+        $grant = $this->grantTo($this->sophie, new ItemShare($this->camille, $robe, Au::Specific, A::Edit));
+        $proposal = Contribution::editFields($this->sophie, $grant, $robe, ['name' => 'Robe rouge']);
+        $this->persist($proposal);
+        // La cible n'est pas une clé étrangère (proposition polymorphe) : on simule sa disparition.
+        (new \ReflectionProperty(Contribution::class, 'targetId'))->setValue($proposal, Uuid::v7());
+
+        $this->expectException(\LogicException::class);
+        $this->expectExceptionMessage('n\'existe plus');
+        $this->reviewer->accept($proposal, $this->camille);
     }
 
     public function testDatabaseGuardsContributions(): void

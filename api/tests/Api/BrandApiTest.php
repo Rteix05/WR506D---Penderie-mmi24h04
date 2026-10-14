@@ -27,6 +27,15 @@ final class BrandApiTest extends ApiTestBase
         self::assertSame($brand['@id'], $garment['brand']);
     }
 
+    /** Les autres référentiels (couleurs, styles) ne sont filtrés par aucun propriétaire : les mêmes pour tous. */
+    public function testOtherReferenceListsAreTheSameForEveryone(): void
+    {
+        $colors = $this->call('GET', '/api/colors', $this->signUp('rafael'))->toArray();
+        self::assertResponseIsSuccessful();
+        self::assertSame($colors['totalItems'], $this->call('GET', '/api/colors', $this->signUp('thomas'))->toArray()['totalItems']);
+        self::assertGreaterThan(0, $colors['totalItems']);
+    }
+
     /** Trouver ou créer : même slug, même marque, quelle que soit la casse ou la ponctuation. */
     public function testExistingBrandIsReturnedInsteadOfADuplicate(): void
     {
