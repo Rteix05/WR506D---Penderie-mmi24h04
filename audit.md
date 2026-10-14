@@ -18,6 +18,7 @@ Penderie, c'est une API Symfony 7.4 / API Platform 4 (PHP 8.4, PostgreSQL 17) et
 | ESLint + `tsc` (app) | règles Expo / React, typage | OK | OK, et maintenant en CI |
 | PHPUnit | 216 tests | ~1 lancement sur 3 en échec au hasard | **stable** (3 causes corrigées) |
 | Snyk | failles (base plus large) | — | **0** : 110 dépendances PHP testées, aucun chemin vulnérable |
+| **Lighthouse** (version web, page de connexion) | performance, accessibilité, bonnes pratiques, SEO | export web en échec | mobile **50 / 100 / 100 / 100** ; ordinateur **98 / 100 / 100 / 100** |
 
 ## Outils mis en place
 
@@ -117,13 +118,14 @@ Points forts :
 - **Texte de 12 px** (légendes, badges) : lisible, mais à vérifier à 200 % de taille système (hauteurs de ligne fixées en pixels, risque de texte coupé).
 - **Points du look** : 28 px, hitSlop compris ; à tester au doigt sur une photo chargée.
 - **Pas de test VoiceOver de bout en bout** : à faire sur les parcours ajout, look du jour et fil (voir § 6).
-- Version web : l'export statique échoue (§ 5) ; la navigation clavier n'y a pas été vérifiée.
+- Version web : **Lighthouse Accessibilité 100**, sur mobile comme sur ordinateur (rapports dans `docs/lighthouse/`). Ce score couvre les contrastes, les noms accessibles, la langue de la page et la structure. La navigation clavier complète reste à vérifier à la main : Lighthouse ne la teste pas.
 
 ## 4. Écoconception
 
 | Constat | Mesure | Commentaire |
 | --- | --- | --- |
 | Bundle de l'application | 4,4 Mo (bytecode Hermes), 1 820 modules | Raisonnable pour une app Expo ; Hermes évite de parser le JS au démarrage |
+| Version web | fichier initial 2,5 Mo → **1,1 Mo** (écrans à la demande, 66 morceaux) ; 741 Kio transférés pour la page de connexion | Lighthouse : 1,2 s de blocage du fil principal sur mobile simulé, 20 ms sur ordinateur |
 | Polices embarquées | 521 Ko (3 TTF) | Variante Bold et Regular seulement |
 | Photos envoyées | JPEG qualité 0,7, 1 280 px de large au plus | Réduites sur le téléphone avant l'envoi |
 | Photos servies | `Cache-Control: private, max-age=86400` | Gardées un jour en cache sur le téléphone |
@@ -152,7 +154,7 @@ Problèmes rencontrés en conditions réelles, et ce qui a été fait :
 | Jeton refusé au hasard (horloge Docker) | « Session expirée » inattendue | **Corrigé** (#47) |
 | Entrées de menu « Bientôt » (Déplacer, Prêter, Vendre…) | fonctionnalités annoncées mais absentes | routes d'API manquantes, prochains lots |
 | Autorisations des profils enfants enregistrées mais pas encore appliquées | un enfant n'est pas encore bloqué | lot 25 |
-| Export web statique en échec (`nouveau-logement/pieces`, `Platform` indéfini au pré-rendu) | pas de version web | à corriger, ou passer le web en `output: single` |
+| Export web en échec (pré-rendu cassé par Expo 57.0.28, `Platform` indéfini) | pas de version web | **Corrigé** : une seule page (`output: single`) et écrans à la demande (#54) |
 | Configuration réseau du poste de développement (eduroam, pare-feu) | l'app ne joint pas l'API | documenté dans le README de l'app |
 
 ## 6. Testabilité et fiabilité
@@ -187,6 +189,6 @@ Manques et scénarios à automatiser :
 | Haute | Appliquer les autorisations des profils enfants (lot 25) |
 | Moyenne | Factoriser la vérification d'image (3 contrôleurs) ; déclarer les routes à la main sans liste manuelle |
 | Moyenne | Monter Expo / React Native à la prochaine version majeure (21 failles hautes de l'outillage) |
-| Moyenne | Miniatures côté API (GD ou Imagick) ; export web réparé |
+| Moyenne | Miniatures côté API (GD ou Imagick) ; alléger le démarrage web sur mobile (Lighthouse Performance 50) |
 | Basse | Vérifier les textes de 12 px à 200 % ; campagne VoiceOver sur les parcours principaux |
 | Basse | Monter PHPStan au niveau 7 puis 8 (nullabilité stricte) |
