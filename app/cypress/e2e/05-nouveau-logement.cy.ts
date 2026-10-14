@@ -34,5 +34,6 @@ describe('Nouveau logement', () => {
     for (const piece of ['Salon', 'Cuisine', 'Salle de bain']) {
       cy.contains('[role="button"]:visible', piece).should('be.visible');
     }
+    cy.capture('logement-cree');
   });
 });

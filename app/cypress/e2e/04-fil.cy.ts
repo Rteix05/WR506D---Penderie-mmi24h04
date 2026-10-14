@@ -7,6 +7,11 @@ describe('Fil d\'actualité', () => {
     cy.visit('/fil');
     cy.contains('Fil d\'actualité').should('be.visible');
     cy.contains('Tenue du jour pour le bureau.').should('be.visible');
+    // La photo passe par GET /api/media/{id}, avec le jeton : elle s'affiche vraiment.
+    cy.get('img:visible').should(($images) => {
+      expect([...$images].some((img) => (img as HTMLImageElement).naturalWidth > 0)).to.equal(true);
+    });
+    cy.capture('fil-look-de-thomas');
   });
 
   it('reste vide pour un compte sans ami', () => {

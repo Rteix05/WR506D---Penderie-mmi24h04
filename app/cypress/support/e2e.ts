@@ -16,6 +16,11 @@ declare global {
       button(label: string): Chainable<JQuery<HTMLElement>>;
       /** Se connecte par l'écran de connexion (session gardée entre les tests). */
       login(email: string, password?: string): Chainable<void>;
+      /**
+       * Capture d'écran de démonstration : l'app ET le journal des commandes
+       * de Cypress (cypress/screenshots/<spec>/<nom>.png, reprises dans docs/ci.md).
+       */
+      capture(name: string): Chainable<void>;
     }
   }
 }
@@ -51,6 +56,10 @@ Cypress.Commands.add('login', (email: string, password: string = DEMO_PASSWORD) 
       },
     },
   );
+});
+
+Cypress.Commands.add('capture', (name: string) => {
+  cy.screenshot(name, { capture: 'runner', overwrite: true });
 });
 
 export {};

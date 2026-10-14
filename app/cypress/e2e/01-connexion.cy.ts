@@ -10,6 +10,7 @@ describe('Connexion', () => {
 
     cy.get('[role="alert"]').should('be.visible');
     cy.location('pathname').should('eq', '/connexion');
+    cy.capture('mauvais-mot-de-passe');
   });
 
   it('ouvre l\'accueil avec le bon mot de passe', () => {
@@ -22,6 +23,7 @@ describe('Connexion', () => {
     cy.contains(/bonjour camille/i).should('be.visible');
     cy.get('[aria-label="Inventaire, 3 objets"]').should('be.visible');
     cy.get('[aria-label="Dressing, 9 vêtements"]').should('be.visible');
+    cy.capture('accueil-camille');
   });
 
   it('se déconnecte depuis Mon profil', () => {

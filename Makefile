@@ -26,7 +26,7 @@ help: ## Affiche cette aide
 up: ## Démarre l'API et PostgreSQL (http://localhost:8080/api)
 	$(API) up
 
-down: ## Arrête tous les conteneurs (API de dev et API e2e)
+down: ## Arrête l'API de dev et PostgreSQL (l'API e2e : make e2e-down)
 	$(API) down
 
 install: ## Installe les dépendances : Composer (conteneur) et npm (app, Cypress compris)

@@ -10,6 +10,7 @@ describe('Inventaire', () => {
     // Les fiches plus bas dans la grille : on fait défiler, comme un utilisateur.
     cy.contains('Chemise en lin blanche').scrollIntoView().should('be.visible');
     cy.contains('Blazer noir').scrollIntoView().should('be.visible');
+    cy.capture('dressing-camille');
   });
 
   it('liste ses objets et ouvre une fiche', () => {
