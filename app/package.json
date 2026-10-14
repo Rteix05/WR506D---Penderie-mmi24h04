@@ -48,7 +48,10 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "web:build": "expo export --platform web --output-dir dist",
+    "web:serve": "npx --yes serve@14.2.4 -s dist -l 4173",
+    "lighthouse": "npx --yes lighthouse@12.8.2 http://localhost:4173/ --view"
   },
   "private": true
 }
