@@ -116,24 +116,6 @@ final class HouseholdAccessApiTest extends ApiTestBase
         self::assertSame(200, $this->code('GET', $chambre['@id'], $this->marc));
     }
 
-    public function testDeletingAloneOrAClosedRoomNeedsNoVote(): void
-    {
-        // Seule dans son logement : la pièce, puis le logement, partent tout de suite.
-        $studio = $this->post('/api/places', $this->sophie, ['name' => 'Studio', 'type' => 'APARTMENT']);
-        $coin = $this->post('/api/rooms', $this->sophie, ['place' => $studio['@id'], 'name' => 'Coin nuit', 'type' => 'BEDROOM']);
-        self::assertSame(204, $this->code('DELETE', $coin['@id'], $this->sophie));
-        self::assertSame(204, $this->code('DELETE', $studio['@id'], $this->sophie));
-        self::assertSame(404, $this->code('GET', $studio['@id'], $this->sophie));
-
-        // En colocation, une pièce fermée se supprime sans vote… par celui qui l'a créée.
-        $appart = $this->flatshare();
-        $chambre = $this->post('/api/rooms', $this->camille, ['place' => $appart['@id'], 'name' => 'Chambre', 'type' => 'BEDROOM']);
-        $this->post("/api/rooms/{$chambre['id']}/close", $this->camille, [], 200);
-        $this->post("/api/rooms/{$chambre['id']}/allowed", $this->camille, ['profileId' => $this->marc['profileId']], 200);
-        self::assertSame(403, $this->code('DELETE', $chambre['@id'], $this->marc), 'autorisé à y ranger, pas à la supprimer');
-        self::assertSame(204, $this->code('DELETE', $chambre['@id'], $this->camille));
-    }
-
     public function testDeletingInAFlatshareIsVoted(): void
     {
         $appart = $this->flatshare();

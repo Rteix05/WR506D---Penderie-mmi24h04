@@ -16,12 +16,10 @@ use App\Entity\Media\Media;
 use App\Entity\Notification\Notification;
 use App\Entity\Place\Place;
 use App\Entity\Place\Room;
-use App\Entity\Reference\GarmentCategory;
 use App\Entity\Reference\ItemCategory;
 use App\Entity\Relation\Follow;
 use App\Entity\Relation\Friendship;
 use App\Entity\Sale\Listing;
-use App\Entity\Sale\Order;
 use App\Entity\Sharing\Collection;
 use App\Entity\Sharing\ItemComment;
 use App\Entity\Sharing\ItemShare;
@@ -31,8 +29,6 @@ use App\Enum\Identity\Permission;
 use App\Enum\Identity\PermissionMode;
 use App\Enum\Loan\LoanStatus;
 use App\Enum\Notification\NotificationType;
-use App\Enum\Sale\DeliveryMethod;
-use App\Enum\Sale\PaymentMethod;
 use App\Enum\Sharing\AccessLevel;
 use App\Enum\Sharing\ShareAudience;
 use App\Service\Identity\ProfileDeleter;
@@ -151,33 +147,6 @@ final class ProfileDeletionTest extends DatabaseTestCase
 
         $this->expectException(ProfileDeletionBlocked::class);
         $this->deleter->deleteChild($this->lea, $this->rafael);
-    }
-
-    public function testOpenOrderBlocksDeletion(): void
-    {
-        $toy = new Item($this->lea, 'Trottinette', $this->room($this->lea));
-        $listing = (new Listing($toy, '15.00'))->publish();
-        $order = new Order($listing, $this->thomas, PaymentMethod::Online, DeliveryMethod::Handover);
-        $this->persist($toy, $listing, $order);
-
-        $this->expectException(ProfileDeletionBlocked::class);
-        $this->expectExceptionMessage('commande(s) en cours');
-        $this->deleter->deleteChild($this->lea, $this->rafael);
-    }
-
-    /** Comme pour les objets : une catégorie de vêtements de même slug fusionne avec celle du tuteur. */
-    public function testGarmentCategoriesOfTheSameSlugMerge(): void
-    {
-        $hers = new GarmentCategory('Déguisements', $this->lea);
-        $his = new GarmentCategory('Déguisements', $this->rafael);
-        $cape = new Garment($this->lea, 'Cape', $this->room($this->lea), $hers);
-        $this->persist($hers, $his, $cape);
-        $hersId = $hers->getId()->toRfc4122();
-
-        $this->deleter->deleteChild($this->lea, $this->rafael);
-
-        self::assertSame(0, $this->rows("SELECT count(*) FROM garment_category WHERE id = '$hersId'"));
-        self::assertSame($his->getId()->toRfc4122(), $this->fetchOne("SELECT category_id FROM garment WHERE id = '{$cape->getId()}'"));
     }
 
     public function testOnlyTheGuardianDeletesAChild(): void

@@ -41,9 +41,3 @@ example
 # generated native folders
 /ios
 /android
-
-# Cypress : captures et vidéos produites par les campagnes
-cypress/screenshots/
-cypress/videos/
-cypress/downloads/
-dist-e2e/

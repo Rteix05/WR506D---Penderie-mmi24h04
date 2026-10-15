@@ -90,7 +90,6 @@
     "require-dev": {
         "api-platform/test": "^5.0",
         "dama/doctrine-test-bundle": "^8.6",
-        "doctrine/doctrine-fixtures-bundle": "^4.3",
         "phpstan/extension-installer": "^1.4",
         "phpstan/phpstan": "^2.3",
         "phpstan/phpstan-doctrine": "^2.0",
