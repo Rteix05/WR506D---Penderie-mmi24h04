@@ -93,7 +93,7 @@ export default function ItemsScreen() {
           <BackButton />
         </View>
         <View className="px-5">
-          <ScreenTitle title="Mes objets" legend={legend} />
+          <ScreenTitle title="Mes objets" testID="items-title" legend={legend} />
         </View>
 
         {items.isPending && <ActivityIndicator className="pt-8" />}
@@ -144,6 +144,7 @@ export default function ItemsScreen() {
                       return (
                         <View key={p.id} className="flex-1">
                           <PossessionCard
+                            testID="item-card"
                             name={p.name}
                             meta={[categories.data?.find((c) => c.iri === p.category)?.name ?? rootOf(p)?.name, room ?? 'sans emplacement'].filter(Boolean).join(' · ')}
                             photo={p.photos?.[0]}

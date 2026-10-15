@@ -37,6 +37,7 @@ export function TileCard({
   glyph,
   aside,
   selected,
+  testID,
 }: {
   title: string;
   meta: string;
@@ -45,12 +46,14 @@ export function TileCard({
   glyph?: ReactNode;
   aside?: string;
   selected?: boolean;
+  testID?: string;
 }) {
   return (
     <Pressable
       accessibilityRole={selected === undefined ? 'button' : 'radio'}
       aria-selected={selected}
       accessibilityLabel={[title, aside, meta].filter(Boolean).join(', ')}
+      testID={testID}
       onPress={onPress}
       style={E1}
       className="flex-1 gap-3 rounded-md bg-surface p-3 active:opacity-80 dark:bg-surface-night">

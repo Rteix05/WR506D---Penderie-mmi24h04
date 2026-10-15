@@ -38,7 +38,7 @@ export default function HomeScreen() {
         <TopBar initial={profile?.displayName.charAt(0).toUpperCase() ?? ''} />
 
         <View className="gap-1 px-5">
-          <Heading level="h3" accessibilityRole="header" className="uppercase text-ink dark:text-ink-night">
+          <Heading level="h3" accessibilityRole="header" testID="home-greeting" className="uppercase text-ink dark:text-ink-night">
             {profile ? `Bonjour ${profile.displayName}` : 'Bonjour'}
           </Heading>
           <Text className="font-luciole text-legend text-muted dark:text-muted-night">{counts}</Text>
@@ -56,8 +56,8 @@ export default function HomeScreen() {
         <LookCard />
 
         <View className="flex-row gap-3 px-5">
-          <Preview title="Inventaire" meta={overview.data ? plural(overview.data.items, 'objet', 'objets') : ' '} tint="bg-primary/[0.08]" art={['baskets', 'casquette', 'pantalon', 'veste']} onPress={() => router.navigate('/objets')} />
-          <Preview title="Dressing" meta={overview.data ? plural(overview.data.garments, 'vêtement', 'vêtements') : ' '} tint="bg-cloth/[0.08]" art={['tshirt', 'veste', 'robe', 'casquette']} onPress={() => router.navigate('/dressing')} />
+          <Preview testID="home-inventory" title="Inventaire" meta={overview.data ? plural(overview.data.items, 'objet', 'objets') : ' '} tint="bg-primary/[0.08]" art={['baskets', 'casquette', 'pantalon', 'veste']} onPress={() => router.navigate('/objets')} />
+          <Preview testID="home-dressing" title="Dressing" meta={overview.data ? plural(overview.data.garments, 'vêtement', 'vêtements') : ' '} tint="bg-cloth/[0.08]" art={['tshirt', 'veste', 'robe', 'casquette']} onPress={() => router.navigate('/dressing')} />
         </View>
 
         <View className="gap-3">
@@ -153,7 +153,7 @@ function LookCard() {
 }
 
 /** Carte d'aperçu (Figma « Card/Apercu ») : mosaïque 2 × 2 de vignettes de 63, titre et compteur. */
-function Preview({ title, meta, tint, art, onPress }: { title: string; meta: string; tint: string; art: ClothKind[]; onPress: () => void }) {
+function Preview({ title, meta, tint, art, onPress, testID }: { title: string; meta: string; tint: string; art: ClothKind[]; onPress: () => void; testID: string }) {
   const tile = (kind: ClothKind, i: number) => (
     <View key={i} className={`h-[63px] w-[63px] items-center justify-center overflow-hidden rounded-xs ${tint}`}>
       <ClothVisual kind={kind} />
@@ -164,6 +164,7 @@ function Preview({ title, meta, tint, art, onPress }: { title: string; meta: str
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={`${title}, ${meta}`}
+      testID={testID}
       onPress={onPress}
       style={E1}
       className="flex-1 gap-3 rounded-md bg-surface p-3 active:opacity-80 dark:bg-surface-night">

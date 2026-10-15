@@ -54,6 +54,7 @@ export default function PlaceScreenRoute() {
 
             return (
               <TileCard
+                testID="room-card"
                 title={room.name}
                 meta={`${plural(storages, 'rangement', 'rangements')} · ${objects(inRoom(data, room).length)}`}
                 accent={i === 0}

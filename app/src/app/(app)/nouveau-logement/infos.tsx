@@ -34,7 +34,7 @@ export default function PlaceInfoStep() {
       <StepHeader title="Ton logement" step={2} />
 
       <View className="gap-5 px-5">
-        <TextField label="Nom" value={draft.name} onChangeText={(name) => update({ name })} autoCapitalize="sentences" placeholder="Ex. Maison principale" />
+        <TextField label="Nom" testID="place-name" value={draft.name} onChangeText={(name) => update({ name })} autoCapitalize="sentences" placeholder="Ex. Maison principale" />
         <SelectField
           label="Type"
           value={draft.kind.label}
@@ -72,6 +72,7 @@ export default function PlaceInfoStep() {
       <ActionBar>
         <Button
           label="Continuer"
+          testID="place-infos-next"
           disabled={draft.name.trim() === ''}
           onPress={() => {
             update({ primary });

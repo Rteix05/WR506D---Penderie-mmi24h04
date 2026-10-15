@@ -63,7 +63,7 @@ export default function ProfileScreen() {
 
         <View className="gap-3">
           {me.data && <Text className="font-luciole text-legend text-muted dark:text-muted-night">Compte : {me.data.account.email}</Text>}
-          <Button label="Se déconnecter" variant="secondary" onPress={() => signOut.mutate()} loading={signOut.isPending} />
+          <Button label="Se déconnecter" testID="logout" variant="secondary" onPress={() => signOut.mutate()} loading={signOut.isPending} />
         </View>
       </ScrollView>
     </SafeAreaView>

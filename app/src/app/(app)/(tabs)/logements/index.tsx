@@ -30,7 +30,7 @@ export default function PlacesScreen() {
   const legend = `${plural(data.places.length, 'logement', 'logements')} · ${plural(stored, 'objet rangé', 'objets rangés')}`;
 
   return (
-    <PlaceScreen title="Mes logements" legend={legend}>
+    <PlaceScreen title="Mes logements" legend={legend} testID="places-title">
       {data.places.length === 0 ? (
         <EmptyState
           icon="search"
@@ -48,6 +48,7 @@ export default function PlacesScreen() {
 
               return (
                 <TileCard
+                  testID="place-card"
                   title={place.name}
                   meta={`${plural(rooms, 'pièce', 'pièces')} · ${objects(inPlace(data, place).length)}`}
                   accent={i === 0}

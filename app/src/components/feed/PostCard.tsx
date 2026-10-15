@@ -21,13 +21,13 @@ const asTags = (mentions: Mention[]): PhotoTag[] => mentions.map((m) => ({ id: S
  * points sont des MENTIONS : les toucher ouvre le vêtement (MentionSheet).
  * Dans le fil, la carte entière mène à la publication.
  */
-export function PostCard({ post, linked = false }: { post: Post; linked?: boolean }) {
+export function PostCard({ post, linked = false, testID }: { post: Post; linked?: boolean; testID?: string }) {
   const [open, setOpen] = useState<Mention | null>(null);
   const mentions = post.look?.tags ?? [];
   const audience = post.audience === 'SPECIFIC' ? 'Personnes choisies' : AUDIENCE[post.audience].chip;
 
   return (
-    <View style={E1} className="gap-3 rounded-lg bg-surface p-4 dark:bg-surface-night">
+    <View testID={testID} style={E1} className="gap-3 rounded-lg bg-surface p-4 dark:bg-surface-night">
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={`Profil de ${post.author.displayName}`}

@@ -102,10 +102,11 @@ export default function RegisterScreen() {
           </View>
 
           <View className="gap-5">
-            <TextField label="Prénom" value={form.firstName} onChangeText={set('firstName')} error={errors.firstName} autoCapitalize="words" autoComplete="given-name" textContentType="givenName" />
-            <TextField label="Nom" value={form.lastName} onChangeText={set('lastName')} error={errors.lastName} autoCapitalize="words" autoComplete="family-name" textContentType="familyName" />
+            <TextField label="Prénom" testID="signup-first-name" value={form.firstName} onChangeText={set('firstName')} error={errors.firstName} autoCapitalize="words" autoComplete="given-name" textContentType="givenName" />
+            <TextField label="Nom" testID="signup-last-name" value={form.lastName} onChangeText={set('lastName')} error={errors.lastName} autoCapitalize="words" autoComplete="family-name" textContentType="familyName" />
             <TextField
               label="Identifiant"
+              testID="signup-username"
               value={form.username}
               onChangeText={(value) => set('username')(value.toLowerCase())}
               error={errors.username}
@@ -115,6 +116,7 @@ export default function RegisterScreen() {
             />
             <TextField
               label="Date de naissance"
+              testID="signup-birth-date"
               value={form.birthDate}
               onChangeText={set('birthDate')}
               error={errors.birthDate}
@@ -123,9 +125,10 @@ export default function RegisterScreen() {
               keyboardType="numbers-and-punctuation"
               autoComplete="birthdate-full"
             />
-            <TextField label="Adresse e-mail" value={form.email} onChangeText={set('email')} error={errors.email} keyboardType="email-address" autoComplete="email" textContentType="emailAddress" />
+            <TextField label="Adresse e-mail" testID="signup-email" value={form.email} onChangeText={set('email')} error={errors.email} keyboardType="email-address" autoComplete="email" textContentType="emailAddress" />
             <TextField
               label="Mot de passe"
+              testID="signup-password"
               value={form.password}
               onChangeText={set('password')}
               error={errors.password}
@@ -135,11 +138,11 @@ export default function RegisterScreen() {
               textContentType="newPassword"
             />
             {generalError && (
-              <Text accessibilityRole="alert" className="font-luciole text-body text-error dark:text-error-night">
+              <Text accessibilityRole="alert" testID="signup-error" className="font-luciole text-body text-error dark:text-error-night">
                 {generalError}
               </Text>
             )}
-            <Button label="CRÉER MON COMPTE" onPress={onSubmit} loading={submit.isPending} />
+            <Button label="CRÉER MON COMPTE" testID="signup-submit" onPress={onSubmit} loading={submit.isPending} />
           </View>
         </ScrollView>
       </KeyboardAvoidingView>

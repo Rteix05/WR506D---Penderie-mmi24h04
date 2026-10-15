@@ -15,6 +15,8 @@ type Props = {
   loading?: boolean;
   /** Pictogramme texte devant le libellé (maquette : « [ ] » Scanner, « + » Ajouter), rose sur un secondaire. */
   glyph?: string;
+  /** Sélecteur stable des tests e2e (data-testid sur le web). */
+  testID?: string;
 };
 
 const CONTAINER = {
@@ -34,13 +36,14 @@ const LABEL = {
  * Luciole Bold 16). Pendant le chargement il est désactivé et l'annonce au
  * lecteur d'écran (aria-busy).
  */
-export function Button({ label, onPress, variant = 'primary', disabled = false, loading = false, glyph }: Props) {
+export function Button({ label, onPress, variant = 'primary', disabled = false, loading = false, glyph, testID }: Props) {
   const inactive = disabled || loading;
 
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={label}
+      testID={testID}
       aria-disabled={inactive} aria-busy={loading}
       onPress={onPress}
       disabled={inactive}

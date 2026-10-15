@@ -27,10 +27,10 @@ export default function PlaceTypeStep() {
       <Grid
         items={PLACE_KINDS}
         keyOf={(k) => k.key}
-        render={(kind) => <TileCard title={kind.label} meta={kind.description} accent={kind.key === chosen} selected={kind.key === chosen} onPress={() => setChosen(kind.key)} />}
+        render={(kind) => <TileCard testID={`place-kind-${kind.key}`} title={kind.label} meta={kind.description} accent={kind.key === chosen} selected={kind.key === chosen} onPress={() => setChosen(kind.key)} />}
       />
       <ActionBar note="Le type sert juste à te proposer les bonnes pièces ensuite.">
-        <Button label="Continuer" onPress={next} />
+        <Button label="Continuer" onPress={next} testID="place-type-next" />
       </ActionBar>
     </FlowScreen>
   );

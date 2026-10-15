@@ -54,6 +54,7 @@ export function PossessionCard({
   photoHeight,
   badge,
   onPress,
+  testID,
 }: {
   name: string;
   meta: string;
@@ -63,9 +64,11 @@ export function PossessionCard({
   photoHeight: number;
   badge?: { label: string; className: string };
   onPress: () => void;
+  testID?: string;
 }) {
   return (
     <Pressable
+      testID={testID}
       accessibilityRole="button"
       accessibilityLabel={[name, badge?.label, meta, extra?.text].filter(Boolean).join(', ')}
       onPress={onPress}

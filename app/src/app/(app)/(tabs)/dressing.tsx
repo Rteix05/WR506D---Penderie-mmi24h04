@@ -96,6 +96,7 @@ export default function DressingScreen() {
     return (
       <PossessionCard
         key={p.id}
+        testID="garment-card"
         name={p.name}
         meta={[name(p.brand), name(p.category), name(p.size) ?? p.sizeLabel].filter(Boolean).join(' · ')}
         photo={p.photos?.[0]}
@@ -115,7 +116,7 @@ export default function DressingScreen() {
           <BackButton />
         </View>
         <View className="px-5">
-          <ScreenTitle title="Mon dressing" legend={shown.length === 0 && all.length > 0 ? 'Aucun résultat' : legend} />
+          <ScreenTitle title="Mon dressing" testID="dressing-title" legend={shown.length === 0 && all.length > 0 ? 'Aucun résultat' : legend} />
         </View>
 
         {garments.isPending && <ActivityIndicator className="pt-8" />}

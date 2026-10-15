@@ -10,7 +10,7 @@ import { ScreenTitle } from '@/components/ui/ScreenTitle';
  * avec le retour, titre de page et légende, puis les blocs espacés de 24.
  * La barre de navigation reste en dessous (pages des onglets).
  */
-export function PlaceScreen({ title, legend, children }: PropsWithChildren<{ title: string; legend?: string }>) {
+export function PlaceScreen({ title, legend, testID, children }: PropsWithChildren<{ title: string; legend?: string; testID?: string }>) {
   return (
     <SafeAreaView edges={['top']} className="flex-1 bg-bg dark:bg-bg-night">
       <ScrollView contentContainerClassName="gap-6 pb-14 pt-5" keyboardShouldPersistTaps="handled">
@@ -18,7 +18,7 @@ export function PlaceScreen({ title, legend, children }: PropsWithChildren<{ tit
           <BackButton />
         </View>
         <View className="px-5">
-          <ScreenTitle title={title} legend={legend || ' '} />
+          <ScreenTitle title={title} legend={legend || ' '} testID={testID} />
         </View>
         {children}
       </ScrollView>

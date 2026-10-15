@@ -1,6 +1,6 @@
 # Couverture des tests — Penderie
 
-> Séance 16. Résultats du 14/10/2026, branche `feat/test`.
+> Séance 16. Résultats du 14/10/2026, branche `feat/test`. Comme le demande le sujet, cette branche n'est **pas fusionnée dans develop** (la fusion du 14/10 a été annulée le 15/10).
 > Synthèse de la chaîne complète (qualité, tests, bout en bout, CI) et captures : [ci.md](ci.md).
 
 ## En bref
@@ -56,6 +56,7 @@ Choix qui rendent la campagne **pertinente** (et pas seulement couvrante) :
 - **On passe par les vrais gestes, jamais par la réflexion sur une méthode privée.** `Order::assertSeller()` est prouvée en appelant `ship()` par l'acheteur. Une seule exception, documentée dans le test : simuler la disparition d'une ligne en base (`ON DELETE SET NULL`), impossible sans base.
 - **Isolation totale.** Chaque test tourne dans une transaction annulée (dama/doctrine-test-bundle). L'ordre des tests n'a pas d'importance, et aucun ne voit les données d'un autre.
 - **Les dépendances externes sont simulées, pas l'application.** OpenRouter (scan par IA) répond via `MockHttpClient`. La base et le noyau Symfony sont les vrais.
+- **Cypress cible des sélecteurs dédiés aux tests** (le `data-cy` du cours). Sous React Native, c'est la prop `testID`, que `react-native-web` rend en `data-testid` : `cy.testId('login-submit')`. Un libellé, une traduction ou un changement de design ne cassent donc pas la campagne. L'accessibilité reste vérifiée, mais comme une **assertion** sur l'élément trouvé (`role="alert"`, `aria-label="Inventaire, 3 objets"`, `aria-checked`), plus comme le moyen de le trouver. Les listes sont comptées (`garment-card` × 9), et un texte n'est cherché qu'à l'intérieur de la carte qui doit le contenir.
 
 ## 3. Les fixtures : deux besoins, deux outils
 
@@ -87,6 +88,7 @@ Une campagne de tests sert d'abord à trouver des problèmes. Celle-ci en a trou
 | `ScanAnalyzer::photoSuggestion()` et `AbstractCategory::transferTo()` : **code mort**, jamais appelé | la couverture, ligne par ligne | supprimé (on ne teste pas du code qui ne sert pas) |
 | Le serveur web d'Expo plantait (pré-rendu statique cassé par Expo 57.0.28) | le lancement de Cypress | correctif de la PR #54, fusionné dans `feat/test` |
 | En mode debug sous Windows, l'API mettait 15 à 30 s par requête : les tests expiraient au hasard | des échecs Cypress qui changeaient d'un passage à l'autre | API e2e en `APP_DEBUG=0` : 0,5 à 3 s |
+| Le scénario « refuse un mot de passe trop court » **ne prouvait rien** : il cherchait « 10 caractères », texte que l'aide affiche en permanence sous le champ (« Au moins 10 caractères. »), erreur ou pas | le passage aux `testID` (l'aide et l'erreur ont des identifiants distincts) | le test vérifie maintenant que l'aide est là avant l'envoi, puis qu'**elle laisse place à l'erreur** (`signup-password-error`) |
 | NativeWind lève une erreur au chargement sur le web (mode sombre « media ») | Cypress (« uncaught exception ») | erreur tierce sans effet visible : tolérée **nommément** dans `cypress/support/e2e.ts`, toute autre erreur fait échouer |
 
 ## 5. Limites, dites franchement

@@ -18,7 +18,7 @@ type Props<T> = {
  * libellé Luciole Bold 12 au-dessus, puces rondes de 32 sur plusieurs
  * lignes, rose plein si choisie, blanche avec ombre e-1 sinon.
  */
-export function Chips<T extends string>({ label, options, selected, onToggle, multiple = false }: Props<T>) {
+export function Chips<T extends string>({ label, options, selected, onToggle, multiple = false, testID }: Props<T> & { testID?: string }) {
   return (
     <View className="gap-2">
       <Text className="font-luciole-bold text-legend text-muted dark:text-muted-night">{label}</Text>
@@ -29,6 +29,7 @@ export function Chips<T extends string>({ label, options, selected, onToggle, mu
           return (
             <Pressable
               key={option.value}
+              testID={testID}
               accessibilityRole={multiple ? 'checkbox' : 'radio'}
               aria-checked={multiple ? on : undefined}
               aria-selected={multiple ? undefined : on}

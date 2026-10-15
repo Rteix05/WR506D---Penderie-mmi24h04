@@ -1,19 +1,20 @@
 import { DEMO_PASSWORD } from './demo';
 
 /**
- * Commandes communes. Les écrans sont ciblés comme un lecteur d'écran les
- * lit : react-native-web traduit accessibilityLabel en aria-label, et
- * accessibilityRole en role. Pas d'identifiant de test ajouté au code :
- * si Cypress trouve un champ, VoiceOver le trouve aussi.
+ * Commandes communes. Les écrans sont ciblés par des attributs dédiés aux
+ * tests, comme le conseille le cours (data-cy) : la prop testID de React
+ * Native, que react-native-web rend en data-testid. Ces sélecteurs ne
+ * cassent pas quand un libellé, une traduction ou le design change.
+ * L'accessibilité reste vérifiée, mais comme une assertion sur l'élément
+ * trouvé (role, aria-label, aria-checked) : elle n'est plus le moyen de le
+ * trouver.
  */
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Cypress {
     interface Chainable {
-      /** Le champ de saisie dont l'étiquette est `label`. */
-      field(label: string): Chainable<JQuery<HTMLElement>>;
-      /** Le bouton dont l'étiquette est `label`. */
-      button(label: string): Chainable<JQuery<HTMLElement>>;
+      /** Les éléments dont le testID (data-testid sur le web) vaut `id`. */
+      testId(id: string): Chainable<JQuery<HTMLElement>>;
       /** Se connecte par l'écran de connexion (session gardée entre les tests). */
       login(email: string, password?: string): Chainable<void>;
       /**
@@ -35,19 +36,17 @@ declare global {
  */
 Cypress.on('uncaught:exception', (error) => !error.message.includes("Cannot manually set color scheme, as dark mode is type 'media'"));
 
-Cypress.Commands.add('field', (label: string) => cy.get(`input[aria-label="${label}"]`));
-
-Cypress.Commands.add('button', (label: string) => cy.get(`[role="button"][aria-label="${label}"]`));
+Cypress.Commands.add('testId', (id: string) => cy.get(`[data-testid="${id}"]`));
 
 Cypress.Commands.add('login', (email: string, password: string = DEMO_PASSWORD) => {
   cy.session(
     email,
     () => {
       cy.visit('/connexion');
-      cy.field('Adresse e-mail').type(email);
-      cy.field('Mot de passe').type(password, { log: false });
-      cy.button('SE CONNECTER').click();
-      cy.contains('Inventaire').should('be.visible');
+      cy.testId('login-email').type(email);
+      cy.testId('login-password').type(password, { log: false });
+      cy.testId('login-submit').click();
+      cy.testId('home-greeting').should('be.visible');
     },
     {
       // La session vit dans le localStorage (expo-secure-store sur le web).

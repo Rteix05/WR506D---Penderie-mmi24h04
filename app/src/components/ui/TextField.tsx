@@ -16,7 +16,8 @@ type Props = TextInputProps & {
  * Le libellé est toujours visible (jamais un simple placeholder, RAAM).
  * En multiligne (Field/Textarea de Figma) : 88 de haut au minimum.
  * En erreur seulement, une bordure rouge ; l'erreur est rattachée au champ
- * pour le lecteur d'écran.
+ * pour le lecteur d'écran. Avec un testID, le message sous le champ reçoit
+ * « <testID>-error » ou « <testID>-hint » : un test distingue l'erreur de l'aide.
  */
 export function TextField({ label, error, hint, ...input }: Props) {
   const help = error ?? hint;
@@ -34,7 +35,7 @@ export function TextField({ label, error, hint, ...input }: Props) {
         className={`${input.multiline ? 'min-h-[88px] py-3' : 'h-12'} rounded-sm bg-surface px-4 font-luciole text-body text-ink dark:bg-surface-night dark:text-ink-night ${error ? 'border border-error dark:border-error-night' : ''}`}
         {...input}
       />
-      {help && <Text className={`font-luciole text-legend ${error ? 'text-error dark:text-error-night' : 'text-muted dark:text-muted-night'}`}>{help}</Text>}
+      {help && <Text testID={input.testID && `${input.testID}-${error ? 'error' : 'hint'}`} className={`font-luciole text-legend ${error ? 'text-error dark:text-error-night' : 'text-muted dark:text-muted-night'}`}>{help}</Text>}
     </View>
   );
 }

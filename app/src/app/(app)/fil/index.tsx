@@ -33,7 +33,7 @@ export default function FeedScreen() {
         data={posts}
         keyExtractor={(p) => p.id}
         contentContainerClassName="gap-4 px-5 pb-10 pt-5"
-        renderItem={({ item }) => <PostCard post={item} linked />}
+        renderItem={({ item }) => <PostCard post={item} linked testID="post-card" />}
         onEndReached={() => tab === 'feed' && feed.hasNextPage && !feed.isFetchingNextPage && feed.fetchNextPage()}
         onRefresh={() => query.refetch()}
         refreshing={query.isRefetching}
@@ -42,7 +42,7 @@ export default function FeedScreen() {
             <View className="flex-row">
               <BackButton />
             </View>
-            <ScreenTitle title="Fil d'actualité" legend="Ce que tes amis ont choisi de te montrer" />
+            <ScreenTitle title="Fil d'actualité" testID="feed-title" legend="Ce que tes amis ont choisi de te montrer" />
             <Segmented tab={tab} onChange={setTab} />
             <Pressable accessibilityRole="button" onPress={() => router.push('/look')} hitSlop={8} className="self-end active:opacity-80">
               <Text className="font-luciole-bold text-legend text-primary dark:text-primary-night">+ Publier un look</Text>

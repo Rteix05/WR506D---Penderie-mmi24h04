@@ -10,29 +10,31 @@ describe('Nouveau logement', () => {
     cy.login(DEMO.nouveau);
     cy.visit('/nouveau-logement/type');
 
-    // La pile de navigation garde les étapes précédentes dans la page : le
-    // bouton de l'étape en cours est le dernier.
+    // Chaque étape a son propre bouton « Continuer » (testID distinct) : la
+    // pile de navigation garde les étapes précédentes dans la page, sans
+    // ambiguïté pour autant.
 
     // 1. Le type : un studio propose salon, cuisine et salle de bain.
-    cy.contains('Studio').click();
-    cy.button('Continuer').last().scrollIntoView().click();
+    cy.testId('place-kind-studio').click().should('have.attr', 'aria-selected', 'true');
+    cy.testId('place-type-next').scrollIntoView().click();
 
     // 2. Les informations.
-    cy.field('Nom').last().clear().type('Studio Croix-Rousse');
-    cy.button('Continuer').last().scrollIntoView().click();
+    cy.testId('place-name').clear().type('Studio Croix-Rousse');
+    cy.testId('place-infos-next').scrollIntoView().click();
 
     // 3. Les pièces, déjà cochées d'après le type.
-    cy.get('[role="checkbox"][aria-checked="true"]').should('have.length', 3);
-    cy.button('Continuer').last().scrollIntoView().click();
+    cy.get('[data-testid="room-chip"][aria-checked="true"]').should('have.length', 3);
+    cy.testId('place-rooms-next').scrollIntoView().click();
 
     // 4. La vérification, puis l'enregistrement par l'API.
     cy.contains('Studio Croix-Rousse').should('be.visible');
-    cy.button('Ajouter ce logement').scrollIntoView().click();
+    cy.testId('place-save').scrollIntoView().click();
 
     // L'écran du logement créé (les étapes, cachées, restent dans la pile).
     cy.location('pathname').should('match', /^\/logements\/[0-9a-f-]{36}$/);
+    cy.get('[data-testid="room-card"]:visible').should('have.length', 3);
     for (const piece of ['Salon', 'Cuisine', 'Salle de bain']) {
-      cy.contains('[role="button"]:visible', piece).should('be.visible');
+      cy.contains('[data-testid="room-card"]:visible', piece).should('be.visible');
     }
     cy.capture('logement-cree');
   });

@@ -72,7 +72,7 @@ export default function PlaceReviewStep() {
             {error}
           </Text>
         )}
-        <Button label="Ajouter ce logement" onPress={save} loading={saving} />
+        <Button label="Ajouter ce logement" testID="place-save" onPress={save} loading={saving} />
         <Button label="Modifier" variant="secondary" onPress={() => router.back()} disabled={saving} />
       </ActionBar>
     </FlowScreen>

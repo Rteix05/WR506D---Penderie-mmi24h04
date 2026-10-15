@@ -41,9 +41,9 @@ export default function PlaceRoomsStep() {
 
       <View className="gap-5 px-5">
         {ROOM_GROUPS.map((group) => (
-          <Chips key={group.title} label={group.title} multiple options={group.rooms.map((r) => ({ value: r.name, label: r.name }))} selected={draft.rooms} onToggle={toggle} />
+          <Chips key={group.title} testID="room-chip" label={group.title} multiple options={group.rooms.map((r) => ({ value: r.name, label: r.name }))} selected={draft.rooms} onToggle={toggle} />
         ))}
-        {draft.custom.length > 0 && <Chips label="Ajoutées par toi" multiple options={draft.custom.map((name) => ({ value: name, label: name }))} selected={draft.rooms} onToggle={toggle} />}
+        {draft.custom.length > 0 && <Chips testID="room-chip" label="Ajoutées par toi" multiple options={draft.custom.map((name) => ({ value: name, label: name }))} selected={draft.rooms} onToggle={toggle} />}
       </View>
 
       {adding ? (
@@ -58,7 +58,7 @@ export default function PlaceRoomsStep() {
       )}
 
       <ActionBar note="Tu pourras ajouter des pièces et des rangements plus tard.">
-        <Button label="Continuer" onPress={() => router.push('/nouveau-logement/verification')} />
+        <Button label="Continuer" onPress={() => router.push('/nouveau-logement/verification')} testID="place-rooms-next" />
       </ActionBar>
     </FlowScreen>
   );

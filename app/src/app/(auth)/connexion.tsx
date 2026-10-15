@@ -55,6 +55,7 @@ export default function LoginScreen() {
         <View className="gap-5 px-5">
           <TextField
             label="Adresse e-mail"
+            testID="login-email"
             value={email}
             onChangeText={setEmail}
             placeholder="mathis@example.com"
@@ -65,6 +66,7 @@ export default function LoginScreen() {
           />
           <TextField
             label="Mot de passe"
+            testID="login-password"
             value={password}
             onChangeText={setPassword}
             secureTextEntry
@@ -83,11 +85,11 @@ export default function LoginScreen() {
 
         <View className="gap-3 px-5">
           {submit.isError && (
-            <Text accessibilityRole="alert" className="font-luciole text-body text-error dark:text-error-night">
+            <Text accessibilityRole="alert" testID="login-error" className="font-luciole text-body text-error dark:text-error-night">
               {submit.error.message}
             </Text>
           )}
-          <Button label="SE CONNECTER" onPress={() => submit.mutate()} disabled={!canSubmit} loading={submit.isPending} />
+          <Button label="SE CONNECTER" testID="login-submit" onPress={() => submit.mutate()} disabled={!canSubmit} loading={submit.isPending} />
         </View>
 
         <View className="items-center px-5">
