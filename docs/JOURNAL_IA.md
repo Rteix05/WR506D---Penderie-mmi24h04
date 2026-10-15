@@ -335,3 +335,18 @@ Règles suivies avec l'outil de développement :
   - `make coverage` : 279 tests verts, 100 % métier ;
   - `make quality` : 0 erreur ;
   - `make e2e` : 11 sur 11, sur plusieurs campagnes de suite, avec remise à zéro de la base.
+
+### 15/10 — Séance 16 (suite) : vérification contre le cours, revert, sélecteurs testID
+
+- **Prompts** (mot pour mot) :
+  - « https://docs.mmi-troyes.fr/books/2627-wr506d-developpement-back-avance/page/seance-16-21-tests-php-david // c'est le cours avec la méthode conseillé pour les test qu'on a fait hier , ouvre le sur chrome et vérifie que tu as bien fait ca » ;
+  - « oui fais le revert et ajoute les testID ».
+- **Produit** :
+  - l'IA a ouvert le cours dans Chrome (connexion faite par l'étudiant) et comparé chaque consigne au dépôt. Tout était fait (fixtures, 100 % métier, `coverage.md`, unitaires/intégration/fonctionnels, Cypress, Makefile, captures, `ci.md`) **sauf une consigne** : « ne pas merge dans develop ». La PR #56 avait été fusionnée le 14/10 ;
+  - **revert partiel** de la fusion sur develop : la campagne de tests (fixtures, tests, Cypress, Makefile, couverture en CI, `coverage.md`, `ci.md`, captures) ne vit plus que sur `feat/test`. Sont gardés dans develop, parce que ce sont des corrections du produit et pas des tests : le correctif d'accessibilité `aria-*` (12 composants), la suppression de 2 méthodes mortes, et ce journal ;
+  - sur `feat/test` : des **`testID`** (rendus en `data-testid`) dans l'app, et une campagne Cypress qui les cible (`cy.testId(...)`), comme les `data-cy` conseillés par le cours. L'accessibilité devient une assertion sur l'élément trouvé.
+- **Trouvé en route** : le scénario « refuse un mot de passe trop court » ne prouvait rien. Il cherchait « 10 caractères », texte que l'aide sous le champ affiche en permanence. Il distingue maintenant l'aide (`signup-password-hint`) de l'erreur (`signup-password-error`).
+- **Erreurs de l'IA, corrigées** : un premier script de remplacement a échoué sur les fins de ligne CRLF des fichiers (rien n'a été écrit), puis un passage par le shell a cassé les guillemets. Les fichiers ont été réécrits directement.
+- **Vérifié** :
+  - arbre de develop après le revert : PHPUnit OK (216 tests), TypeScript et ESLint 0 erreur ;
+  - `feat/test` : `make e2e` 11/11 sur deux campagnes de suite.

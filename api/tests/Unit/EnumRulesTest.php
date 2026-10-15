@@ -7,7 +7,6 @@ use App\Enum\Identity\Permission;
 use App\Enum\Identity\PermissionMode;
 use App\Enum\Identity\ProfileType;
 use App\Enum\Inventory\Condition;
-use App\Enum\Loan\LoanStatus;
 use App\Enum\Notification\ModerationActionType;
 use App\Enum\Notification\NotificationType;
 use App\Enum\Sharing\AccessLevel;
@@ -101,12 +100,5 @@ final class EnumRulesTest extends TestCase
     public function testBrandSlugDeduplicates(string $name, string $slug): void
     {
         self::assertSame($slug, Brand::slugify($name));
-    }
-
-    /** Un prêt ouvert (demandé, accepté, en cours) bloque la vente de l'objet et la suppression du profil. */
-    public function testOpenLoanStatuses(): void
-    {
-        $open = array_values(array_filter(LoanStatus::cases(), static fn (LoanStatus $s) => $s->isOpen()));
-        self::assertSame([LoanStatus::Requested, LoanStatus::Accepted, LoanStatus::Active], $open);
     }
 }
