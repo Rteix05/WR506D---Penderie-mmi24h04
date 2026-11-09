@@ -350,3 +350,36 @@ Règles suivies avec l'outil de développement :
 - **Vérifié** :
   - arbre de develop après le revert : PHPUnit OK (216 tests), TypeScript et ESLint 0 erreur ;
   - `feat/test` : `make e2e` 11/11 sur deux campagnes de suite.
+
+### 09/11 — Prêt d'objets côté API, failles Symfony (PR #58 et suivante)
+
+- **Prompts** (mot pour mot) :
+  - « ou est-ce qu'on en est dans le projet » ;
+  - « on commence par le prêt d'objets , puis déplacement d'objet / carton ».
+- **État des lieux fait par l'IA** : rien n'avait bougé depuis le 15/10. L'IA a croisé le dépôt et les tâches Asana non cochées. Le prêt (section 10) est la plus grosse section restante. Son modèle existait déjà (`Loan`, `LoanEvent`, la machine à états dans l'entité, l'index unique « un seul prêt actif par objet »), mais aucune route ne l'exposait.
+- **Produit** :
+  - `LoanController` : « Mes prêts » (`GET /api/loans`), le détail avec son journal, les candidats (amis et profils du compte), l'historique d'un objet, et un geste par transition (prêter, demander, accepter, refuser, annuler, remettre, repousser la date, déclarer le retour, confirmer le retour, déclarer perdu) ;
+  - des règles en plus de l'entité :
+    - on prête seulement à un ami ou à son foyer ;
+    - un objet en vente ne se prête pas ;
+    - un objet déjà promis ou déjà chez quelqu'un ne se promet pas à un second ;
+    - on ne demande pas deux fois le même objet ;
+    - la date de retour ne peut pas être passée ;
+  - au retour, le prêteur constate l'état (un dommage est journalisé) et peut ranger l'objet ailleurs. Le déplacement est alors tracé avec la raison `LOAN_RETURN`, que l'enum prévoyait déjà ;
+  - « Chez Bruno » sur la fiche (`lentTo`), pour le propriétaire seulement ;
+  - une notification pour l'autre partie à chaque étape clé ;
+  - 11 tests fonctionnels (`LoanApiTest`) et une section « Prêt d'objets » dans le README de l'API.
+- **Trouvé en route** : `composer audit` échouait depuis le 4/11 (19 failles publiées sur Symfony 7.4). L'IA a ouvert une PR à part (#58) pour passer Symfony en 7.4.23 :
+  - elle a refusé la montée de `doctrine/collections` en version 3, qui est une version majeure ;
+  - cette mise à jour durcit `MapRequestPayload`, et 66 tests tombaient en 415 à l'inscription. L'IA a listé `json` et `jsonld` dans `RegisterController`.
+- **Choix de l'IA** :
+  - un enfant ne prête ni n'emprunte tant que le parcours d'accord du tuteur n'est pas exposé (la permission est « sur accord ») ;
+  - les amis du prêteur n'ouvrent pas ses prêts un par un, seules les parties le peuvent.
+- **Erreurs de l'IA, corrigées** :
+  - un appel à `Listing::isOpen()`, une méthode qui n'existe pas (la bonne est `isOnSale()`), repéré par PHPStan ;
+  - des remplacements par le shell ont encore cassé les apostrophes des chaînes PHP ; l'IA est repassée à l'éditeur ;
+  - les tests attendaient « Bruno Test » alors que le nom affiché est le prénom seul.
+- **Vérifié** :
+  - PHPUnit, suite complète : 227 tests OK ;
+  - PHPStan niveau 6 : 0 erreur ;
+  - `composer audit` : aucune faille.
