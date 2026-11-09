@@ -5,6 +5,7 @@ import { ActivityIndicator, Alert, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Attributes, confirmDelete, DetailActions, DetailHero, DetailTitle, Section, soon } from '@/components/inventory/Detail';
+import { PossessionLoans, useLoanAction } from '@/components/loans/PossessionLoans';
 import { BackButton } from '@/components/ui/BackButton';
 import { Banner } from '@/components/ui/Banner';
 import { Button } from '@/components/ui/Button';
@@ -30,6 +31,7 @@ export default function GarmentScreen() {
   const locations = useLocations();
   const queryClient = useQueryClient();
   const [deleting, setDeleting] = useState(false);
+  const loanAction = useLoanAction(garment.data, 'garment', garment.data?.access === 'ADMIN');
 
   if (!garment.data) {
     return (
@@ -86,6 +88,7 @@ export default function GarmentScreen() {
         )}
 
         <View className="gap-3 px-5">
+          <PossessionLoans possession={p} owner={owner} />
           {p.room && (
             <Section title="Localisation" link={owner ? { label: 'Déplacer le vêtement', onPress: () => soon('Déplacer le vêtement') } : undefined}>
               <Text className="font-luciole-bold text-body text-ink dark:text-ink-night">{where ?? '…'}</Text>
@@ -103,8 +106,11 @@ export default function GarmentScreen() {
           )}
         </View>
 
+        {!owner && loanAction.primary && <DetailActions primary={loanAction.primary} note={loanAction.note} secondary={[]} />}
         {owner && (
           <DetailActions
+            primary={loanAction.primary}
+            note={loanAction.note}
             secondary={[
               { label: 'Modifier', onPress: edit },
               { label: 'Déplacer', onPress: () => soon('Déplacer') },
