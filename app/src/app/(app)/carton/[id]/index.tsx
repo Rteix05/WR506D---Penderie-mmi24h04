@@ -3,7 +3,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { Text, View } from 'react-native';
 
 import { ActionBar, FlowScreen } from '@/components/add/FlowScreen';
-import { InfoRow, soon } from '@/components/inventory/Detail';
+import { InfoRow } from '@/components/inventory/Detail';
 import { Breadcrumb, Loading, Missing, PossessionRow, SectionHeader } from '@/components/places/Blocks';
 import { DeleteLink } from '@/components/places/DeleteLink';
 import { BackButton } from '@/components/ui/BackButton';
@@ -12,6 +12,7 @@ import { E1 } from '@/components/ui/elevation';
 import { Heading } from '@/components/ui/Heading';
 import { ScreenTitle } from '@/components/ui/ScreenTitle';
 import type { Location } from '@/lib/add-draft';
+import { openMove } from '@/lib/moves';
 import { BOX_TYPES, boxPath, deleteLocation, inBox, labelOf, objects, usePlacesData } from '@/lib/places';
 
 /** Objets montrés avant « Voir les N objets ». */
@@ -24,7 +25,7 @@ const PREVIEW = 3;
  * du contenu, puis « Ajouter un objet », « Déplacer », « Supprimer ».
  *
  * « Ajouter un objet » ouvre l'ajout avec l'emplacement du carton déjà
- * choisi. « Déplacer le carton » attend sa route d'API. La date de
+ * choisi. « Déplacer le carton » emporte tout son contenu. La date de
  * fermeture n'existe pas côté API : pas de ligne « Fermé le ».
  * Supprimer : seulement un carton vide (l'API refuse sinon).
  */
@@ -109,7 +110,7 @@ export default function BoxScreen() {
 
       <ActionBar>
         <Button label="Ajouter un objet" onPress={() => router.push({ pathname: '/ajouter', params: { at: JSON.stringify(at) } })} />
-        <Button label="Déplacer le carton" variant="secondary" onPress={() => soon('Déplacer le carton')} />
+        <Button label="Déplacer le carton" variant="secondary" onPress={() => openMove('box', box.id, box.name, path)} />
         {contents.length === 0 && (
           <DeleteLink
             label="Supprimer ce carton"

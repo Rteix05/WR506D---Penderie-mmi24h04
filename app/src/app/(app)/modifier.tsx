@@ -6,13 +6,14 @@ import { ActivityIndicator, Alert, Pressable, Text, View } from 'react-native';
 import { ActionBar, FlowScreen } from '@/components/add/FlowScreen';
 import { Chips } from '@/components/form/Chips';
 import { SelectField } from '@/components/form/SelectField';
-import { confirmDelete, Section, soon } from '@/components/inventory/Detail';
+import { confirmDelete, Section } from '@/components/inventory/Detail';
 import { BackButton } from '@/components/ui/BackButton';
 import { Button } from '@/components/ui/Button';
 import { ScreenTitle } from '@/components/ui/ScreenTitle';
 import { TextField } from '@/components/ui/TextField';
 import { USAGES, type Usage } from '@/lib/add-draft';
 import { ApiError } from '@/lib/api';
+import { openMove } from '@/lib/moves';
 import { CONDITION_LABEL, deletePossession, locationOf, updatePossession, usePossession, type ConditionValue, type Kind, type Possession } from '@/lib/possessions';
 import { createBrand, useBrands, useColors, useGarmentCategories, useItemCategories, useLocations, useSizes, useStyles } from '@/lib/reference';
 
@@ -201,7 +202,7 @@ function EditForm({ kind, initial }: { kind: Kind; initial: Possession }) {
         <TextField label="Notes (visibles par toi seul)" value={notes} onChangeText={setNotes} multiline autoCapitalize="sentences" error={fieldErrors.notes} />
 
         {initial.room && (
-          <Section title="Localisation" link={{ label: kind === 'item' ? "Déplacer l'objet" : 'Déplacer le vêtement', onPress: () => soon('Déplacer') }}>
+          <Section title="Localisation" link={{ label: kind === 'item' ? "Déplacer l'objet" : 'Déplacer le vêtement', onPress: () => openMove(kind, initial.id, initial.name, locationOf(locations.data, initial)) }}>
             <Text className="font-luciole-bold text-body text-ink dark:text-ink-night">{locationOf(locations.data, initial) ?? '…'}</Text>
           </Section>
         )}

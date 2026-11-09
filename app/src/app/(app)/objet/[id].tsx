@@ -6,8 +6,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { confirmDelete, DetailActions, DetailHero, DetailTitle, InfoRow, Section, soon } from '@/components/inventory/Detail';
 import { PossessionLoans, useLoanAction } from '@/components/loans/PossessionLoans';
+import { MoveHistory } from '@/components/inventory/MoveHistory';
 import { BackButton } from '@/components/ui/BackButton';
 import { artOf, AVAILABILITY, CONDITION_LABEL, deletePossession, locationOf, usePossession } from '@/lib/possessions';
+import { openMove } from '@/lib/moves';
 import { useItemCategories, useLocations } from '@/lib/reference';
 
 /**
@@ -16,7 +18,7 @@ import { useItemCategories, useLocations } from '@/lib/reference';
  *
  * Données réelles de l'API. « Prêter » ouvre le parcours de prêt ; un ami
  * qui voit l'objet peut demander à l'emprunter. En attente de leurs
- * routes : « Déplacer », « Partager », « Vendre » (une alerte le dit) ; les
+ * routes : « Partager », « Vendre » (une alerte le dit) ; les
  * collections, absentes plutôt que remplies d'exemples. Modifier et
  * supprimer : seulement pour le propriétaire (access ADMIN).
  */
@@ -66,10 +68,11 @@ export default function ItemScreen() {
         <View className="gap-3 px-5">
           <PossessionLoans possession={p} owner={owner} />
           {p.room && (
-            <Section title="Localisation" link={owner ? { label: "Déplacer l'objet", onPress: () => soon("Déplacer l'objet") } : undefined}>
+            <Section title="Localisation" link={owner ? { label: "Déplacer l'objet", onPress: () => openMove('item', p.id, p.name, where) } : undefined}>
               <Text className="font-luciole-bold text-body text-ink dark:text-ink-night">{where ?? '…'}</Text>
             </Section>
           )}
+          <MoveHistory iri={p['@id']} enabled={Boolean(p.room)} />
           {(category || p.condition) && (
             <Section title="Détails" gap="gap-3">
               {category && <InfoRow label="Catégorie" value={category} />}
