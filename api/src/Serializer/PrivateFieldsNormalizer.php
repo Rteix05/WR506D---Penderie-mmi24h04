@@ -3,10 +3,14 @@
 namespace App\Serializer;
 
 use App\Entity\Inventory\AbstractPossession;
+use App\Entity\Inventory\Garment;
+use App\Entity\Inventory\Item;
 use App\Entity\Place\Box;
 use App\Entity\Place\Place;
 use App\Entity\Place\Room;
 use App\Entity\Place\Storage;
+use App\Enum\Inventory\Availability;
+use App\Repository\Loan\LoanRepository;
 use App\Security\CurrentProfile;
 use App\Security\ResourceAccess;
 use Symfony\Component\Serializer\Normalizer\NormalizerAwareInterface;
@@ -24,7 +28,9 @@ use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
  *  - « access » : la case du tableau des droits pour celui qui regarde
  *    (ADMIN, EDIT, VIEW), pour que l'application affiche les bons gestes ;
  *  - « photos » d'un bien : les URL de GET /api/media/{id}, qui exige un
- *    jeton — donc absentes pour un lien public sans compte.
+ *    jeton — donc absentes pour un lien public sans compte ;
+ *  - « lentTo » d'un bien prêté (LENT) : chez qui il est et jusqu'à quand
+ *    (« Chez Thomas »), pour le propriétaire et son tuteur seulement.
  */
 final class PrivateFieldsNormalizer implements NormalizerInterface, NormalizerAwareInterface
 {
@@ -35,6 +41,7 @@ final class PrivateFieldsNormalizer implements NormalizerInterface, NormalizerAw
     public function __construct(
         private readonly CurrentProfile $current,
         private readonly ResourceAccess $access,
+        private readonly LoanRepository $loans,
     ) {
     }
 
@@ -43,7 +50,8 @@ final class PrivateFieldsNormalizer implements NormalizerInterface, NormalizerAw
         $context[self::DONE][spl_object_id($data)] = true;
         $viewer = $this->viewer();
         $groups = (array) ($context['groups'] ?? []);
-        if (null !== $viewer && $this->access->isOwner($viewer, $data)) {
+        $owner = null !== $viewer && $this->access->isOwner($viewer, $data);
+        if ($owner) {
             $groups[] = $data instanceof Place ? 'place:private' : 'possession:private';
             $groups[] = 'possession:location';
         } elseif (null !== $viewer && $data instanceof AbstractPossession && $this->access->canSeeLocation($viewer, $data)) {
@@ -56,6 +64,16 @@ final class PrivateFieldsNormalizer implements NormalizerInterface, NormalizerAw
             $normalized['access'] = $this->access->level($viewer, $data)->value;
             if ($data instanceof AbstractPossession) {
                 $normalized['photos'] = $data->getPhotos();
+            }
+            // Une requête de plus, seulement pour un bien prêté.
+            if ($owner && ($data instanceof Item || $data instanceof Garment) && Availability::Lent === $data->getAvailability()) {
+                $loan = $this->loans->activeOn($data);
+                $normalized['lentTo'] = null === $loan ? null : [
+                    'loan' => (string) $loan->getId(),
+                    'borrower' => $loan->getBorrower()->getDisplayName(),
+                    'dueDate' => $loan->getDueDate()?->format('Y-m-d'),
+                    'overdue' => $loan->isOverdue(),
+                ];
             }
         }
 
