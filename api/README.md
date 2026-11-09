@@ -245,6 +245,23 @@ Le fil de Penderie (maquette, section « 16 — Fil d'actualité »), commencé 
 
 L'audience est vérifiée à chaque lecture : retirer un ami lui cache aussitôt les publications et les vêtements. La photo d'un look publié se lit par l'audience de la publication (`GET /api/media/{id}`). Un look publié ne repasse plus en préparation ; un look qui a été publié ne se supprime plus (sa photo est celle de la publication).
 
+## Back-office
+
+Une interface web pour les administrateurs, à part de l'app mobile : **Twig + Stimulus + Tailwind**, servie par cette même application Symfony sous `/admin`. Elle suit la maquette Figma (section back-office de « Maquette v2 », lot 26 du plugin).
+
+- **Accès** : un compte `ROLE_ADMIN` seulement. Le pare-feu `admin` a une session et un formulaire de connexion (`/admin/connexion`, jeton CSRF) ; `AdminUserChecker` refuse les autres comptes dès le formulaire. Aucun écran ne donne ce rôle : `php bin/console app:admin:grant <email>` (et `--revoke` pour le retirer).
+- **Tableau de bord** (`/admin`) : utilisateurs (et nouveaux comptes de la semaine), scans réussis sur 30 jours (et échecs de la semaine), prêts en cours (et en retard), ventes du mois ; les inscriptions des 7 derniers jours ; « À traiter en priorité » (litiges ouverts, puis prêts en retard) ; les dernières commandes. Les chiffres sont calculés par `DashboardStats`, en requêtes agrégées.
+- **Front** : AssetMapper (pas de Node côté API), Stimulus pour les comportements (le menu sur petit écran : `assets/controllers/sidebar_controller.js`), Tailwind 4 dont le thème reprend la charte de l'app (`assets/styles/app.css`, mêmes noms de couleurs, de rayons et de tailles).
+
+La feuille de style se compile avant d'ouvrir le back-office (sinon la page plante sur le CSS manquant) :
+
+```bash
+docker compose exec php make assets EXEC=          # une fois
+docker compose exec php make assets-watch EXEC=    # pendant le développement
+```
+
+Pas encore faits : la double authentification de la maquette, la recherche, et les écrans Utilisateurs, Signalements, Ventes et transactions, Litiges, Catégories (marqués « bientôt » dans le menu). « Utilisateurs actifs » compte pour l'instant tous les comptes : l'API ne garde pas la date de dernière connexion.
+
 ## Tests
 
 La suite PHPUnit tourne sur la base de test `penderie_test`, migrée et chargée de ses référentiels (voir « Base de données ») :
