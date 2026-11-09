@@ -404,3 +404,26 @@ Règles suivies avec l'outil de développement :
   - le bloc « Date de retour » n'affichait pas la date ;
   - « 23 nov.. » s'écrivait avec deux points.
 - **Vérifié** : API 233 tests OK et PHPStan 0 erreur ; app tsc et ESLint 0 erreur.
+
+### 09/11 (fin) — Back-office : KPI de la maquette, socle et tableau de bord (PR #63, #64)
+
+- **Prompts** (mot pour mot) :
+  - « je dois passer au back office , pour la maquette qu'on a fait sur figma le client m'a suggéré de changer les deux kpi du milieu dans le dashboard (signalement et litiges) » ;
+  - « d'ailleurs le back office n'est pas dans l'appli donc on le fera en twig stimulus tailwind » ;
+  - « relance » ;
+  - « c'est fait à la main, pousse la branche et commence a dev » ;
+  - « reprends ou tu t'étais arrété ».
+- **Choix de l'étudiant** (sur proposition de l'IA) : remplacer les deux KPI par « Scans réussis » et « Prêts en cours », dans la maquette seulement d'abord.
+- **Maquette (#63)** : l'IA a trouvé les deux cartes dans le fichier Figma, mais l'API Figma n'avait pas accès à la police Luciole et a refusé de modifier les textes. Rien n'a été changé dans le fichier. L'étudiant a fait la modification à la main. L'IA a mis à jour la source du plugin (lot 26), puis relu les cartes : sur « Scans réussis », le chiffre « 7 » et la majuscule de « Réussis » restent à reprendre.
+- **Back-office (#64)** :
+  - socle AssetMapper, Stimulus et Tailwind 4 dans l'API, avec le thème repris de la charte de l'app ;
+  - pare-feu `admin` (session, formulaire, CSRF) qui refuse les comptes non administrateurs dès la connexion, et commande `app:admin:grant` ;
+  - tableau de bord calculé sur les vraies données : 4 KPI, inscriptions de la semaine, priorités, dernières commandes.
+- **Choix de l'IA** :
+  - la branche part du correctif Symfony (#58), parce que l'audit aurait fait échouer la CI ;
+  - la double authentification et les autres écrans sont reportés ;
+  - « Utilisateurs actifs » compte tous les comptes, faute de date de dernière connexion. **À valider.**
+- **Trouvé en route, corrigé** :
+  - le nom de l'administrateur n'apparaissait pas quand son compte n'avait pas de profil « par défaut » ;
+  - sans `tailwind:build`, les pages admin plantent : l'étape est ajoutée à la CI, avec `make assets`.
+- **Vérifié** : 220 tests OK, `make quality` vert ; visite réelle avec Cypress (connexion refusée, tableau de bord, menu sur mobile).
