@@ -33,4 +33,22 @@ class FriendshipRepository extends ServiceEntityRepository
     {
         return FriendshipStatus::Accepted === $this->findBetween($a, $b)?->getStatus();
     }
+
+    /**
+     * Les amis acceptés, quel que soit le sens de la demande.
+     *
+     * @return list<Profile>
+     */
+    public function friendsOf(Profile $me): array
+    {
+        /** @var list<Friendship> $friendships */
+        $friendships = $this->createQueryBuilder('f')
+            ->where('f.requester = :me OR f.addressee = :me')
+            ->andWhere('f.status = :accepted')
+            ->setParameter('me', $me->getId(), 'uuid')
+            ->setParameter('accepted', FriendshipStatus::Accepted)
+            ->getQuery()->getResult();
+
+        return array_map(static fn (Friendship $f) => $f->getRequester()->getId()->equals($me->getId()) ? $f->getAddressee() : $f->getRequester(), $friendships);
+    }
 }
