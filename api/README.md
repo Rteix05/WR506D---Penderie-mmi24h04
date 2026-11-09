@@ -96,6 +96,15 @@ Un objet ou un vêtement est rangé dans une cascade **pièce › rangement › 
 - À la **création** (`POST /api/items`, `POST /api/garments`), on peut donner `room`, `storage` et `box`. Le conteneur impose sa pièce et son rangement ; un rangement d'une autre pièce est refusé (422, `ValidLocation`) ; ranger dans la pièce de quelqu'un d'autre est refusé (403).
 - **Ensuite**, l'emplacement ne change que par un déplacement (`LocationMover`, qui écrit l'historique) : un `PATCH` ne le modifie pas.
 
+| Route | Rôle |
+| --- | --- |
+| `POST /api/items/{id}/move`, `POST /api/garments/{id}/move` | `{room, storage?, box?}` : range l'objet ailleurs. Un conteneur impose sa pièce et son rangement (`room` devient facultative) |
+| `POST /api/boxes/{id}/move` | `{room, storage?}` : déplace le conteneur et tout ce qu'il contient |
+| `POST /api/storages/{id}/move` | `{room}` : déplace le meuble, ses conteneurs et tout ce qui est rangé dessus ou dedans |
+| `GET /api/possessions/moves?possession=` | l'historique d'un objet (IRI) : les emplacements **quittés**, du plus récent au plus ancien, avec qui l'a déplacé et pourquoi (`MANUAL_MOVE`, `BOX_MOVED`, `LOAN_RETURN`) |
+
+Déplacer un objet demande de pouvoir le modifier (son propriétaire, son tuteur) et de pouvoir ranger dans la pièce d'arrivée (403 sinon). Un rangement d'une autre pièce est refusé (422). Un conteneur ou un meuble ne se déplace que par celui qui l'a créé : en colocation, on ne déménage pas les affaires des autres avec. Un objet prêté se déplace aussi : c'est sa place habituelle, il y revient au retour. Un vêtement « à compléter » se range en le complétant (422).
+
 ## Photos
 
 Une photo appartient à un objet ou à un vêtement (galerie : `ItemMedia`, `GarmentMedia`).
