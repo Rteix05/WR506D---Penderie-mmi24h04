@@ -383,3 +383,24 @@ Règles suivies avec l'outil de développement :
   - PHPUnit, suite complète : 227 tests OK ;
   - PHPStan niveau 6 : 0 erreur ;
   - `composer audit` : aucune faille.
+
+### 09/11 (suite) — Prêt côté app, déplacements (PR #60 à #62)
+
+- **Prompt** : le même que l'entrée précédente (« on commence par le prêt d'objets , puis déplacement d'objet / carton »).
+- **Produit** :
+  - app, prêts (#60) : le parcours « Prêter » en 3 étapes (ami, date de retour et note, vérification), « Mes prêts » en deux onglets, la fiche d'un prêt avec les gestes de chaque partie et son historique, l'écran « Objet rendu ? » (état au retour, rangement), et sur les fiches « Prêter », « Demander à l'emprunter », « Chez Thomas » et l'historique des prêts. Le tout suit le lot 05 de la maquette ;
+  - API, déplacements (#61) : un objet, un carton avec son contenu, un meuble avec ses conteneurs. `LocationMover` existait, il ne manquait que les routes. L'historique des emplacements quittés est aussi exposé. 6 tests ;
+  - app, déplacements (#62) : un écran « Déplacer » commun (objet, vêtement, carton) qui réutilise le choix d'emplacement des parcours d'ajout, et le bloc « Emplacements précédents » sur les fiches.
+- **Choix de l'IA** :
+  - un conteneur ou un meuble ne se déplace que par son créateur : en colocation, on ne déménage pas les affaires des autres avec ;
+  - un objet prêté peut être déplacé : c'est sa place habituelle qui change ;
+  - « Demander à l'emprunter » part sans confirmation, puisque la demande se retire ensuite.
+- **Vérification dans l'app** : l'extension Chrome n'étant pas connectée, l'IA a piloté l'export web avec Cypress, dans un scénario jetable hors du dépôt, contre l'API locale et le compte de démo Thomas. Elle a joué :
+  - le prêt complet d'un jean à Scan (Scan reçoit et rend par l'API) ;
+  - le retour, confirmé en « Usé » ;
+  - le déplacement d'un sweat de la chambre à l'entrée.
+- **Trouvé en testant, corrigé** :
+  - `Alert.alert` ne fait rien sur le web, donc la demande d'emprunt restait muette ;
+  - le bloc « Date de retour » n'affichait pas la date ;
+  - « 23 nov.. » s'écrivait avec deux points.
+- **Vérifié** : API 233 tests OK et PHPStan 0 erreur ; app tsc et ESLint 0 erreur.
