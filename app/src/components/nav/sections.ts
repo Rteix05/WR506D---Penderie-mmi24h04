@@ -27,7 +27,7 @@ export const SECTIONS: Record<Section, { legend: string; entries: MenuEntry[] }>
       { title: 'Mon dressing', subtitle: 'Tes vêtements', href: '/dressing' },
       { title: 'Mes tenues', subtitle: 'Suggestions et tenues enregistrées' },
       { title: 'Mes collections', subtitle: 'Tableaux privés par défaut' },
-      { title: 'Mes prêts', subtitle: 'Prêtés et empruntés' },
+      { title: 'Mes prêts', subtitle: 'Prêtés et empruntés', href: '/prets' },
     ],
   },
   Logements: {
@@ -57,7 +57,7 @@ export const ORDER: Section[] = ['Accueil', 'Inventaire', 'Logements', 'Profil']
 /** L'onglet allumé quand aucun panneau n'est ouvert : celui de la page affichée. */
 export function sectionOf(pathname: string): Section {
   if (pathname.startsWith('/profil')) return 'Profil';
-  if (pathname.startsWith('/objets') || pathname.startsWith('/dressing')) return 'Inventaire';
+  if (pathname.startsWith('/objets') || pathname.startsWith('/dressing') || pathname.startsWith('/prets')) return 'Inventaire';
   if (pathname.startsWith('/logements')) return 'Logements';
 
   return 'Accueil';

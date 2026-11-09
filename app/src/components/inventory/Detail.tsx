@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/Button';
 import { Heading } from '@/components/ui/Heading';
 import { E1 } from '@/components/ui/elevation';
 
-/** Une action de la maquette qui attend sa route d'API (prêt, vente, partage, déplacement). */
+/** Une action de la maquette qui attend sa route d'API (vente, partage, déplacement). */
 export function soon(what: string) {
   Alert.alert(what, 'Cette action arrive bientôt.');
 }
@@ -91,13 +91,29 @@ export function InfoRow({ label, value }: { label: string; value: string }) {
 }
 
 /**
- * Barre d'actions d'une fiche (Figma « Detail/Action bar ») : « Prêter » en
- * aplat, trois boutons secondaires côte à côte, le lien rouge de suppression.
+ * Barre d'actions d'une fiche (Figma « Detail/Action bar ») : l'action
+ * principale en aplat (« Prêter »), trois boutons secondaires côte à côte,
+ * une note grise (pourquoi on ne peut pas prêter), le lien rouge de
+ * suppression.
  */
-export function DetailActions({ secondary, deleteLabel, onDelete, deleting }: { secondary: { label: string; onPress: () => void }[]; deleteLabel?: string; onDelete?: () => void; deleting?: boolean }) {
+export function DetailActions({
+  primary,
+  note,
+  secondary,
+  deleteLabel,
+  onDelete,
+  deleting,
+}: {
+  primary?: { label: string; onPress: () => void };
+  note?: string;
+  secondary: { label: string; onPress: () => void }[];
+  deleteLabel?: string;
+  onDelete?: () => void;
+  deleting?: boolean;
+}) {
   return (
     <View className="gap-3 px-5">
-      <Button label="Prêter" onPress={() => soon('Prêter')} />
+      {primary && <Button label={primary.label} onPress={primary.onPress} />}
       <View className="flex-row gap-3">
         {secondary.map((action) => (
           <View key={action.label} className="flex-1">
@@ -105,6 +121,7 @@ export function DetailActions({ secondary, deleteLabel, onDelete, deleting }: { 
           </View>
         ))}
       </View>
+      {note && <Text className="text-center font-luciole text-legend text-muted dark:text-muted-night">{note}</Text>}
       {deleteLabel && onDelete && (
         <Pressable accessibilityRole="button" onPress={onDelete} disabled={deleting} hitSlop={8} className="self-center py-1">
           <Text className={`font-luciole-bold text-legend text-error dark:text-error-night ${deleting ? 'opacity-50' : ''}`}>{deleting ? 'Suppression…' : deleteLabel}</Text>

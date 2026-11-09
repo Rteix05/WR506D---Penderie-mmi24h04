@@ -27,6 +27,12 @@ export default function AppLayout() {
       <Stack.Screen name="nouveau-logement" options={{ presentation: 'modal' }} />
       <Stack.Screen name="nouveau-carton" options={{ presentation: 'modal' }} />
       <Stack.Screen name="nouvel-emplacement" options={{ presentation: 'modal' }} />
+      {/* Déplacer un objet, un vêtement ou un carton. */}
+      <Stack.Screen name="deplacer" options={{ presentation: 'modal' }} />
+      {/* Prêt d'objets : le parcours « Prêter », la fiche d'un prêt, son retour. */}
+      <Stack.Screen name="preter" options={{ presentation: 'modal' }} />
+      <Stack.Screen name="pret/[id]/index" />
+      <Stack.Screen name="pret/[id]/retour" options={{ presentation: 'modal' }} />
       {/* Profils du compte : changer, créer, modifier, autorisations. */}
       <Stack.Screen name="profils" options={{ presentation: 'modal' }} />
     </Stack>

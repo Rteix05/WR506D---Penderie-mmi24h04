@@ -5,9 +5,12 @@ import { ActivityIndicator, Alert, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Attributes, confirmDelete, DetailActions, DetailHero, DetailTitle, Section, soon } from '@/components/inventory/Detail';
+import { PossessionLoans, useLoanAction } from '@/components/loans/PossessionLoans';
+import { MoveHistory } from '@/components/inventory/MoveHistory';
 import { BackButton } from '@/components/ui/BackButton';
 import { Banner } from '@/components/ui/Banner';
 import { Button } from '@/components/ui/Button';
+import { openMove } from '@/lib/moves';
 import { artOf, AVAILABILITY, CONDITION_LABEL, deletePossession, locationOf, rootCategory, usePossession, USAGE_LABEL } from '@/lib/possessions';
 import { useBrands, useColors, useGarmentCategories, useLocations, useSizes, useStyles } from '@/lib/reference';
 
@@ -30,6 +33,7 @@ export default function GarmentScreen() {
   const locations = useLocations();
   const queryClient = useQueryClient();
   const [deleting, setDeleting] = useState(false);
+  const loanAction = useLoanAction(garment.data, 'garment', garment.data?.access === 'ADMIN');
 
   if (!garment.data) {
     return (
@@ -86,11 +90,13 @@ export default function GarmentScreen() {
         )}
 
         <View className="gap-3 px-5">
+          <PossessionLoans possession={p} owner={owner} />
           {p.room && (
-            <Section title="Localisation" link={owner ? { label: 'Déplacer le vêtement', onPress: () => soon('Déplacer le vêtement') } : undefined}>
+            <Section title="Localisation" link={owner ? { label: 'Déplacer le vêtement', onPress: () => openMove('garment', p.id, p.name, where) } : undefined}>
               <Text className="font-luciole-bold text-body text-ink dark:text-ink-night">{where ?? '…'}</Text>
             </Section>
           )}
+          <MoveHistory iri={p['@id']} enabled={Boolean(p.room)} />
           {p.description && (
             <Section title="Description">
               <Text className="font-luciole text-body text-ink dark:text-ink-night">{p.description}</Text>
@@ -103,11 +109,14 @@ export default function GarmentScreen() {
           )}
         </View>
 
+        {!owner && loanAction.primary && <DetailActions primary={loanAction.primary} note={loanAction.note} secondary={[]} />}
         {owner && (
           <DetailActions
+            primary={loanAction.primary}
+            note={loanAction.note}
             secondary={[
               { label: 'Modifier', onPress: edit },
-              { label: 'Déplacer', onPress: () => soon('Déplacer') },
+              ...(p.room ? [{ label: 'Déplacer', onPress: () => openMove('garment', p.id, p.name, where) }] : []),
               { label: 'Vendre', onPress: () => soon('Vendre') },
             ]}
             deleteLabel="Supprimer ce vêtement"
