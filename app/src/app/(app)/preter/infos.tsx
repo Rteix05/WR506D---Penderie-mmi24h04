@@ -49,7 +49,7 @@ export default function LendInfoStep() {
           autoCapitalize="sentences"
           multiline
           maxLength={1000}
-          hint={due ? `Retour prévu le ${shortDate(due)}.` : due === null ? 'Retour prévu : non défini.' : undefined}
+          hint={due ? `Retour prévu le ${shortDate(due)}` : due === null ? 'Retour prévu : non défini' : undefined}
         />
       </View>
 

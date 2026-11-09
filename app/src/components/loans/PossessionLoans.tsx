@@ -94,21 +94,15 @@ export function useLoanAction(possession: Possession | undefined, kind: Kind, ow
     return { primary: { label: 'Prêter', onPress: () => router.push({ pathname: '/preter', params: { kind, id: p.id, iri: p['@id'], name: p.name } }) } };
   }
 
-  const ask = () =>
-    Alert.alert('Demander à l’emprunter ?', `Le propriétaire de « ${p.name} » recevra ta demande et pourra l’accepter.`, [
-      { text: 'Retour', style: 'cancel' },
-      {
-        text: 'Envoyer la demande',
-        onPress: async () => {
-          try {
-            const loan = await requestLoan(queryClient, { possession: p['@id'], note: null });
-            openLoan(loan.id);
-          } catch (e) {
-            Alert.alert('Demande impossible', e instanceof Error ? e.message : '');
-          }
-        },
-      },
-    ]);
+  // Pas de confirmation : une demande se retire ensuite depuis la fiche du prêt.
+  const ask = async () => {
+    try {
+      const loan = await requestLoan(queryClient, { possession: p['@id'], note: null });
+      openLoan(loan.id);
+    } catch (e) {
+      Alert.alert('Demande impossible', e instanceof Error ? e.message : '');
+    }
+  };
 
-  return { primary: { label: 'Demander à l’emprunter', onPress: ask } };
+  return { primary: { label: 'Demander à l’emprunter', onPress: () => void ask() } };
 }

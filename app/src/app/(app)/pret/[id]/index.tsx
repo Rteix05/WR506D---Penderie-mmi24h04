@@ -99,7 +99,7 @@ export default function LoanScreen() {
               ['État au retour', l.conditionAtReturn && CONDITION_LABEL[l.conditionAtReturn]],
             ]}
           />
-          {l.overdue && <Banner tone="error" title="En retard" text={`Le retour était prévu le ${shortDate(l.dueDate ?? '')}.`} />}
+          {l.overdue && <Banner tone="error" title="En retard" text={`Le retour était prévu le ${shortDate(l.dueDate ?? '')}`} />}
 
           {(l.note || l.returnNote) && (
             <View className="gap-3 px-5">
@@ -119,6 +119,7 @@ export default function LoanScreen() {
           {lender && isPending(l) && (
             <View className="px-5">
               <Section title="Date de retour" link={{ label: editingDue ? 'Garder la date' : 'Changer la date', onPress: () => setEditingDue(!editingDue) }}>
+                <Text className="font-luciole-bold text-body text-ink dark:text-ink-night">{l.dueDate ? shortDate(l.dueDate) : 'Non définie'}</Text>
                 {editingDue && (
                   <View className="gap-3">
                     <Chips label="Nouvelle date" options={DUE_CHOICES} selected={[due]} onToggle={setDue} />
