@@ -25,7 +25,15 @@
       "bundler": "metro"
     },
     "plugins": [
-      ["expo-router", { "asyncRoutes": { "web": true, "default": false } }],
+      [
+        "expo-router",
+        {
+          "asyncRoutes": {
+            "web": true,
+            "default": false
+          }
+        }
+      ],
       [
         "expo-splash-screen",
         {
@@ -42,7 +50,11 @@
           "microphonePermission": false
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      "expo-font",
+      "expo-image",
+      "expo-status-bar",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true,
