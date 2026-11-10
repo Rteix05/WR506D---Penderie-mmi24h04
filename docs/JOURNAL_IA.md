@@ -350,3 +350,112 @@ Règles suivies avec l'outil de développement :
 - **Vérifié** :
   - arbre de develop après le revert : PHPUnit OK (216 tests), TypeScript et ESLint 0 erreur ;
   - `feat/test` : `make e2e` 11/11 sur deux campagnes de suite.
+
+### 09/11 — Prêt d'objets côté API, failles Symfony (PR #58 et suivante)
+
+- **Prompts** (mot pour mot) :
+  - « ou est-ce qu'on en est dans le projet » ;
+  - « on commence par le prêt d'objets , puis déplacement d'objet / carton ».
+- **État des lieux fait par l'IA** : rien n'avait bougé depuis le 15/10. L'IA a croisé le dépôt et les tâches Asana non cochées. Le prêt (section 10) est la plus grosse section restante. Son modèle existait déjà (`Loan`, `LoanEvent`, la machine à états dans l'entité, l'index unique « un seul prêt actif par objet »), mais aucune route ne l'exposait.
+- **Produit** :
+  - `LoanController` : « Mes prêts » (`GET /api/loans`), le détail avec son journal, les candidats (amis et profils du compte), l'historique d'un objet, et un geste par transition (prêter, demander, accepter, refuser, annuler, remettre, repousser la date, déclarer le retour, confirmer le retour, déclarer perdu) ;
+  - des règles en plus de l'entité :
+    - on prête seulement à un ami ou à son foyer ;
+    - un objet en vente ne se prête pas ;
+    - un objet déjà promis ou déjà chez quelqu'un ne se promet pas à un second ;
+    - on ne demande pas deux fois le même objet ;
+    - la date de retour ne peut pas être passée ;
+  - au retour, le prêteur constate l'état (un dommage est journalisé) et peut ranger l'objet ailleurs. Le déplacement est alors tracé avec la raison `LOAN_RETURN`, que l'enum prévoyait déjà ;
+  - « Chez Bruno » sur la fiche (`lentTo`), pour le propriétaire seulement ;
+  - une notification pour l'autre partie à chaque étape clé ;
+  - 11 tests fonctionnels (`LoanApiTest`) et une section « Prêt d'objets » dans le README de l'API.
+- **Trouvé en route** : `composer audit` échouait depuis le 4/11 (19 failles publiées sur Symfony 7.4). L'IA a ouvert une PR à part (#58) pour passer Symfony en 7.4.23 :
+  - elle a refusé la montée de `doctrine/collections` en version 3, qui est une version majeure ;
+  - cette mise à jour durcit `MapRequestPayload`, et 66 tests tombaient en 415 à l'inscription. L'IA a listé `json` et `jsonld` dans `RegisterController`.
+- **Choix de l'IA** :
+  - un enfant ne prête ni n'emprunte tant que le parcours d'accord du tuteur n'est pas exposé (la permission est « sur accord ») ;
+  - les amis du prêteur n'ouvrent pas ses prêts un par un, seules les parties le peuvent.
+- **Erreurs de l'IA, corrigées** :
+  - un appel à `Listing::isOpen()`, une méthode qui n'existe pas (la bonne est `isOnSale()`), repéré par PHPStan ;
+  - des remplacements par le shell ont encore cassé les apostrophes des chaînes PHP ; l'IA est repassée à l'éditeur ;
+  - les tests attendaient « Bruno Test » alors que le nom affiché est le prénom seul.
+- **Vérifié** :
+  - PHPUnit, suite complète : 227 tests OK ;
+  - PHPStan niveau 6 : 0 erreur ;
+  - `composer audit` : aucune faille.
+
+### 09/11 (suite) — Prêt côté app, déplacements (PR #60 à #62)
+
+- **Prompt** : le même que l'entrée précédente (« on commence par le prêt d'objets , puis déplacement d'objet / carton »).
+- **Produit** :
+  - app, prêts (#60) : le parcours « Prêter » en 3 étapes (ami, date de retour et note, vérification), « Mes prêts » en deux onglets, la fiche d'un prêt avec les gestes de chaque partie et son historique, l'écran « Objet rendu ? » (état au retour, rangement), et sur les fiches « Prêter », « Demander à l'emprunter », « Chez Thomas » et l'historique des prêts. Le tout suit le lot 05 de la maquette ;
+  - API, déplacements (#61) : un objet, un carton avec son contenu, un meuble avec ses conteneurs. `LocationMover` existait, il ne manquait que les routes. L'historique des emplacements quittés est aussi exposé. 6 tests ;
+  - app, déplacements (#62) : un écran « Déplacer » commun (objet, vêtement, carton) qui réutilise le choix d'emplacement des parcours d'ajout, et le bloc « Emplacements précédents » sur les fiches.
+- **Choix de l'IA** :
+  - un conteneur ou un meuble ne se déplace que par son créateur : en colocation, on ne déménage pas les affaires des autres avec ;
+  - un objet prêté peut être déplacé : c'est sa place habituelle qui change ;
+  - « Demander à l'emprunter » part sans confirmation, puisque la demande se retire ensuite.
+- **Vérification dans l'app** : l'extension Chrome n'étant pas connectée, l'IA a piloté l'export web avec Cypress, dans un scénario jetable hors du dépôt, contre l'API locale et le compte de démo Thomas. Elle a joué :
+  - le prêt complet d'un jean à Scan (Scan reçoit et rend par l'API) ;
+  - le retour, confirmé en « Usé » ;
+  - le déplacement d'un sweat de la chambre à l'entrée.
+- **Trouvé en testant, corrigé** :
+  - `Alert.alert` ne fait rien sur le web, donc la demande d'emprunt restait muette ;
+  - le bloc « Date de retour » n'affichait pas la date ;
+  - « 23 nov.. » s'écrivait avec deux points.
+- **Vérifié** : API 233 tests OK et PHPStan 0 erreur ; app tsc et ESLint 0 erreur.
+
+### 09/11 (fin) — Back-office : KPI de la maquette, socle et tableau de bord (PR #63, #64)
+
+- **Prompts** (mot pour mot) :
+  - « je dois passer au back office , pour la maquette qu'on a fait sur figma le client m'a suggéré de changer les deux kpi du milieu dans le dashboard (signalement et litiges) » ;
+  - « d'ailleurs le back office n'est pas dans l'appli donc on le fera en twig stimulus tailwind » ;
+  - « relance » ;
+  - « c'est fait à la main, pousse la branche et commence a dev » ;
+  - « reprends ou tu t'étais arrété ».
+- **Choix de l'étudiant** (sur proposition de l'IA) : remplacer les deux KPI par « Scans réussis » et « Prêts en cours », dans la maquette seulement d'abord.
+- **Maquette (#63)** : l'IA a trouvé les deux cartes dans le fichier Figma, mais l'API Figma n'avait pas accès à la police Luciole et a refusé de modifier les textes. Rien n'a été changé dans le fichier. L'étudiant a fait la modification à la main. L'IA a mis à jour la source du plugin (lot 26), puis relu les cartes : sur « Scans réussis », le chiffre « 7 » et la majuscule de « Réussis » restent à reprendre.
+- **Back-office (#64)** :
+  - socle AssetMapper, Stimulus et Tailwind 4 dans l'API, avec le thème repris de la charte de l'app ;
+  - pare-feu `admin` (session, formulaire, CSRF) qui refuse les comptes non administrateurs dès la connexion, et commande `app:admin:grant` ;
+  - tableau de bord calculé sur les vraies données : 4 KPI, inscriptions de la semaine, priorités, dernières commandes.
+- **Choix de l'IA** :
+  - la branche part du correctif Symfony (#58), parce que l'audit aurait fait échouer la CI ;
+  - la double authentification et les autres écrans sont reportés ;
+  - « Utilisateurs actifs » compte tous les comptes, faute de date de dernière connexion. **À valider.**
+- **Trouvé en route, corrigé** :
+  - le nom de l'administrateur n'apparaissait pas quand son compte n'avait pas de profil « par défaut » ;
+  - sans `tailwind:build`, les pages admin plantent : l'étape est ajoutée à la CI, avec `make assets`.
+- **Vérifié** : 220 tests OK, `make quality` vert ; visite réelle avec Cypress (connexion refusée, tableau de bord, menu sur mobile).
+
+### 10/11 — SDK 58, lenteur de l'API sous Windows, écrans du back-office (PR #65, #66)
+
+- **Prompts** (mot pour mot) :
+  - « je test les prets en local sur mon tel et l'admin en meme temps lance tout » ;
+  - « le sdk du projet n'est plus compatible avec ma version de expo » ;
+  - « timeout sur back office et tel ca c'est lancé mais très lentement » ;
+  - « trouve la raison et répare ca » ;
+  - « le compte admin pour le back » ;
+  - « ca marche, continue les autres écrans du back office ».
+- **SDK 58 (#65)** : Expo Go ne lit qu'un SDK à la fois. L'IA a lu la documentation officielle de la migration, puis passé l'app en SDK 58 (React Native 0.88). Deux adaptations : `initialRouteName` devient `anchor`, et `null` n'est plus accepté dans les listes. Vérifié : expo-doctor, tsc, ESLint, export web.
+- **Lenteur** : environ 30 s par requête. L'IA a mesuré dans le conteneur : chaque fichier du code monté depuis Windows met 35 à 150 ms à être relu, et le mode debug revérifie tout `src/` à chaque requête (11 s). Une commande Symfony prend 13 s avec le mode debug, 0,3 s sans. Le contournement est `APP_DEBUG=0` dans `api/.env.local`. Il a fait apparaître un autre défaut : le CSS du back-office répondait 404 sans debug, réglé par `asset_mapper.server` en dev.
+- **Écrans du back-office (#66)** : utilisateurs (liste, fiche, suspension avec journal de modération), ventes, litiges (prise en charge, décision écrite, sans mouvement d'argent comme le veut le MDD) et catégories (lecture seule). 6 tests.
+- **Trouvé en essayant, corrigé** :
+  - la liste des utilisateurs plantait (`DISTINCT` impossible sur une ligne qui contient du JSON) ;
+  - la fiche de Thomas affichait l'identifiant de l'administrateur connecté (variable du gabarit écrasée).
+- **Erreur de l'IA** : en vérifiant `api/.env.local`, elle a affiché la clé OpenRouter dans le terminal. L'étudiant a été prévenu de la régénérer.
+- **Vérifié** : 226 tests OK, PHPStan 0 erreur ; visite réelle de chaque écran.
+
+### 10/11 (suite) — Les trois points restants du back-office (PR #67 à #69)
+
+- **Prompt** (mot pour mot) : « fais les 3 points pas encore fait ».
+- **Suspension d'une durée choisie (#67)** : 7, 30 ou 90 jours, ou jusqu'à réactivation. Une suspension échue se lève toute seule à la première requête du compte, ou par la commande nocturne `app:moderation:lift-expired`, et la levée est journalisée. Pour les tests, l'horloge est simulée (`MockClock`), parce que le journal refuse une date de fin dans le passé.
+- **Signalements (#68)** : l'entité `Report` du MDD (prévue en V2), la route `POST /api/reports` pour signaler depuis l'app (seulement ce qu'on voit, jamais son propre contenu), et l'écran du back-office avec quatre décisions : classer, masquer, avertir l'auteur, suspendre son compte. Chaque décision est inscrite au journal de modération et liée au signalement.
+- **Double authentification (#69)** : codes TOTP (scheb/2fa-bundle), activation obligatoire à la première connexion d'un administrateur (QR code), et `--reset-2fa` si le téléphone est perdu. L'app mobile n'est pas concernée.
+- **Trouvé par les tests, corrigé** :
+  - une tolérance TOTP de 30 s faisait planter OTPHP ;
+  - le secret généré était trop long pour sa colonne ;
+  - la règle d'accès posée sur la déconnexion empêchait de se déconnecter (403) ;
+  - un test des signalements, déjà poussé, ne passait pas PHPStan : corrigé sur sa branche.
+- **Erreurs de l'IA** : une remise de côté (`git stash`) a échoué sur le fichier `api/nul`, au nom réservé sous Windows. Rien n'a été perdu : le travail est resté dans le dossier, et la copie en double a été supprimée après vérification. Les patchs passés par le shell ont encore abîmé des antislashs et des apostrophes ; l'IA est repassée à l'éditeur.
+- **Vérifié** : 240 tests OK, PHPStan 0 erreur, migrations réversibles ; écrans vus dans le navigateur.

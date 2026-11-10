@@ -96,6 +96,15 @@ Un objet ou un vêtement est rangé dans une cascade **pièce › rangement › 
 - À la **création** (`POST /api/items`, `POST /api/garments`), on peut donner `room`, `storage` et `box`. Le conteneur impose sa pièce et son rangement ; un rangement d'une autre pièce est refusé (422, `ValidLocation`) ; ranger dans la pièce de quelqu'un d'autre est refusé (403).
 - **Ensuite**, l'emplacement ne change que par un déplacement (`LocationMover`, qui écrit l'historique) : un `PATCH` ne le modifie pas.
 
+| Route | Rôle |
+| --- | --- |
+| `POST /api/items/{id}/move`, `POST /api/garments/{id}/move` | `{room, storage?, box?}` : range l'objet ailleurs. Un conteneur impose sa pièce et son rangement (`room` devient facultative) |
+| `POST /api/boxes/{id}/move` | `{room, storage?}` : déplace le conteneur et tout ce qu'il contient |
+| `POST /api/storages/{id}/move` | `{room}` : déplace le meuble, ses conteneurs et tout ce qui est rangé dessus ou dedans |
+| `GET /api/possessions/moves?possession=` | l'historique d'un objet (IRI) : les emplacements **quittés**, du plus récent au plus ancien, avec qui l'a déplacé et pourquoi (`MANUAL_MOVE`, `BOX_MOVED`, `LOAN_RETURN`) |
+
+Déplacer un objet demande de pouvoir le modifier (son propriétaire, son tuteur) et de pouvoir ranger dans la pièce d'arrivée (403 sinon). Un rangement d'une autre pièce est refusé (422). Un conteneur ou un meuble ne se déplace que par celui qui l'a créé : en colocation, on ne déménage pas les affaires des autres avec. Un objet prêté se déplace aussi : c'est sa place habituelle, il y revient au retour. Un vêtement « à compléter » se range en le complétant (422).
+
 ## Photos
 
 Une photo appartient à un objet ou à un vêtement (galerie : `ItemMedia`, `GarmentMedia`).
@@ -244,6 +253,32 @@ Le fil de Penderie (maquette, section « 16 — Fil d'actualité »), commencé 
 | `GET /api/profiles/{id}/page` | la page d'un profil vue par moi : `relation` (moi, foyer, ami, abonné), ses publications visibles, et les vêtements qu'elles me montrent |
 
 L'audience est vérifiée à chaque lecture : retirer un ami lui cache aussitôt les publications et les vêtements. La photo d'un look publié se lit par l'audience de la publication (`GET /api/media/{id}`). Un look publié ne repasse plus en préparation ; un look qui a été publié ne se supprime plus (sa photo est celle de la publication).
+
+## Prêt d'objets
+
+Un prêt (`Loan`) suit un cycle de vie porté par l'entité : `REQUESTED` › `ACCEPTED` › `ACTIVE` › `RETURNED`, avec les sorties `DECLINED`, `CANCELLED` et `LOST`. Chaque geste écrit une ligne du journal (`LoanEvent`) avec son auteur. Le retard n'est pas un statut : c'est un prêt `ACTIVE` dont la date de retour est passée (`overdue`), et repousser la date l'annule aussitôt.
+
+| Route | Rôle |
+| --- | --- |
+| `GET /api/loans?role=&open=` | mes prêts, du plus récent au plus ancien. `role` : `lender` (ce que je prête) ou `borrower` (ce que j'emprunte) ; `open=1` : en cours (demandés, acceptés, chez l'emprunteur), `open=0` : l'historique |
+| `GET /api/loans/{id}` | un prêt et son journal (`events`) ; seules les parties et leur tuteur l'ouvrent (404 sinon) |
+| `GET /api/loans/candidates` | à qui je peux prêter : mes amis et les autres profils de mon compte (`household`) |
+| `GET /api/possessions/loans?possession=` | l'historique des prêts d'un objet (IRI), pour son propriétaire |
+| `POST /api/loans` | `{possession, borrower, dueDate?, note?}` : le propriétaire prête de lui-même, le prêt naît `ACCEPTED` |
+| `POST /api/loans/request` | `{possession, note?}` : quelqu'un qui voit l'objet (partagé avec lui) demande à l'emprunter |
+| `POST /api/loans/{id}/accept` · `/decline` | le prêteur répond à une demande : `{dueDate?}` ou `{reason?}` |
+| `POST /api/loans/{id}/received` | l'emprunteur a l'objet en main : le prêt devient `ACTIVE`, l'objet `LENT`, et son état du moment est noté |
+| `POST /api/loans/{id}/due-date` | `{dueDate: "AAAA-MM-JJ" \| null}` : le prêteur repousse ou retire la date de retour |
+| `POST /api/loans/{id}/declare-return` | `{note?}` : l'emprunteur dit l'avoir rendu ; le prêteur confirme ensuite |
+| `POST /api/loans/{id}/confirm-return` | `{condition?, note?, room?, storage?, box?}` : le prêteur constate l'état (pire qu'au départ : `DAMAGE_REPORTED`) ; avec une pièce, l'objet est rangé là (déplacement tracé, raison `LOAN_RETURN`) |
+| `POST /api/loans/{id}/lost` | le prêteur déclare l'objet perdu : il passe `LOST` |
+| `POST /api/loans/{id}/cancel` | l'un ou l'autre annule, tant que l'objet n'a pas été remis |
+
+**Les règles.** On ne prête qu'à un ami ou à un profil de son compte, jamais à soi-même. Seul un objet disponible se prête : un objet prêté, perdu ou vendu ne se re-prête pas, ce qui interdit aussi le sous-prêt (seul le propriétaire prête, et l'emprunteur ne l'est pas). Un objet en vente ne se prête pas (409), un objet déjà promis ou déjà chez quelqu'un ne se promet pas à un second (409), et on ne demande pas deux fois le même objet (409). Un geste fait par la mauvaise partie répond 422.
+
+**Sur la fiche.** Un objet prêté porte `lentTo` {`loan`, `borrower`, `dueDate`, `overdue`} : « Chez Bruno, retour le 12 », pour son propriétaire seulement. L'emplacement habituel ne change pas pendant le prêt : au retour, l'objet retrouve sa place, ou celle que le prêteur choisit.
+
+**Profil enfant.** `LOAN_LEND` et `LOAN_BORROW` demandent l'accord du tuteur : tant que ce parcours n'est pas exposé, un enfant ne prête ni n'emprunte (403). Un adulte peut prêter au profil de son enfant (foyer).
 
 ## Tests
 
