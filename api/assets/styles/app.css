@@ -1,0 +1,74 @@
+/*
+ * Back-office de Penderie : la charte de l'app (docs/PENDERIE_DS_v2.md,
+ * app/tailwind.config.js) traduite en thème Tailwind 4. Mêmes noms de
+ * couleurs, de rayons et de tailles : « bg-surface rounded-md text-legend »
+ * veut dire la même chose dans l'app et ici.
+ *
+ * Compilé par symfonycasts/tailwind-bundle : php bin/console tailwind:build
+ * (--watch pendant le développement).
+ */
+@import "tailwindcss";
+
+@source "../../templates";
+@source "../controllers";
+
+@font-face {
+    font-family: "Typolio";
+    src: url("../fonts/Typolio-Regular.ttf") format("truetype");
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Luciole";
+    src: url("../fonts/Luciole-Regular.ttf") format("truetype");
+    font-weight: 400;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Luciole";
+    src: url("../fonts/Luciole-Bold.ttf") format("truetype");
+    font-weight: 700;
+    font-display: swap;
+}
+
+@theme {
+    /* Accent unique : bouton principal, entrée de menu active, pastilles. */
+    --color-primary: #D31D66;
+    /* Titres et texte principal ; aussi le fond de la barre latérale. */
+    --color-ink: #1A1E24;
+    --color-surface: #FFFFFF;
+    --color-bg: #F8FAFC;
+    /* Succès, « Payé », « En cours ». */
+    --color-main: #117D6F;
+    --color-main-tint: #EAF6F6;
+    --color-cloth: #831297;
+    /* Erreur, « En retard ». */
+    --color-error: #DC2626;
+    /* Texte secondaire, « Remboursé », neutre. */
+    --color-muted: #475569;
+
+    --font-typolio: "Typolio", sans-serif;
+    --font-luciole: "Luciole", sans-serif;
+
+    --text-h3: 32px;
+    --text-h3--line-height: 38px;
+    --text-h4: 24px;
+    --text-h4--line-height: 30px;
+    --text-body: 16px;
+    --text-body--line-height: 22px;
+    --text-legend: 12px;
+    --text-legend--line-height: 16px;
+
+    /* Rayons du DS, comme dans l'app. */
+    --radius-xs: 8px;
+    --radius-sm: 12px;
+    --radius-md: 16px;
+    --radius-lg: 24px;
+}
+
+@layer base {
+    body {
+        @apply bg-bg font-luciole text-body text-ink antialiased;
+    }
+}
