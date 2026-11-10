@@ -51,6 +51,18 @@ En revanche, `vendor/` et `var/` vivent dans des volumes Docker. Sous Windows, l
 
 Les services ajoutés par les prochaines fonctionnalités (stockage des photos, e-mails) viendront compléter `compose.yaml` avec leur feature.
 
+### Lenteur sous Windows : couper le mode debug
+
+Même avec `vendor/` et `var/` en volumes, le code (`src/`, `config/`, `templates/`) reste monté depuis Windows, où chaque fichier met 35 à 150 ms à être relu. En mode debug, Symfony vérifie à chaque requête qu'aucun de ces fichiers n'a changé : mesuré le 10/11, 11 s rien que pour parcourir `src/`, et environ **30 s par requête** pour l'API comme pour le back-office. Sans debug, une requête prend moins d'une seconde.
+
+Sur un poste Windows, ajouter dans `api/.env.local` (non versionné) :
+
+```dotenv
+APP_DEBUG=0
+```
+
+Contrepartie : le cache n'est plus reconstruit tout seul. Après une modification du code PHP ou des gabarits : `docker compose exec php bin/console cache:clear`. Le back-office reste servi en dev (`asset_mapper.server` activé en `when@dev`). Les tests ne sont pas concernés : ils tournent dans l'environnement `test`. La vraie solution serait de cloner le projet dans le système de fichiers de WSL 2 plutôt que sur `C:`.
+
 ## Base de données
 
 Les entités suivent le modèle de données V2 (`docs/PENDERIE_MODELE_DONNEES_V2.html`). Chaque domaine arrive avec sa migration :
