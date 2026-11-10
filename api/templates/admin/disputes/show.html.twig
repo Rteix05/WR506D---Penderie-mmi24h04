@@ -1,0 +1,82 @@
+{% extends 'admin/base.html.twig' %}
+{% import 'admin/_ui.html.twig' as ui %}
+
+{% block title %}Litige #{{ order.reference }}{% endblock %}
+{% block active %}disputes{% endblock %}
+{% block heading %}Litige #{{ order.reference }}{% endblock %}
+{% block subtitle %}<a class="hover:underline" href="{{ path('admin_disputes') }}">Litiges</a> › {{ order.listing.possession.name }} · {{ order.totalAmount|admin_euros }} €{% endblock %}
+
+{% block body %}
+    {% set reasons = {NOT_RECEIVED: 'Colis jamais reçu', NOT_AS_DESCRIBED: 'Non conforme à l’annonce', DAMAGED: 'Endommagé à la réception', PAYMENT_ISSUE: 'Problème de paiement', OTHER: 'Autre'} %}
+    {% set events = {
+        CREATED: 'Commande passée', PAYMENT_AUTHORIZED: 'Paiement autorisé', PAYMENT_CAPTURED: 'Commande payée', PAYMENT_FAILED: 'Paiement refusé',
+        HANDOVER_SCHEDULED: 'Remise prévue', HANDOVER_CONFIRMED_BY_SELLER: 'Remise confirmée par le vendeur', HANDOVER_CONFIRMED_BY_BUYER: 'Remise confirmée par l’acheteur',
+        SHIPPED: 'Colis expédié', DELIVERED: 'Colis livré', RECEIVED: 'Réception confirmée', COMPLETED: 'Vente terminée', CANCELLED: 'Commande annulée',
+        REFUND_REQUESTED: 'Remboursement demandé', REFUND_ISSUED: 'Remboursement effectué', DISPUTE_OPENED: 'Problème signalé',
+    } %}
+
+    <div class="grid gap-6 xl:grid-cols-[1fr_minmax(0,400px)]">
+        <div class="flex flex-col gap-6">
+            <section class="{{ ui.card_class() }}" aria-labelledby="chronologie">
+                <h2 id="chronologie" class="text-legend font-bold text-muted">Chronologie</h2>
+                <ol class="mt-3 flex flex-col gap-3">
+                    {% for event in order.events %}
+                        {% set bad = event.type.value in ['DISPUTE_OPENED', 'PAYMENT_FAILED', 'CANCELLED', 'REFUND_REQUESTED'] %}
+                        <li class="flex items-start gap-3 text-legend">
+                            <span class="mt-1.5 size-2 shrink-0 rounded-full {{ bad ? 'bg-primary' : 'bg-main' }}" aria-hidden="true"></span>
+                            <span>
+                                <span class="text-body font-bold">{{ events[event.type.value] ?? event.type.value }}{% if event.actor %} par {{ event.actor.displayName }}{% endif %}</span>
+                                <span class="text-muted">{{ event.occurredAt|admin_date(true) }}</span>
+                                {% if event.note %}<br>« {{ event.note }} »{% endif %}
+                                {% if event.type.value == 'DISPUTE_OPENED' %}<br>{{ reasons[dispute.reason.value] }} · « {{ dispute.description }} »{% endif %}
+                            </span>
+                        </li>
+                    {% endfor %}
+                </ol>
+            </section>
+
+            <section class="{{ ui.card_class() }}" aria-labelledby="parties">
+                <h2 id="parties" class="text-legend font-bold text-muted">Les deux parties</h2>
+                <div class="mt-3 grid gap-4 sm:grid-cols-2">
+                    {% for role, party in {Acheteur: [order.buyer, buyerDisputes], Vendeur: [order.seller, sellerDisputes]} %}
+                        <p class="text-legend">
+                            <a class="text-body font-bold hover:underline" href="{{ path('admin_user', {id: party[0].account.id}) }}">{{ party[0].displayName }}</a><br>
+                            <span class="text-muted">{{ role }} · {{ party[1] }} autre{{ party[1] > 1 ? 's' }} litige{{ party[1] > 1 ? 's' }}</span>
+                        </p>
+                    {% endfor %}
+                </div>
+            </section>
+        </div>
+
+        <section class="{{ ui.card_class() }} flex flex-col gap-4 self-start" aria-labelledby="decision">
+            <h2 id="decision" class="text-legend font-bold text-muted">Décision</h2>
+            <dl class="flex flex-col gap-2 text-legend">
+                <div class="flex justify-between gap-4"><dt class="text-muted">Montant en jeu</dt><dd class="text-body font-bold">{{ order.totalAmount|admin_euros }} €</dd></div>
+                <div class="flex justify-between gap-4"><dt class="text-muted">Annonce</dt><dd class="text-body font-bold">« {{ order.listing.possession.name }} »</dd></div>
+                {% if dispute.handledBy %}<div class="flex justify-between gap-4"><dt class="text-muted">Traité par</dt><dd>{{ dispute.handledBy.email }}</dd></div>{% endif %}
+            </dl>
+
+            {% if not open %}
+                <p class="rounded-sm bg-main-tint px-4 py-3 text-legend text-main"><span class="font-bold">{{ dispute.status.value == 'CLOSED' ? 'Clos' : 'Résolu' }}.</span> {{ dispute.resolution }}</p>
+            {% else %}
+                {% if dispute.status.value == 'OPEN' %}
+                    <form method="post" action="{{ path('admin_dispute_take', {id: dispute.id}) }}">
+                        <input type="hidden" name="_token" value="{{ csrf_token('dispute-' ~ dispute.id) }}">
+                        <button type="submit" class="{{ ui.button_class('secondary') }}">Prendre en charge</button>
+                    </form>
+                {% endif %}
+                <form method="post" action="{{ path('admin_dispute_resolve', {id: dispute.id}) }}" class="flex flex-col gap-3">
+                    <label class="flex flex-col gap-1">
+                        <span class="text-legend font-bold text-muted">Décision (lue par les deux parties)</span>
+                        <textarea name="note" required maxlength="1000" rows="3" class="rounded-sm bg-bg px-4 py-3 text-body outline-none focus:ring-2 focus:ring-primary" placeholder="L’étiquette dit acrylique : l’annonce n’était pas conforme."></textarea>
+                    </label>
+                    <input type="hidden" name="_token" value="{{ csrf_token('dispute-' ~ dispute.id) }}">
+                    <button type="submit" name="outcome" value="buyer" class="{{ ui.button_class('primary') }}">Donner raison à l’acheteur</button>
+                    <button type="submit" name="outcome" value="seller" class="{{ ui.button_class('secondary') }}">Donner raison au vendeur</button>
+                    <button type="submit" name="outcome" value="none" class="text-center text-body font-bold text-primary hover:underline">Clore sans suite</button>
+                </form>
+            {% endif %}
+            <p class="text-legend text-muted">Un remboursement est exécuté par le prestataire de paiement. L’administration décide, elle ne manipule jamais d’argent.</p>
+        </section>
+    </div>
+{% endblock %}

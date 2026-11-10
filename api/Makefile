@@ -14,7 +14,7 @@ CONSOLE  = $(PHP) bin/console
 COMPOSER = $(EXEC) composer
 
 .DEFAULT_GOAL := help
-.PHONY: help up down install migrate test phpstan lint lint-container lint-yaml lint-twig lint-schema audit quality ci
+.PHONY: assets assets-watch help up down install migrate test phpstan lint lint-container lint-yaml lint-twig lint-schema audit quality ci
 
 help: ## Affiche cette aide
 	@grep -E '^[a-z-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-16s\033[0m %s\n", $$1, $$2}'
@@ -31,6 +31,12 @@ install: ## Installe les dépendances Composer
 migrate: ## Joue les migrations (dev et test)
 	$(CONSOLE) doctrine:migrations:migrate --no-interaction
 	$(CONSOLE) doctrine:migrations:migrate --no-interaction --env=test
+
+assets: ## Compile la feuille de style du back-office (Tailwind) ; assets-watch la recompile à chaque modification
+	$(CONSOLE) tailwind:build
+
+assets-watch:
+	$(CONSOLE) tailwind:build --watch
 
 test: ## Lance la suite PHPUnit
 	$(PHP) bin/phpunit

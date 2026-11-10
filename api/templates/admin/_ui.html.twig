@@ -1,0 +1,85 @@
+{#
+ # Briques du back-office, reprises de la maquette (lot 26) :
+ #   pill(label, tone)  pastille de statut : green, red, pink, grey
+ #   card()             carte blanche (rayon 16, ombre légère)
+ #}
+
+{% macro pill(label, tone = 'grey') %}
+    {% set tones = {
+        green: 'bg-main-tint text-main',
+        red: 'bg-error/10 text-error',
+        pink: 'bg-primary/12 text-primary',
+        grey: 'bg-muted/12 text-muted',
+    } %}
+    <span class="inline-flex rounded-full px-2 py-1 text-legend font-bold {{ tones[tone] ?? tones.grey }}">{{ label }}</span>
+{% endmacro %}
+
+{% macro kpi(label, value, detail, tone) %}
+    <section class="rounded-md bg-surface p-6 shadow-[0_1px_3px_rgba(26,30,36,0.08)]" aria-label="{{ label }}">
+        <h2 class="text-legend font-bold text-muted">{{ label }}</h2>
+        <p class="mt-1 font-typolio text-h3">{{ value }}</p>
+        {% if detail %}<p class="mt-3">{{ _self.pill(detail, tone) }}</p>{% endif %}
+    </section>
+{% endmacro %}
+
+{% macro order_status(status) %}
+    {% set labels = {
+        PENDING_PAYMENT: ['En attente', 'pink'],
+        AWAITING_HANDOVER: ['À remettre', 'pink'],
+        PAID: ['Payé', 'green'],
+        SHIPPED: ['Expédié', 'green'],
+        DELIVERED: ['Livré', 'green'],
+        COMPLETED: ['Terminé', 'green'],
+        CANCELLED: ['Annulé', 'grey'],
+        REFUNDED: ['Remboursé', 'grey'],
+    } %}
+    {% set entry = labels[status.value] ?? [status.value, 'grey'] %}
+    {{ _self.pill(entry[0], entry[1]) }}
+{% endmacro %}
+
+{# Recherche de la page (GET ?q=), en haut à droite, comme la maquette. #}
+{% macro search(placeholder, value, params = {}) %}
+    <form method="get" role="search" class="w-full md:w-80">
+        {% for name, v in params %}<input type="hidden" name="{{ name }}" value="{{ v }}">{% endfor %}
+        <label class="flex h-12 items-center gap-2 rounded-sm bg-surface px-4 shadow-[0_1px_3px_rgba(26,30,36,0.08)] focus-within:ring-2 focus-within:ring-primary">
+            <span class="text-legend font-bold text-muted" aria-hidden="true">o-</span>
+            <span class="sr-only">Rechercher</span>
+            <input type="search" name="q" value="{{ value }}" placeholder="{{ placeholder }}" class="w-full bg-transparent text-body outline-none">
+        </label>
+    </form>
+{% endmacro %}
+
+{#
+ # Onglets de filtre (Figma « Chip/Filter ») : liens qui gardent la recherche.
+ #   tabs([{key, label}], current, route, {q: …})
+ #}
+{% macro tabs(items, current, route, params = {}) %}
+    <nav aria-label="Filtres" class="mb-6 flex flex-wrap gap-2">
+        {% for item in items %}
+            {% set on = item.key == current %}
+            <a href="{{ path(route, params|merge({filter: item.key})) }}" {% if on %}aria-current="page"{% endif %}
+               class="rounded-full px-4 py-2 text-legend font-bold {{ on ? 'bg-primary text-white' : 'bg-surface text-muted shadow-[0_1px_3px_rgba(26,30,36,0.08)] hover:text-ink' }}">{{ item.label }}</a>
+        {% endfor %}
+    </nav>
+{% endmacro %}
+
+{# Bas de tableau : « 20 sur 134 » et les pages précédente / suivante. #}
+{% macro pager(page, perPage, total, route, params = {}, note = null) %}
+    {% set shown = min(total, page * perPage) %}
+    <div class="mt-4 flex flex-wrap items-center justify-between gap-3 text-legend">
+        <p class="text-muted">{{ total == 0 ? 0 : (page - 1) * perPage + 1 }}–{{ shown }} sur {{ total|number_format(0, ',', ' ') }}{% if note %} · {{ note }}{% endif %}</p>
+        <p class="flex gap-4 font-bold">
+            {% if page > 1 %}<a class="text-primary hover:underline" href="{{ path(route, params|merge({page: page - 1})) }}">‹ Page précédente</a>{% endif %}
+            {% if shown < total %}<a class="text-primary hover:underline" href="{{ path(route, params|merge({page: page + 1})) }}">Page suivante ›</a>{% endif %}
+        </p>
+    </div>
+{% endmacro %}
+
+{# Classes des boutons : primary (aplat rose), danger (rouge), secondary (blanc). #}
+{% macro button_class(kind = 'primary') %}{{ {
+    primary: 'bg-primary text-white hover:brightness-110',
+    danger: 'bg-error text-white hover:brightness-110',
+    secondary: 'bg-surface text-ink shadow-[0_1px_3px_rgba(26,30,36,0.12)] hover:bg-bg',
+}[kind] }} inline-flex h-12 w-full items-center justify-center rounded-md px-4 text-body font-bold focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2{% endmacro %}
+
+{% macro card_class() %}rounded-md bg-surface p-6 shadow-[0_1px_3px_rgba(26,30,36,0.08)]{% endmacro %}

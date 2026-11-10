@@ -1,0 +1,20 @@
+framework:
+    asset_mapper:
+        # The paths to make available to the asset mapper.
+        paths:
+            - assets/
+        missing_import_mode: strict
+
+# En dev, les fichiers sont servis à la volée même sans mode debug : sous
+# Windows, l'API de dev tourne souvent avec APP_DEBUG=0 (voir README, « Lenteur
+# sous Windows »), et le serveur d'AssetMapper ne s'active par défaut qu'en
+# debug (404 sur le CSS et le JS du back-office sinon).
+when@dev:
+    framework:
+        asset_mapper:
+            server: true
+
+when@prod:
+    framework:
+        asset_mapper:
+            missing_import_mode: warn
