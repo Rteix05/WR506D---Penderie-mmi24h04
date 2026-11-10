@@ -108,6 +108,8 @@ final class ProfileDeleter
                 ['order_event', 'actor_id'],
                 ['refund', 'requested_by_id'],
                 ['dispute', 'opener_id'],
+                // Un signalement survit à son auteur : la modération garde sa trace.
+                ['report', 'reporter_id'],
                 ['comment', 'author_id'],
                 ['location_history', 'moved_by_id'],
                 ['profile_permission', 'updated_by_id'],

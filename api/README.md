@@ -257,6 +257,10 @@ Le fil de Penderie (maquette, section « 16 — Fil d'actualité »), commencé 
 
 L'audience est vérifiée à chaque lecture : retirer un ami lui cache aussitôt les publications et les vêtements. La photo d'un look publié se lit par l'audience de la publication (`GET /api/media/{id}`). Un look publié ne repasse plus en préparation ; un look qui a été publié ne se supprime plus (sa photo est celle de la publication).
 
+## Signaler un contenu
+
+`POST /api/reports` `{targetType, targetId, reason, description?}` : `targetType` vaut `PROFILE`, `ITEM`, `GARMENT`, `COMMENT`, `LISTING`, `COLLECTION` ou `POST` ; `reason` vaut `SPAM`, `INAPPROPRIATE`, `COUNTERFEIT`, `HARASSMENT` ou `OTHER`. On ne signale que ce qu'on voit (404 sinon), jamais son propre contenu ni celui de son compte (422), et une seule fois tant que le premier signalement n'est pas traité (409). Le signalement (`Report`, V2 du MDD) garde une référence souple à sa cible : il survit à la suppression du contenu. Il se traite dans le back-office.
+
 ## Back-office
 
 Une interface web pour les administrateurs, à part de l'app mobile : **Twig + Stimulus + Tailwind**, servie par cette même application Symfony sous `/admin`. Elle suit la maquette Figma (section back-office de « Maquette v2 », lot 26 du plugin).
@@ -266,6 +270,7 @@ Une interface web pour les administrateurs, à part de l'app mobile : **Twig + S
 - **Utilisateurs** (`/admin/utilisateurs`) : recherche (e-mail, identifiant, nom d'un profil), filtres (tous, actifs, suspendus, avec profil enfant), et la fiche d'un compte : ses profils (enfants, tuteur), son activité (objets, ventes et achats, litiges), le journal de modération. **Suspendre** écrit une `ModerationAction` BAN_ACCOUNT (journal en écriture seule) et suspend chaque profil : l'app refuse alors toute requête (`CurrentProfile`). **Réactiver** écrit RESTORE et lève les suspensions. Un motif est obligatoire ; on ne se suspend pas soi-même (`AccountModerator`). La suspension dure 7, 30 (par défaut) ou 90 jours, ou jusqu'à réactivation : échue, elle se lève toute seule à la première requête du compte (`CurrentProfile`), et la levée est journalisée. Pour mettre à jour le back-office des comptes qui ne reviennent pas, lancer chaque nuit `php bin/console app:moderation:lift-expired`.
 - **Ventes et transactions** (`/admin/ventes`) : les chiffres du mois (ventes, volume, paiements réussis, remboursements) et les commandes, filtrées (payées, en livraison, remboursées, en litige) ou cherchées par numéro. En lecture seule.
 - **Litiges** (`/admin/litiges`) : les litiges (ouverts d'abord) et les remboursements ; le détail d'un litige montre la chronologie de la commande et les deux parties. L'administrateur le **prend en charge**, puis le **clôt** avec une décision écrite (en faveur de l'acheteur, du vendeur, ou sans suite). Comme le dit le MDD, un litige « n'arbitre pas et ne déplace pas d'argent » : un remboursement passe par le prestataire de paiement.
+- **Signalements** (`/admin/signalements`) : trois onglets (objets, contenus, commentaires) et trois états (à traiter, en cours, traités). Le détail montre le contenu signalé, le contexte et l'auteur, et propose quatre décisions (`ReportDesk`) : classer sans suite ; masquer (un commentaire est masqué, une publication retirée, une annonce retirée de la vente) ; avertir l'auteur (une notification « Avertissement de la modération ») ; suspendre son compte 30 jours. Chaque décision écrit une `ModerationAction` qui pointe vers le signalement, et le clôt. Les signalements à traiter passent en tête de « À traiter en priorité ».
 - **Catégories** (`/admin/categories`) : les catégories de l'application avec le nombre de biens rangés dessous, les styles, les états d'un objet. En lecture seule : elles viennent des référentiels (`app:reference-data:load`).
 - Les actions (suspendre, réactiver, prendre en charge, clore) sont des POST protégés par un jeton CSRF.
 - **Front** : AssetMapper (pas de Node côté API), Stimulus pour les comportements (le menu sur petit écran : `assets/controllers/sidebar_controller.js`), Tailwind 4 dont le thème reprend la charte de l'app (`assets/styles/app.css`, mêmes noms de couleurs, de rayons et de tailles).
@@ -277,7 +282,7 @@ docker compose exec php make assets EXEC=          # une fois
 docker compose exec php make assets-watch EXEC=    # pendant le développement
 ```
 
-Pas encore faits : la double authentification de la maquette, et l'écran Signalements (marqué « bientôt » dans le menu) : l'entité Report est prévue en V2 du MDD. « Utilisateurs actifs » compte pour l'instant tous les comptes : l'API ne garde pas la date de dernière connexion.
+Pas encore faite : la double authentification de la maquette. « Utilisateurs actifs » compte pour l'instant tous les comptes : l'API ne garde pas la date de dernière connexion.
 
 ## Tests
 

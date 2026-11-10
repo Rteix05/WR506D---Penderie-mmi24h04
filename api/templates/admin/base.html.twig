@@ -5,8 +5,7 @@
  # sidebar_controller).
  #
  # Blocs : title, active (entrée de menu allumée), heading, subtitle,
- # search (à droite du titre), body. Signalements attend son entité (Report,
- # V2 du MDD) : visible, pas cliquable.
+ # search (à droite du titre), body.
  #}
 <!DOCTYPE html>
 <html lang="fr">
@@ -21,7 +20,7 @@
 {% set menu = [
     {label: 'Tableau de bord', route: 'admin_dashboard', key: 'dashboard'},
     {label: 'Utilisateurs', route: 'admin_users', key: 'users'},
-    {label: 'Signalements', key: 'reports'},
+    {label: 'Signalements', route: 'admin_reports', key: 'reports', badge: admin_open_reports()},
     {label: 'Ventes et transactions', route: 'admin_sales', key: 'sales'},
     {label: 'Litiges', route: 'admin_disputes', key: 'disputes', badge: admin_open_disputes()},
     {label: 'Catégories', route: 'admin_categories', key: 'categories'},

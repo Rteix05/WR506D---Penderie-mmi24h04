@@ -5,10 +5,12 @@ namespace App\Service\Admin;
 use App\Entity\Identity\Account;
 use App\Entity\Inventory\Scan;
 use App\Entity\Loan\Loan;
+use App\Entity\Notification\Report;
 use App\Entity\Sale\Dispute;
 use App\Entity\Sale\Order;
 use App\Enum\Inventory\ScanStatus;
 use App\Enum\Loan\LoanStatus;
+use App\Enum\Notification\ReportStatus;
 use App\Enum\Sale\DisputeStatus;
 use App\Enum\Sale\OrderStatus;
 use Doctrine\ORM\EntityManagerInterface;
@@ -26,7 +28,9 @@ use Psr\Clock\ClockInterface;
 final class DashboardStats
 {
     /** Une vente compte dès qu'elle est payée (ou remise en main propre), tant qu'elle n'est ni annulée ni remboursée. */
-    private const SOLD = [OrderStatus::Paid, OrderStatus::Shipped, OrderStatus::Delivered, OrderStatus::Completed];
+    private const REASONS = ['SPAM' => 'spam', 'INAPPROPRIATE' => 'contenu inapproprié', 'COUNTERFEIT' => 'contrefaçon', 'HARASSMENT' => 'harcèlement', 'OTHER' => 'autre motif'];
+
+    private const SOLD =[OrderStatus::Paid, OrderStatus::Shipped, OrderStatus::Delivered, OrderStatus::Completed];
 
     public function __construct(
         private readonly EntityManagerInterface $em,
@@ -152,25 +156,46 @@ final class DashboardStats
     }
 
     /**
-     * « À traiter en priorité » : les litiges ouverts d'abord (les plus
-     * anciens en tête), puis les prêts les plus en retard.
+     * « À traiter en priorité » : les signalements à traiter d'abord, puis
+     * les litiges ouverts (les plus anciens en tête), puis les prêts les
+     * plus en retard.
      *
-     * @return list<array{kind: 'dispute'|'loan', title: string, detail: string, since: ?\DateTimeImmutable}>
+     * @return list<array{kind: 'report'|'dispute'|'loan', title: string, detail: string, since: ?\DateTimeImmutable, id?: string}>
      */
     public function priorities(int $limit = 3): array
     {
-        /** @var list<Dispute> $disputes */
-        $disputes = $this->em->createQueryBuilder()
-            ->select('d')->from(Dispute::class, 'd')
-            ->where('d.status IN (:open)')->setParameter('open', [DisputeStatus::Open, DisputeStatus::UnderReview])
-            ->orderBy('d.createdAt', 'ASC')->setMaxResults($limit)
+        /** @var list<Report> $reports */
+        $reports = $this->em->createQueryBuilder()
+            ->select('r')->from(Report::class, 'r')
+            ->where('r.status = :open')->setParameter('open', ReportStatus::Open)
+            ->orderBy('r.createdAt', 'ASC')->setMaxResults($limit)
             ->getQuery()->getResult();
-        $items = array_map(static fn (Dispute $d) => [
-            'kind' => 'dispute',
-            'title' => 'Litige #'.$d->getOrder()->getReference(),
-            'detail' => \sprintf('%s · %s €', $d->getOrder()->getListing()->getPossession()->getName(), self::euros($d->getOrder()->getTotalAmount())),
-            'since' => $d->getCreatedAt(),
-        ], $disputes);
+        $types = ['PROFILE' => 'Profil', 'ITEM' => 'Objet', 'GARMENT' => 'Vêtement', 'COMMENT' => 'Commentaire', 'LISTING' => 'Annonce', 'COLLECTION' => 'Collection', 'POST' => 'Publication'];
+        $items = array_map(static fn (Report $r) => [
+            'kind' => 'report',
+            'title' => $types[$r->getTargetType()->value].' signalé',
+            'detail' => 'par '.$r->getReporter()->getDisplayName().' · '.self::REASONS[$r->getReason()->value],
+            'since' => $r->getCreatedAt(),
+            'id' => (string) $r->getId(),
+        ], $reports);
+
+        if (\count($items) < $limit) {
+            /** @var list<Dispute> $disputes */
+            $disputes = $this->em->createQueryBuilder()
+                ->select('d')->from(Dispute::class, 'd')
+                ->where('d.status IN (:open)')->setParameter('open', [DisputeStatus::Open, DisputeStatus::UnderReview])
+                ->orderBy('d.createdAt', 'ASC')->setMaxResults($limit - \count($items))
+                ->getQuery()->getResult();
+            foreach ($disputes as $d) {
+                $items[] = [
+                    'kind' => 'dispute',
+                    'title' => 'Litige #'.$d->getOrder()->getReference(),
+                    'detail' => \sprintf('%s · %s €', $d->getOrder()->getListing()->getPossession()->getName(), self::euros($d->getOrder()->getTotalAmount())),
+                    'since' => $d->getCreatedAt(),
+                    'id' => (string) $d->getId(),
+                ];
+            }
+        }
 
         if (\count($items) < $limit) {
             /** @var list<Loan> $late */
@@ -191,6 +216,12 @@ final class DashboardStats
         }
 
         return $items;
+    }
+
+    /** Les signalements pas encore traités (pastille du menu). */
+    public function openReports(): int
+    {
+        return $this->em->getRepository(Report::class)->count(['status' => [ReportStatus::Open, ReportStatus::UnderReview]]);
     }
 
     /** Les litiges ouverts (pastille du menu). */
