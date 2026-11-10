@@ -87,9 +87,7 @@ final class ReportsTest extends WebTestCase
     private function decide(Report $report, string $decision, string $note = 'Menace explicite'): void
     {
         $form = $this->page('/admin/signalements/'.$report->getId())->selectButton('Appliquer la décision')->form();
-        $form['decision']->select($decision);
-        $form['note'] = $note;
-        $this->client->submit($form);
+        $this->client->submit($form, ['decision' => $decision, 'note' => $note]);
         $this->client->followRedirect();
     }
 
