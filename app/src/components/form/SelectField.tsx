@@ -150,7 +150,7 @@ export function PickerSheet({
                 <Pressable accessibilityRole="button" onPress={() => onSelect(null)} className="rounded-md bg-ink/[0.03] px-4 py-3 dark:bg-ink-night/[0.06]">
                   <Text className="font-luciole text-body text-muted dark:text-muted-night">Aucun</Text>
                 </Pressable>
-              ) : null
+              ) : undefined
             }
             renderItem={({ item }) => (
               <Pressable

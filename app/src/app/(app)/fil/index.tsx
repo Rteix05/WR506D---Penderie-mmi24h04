@@ -51,7 +51,7 @@ export default function FeedScreen() {
             {query.isError && <Text className="font-luciole text-body text-error dark:text-error-night">{query.error.message}</Text>}
           </View>
         }
-        ListEmptyComponent={query.isSuccess ? <Empty mine={tab === 'mine'} /> : null}
+        ListEmptyComponent={query.isSuccess ? <Empty mine={tab === 'mine'} /> : undefined}
         ListFooterComponent={
           <View className="gap-4 pt-2">
             {feed.isFetchingNextPage && <ActivityIndicator />}
