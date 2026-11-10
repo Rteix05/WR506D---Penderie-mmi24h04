@@ -27,6 +27,30 @@ security:
                 success_handler: lexik_jwt_authentication.handler.authentication_success
                 failure_handler: lexik_jwt_authentication.handler.authentication_failure
 
+        # Back-office (Twig) : une session, un formulaire, réservé aux comptes
+        # ROLE_ADMIN. AdminUserChecker refuse les autres dès la connexion.
+        admin:
+            pattern: ^/admin
+            lazy: true
+            provider: accounts
+            user_checker: App\Security\AdminUserChecker
+            form_login:
+                login_path: admin_login
+                check_path: admin_login
+                default_target_path: admin_dashboard
+                always_use_default_target_path: false
+                username_parameter: email
+                password_parameter: password
+                enable_csrf: true
+            logout:
+                path: admin_logout
+                target: admin_login
+            # Après le mot de passe, le code de l'application d'authentification.
+            two_factor:
+                auth_form_path: 2fa_login
+                check_path: 2fa_login_check
+                enable_csrf: true
+
         api:
             pattern: ^/api
             stateless: true
@@ -36,6 +60,13 @@ security:
                 check_path: /api/auth/refresh
 
     access_control:
+        - { path: ^/admin/connexion$, roles: PUBLIC_ACCESS }
+        # Entre le mot de passe et le code : seulement l'écran du code.
+        - { path: ^/admin/(2fa|2fa_check)$, roles: IS_AUTHENTICATED_2FA_IN_PROGRESS }
+        # La déconnexion reste ouverte, connecté ou pendant l'étape du code
+        # (IS_AUTHENTICATED_2FA_IN_PROGRESS refusait un administrateur déjà connecté).
+        - { path: ^/admin/deconnexion$, roles: PUBLIC_ACCESS }
+        - { path: ^/admin, roles: ROLE_ADMIN }
         - { path: ^/api/auth/(login|refresh|register)$, roles: PUBLIC_ACCESS }
         # Un lien de partage s'ouvre sans compte (lecture seule, voir LinkController).
         - { path: ^/api/links/, roles: PUBLIC_ACCESS }

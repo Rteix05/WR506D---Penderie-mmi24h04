@@ -8,6 +8,9 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Scheb\TwoFactorBundle\Model\Totp\TotpConfiguration;
+use Scheb\TwoFactorBundle\Model\Totp\TotpConfigurationInterface;
+use Scheb\TwoFactorBundle\Model\Totp\TwoFactorInterface;
 use Symfony\Bridge\Doctrine\Types\UuidType;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
@@ -27,7 +30,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[ORM\Entity(repositoryClass: AccountRepository::class)]
 #[ORM\HasLifecycleCallbacks]
 #[UniqueEntity(fields: ['email'], message: 'Un compte existe déjà avec cette adresse.')]
-class Account implements UserInterface, PasswordAuthenticatedUserInterface
+class Account implements UserInterface, PasswordAuthenticatedUserInterface, TwoFactorInterface
 {
     use TimestampableTrait;
 
@@ -67,6 +70,14 @@ class Account implements UserInterface, PasswordAuthenticatedUserInterface
     /** @var Collection<int, Profile> */
     #[ORM\OneToMany(targetEntity: Profile::class, mappedBy: 'account')]
     private Collection $profiles;
+
+    /**
+     * Le secret TOTP de la double authentification du back-office
+     * (scheb/2fa-totp). Nul tant qu'elle n'est pas activée ; seul un
+     * administrateur en a un. Jamais sérialisé ni exposé par l'API.
+     */
+    #[ORM\Column(length: 64, nullable: true)]
+    private ?string $totpSecret = null;
 
     public function __construct(string $email)
     {
@@ -158,6 +169,32 @@ class Account implements UserInterface, PasswordAuthenticatedUserInterface
     public function setLocale(string $locale): static
     {
         $this->locale = $locale;
+
+        return $this;
+    }
+
+    // --- Double authentification (back-office) -----------------------------------
+
+    public function isTotpAuthenticationEnabled(): bool
+    {
+        return null !== $this->totpSecret;
+    }
+
+    public function getTotpAuthenticationUsername(): string
+    {
+        return $this->email;
+    }
+
+    /** Codes à 6 chiffres renouvelés toutes les 30 s (SHA-1) : ce que lisent toutes les applications. */
+    public function getTotpAuthenticationConfiguration(): ?TotpConfigurationInterface
+    {
+        return null === $this->totpSecret ? null : new TotpConfiguration($this->totpSecret, TotpConfiguration::ALGORITHM_SHA1, 30, 6);
+    }
+
+    /** Active (secret confirmé par un premier code) ou réinitialise (null) la double authentification. */
+    public function setTotpSecret(?string $secret): static
+    {
+        $this->totpSecret = $secret;
 
         return $this;
     }

@@ -1,0 +1,93 @@
+{% extends 'admin/base.html.twig' %}
+{% import 'admin/_ui.html.twig' as ui %}
+
+{% block title %}Signalement{% endblock %}
+{% block active %}reports{% endblock %}
+{% block heading %}{{ {COMMENT: 'Commentaire', POST: 'Publication', LISTING: 'Annonce', PROFILE: 'Profil', ITEM: 'Objet', GARMENT: 'Vêtement', COLLECTION: 'Collection'}[report.targetType.value] }} signalé{{ report.targetType.value in ['POST', 'LISTING', 'COLLECTION'] ? 'e' }}{% endblock %}
+{% block subtitle %}<a class="hover:underline" href="{{ path('admin_reports') }}">Signalements</a> › #{{ report.id|slice(-6) }}{% endblock %}
+
+{% block body %}
+    {% set report_reasons = admin_labels('report_reasons') %}
+    {% set report_types = admin_labels('report_types') %}
+    {% set report_status = admin_labels('report_status') %}
+    {% set st = report_status[report.status.value] %}
+    {% set actionLabels = {HIDE_CONTENT: 'Contenu masqué', DELETE_CONTENT: 'Contenu retiré', WARN: 'Auteur averti', BAN_ACCOUNT: 'Compte suspendu', SUSPEND_PROFILE: 'Profil suspendu', RESTORE: 'Rétabli'} %}
+
+    <div class="grid gap-6 xl:grid-cols-[1fr_minmax(0,400px)]">
+        <div class="flex flex-col gap-6">
+            <section class="{{ ui.card_class() }}" aria-labelledby="contenu">
+                <h2 id="contenu" class="text-legend font-bold text-muted">Contenu signalé</h2>
+                <div class="mt-3 rounded-sm bg-ink/[0.03] px-4 py-3">
+                    <p class="text-legend text-muted">{{ author ? '@' ~ author.username : 'Auteur inconnu' }} · {{ report_types[report.targetType.value] }}</p>
+                    <p class="mt-1 whitespace-pre-line text-body">{{ label }}</p>
+                    {% if target is null %}<p class="mt-2">{{ ui.pill('Supprimé depuis', 'grey') }}</p>
+                    {% elseif target.hiddenAt is defined and target.hiddenAt %}<p class="mt-2">{{ ui.pill('Masqué', 'grey') }}</p>{% endif %}
+                </div>
+            </section>
+
+            <section class="{{ ui.card_class() }}" aria-labelledby="contexte">
+                <h2 id="contexte" class="text-legend font-bold text-muted">Contexte</h2>
+                <dl class="mt-3 flex flex-col gap-2 text-legend">
+                    <div class="flex justify-between gap-4"><dt class="text-muted">Signalé par</dt><dd class="text-right text-body font-bold">{{ report.reporter.displayName }} · {{ report_reasons[report.reason.value]|lower }}</dd></div>
+                    <div class="flex justify-between gap-4"><dt class="text-muted">Le</dt><dd class="text-body font-bold">{{ report.createdAt|admin_date(true) }}</dd></div>
+                    <div class="flex justify-between gap-4"><dt class="text-muted">Autres signalements</dt><dd class="text-body font-bold">{{ others }}</dd></div>
+                    <div class="flex justify-between gap-4"><dt class="text-muted">Statut</dt><dd>{{ ui.pill(st[0], st[1]) }}</dd></div>
+                </dl>
+                {% if report.description %}<p class="mt-3 rounded-sm bg-ink/[0.03] px-4 py-3 text-legend">« {{ report.description }} »</p>{% endif %}
+            </section>
+
+            {% if author %}
+                <section class="{{ ui.card_class() }}" aria-labelledby="auteur">
+                    <h2 id="auteur" class="text-legend font-bold text-muted">L’auteur</h2>
+                    <p class="mt-3 text-legend">
+                        <a class="text-body font-bold hover:underline" href="{{ path('admin_user', {id: author.account.id}) }}">{{ author.displayName }} (@{{ author.username }})</a><br>
+                        <span class="text-muted">Inscrit le {{ author.account.createdAt|admin_date }}{% if author.suspendedAt %} · suspendu{% endif %}</span>
+                    </p>
+                </section>
+            {% endif %}
+        </div>
+
+        <section class="{{ ui.card_class() }} flex flex-col gap-4 self-start" aria-labelledby="decision">
+            <h2 id="decision" class="text-legend font-bold text-muted">Décision</h2>
+            {% if not report.status.pending %}
+                <p class="rounded-sm {{ report.status.value == 'ACTIONED' ? 'bg-main-tint text-main' : 'bg-ink/[0.04] text-muted' }} px-4 py-3 text-legend">
+                    <span class="font-bold">{{ st[0] }}</span>{% if report.handledBy %} par {{ report.handledBy.email }}{% endif %}{% if report.handledAt %}, le {{ report.handledAt|admin_date }}{% endif %}.<br>{{ report.resolution }}
+                </p>
+                {% for action in actions %}
+                    <p class="text-legend text-muted">Journal : {{ actionLabels[action.actionType.value] ?? action.actionType.value }}{% if action.expiresAt %} jusqu’au {{ action.expiresAt|admin_date }}{% endif %}.</p>
+                {% endfor %}
+            {% else %}
+                {% if report.status.value == 'OPEN' %}
+                    <form method="post" action="{{ path('admin_report_take', {id: report.id}) }}">
+                        <input type="hidden" name="_token" value="{{ csrf_token('report-' ~ report.id) }}">
+                        <button type="submit" class="{{ ui.button_class('secondary') }}">Prendre en charge</button>
+                    </form>
+                {% endif %}
+                <form method="post" action="{{ path('admin_report_decide', {id: report.id}) }}" class="flex flex-col gap-3">
+                    <fieldset class="flex flex-col gap-2">
+                        <legend class="sr-only">Décision</legend>
+                        {% set choices = [
+                            {value: 'dismiss', title: 'Classer sans suite', text: 'Le contenu reste visible', enabled: true},
+                            {value: 'hide', title: hideLabel, text: canHide ? 'Il disparaît pour tout le monde' : 'Rien à masquer pour ce type de contenu', enabled: canHide},
+                            {value: 'warn', title: 'Avertir l’auteur', text: 'Message officiel, sans sanction', enabled: author is not null},
+                            {value: 'suspend', title: 'Suspendre le compte', text: '30 jours, réversible', enabled: author is not null},
+                        ] %}
+                        {% for c in choices %}
+                            <label class="flex cursor-pointer items-start gap-3 rounded-sm bg-ink/[0.03] px-4 py-3 has-[:checked]:bg-primary/8 has-[:checked]:ring-2 has-[:checked]:ring-primary {{ c.enabled ? '' : 'cursor-not-allowed opacity-50' }}">
+                                <input type="radio" name="decision" value="{{ c.value }}" required {{ c.enabled ? '' : 'disabled' }} class="mt-1 accent-primary">
+                                <span><span class="block text-body font-bold">{{ c.title }}</span><span class="text-legend text-muted">{{ c.text }}</span></span>
+                            </label>
+                        {% endfor %}
+                    </fieldset>
+                    <label class="flex flex-col gap-1">
+                        <span class="text-legend font-bold text-muted">Note (gardée dans le journal ; envoyée à l’auteur s’il est averti)</span>
+                        <textarea name="note" required maxlength="1000" rows="3" class="rounded-sm bg-bg px-4 py-3 text-body outline-none focus:ring-2 focus:ring-primary"></textarea>
+                    </label>
+                    <input type="hidden" name="_token" value="{{ csrf_token('report-' ~ report.id) }}">
+                    <button type="submit" class="{{ ui.button_class('primary') }}">Appliquer la décision</button>
+                    <p class="text-legend text-muted">La décision est inscrite au journal de modération.</p>
+                </form>
+            {% endif %}
+        </section>
+    </div>
+{% endblock %}

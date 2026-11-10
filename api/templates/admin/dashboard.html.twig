@@ -1,0 +1,101 @@
+{% extends 'admin/base.html.twig' %}
+{% import 'admin/_ui.html.twig' as ui %}
+
+{% block title %}Tableau de bord{% endblock %}
+{% block active %}dashboard{% endblock %}
+{% block heading %}Tableau de bord{% endblock %}
+{% block subtitle %}{{ today }}{% endblock %}
+
+{% block body %}
+    {# Quatre indicateurs ; ceux du milieu à la demande du client (09/11). #}
+    <div class="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+        {{ ui.kpi('Utilisateurs actifs', accounts.total|number_format(0, ',', ' '), '+' ~ accounts.thisWeek ~ ' cette semaine', 'green') }}
+        {{ ui.kpi(
+            'Scans réussis',
+            scans.rate is null ? '—' : scans.rate ~ ' %',
+            scans.scans == 0 ? 'Aucun scan ce mois-ci' : scans.failedThisWeek ~ (scans.failedThisWeek > 1 ? ' échecs' : ' échec') ~ ' cette semaine',
+            scans.failedThisWeek > 0 ? 'red' : 'grey'
+        ) }}
+        {{ ui.kpi('Prêts en cours', loans.active|number_format(0, ',', ' '), loans.overdue ~ ' en retard', loans.overdue > 0 ? 'pink' : 'grey') }}
+        {{ ui.kpi('Ventes du mois', sales.count|number_format(0, ',', ' '), sales.amount|admin_euros ~ ' € encaissés', 'grey') }}
+    </div>
+
+    <div class="mt-6 grid gap-6 xl:grid-cols-[minmax(0,640px)_1fr]">
+        {# Nouveaux inscrits : barres à l'échelle du meilleur jour, le meilleur en rose plein. #}
+        <section class="rounded-md bg-surface p-6 shadow-[0_1px_3px_rgba(26,30,36,0.08)]" aria-labelledby="inscrits">
+            <h2 id="inscrits" class="text-legend font-bold text-muted">Nouveaux inscrits · 7 derniers jours</h2>
+            <p class="mt-1 font-typolio text-h3">{{ signups|reduce((sum, d) => sum + d.count, 0) }}</p>
+            <ol class="mt-6 grid h-52 grid-cols-7 items-end gap-3 sm:gap-6">
+                {% for day in signups %}
+                    {% set best = day.count == signupsMax and day.count > 0 %}
+                    <li class="flex h-full flex-col items-center justify-end gap-1">
+                        <span class="text-legend font-bold">{{ day.count }}</span>
+                        <span class="w-full rounded-xs {{ best ? 'bg-primary' : 'bg-primary/35' }}"
+                              style="height: {{ max(4, (day.count / signupsMax * 160)|round) }}px"
+                              aria-hidden="true"></span>
+                        <span class="text-legend text-muted" title="{{ day.date|date('d/m') }}">{{ day.letter }}</span>
+                        <span class="sr-only">{{ day.count }} le {{ day.date|date('d/m') }}</span>
+                    </li>
+                {% endfor %}
+            </ol>
+        </section>
+
+        <section class="rounded-md bg-surface p-6 shadow-[0_1px_3px_rgba(26,30,36,0.08)]" aria-labelledby="priorites">
+            <h2 id="priorites" class="text-legend font-bold text-muted">À traiter en priorité</h2>
+            {% if priorities is empty %}
+                <p class="mt-4 text-body text-muted">Rien à traiter : aucun signalement, aucun litige ouvert, aucun prêt en retard.</p>
+            {% else %}
+                <ul class="mt-4 flex flex-col gap-3">
+                    {% for item in priorities %}
+                        {% set link = {report: 'admin_report', dispute: 'admin_dispute'}[item.kind] ?? null %}
+                        <li>
+                            {% if link and item.id is defined %}
+                                <a href="{{ path(link, {id: item.id}) }}" class="block rounded-sm bg-ink/[0.03] px-4 py-3 hover:bg-ink/[0.06]">
+                                    <span class="block text-body font-bold">{{ item.title }}</span>
+                                    <span class="block text-legend text-muted">{{ item.detail }}</span>
+                                </a>
+                            {% else %}
+                                <div class="rounded-sm bg-ink/[0.03] px-4 py-3">
+                                    <p class="text-body font-bold">{{ item.title }}</p>
+                                    <p class="text-legend text-muted">{{ item.detail }}</p>
+                                </div>
+                            {% endif %}
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </section>
+    </div>
+
+    <section class="mt-6 rounded-md bg-surface p-6 shadow-[0_1px_3px_rgba(26,30,36,0.08)]" aria-labelledby="transactions">
+        <h2 id="transactions" class="sr-only">Dernières transactions</h2>
+        {% if orders is empty %}
+            <p class="text-body text-muted">Aucune transaction pour l’instant.</p>
+        {% else %}
+            <div class="overflow-x-auto">
+                <table class="w-full min-w-[640px] text-left">
+                    <thead>
+                    <tr class="text-legend font-bold text-muted">
+                        <th scope="col" class="pb-3">Commande</th>
+                        <th scope="col" class="pb-3">Article</th>
+                        <th scope="col" class="pb-3">Vendeur → Acheteur</th>
+                        <th scope="col" class="pb-3">Montant</th>
+                        <th scope="col" class="pb-3">Paiement</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for order in orders %}
+                        <tr class="border-t border-ink/8 text-legend">
+                            <td class="py-4 text-body font-bold">#{{ order.reference }}</td>
+                            <td class="py-4">{{ order.listing.possession.name }}</td>
+                            <td class="py-4">{{ order.seller.displayName }} → {{ order.buyer.displayName }}</td>
+                            <td class="py-4">{{ order.totalAmount|admin_euros }} €</td>
+                            <td class="py-4">{{ ui.order_status(order.status) }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+    </section>
+{% endblock %}

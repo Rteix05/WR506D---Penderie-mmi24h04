@@ -51,6 +51,18 @@ En revanche, `vendor/` et `var/` vivent dans des volumes Docker. Sous Windows, l
 
 Les services ajoutés par les prochaines fonctionnalités (stockage des photos, e-mails) viendront compléter `compose.yaml` avec leur feature.
 
+### Lenteur sous Windows : couper le mode debug
+
+Même avec `vendor/` et `var/` en volumes, le code (`src/`, `config/`, `templates/`) reste monté depuis Windows, où chaque fichier met 35 à 150 ms à être relu. En mode debug, Symfony vérifie à chaque requête qu'aucun de ces fichiers n'a changé : mesuré le 10/11, 11 s rien que pour parcourir `src/`, et environ **30 s par requête** pour l'API comme pour le back-office. Sans debug, une requête prend moins d'une seconde.
+
+Sur un poste Windows, ajouter dans `api/.env.local` (non versionné) :
+
+```dotenv
+APP_DEBUG=0
+```
+
+Contrepartie : le cache n'est plus reconstruit tout seul. Après une modification du code PHP ou des gabarits : `docker compose exec php bin/console cache:clear`. Le back-office reste servi en dev (`asset_mapper.server` activé en `when@dev`). Les tests ne sont pas concernés : ils tournent dans l'environnement `test`. La vraie solution serait de cloner le projet dans le système de fichiers de WSL 2 plutôt que sur `C:`.
+
 ## Base de données
 
 Les entités suivent le modèle de données V2 (`docs/PENDERIE_MODELE_DONNEES_V2.html`). Chaque domaine arrive avec sa migration :
@@ -244,6 +256,33 @@ Le fil de Penderie (maquette, section « 16 — Fil d'actualité »), commencé 
 | `GET /api/profiles/{id}/page` | la page d'un profil vue par moi : `relation` (moi, foyer, ami, abonné), ses publications visibles, et les vêtements qu'elles me montrent |
 
 L'audience est vérifiée à chaque lecture : retirer un ami lui cache aussitôt les publications et les vêtements. La photo d'un look publié se lit par l'audience de la publication (`GET /api/media/{id}`). Un look publié ne repasse plus en préparation ; un look qui a été publié ne se supprime plus (sa photo est celle de la publication).
+
+## Signaler un contenu
+
+`POST /api/reports` `{targetType, targetId, reason, description?}` : `targetType` vaut `PROFILE`, `ITEM`, `GARMENT`, `COMMENT`, `LISTING`, `COLLECTION` ou `POST` ; `reason` vaut `SPAM`, `INAPPROPRIATE`, `COUNTERFEIT`, `HARASSMENT` ou `OTHER`. On ne signale que ce qu'on voit (404 sinon), jamais son propre contenu ni celui de son compte (422), et une seule fois tant que le premier signalement n'est pas traité (409). Le signalement (`Report`, V2 du MDD) garde une référence souple à sa cible : il survit à la suppression du contenu. Il se traite dans le back-office.
+
+## Back-office
+
+Une interface web pour les administrateurs, à part de l'app mobile : **Twig + Stimulus + Tailwind**, servie par cette même application Symfony sous `/admin`. Elle suit la maquette Figma (section back-office de « Maquette v2 », lot 26 du plugin).
+
+- **Accès** : un compte `ROLE_ADMIN` seulement. Le pare-feu `admin` a une session et un formulaire de connexion (`/admin/connexion`, jeton CSRF) ; `AdminUserChecker` refuse les autres comptes dès le formulaire. Aucun écran ne donne ce rôle : `php bin/console app:admin:grant <email>` (et `--revoke` pour le retirer).
+- **Tableau de bord** (`/admin`) : utilisateurs (et nouveaux comptes de la semaine), scans réussis sur 30 jours (et échecs de la semaine), prêts en cours (et en retard), ventes du mois ; les inscriptions des 7 derniers jours ; « À traiter en priorité » (litiges ouverts, puis prêts en retard) ; les dernières commandes. Les chiffres sont calculés par `DashboardStats`, en requêtes agrégées.
+- **Utilisateurs** (`/admin/utilisateurs`) : recherche (e-mail, identifiant, nom d'un profil), filtres (tous, actifs, suspendus, avec profil enfant), et la fiche d'un compte : ses profils (enfants, tuteur), son activité (objets, ventes et achats, litiges), le journal de modération. **Suspendre** écrit une `ModerationAction` BAN_ACCOUNT (journal en écriture seule) et suspend chaque profil : l'app refuse alors toute requête (`CurrentProfile`). **Réactiver** écrit RESTORE et lève les suspensions. Un motif est obligatoire ; on ne se suspend pas soi-même (`AccountModerator`). La suspension dure 7, 30 (par défaut) ou 90 jours, ou jusqu'à réactivation : échue, elle se lève toute seule à la première requête du compte (`CurrentProfile`), et la levée est journalisée. Pour mettre à jour le back-office des comptes qui ne reviennent pas, lancer chaque nuit `php bin/console app:moderation:lift-expired`.
+- **Ventes et transactions** (`/admin/ventes`) : les chiffres du mois (ventes, volume, paiements réussis, remboursements) et les commandes, filtrées (payées, en livraison, remboursées, en litige) ou cherchées par numéro. En lecture seule.
+- **Litiges** (`/admin/litiges`) : les litiges (ouverts d'abord) et les remboursements ; le détail d'un litige montre la chronologie de la commande et les deux parties. L'administrateur le **prend en charge**, puis le **clôt** avec une décision écrite (en faveur de l'acheteur, du vendeur, ou sans suite). Comme le dit le MDD, un litige « n'arbitre pas et ne déplace pas d'argent » : un remboursement passe par le prestataire de paiement.
+- **Signalements** (`/admin/signalements`) : trois onglets (objets, contenus, commentaires) et trois états (à traiter, en cours, traités). Le détail montre le contenu signalé, le contexte et l'auteur, et propose quatre décisions (`ReportDesk`) : classer sans suite ; masquer (un commentaire est masqué, une publication retirée, une annonce retirée de la vente) ; avertir l'auteur (une notification « Avertissement de la modération ») ; suspendre son compte 30 jours. Chaque décision écrit une `ModerationAction` qui pointe vers le signalement, et le clôt. Les signalements à traiter passent en tête de « À traiter en priorité ».
+- **Catégories** (`/admin/categories`) : les catégories de l'application avec le nombre de biens rangés dessous, les styles, les états d'un objet. En lecture seule : elles viennent des référentiels (`app:reference-data:load`).
+- Les actions (suspendre, réactiver, prendre en charge, clore) sont des POST protégés par un jeton CSRF.
+- **Front** : AssetMapper (pas de Node côté API), Stimulus pour les comportements (le menu sur petit écran : `assets/controllers/sidebar_controller.js`), Tailwind 4 dont le thème reprend la charte de l'app (`assets/styles/app.css`, mêmes noms de couleurs, de rayons et de tailles).
+
+La feuille de style se compile avant d'ouvrir le back-office (sinon la page plante sur le CSS manquant) :
+
+```bash
+docker compose exec php make assets EXEC=          # une fois
+docker compose exec php make assets-watch EXEC=    # pendant le développement
+```
+
+**Double authentification** (maquette : « Double authentification obligatoire »). Après l'e-mail et le mot de passe, le back-office demande le code à 6 chiffres d'une application d'authentification (TOTP, `scheb/2fa-bundle`). À la première connexion, un administrateur sans double authentification est conduit vers `/admin/2fa/activer` (QR code et clé), et rien d'autre ne lui est ouvert tant qu'un premier code n'a pas été vérifié ; le secret n'est enregistré qu'à ce moment. Seul le pare-feu du back-office est concerné : l'app mobile ne change pas. Téléphone perdu : `php bin/console app:admin:grant <email> --reset-2fa` (retirer l'accès efface aussi le secret). « Utilisateurs actifs » compte pour l'instant tous les comptes : l'API ne garde pas la date de dernière connexion.
 
 ## Tests
 
