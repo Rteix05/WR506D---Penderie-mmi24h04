@@ -1,0 +1,57 @@
+{% extends 'admin/base.html.twig' %}
+{% import 'admin/_ui.html.twig' as ui %}
+
+{% block title %}Catégories{% endblock %}
+{% block active %}categories{% endblock %}
+{% block heading %}Catégories{% endblock %}
+{% block subtitle %}Ce qui organise l’inventaire et guide les suggestions{% endblock %}
+
+{% block body %}
+    {% macro list(title, rows, unit) %}
+        <section class="rounded-md bg-surface p-6 shadow-[0_1px_3px_rgba(26,30,36,0.08)]" aria-label="{{ title }}">
+            <h2 class="text-legend font-bold text-muted">{{ title }}</h2>
+            <ul class="mt-3 flex flex-col gap-2">
+                {% for row in rows %}
+                    <li class="rounded-sm bg-ink/[0.03] px-4 py-3">
+                        <p class="text-body font-bold">{{ row.category.name }}</p>
+                        <p class="text-legend text-muted">{{ row.possessions|number_format(0, ',', ' ') }} {{ unit }}{{ row.possessions > 1 ? 's' }}{% if row.children %} · {{ row.children }} sous-catégorie{{ row.children > 1 ? 's' }}{% endif %}</p>
+                    </li>
+                {% else %}
+                    <li class="text-legend text-muted">Aucune : lancer app:reference-data:load.</li>
+                {% endfor %}
+            </ul>
+        </section>
+    {% endmacro %}
+
+    <div class="grid gap-6 lg:grid-cols-2 xl:grid-cols-[1fr_1fr_minmax(0,320px)]">
+        {{ _self.list('Objets', items, 'objet') }}
+        {{ _self.list('Vêtements', garments, 'vêtement') }}
+
+        <div class="flex flex-col gap-6">
+            <section class="{{ ui.card_class() }}" aria-labelledby="styles">
+                <h2 id="styles" class="text-legend font-bold text-muted">Styles</h2>
+                <ul class="mt-3 flex flex-col gap-2">
+                    {% for row in styles %}
+                        <li class="flex justify-between gap-3 rounded-sm bg-ink/[0.03] px-4 py-3 text-legend">
+                            <span class="text-body font-bold">{{ row.style.name }}</span>
+                            <span class="text-muted">{{ row.n }} vêtement{{ row.n > 1 ? 's' }}</span>
+                        </li>
+                    {% else %}
+                        <li class="text-legend text-muted">Aucun style.</li>
+                    {% endfor %}
+                </ul>
+            </section>
+
+            <section class="{{ ui.card_class() }}" aria-labelledby="etats">
+                <h2 id="etats" class="text-legend font-bold text-muted">États d’un objet</h2>
+                <p class="mt-3 flex flex-wrap gap-2">
+                    {{ ui.pill('Disponible', 'green') }} {{ ui.pill('Prêté', 'pink') }} {{ ui.pill('Emprunté', 'pink') }}
+                    {{ ui.pill('Perdu', 'red') }} {{ ui.pill('Vendu', 'grey') }} {{ ui.pill('En vente', 'pink') }}
+                </p>
+                <p class="mt-3 text-legend text-muted">Définis par les règles métier : non modifiables ici. « En vente » est dérivé d’une annonce publiée, et « Déplacer » est une action, pas un état.</p>
+            </section>
+        </div>
+    </div>
+
+    <p class="mt-6 text-legend text-muted">Les catégories de l’application viennent des référentiels (<code>app:reference-data:load</code>) : elles se modifient dans le code, pas ici. Celles qu’un profil crée restent les siennes.</p>
+{% endblock %}

@@ -1,0 +1,94 @@
+{#
+ # Gabarit du back-office (maquette « Admin », lot 26) : barre latérale encre
+ # avec le logo, le menu et l'administrateur connecté ; la page à droite.
+ # Sur petit écran, la barre se cache et s'ouvre par « Menu » (Stimulus,
+ # sidebar_controller).
+ #
+ # Blocs : title, active (entrée de menu allumée), heading, subtitle,
+ # search (à droite du titre), body. Signalements attend son entité (Report,
+ # V2 du MDD) : visible, pas cliquable.
+ #}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex, nofollow">
+    <title>{% block title %}Back-office{% endblock %} · Penderie</title>
+    {% block importmap %}{{ importmap('app') }}{% endblock %}
+</head>
+<body>
+{% set menu = [
+    {label: 'Tableau de bord', route: 'admin_dashboard', key: 'dashboard'},
+    {label: 'Utilisateurs', route: 'admin_users', key: 'users'},
+    {label: 'Signalements', key: 'reports'},
+    {label: 'Ventes et transactions', route: 'admin_sales', key: 'sales'},
+    {label: 'Litiges', route: 'admin_disputes', key: 'disputes', badge: admin_open_disputes()},
+    {label: 'Catégories', route: 'admin_categories', key: 'categories'},
+] %}
+{% set active = block('active') is defined ? block('active') : '' %}
+{# « admin_profile » et pas « profile » : une page fille (fiche utilisateur) a le sien. #}
+{% set admin_profile = (app.user.profiles|filter(p => p.default)|first) ?: (app.user.profiles|first) %}
+
+<div class="min-h-screen lg:flex" data-controller="sidebar" data-action="keydown@window->sidebar#closeOnEscape">
+    <a href="#contenu" class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-sm focus:bg-surface focus:px-4 focus:py-2">Aller au contenu</a>
+
+    <header class="flex items-center justify-between bg-ink px-5 py-4 lg:hidden">
+        <p class="flex items-center gap-2 font-typolio text-[20px] text-white">PENDERIE <span class="rounded-full bg-primary px-2 py-0.5 font-luciole text-legend font-bold">ADMIN</span></p>
+        <button type="button" class="rounded-sm px-3 py-2 text-legend font-bold text-white ring-1 ring-white/30" data-sidebar-target="toggle" data-action="sidebar#open" aria-controls="menu-admin" aria-expanded="false">Menu</button>
+    </header>
+
+    <div class="fixed inset-0 z-30 hidden bg-ink/55 lg:hidden" data-sidebar-target="veil" data-action="click->sidebar#close"></div>
+
+    <nav id="menu-admin" aria-label="Back-office" data-sidebar-target="panel"
+         class="fixed inset-y-0 left-0 z-40 flex w-64 -translate-x-full flex-col justify-between bg-ink px-5 py-8 text-white transition-transform lg:static lg:translate-x-0">
+        <div class="flex flex-col gap-10">
+            <p class="flex items-center gap-2 font-typolio text-[22px]">PENDERIE <span class="rounded-full bg-primary px-2 py-0.5 font-luciole text-legend font-bold">ADMIN</span></p>
+            <ul class="flex flex-col gap-1">
+                {% for entry in menu %}
+                    {% set on = entry.key == active %}
+                    <li>
+                        {% if entry.route is defined %}
+                            <a href="{{ path(entry.route) }}" {% if on %}aria-current="page"{% endif %}
+                               class="flex items-center justify-between rounded-sm px-3 py-3 text-body {{ on ? 'bg-white/10 font-bold' : 'text-white/85 hover:bg-white/5' }}">
+                                {{ entry.label }}
+                                {% if entry.badge ?? 0 %}<span class="grid size-6 place-items-center rounded-full bg-primary text-legend font-bold">{{ entry.badge }}</span>{% endif %}
+                            </a>
+                        {% else %}
+                            {# Écran pas encore construit : visible, pas cliquable. #}
+                            <span aria-disabled="true" title="Bientôt" class="flex items-center justify-between rounded-sm px-3 py-3 text-body text-white/45">
+                                {{ entry.label }}
+                                {% if entry.badge ?? 0 %}<span class="grid size-6 place-items-center rounded-full bg-primary text-legend font-bold text-white">{{ entry.badge }}</span>{% else %}<span class="text-legend">bientôt</span>{% endif %}
+                            </span>
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <div class="flex flex-col gap-1">
+            <p class="text-body font-bold">{{ admin_profile ? admin_profile.displayName : app.user.userIdentifier }}</p>
+            <p class="text-legend text-white/80">Administrateur · actions journalisées</p>
+            <a href="{{ path('admin_logout') }}" class="mt-2 text-legend font-bold hover:underline">Se déconnecter</a>
+        </div>
+    </nav>
+
+    <main id="contenu" class="min-w-0 flex-1 px-5 py-8 lg:px-10">
+        <header class="mb-8 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+            <div>
+                <h1 class="font-typolio text-h3 uppercase">{% block heading %}{% endblock %}</h1>
+                <p class="mt-1 text-legend text-muted">{% block subtitle %}{% endblock %}</p>
+            </div>
+            {% block search %}{% endblock %}
+        </header>
+        {% for message in app.flashes('success') %}
+            <p role="status" class="mb-6 rounded-sm bg-main-tint px-4 py-3 text-legend font-bold text-main">{{ message }}</p>
+        {% endfor %}
+        {% for message in app.flashes('error') %}
+            <p role="alert" class="mb-6 rounded-sm bg-error/10 px-4 py-3 text-legend font-bold text-error">{{ message }}</p>
+        {% endfor %}
+        {% block body %}{% endblock %}
+    </main>
+</div>
+</body>
+</html>
