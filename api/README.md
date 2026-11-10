@@ -51,6 +51,18 @@ En revanche, `vendor/` et `var/` vivent dans des volumes Docker. Sous Windows, l
 
 Les services ajoutés par les prochaines fonctionnalités (stockage des photos, e-mails) viendront compléter `compose.yaml` avec leur feature.
 
+### Lenteur sous Windows : couper le mode debug
+
+Même avec `vendor/` et `var/` en volumes, le code (`src/`, `config/`, `templates/`) reste monté depuis Windows, où chaque fichier met 35 à 150 ms à être relu. En mode debug, Symfony vérifie à chaque requête qu'aucun de ces fichiers n'a changé : mesuré le 10/11, 11 s rien que pour parcourir `src/`, et environ **30 s par requête** pour l'API comme pour le back-office. Sans debug, une requête prend moins d'une seconde.
+
+Sur un poste Windows, ajouter dans `api/.env.local` (non versionné) :
+
+```dotenv
+APP_DEBUG=0
+```
+
+Contrepartie : le cache n'est plus reconstruit tout seul. Après une modification du code PHP ou des gabarits : `docker compose exec php bin/console cache:clear`. Le back-office reste servi en dev (`asset_mapper.server` activé en `when@dev`). Les tests ne sont pas concernés : ils tournent dans l'environnement `test`. La vraie solution serait de cloner le projet dans le système de fichiers de WSL 2 plutôt que sur `C:`.
+
 ## Base de données
 
 Les entités suivent le modèle de données V2 (`docs/PENDERIE_MODELE_DONNEES_V2.html`). Chaque domaine arrive avec sa migration :
@@ -244,6 +256,23 @@ Le fil de Penderie (maquette, section « 16 — Fil d'actualité »), commencé 
 | `GET /api/profiles/{id}/page` | la page d'un profil vue par moi : `relation` (moi, foyer, ami, abonné), ses publications visibles, et les vêtements qu'elles me montrent |
 
 L'audience est vérifiée à chaque lecture : retirer un ami lui cache aussitôt les publications et les vêtements. La photo d'un look publié se lit par l'audience de la publication (`GET /api/media/{id}`). Un look publié ne repasse plus en préparation ; un look qui a été publié ne se supprime plus (sa photo est celle de la publication).
+
+## Back-office
+
+Une interface web pour les administrateurs, à part de l'app mobile : **Twig + Stimulus + Tailwind**, servie par cette même application Symfony sous `/admin`. Elle suit la maquette Figma (section back-office de « Maquette v2 », lot 26 du plugin).
+
+- **Accès** : un compte `ROLE_ADMIN` seulement. Le pare-feu `admin` a une session et un formulaire de connexion (`/admin/connexion`, jeton CSRF) ; `AdminUserChecker` refuse les autres comptes dès le formulaire. Aucun écran ne donne ce rôle : `php bin/console app:admin:grant <email>` (et `--revoke` pour le retirer).
+- **Tableau de bord** (`/admin`) : utilisateurs (et nouveaux comptes de la semaine), scans réussis sur 30 jours (et échecs de la semaine), prêts en cours (et en retard), ventes du mois ; les inscriptions des 7 derniers jours ; « À traiter en priorité » (litiges ouverts, puis prêts en retard) ; les dernières commandes. Les chiffres sont calculés par `DashboardStats`, en requêtes agrégées.
+- **Front** : AssetMapper (pas de Node côté API), Stimulus pour les comportements (le menu sur petit écran : `assets/controllers/sidebar_controller.js`), Tailwind 4 dont le thème reprend la charte de l'app (`assets/styles/app.css`, mêmes noms de couleurs, de rayons et de tailles).
+
+La feuille de style se compile avant d'ouvrir le back-office (sinon la page plante sur le CSS manquant) :
+
+```bash
+docker compose exec php make assets EXEC=          # une fois
+docker compose exec php make assets-watch EXEC=    # pendant le développement
+```
+
+Pas encore faits : la double authentification de la maquette, la recherche, et les écrans Utilisateurs, Signalements, Ventes et transactions, Litiges, Catégories (marqués « bientôt » dans le menu). « Utilisateurs actifs » compte pour l'instant tous les comptes : l'API ne garde pas la date de dernière connexion.
 
 ## Tests
 

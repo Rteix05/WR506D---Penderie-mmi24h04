@@ -84,6 +84,10 @@ jobs:
       - name: Schéma synchronisé avec le mapping
         run: php bin/console doctrine:schema:validate
 
+      # Les pages du back-office (Twig) chargent la feuille compilée par Tailwind.
+      - name: Feuille de style du back-office (Tailwind)
+        run: php bin/console tailwind:build
+
       - name: PHPUnit
         run: php bin/phpunit
 
