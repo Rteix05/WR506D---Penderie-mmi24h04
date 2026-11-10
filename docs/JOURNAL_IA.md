@@ -445,3 +445,17 @@ Règles suivies avec l'outil de développement :
   - la fiche de Thomas affichait l'identifiant de l'administrateur connecté (variable du gabarit écrasée).
 - **Erreur de l'IA** : en vérifiant `api/.env.local`, elle a affiché la clé OpenRouter dans le terminal. L'étudiant a été prévenu de la régénérer.
 - **Vérifié** : 226 tests OK, PHPStan 0 erreur ; visite réelle de chaque écran.
+
+### 10/11 (suite) — Les trois points restants du back-office (PR #67 à #69)
+
+- **Prompt** (mot pour mot) : « fais les 3 points pas encore fait ».
+- **Suspension d'une durée choisie (#67)** : 7, 30 ou 90 jours, ou jusqu'à réactivation. Une suspension échue se lève toute seule à la première requête du compte, ou par la commande nocturne `app:moderation:lift-expired`, et la levée est journalisée. Pour les tests, l'horloge est simulée (`MockClock`), parce que le journal refuse une date de fin dans le passé.
+- **Signalements (#68)** : l'entité `Report` du MDD (prévue en V2), la route `POST /api/reports` pour signaler depuis l'app (seulement ce qu'on voit, jamais son propre contenu), et l'écran du back-office avec quatre décisions : classer, masquer, avertir l'auteur, suspendre son compte. Chaque décision est inscrite au journal de modération et liée au signalement.
+- **Double authentification (#69)** : codes TOTP (scheb/2fa-bundle), activation obligatoire à la première connexion d'un administrateur (QR code), et `--reset-2fa` si le téléphone est perdu. L'app mobile n'est pas concernée.
+- **Trouvé par les tests, corrigé** :
+  - une tolérance TOTP de 30 s faisait planter OTPHP ;
+  - le secret généré était trop long pour sa colonne ;
+  - la règle d'accès posée sur la déconnexion empêchait de se déconnecter (403) ;
+  - un test des signalements, déjà poussé, ne passait pas PHPStan : corrigé sur sa branche.
+- **Erreurs de l'IA** : une remise de côté (`git stash`) a échoué sur le fichier `api/nul`, au nom réservé sous Windows. Rien n'a été perdu : le travail est resté dans le dossier, et la copie en double a été supprimée après vérification. Les patchs passés par le shell ont encore abîmé des antislashs et des apostrophes ; l'IA est repassée à l'éditeur.
+- **Vérifié** : 240 tests OK, PHPStan 0 erreur, migrations réversibles ; écrans vus dans le navigateur.
