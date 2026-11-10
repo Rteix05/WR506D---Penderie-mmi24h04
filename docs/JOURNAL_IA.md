@@ -427,3 +427,21 @@ Règles suivies avec l'outil de développement :
   - le nom de l'administrateur n'apparaissait pas quand son compte n'avait pas de profil « par défaut » ;
   - sans `tailwind:build`, les pages admin plantent : l'étape est ajoutée à la CI, avec `make assets`.
 - **Vérifié** : 220 tests OK, `make quality` vert ; visite réelle avec Cypress (connexion refusée, tableau de bord, menu sur mobile).
+
+### 10/11 — SDK 58, lenteur de l'API sous Windows, écrans du back-office (PR #65, #66)
+
+- **Prompts** (mot pour mot) :
+  - « je test les prets en local sur mon tel et l'admin en meme temps lance tout » ;
+  - « le sdk du projet n'est plus compatible avec ma version de expo » ;
+  - « timeout sur back office et tel ca c'est lancé mais très lentement » ;
+  - « trouve la raison et répare ca » ;
+  - « le compte admin pour le back » ;
+  - « ca marche, continue les autres écrans du back office ».
+- **SDK 58 (#65)** : Expo Go ne lit qu'un SDK à la fois. L'IA a lu la documentation officielle de la migration, puis passé l'app en SDK 58 (React Native 0.88). Deux adaptations : `initialRouteName` devient `anchor`, et `null` n'est plus accepté dans les listes. Vérifié : expo-doctor, tsc, ESLint, export web.
+- **Lenteur** : environ 30 s par requête. L'IA a mesuré dans le conteneur : chaque fichier du code monté depuis Windows met 35 à 150 ms à être relu, et le mode debug revérifie tout `src/` à chaque requête (11 s). Une commande Symfony prend 13 s avec le mode debug, 0,3 s sans. Le contournement est `APP_DEBUG=0` dans `api/.env.local`. Il a fait apparaître un autre défaut : le CSS du back-office répondait 404 sans debug, réglé par `asset_mapper.server` en dev.
+- **Écrans du back-office (#66)** : utilisateurs (liste, fiche, suspension avec journal de modération), ventes, litiges (prise en charge, décision écrite, sans mouvement d'argent comme le veut le MDD) et catégories (lecture seule). 6 tests.
+- **Trouvé en essayant, corrigé** :
+  - la liste des utilisateurs plantait (`DISTINCT` impossible sur une ligne qui contient du JSON) ;
+  - la fiche de Thomas affichait l'identifiant de l'administrateur connecté (variable du gabarit écrasée).
+- **Erreur de l'IA** : en vérifiant `api/.env.local`, elle a affiché la clé OpenRouter dans le terminal. L'étudiant a été prévenu de la régénérer.
+- **Vérifié** : 226 tests OK, PHPStan 0 erreur ; visite réelle de chaque écran.
