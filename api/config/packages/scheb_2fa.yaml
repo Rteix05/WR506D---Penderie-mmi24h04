@@ -1,0 +1,16 @@
+# Double authentification du back-office (maquette « Admin — Connexion » :
+# « Double authentification obligatoire »). Codes TOTP (application
+# d'authentification), seulement sur le pare-feu « admin » : l'API de l'app
+# n'est pas concernée. Voir templates/admin/2fa*.html.twig et
+# App\EventSubscriber\AdminTwoFactorEnrollmentSubscriber.
+scheb_two_factor:
+    security_tokens:
+        - Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken
+        - Symfony\Component\Security\Http\Authenticator\Token\PostAuthenticationToken
+    totp:
+        enabled: true
+        server_name: Penderie
+        issuer: Penderie
+        # Tolère un décalage de 29 s avec l'horloge du téléphone (OTPHP exige moins que la période de 30 s).
+        leeway: 29
+        template: admin/2fa.html.twig

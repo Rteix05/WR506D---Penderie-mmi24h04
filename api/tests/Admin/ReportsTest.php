@@ -49,7 +49,7 @@ final class ReportsTest extends WebTestCase
     {
         $account = new Account($username.'@exemple.fr');
         if ($admin) {
-            $account->setRoles([Account::ROLE_ADMIN]);
+            $account->setRoles([Account::ROLE_ADMIN])->setTotpSecret(BackOfficeTest::TOTP_SECRET);
         }
         $profile = new Profile($account, ProfileType::Adult, ucfirst($username), 'Test', new \DateTimeImmutable('1990-01-01'), $username);
         $this->em->persist($account);

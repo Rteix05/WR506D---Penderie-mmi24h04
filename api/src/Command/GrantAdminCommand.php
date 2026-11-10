@@ -19,6 +19,11 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  *
  *   php bin/console app:admin:grant camille@penderie.app
  *   php bin/console app:admin:grant camille@penderie.app --revoke
+ *   php bin/console app:admin:grant camille@penderie.app --reset-2fa
+ *
+ * --reset-2fa efface le secret de la double authentification (téléphone
+ * perdu) : l'administrateur la réactive à sa prochaine connexion. Retirer
+ * l'accès l'efface aussi.
  */
 #[AsCommand(name: 'app:admin:grant', description: 'Donne (ou retire) l\'accès au back-office à un compte existant.')]
 final class GrantAdminCommand extends Command
@@ -32,7 +37,8 @@ final class GrantAdminCommand extends Command
     {
         $this
             ->addArgument('email', InputArgument::REQUIRED, 'L\'e-mail du compte')
-            ->addOption('revoke', null, InputOption::VALUE_NONE, 'Retirer l\'accès au lieu de le donner');
+            ->addOption('revoke', null, InputOption::VALUE_NONE, 'Retirer l\'accès au lieu de le donner')
+            ->addOption('reset-2fa', null, InputOption::VALUE_NONE, 'Effacer la double authentification (téléphone perdu)');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -46,9 +52,20 @@ final class GrantAdminCommand extends Command
             return Command::FAILURE;
         }
 
+        if ((bool) $input->getOption('reset-2fa')) {
+            $account->setTotpSecret(null);
+            $this->em->flush();
+            $io->success(\sprintf('Double authentification de %s effacée : elle sera réactivée à sa prochaine connexion.', $email));
+
+            return Command::SUCCESS;
+        }
+
         $revoke = (bool) $input->getOption('revoke');
         $roles = array_diff($account->getRoles(), [Account::ROLE_ADMIN]);
         $account->setRoles(array_values($revoke ? $roles : [...$roles, Account::ROLE_ADMIN]));
+        if ($revoke) {
+            $account->setTotpSecret(null);
+        }
         $this->em->flush();
 
         $io->success($revoke ? \sprintf('%s n\'a plus accès au back-office.', $email) : \sprintf('%s a maintenant accès au back-office (/admin).', $email));

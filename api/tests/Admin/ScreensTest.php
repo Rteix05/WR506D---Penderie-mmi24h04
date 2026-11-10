@@ -48,7 +48,7 @@ final class ScreensTest extends WebTestCase
     {
         $account ??= new Account($username.'@exemple.fr');
         if ($admin) {
-            $account->setRoles([Account::ROLE_ADMIN]);
+            $account->setRoles([Account::ROLE_ADMIN])->setTotpSecret(BackOfficeTest::TOTP_SECRET);
         }
         $profile = new Profile($account, $type, ucfirst($username), 'Test', new \DateTimeImmutable(ProfileType::Child === $type ? '2016-01-01' : '1990-01-01'), $username, $guardian);
         $this->em->persist($account);
@@ -193,6 +193,7 @@ final class ScreensTest extends WebTestCase
     public function testEveryScreenIsForAdminsOnly(): void
     {
         $this->client->request('GET', '/admin/deconnexion');
+        self::assertResponseRedirects('/admin/connexion', null, 'on se déconnecte');
         foreach (['/admin/utilisateurs', '/admin/ventes', '/admin/litiges', '/admin/categories'] as $url) {
             $this->client->request('GET', $url);
             self::assertResponseRedirects('/admin/connexion', null, $url);

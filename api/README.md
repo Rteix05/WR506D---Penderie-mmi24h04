@@ -282,7 +282,7 @@ docker compose exec php make assets EXEC=          # une fois
 docker compose exec php make assets-watch EXEC=    # pendant le développement
 ```
 
-Pas encore faite : la double authentification de la maquette. « Utilisateurs actifs » compte pour l'instant tous les comptes : l'API ne garde pas la date de dernière connexion.
+**Double authentification** (maquette : « Double authentification obligatoire »). Après l'e-mail et le mot de passe, le back-office demande le code à 6 chiffres d'une application d'authentification (TOTP, `scheb/2fa-bundle`). À la première connexion, un administrateur sans double authentification est conduit vers `/admin/2fa/activer` (QR code et clé), et rien d'autre ne lui est ouvert tant qu'un premier code n'a pas été vérifié ; le secret n'est enregistré qu'à ce moment. Seul le pare-feu du back-office est concerné : l'app mobile ne change pas. Téléphone perdu : `php bin/console app:admin:grant <email> --reset-2fa` (retirer l'accès efface aussi le secret). « Utilisateurs actifs » compte pour l'instant tous les comptes : l'API ne garde pas la date de dernière connexion.
 
 ## Tests
 
