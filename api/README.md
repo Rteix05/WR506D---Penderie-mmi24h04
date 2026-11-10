@@ -263,6 +263,11 @@ Une interface web pour les administrateurs, à part de l'app mobile : **Twig + S
 
 - **Accès** : un compte `ROLE_ADMIN` seulement. Le pare-feu `admin` a une session et un formulaire de connexion (`/admin/connexion`, jeton CSRF) ; `AdminUserChecker` refuse les autres comptes dès le formulaire. Aucun écran ne donne ce rôle : `php bin/console app:admin:grant <email>` (et `--revoke` pour le retirer).
 - **Tableau de bord** (`/admin`) : utilisateurs (et nouveaux comptes de la semaine), scans réussis sur 30 jours (et échecs de la semaine), prêts en cours (et en retard), ventes du mois ; les inscriptions des 7 derniers jours ; « À traiter en priorité » (litiges ouverts, puis prêts en retard) ; les dernières commandes. Les chiffres sont calculés par `DashboardStats`, en requêtes agrégées.
+- **Utilisateurs** (`/admin/utilisateurs`) : recherche (e-mail, identifiant, nom d'un profil), filtres (tous, actifs, suspendus, avec profil enfant), et la fiche d'un compte : ses profils (enfants, tuteur), son activité (objets, ventes et achats, litiges), le journal de modération. **Suspendre** écrit une `ModerationAction` BAN_ACCOUNT (journal en écriture seule) et suspend chaque profil : l'app refuse alors toute requête (`CurrentProfile`). **Réactiver** écrit RESTORE et lève les suspensions. Un motif est obligatoire ; on ne se suspend pas soi-même (`AccountModerator`).
+- **Ventes et transactions** (`/admin/ventes`) : les chiffres du mois (ventes, volume, paiements réussis, remboursements) et les commandes, filtrées (payées, en livraison, remboursées, en litige) ou cherchées par numéro. En lecture seule.
+- **Litiges** (`/admin/litiges`) : les litiges (ouverts d'abord) et les remboursements ; le détail d'un litige montre la chronologie de la commande et les deux parties. L'administrateur le **prend en charge**, puis le **clôt** avec une décision écrite (en faveur de l'acheteur, du vendeur, ou sans suite). Comme le dit le MDD, un litige « n'arbitre pas et ne déplace pas d'argent » : un remboursement passe par le prestataire de paiement.
+- **Catégories** (`/admin/categories`) : les catégories de l'application avec le nombre de biens rangés dessous, les styles, les états d'un objet. En lecture seule : elles viennent des référentiels (`app:reference-data:load`).
+- Les actions (suspendre, réactiver, prendre en charge, clore) sont des POST protégés par un jeton CSRF.
 - **Front** : AssetMapper (pas de Node côté API), Stimulus pour les comportements (le menu sur petit écran : `assets/controllers/sidebar_controller.js`), Tailwind 4 dont le thème reprend la charte de l'app (`assets/styles/app.css`, mêmes noms de couleurs, de rayons et de tailles).
 
 La feuille de style se compile avant d'ouvrir le back-office (sinon la page plante sur le CSS manquant) :
@@ -272,7 +277,7 @@ docker compose exec php make assets EXEC=          # une fois
 docker compose exec php make assets-watch EXEC=    # pendant le développement
 ```
 
-Pas encore faits : la double authentification de la maquette, la recherche, et les écrans Utilisateurs, Signalements, Ventes et transactions, Litiges, Catégories (marqués « bientôt » dans le menu). « Utilisateurs actifs » compte pour l'instant tous les comptes : l'API ne garde pas la date de dernière connexion.
+Pas encore faits : la double authentification de la maquette, et l'écran Signalements (marqué « bientôt » dans le menu) : l'entité Report est prévue en V2 du MDD. La fin automatique d'une suspension (expiresAt) n'est pas encore appliquée : un compte reste suspendu jusqu'à sa réactivation. « Utilisateurs actifs » compte pour l'instant tous les comptes : l'API ne garde pas la date de dernière connexion.
 
 ## Tests
 
