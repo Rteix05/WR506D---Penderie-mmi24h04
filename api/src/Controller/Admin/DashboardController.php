@@ -34,7 +34,7 @@ final class DashboardController extends AbstractController
             'accounts' => $this->stats->accounts(),
             'scans' => $this->stats->scans(),
             'loans' => $this->stats->loans(),
-            'sales' => $this->stats->salesThisMonth(),
+            'possessions' => $this->stats->possessions(),
             'signups' => array_map(static fn (array $d) => $d + ['letter' => mb_strtoupper((string) $weekday->format($d['date']))], $days),
             'signupsMax' => max(1, ...array_column($days, 'count')),
             'priorities' => $this->stats->priorities(),

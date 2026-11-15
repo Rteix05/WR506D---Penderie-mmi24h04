@@ -79,6 +79,14 @@ class Account implements UserInterface, PasswordAuthenticatedUserInterface, TwoF
     #[ORM\Column(length: 64, nullable: true)]
     private ?string $totpSecret = null;
 
+    /**
+     * Le dernier jour où le compte a utilisé l'app (une requête authentifiée
+     * à l'API). Écrit une fois par jour au plus (AccountActivitySubscriber) :
+     * c'est ce que compte « Utilisateurs actifs » dans le back-office.
+     */
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
+    private ?\DateTimeImmutable $lastSeenAt = null;
+
     public function __construct(string $email)
     {
         $this->id = Uuid::v7();
@@ -197,6 +205,22 @@ class Account implements UserInterface, PasswordAuthenticatedUserInterface, TwoF
         $this->totpSecret = $secret;
 
         return $this;
+    }
+
+    public function getLastSeenAt(): ?\DateTimeImmutable
+    {
+        return $this->lastSeenAt;
+    }
+
+    /** Note la venue du jour ; renvoie vrai si la date a changé (une écriture par jour au plus). */
+    public function markSeen(\DateTimeImmutable $now): bool
+    {
+        if (null !== $this->lastSeenAt && $this->lastSeenAt->format('Y-m-d') === $now->format('Y-m-d')) {
+            return false;
+        }
+        $this->lastSeenAt = $now;
+
+        return true;
     }
 
     public function isGhost(): bool
