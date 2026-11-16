@@ -180,6 +180,36 @@
       }
     }
   },
+  "activity": {
+    "title": "アクティビティ",
+    "legend": "このプロフィールの数字",
+    "inventory": {
+      "title": "持ち物",
+      "items": "アイテム",
+      "garments": "服",
+      "addedThisMonth": "今月の追加"
+    },
+    "loans": {
+      "title": "貸し借り",
+      "lent": "貸し出し中",
+      "overdue": "うち期限切れ",
+      "borrowed": "借りているもの",
+      "returned": "返却済み"
+    },
+    "sales": {
+      "title": "売買",
+      "onSale": "出品中",
+      "sold": "売れたもの",
+      "bought": "買ったもの"
+    },
+    "scans": {
+      "title": "スキャン",
+      "total": "スキャン回数",
+      "rate": "一度で認識",
+      "percent": "{{rate}}%",
+      "none": "スキャンなし"
+    }
+  },
   "settings": {
     "title": "設定",
     "legend": "アプリの設定",

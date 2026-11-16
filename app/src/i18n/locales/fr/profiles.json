@@ -181,6 +181,36 @@
       }
     }
   },
+  "activity": {
+    "title": "Mon activité",
+    "legend": "Les chiffres de ce profil",
+    "inventory": {
+      "title": "Inventaire",
+      "items": "Objets",
+      "garments": "Vêtements",
+      "addedThisMonth": "Ajoutés ce mois-ci"
+    },
+    "loans": {
+      "title": "Prêts",
+      "lent": "Prêtés en ce moment",
+      "overdue": "Dont en retard",
+      "borrowed": "Empruntés en ce moment",
+      "returned": "Prêts terminés"
+    },
+    "sales": {
+      "title": "Ventes",
+      "onSale": "En vente",
+      "sold": "Vendus",
+      "bought": "Achetés"
+    },
+    "scans": {
+      "title": "Scans",
+      "total": "Scans faits",
+      "rate": "Reconnus du premier coup",
+      "percent": "{{rate}} %",
+      "none": "Aucun scan"
+    }
+  },
   "settings": {
     "title": "Paramètres",
     "legend": "Préférences de l’app",

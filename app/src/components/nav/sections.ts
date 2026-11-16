@@ -72,6 +72,7 @@ export function sections(): Record<Section, { title: string; legend: string; ent
       legend: i18n.t('common:navigation.sections.profil.legend'),
       entries: [
         menuEntry('Profil', 'profile', '/profil'),
+        menuEntry('Profil', 'activity', '/activite'),
         menuEntry('Profil', 'friends'),
         menuEntry('Profil', 'shares'),
         menuEntry('Profil', 'selling'),

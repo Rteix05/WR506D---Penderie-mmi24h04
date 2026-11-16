@@ -75,6 +75,10 @@
           "title": "My profile",
           "subtitle": "Details and family profiles"
         },
+        "activity": {
+          "title": "My activity",
+          "subtitle": "Your numbers: items, loans, sales"
+        },
         "friends": {
           "title": "Friends and followers",
           "subtitle": "Friends, followers, requests"

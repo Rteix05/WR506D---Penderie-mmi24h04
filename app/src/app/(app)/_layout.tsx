@@ -37,6 +37,7 @@ export default function AppLayout() {
       <Stack.Screen name="profils" options={{ presentation: 'modal' }} />
       {/* Paramètres : la langue de l'app. */}
       <Stack.Screen name="parametres" />
+      <Stack.Screen name="activite" />
     </Stack>
   );
 }
