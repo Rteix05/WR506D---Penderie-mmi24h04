@@ -10,6 +10,7 @@ import { BackButton } from '@/components/ui/BackButton';
 import { Banner } from '@/components/ui/Banner';
 import { Button } from '@/components/ui/Button';
 import { E1 } from '@/components/ui/elevation';
+import { Heading } from '@/components/ui/Heading';
 import { ScreenTitle } from '@/components/ui/ScreenTitle';
 import { useActivity, type Activity } from '@/lib/activity';
 import { useAccountProfiles } from '@/lib/profiles';
@@ -136,9 +137,9 @@ function Figures({ a }: { a: Activity }) {
               accessibilityRole="progressbar"
               accessibilityLabel={t('activity.scans.a11y', { rate: a.scans.rate, recognised: a.scans.recognised, total: a.scans.total })}
               accessibilityValue={{ min: 0, max: 100, now: a.scans.rate }}
-              className="gap-2">
-              <View className="flex-row items-baseline justify-between">
-                <Text className="font-luciole text-legend text-muted dark:text-muted-night">{t('activity.scans.rate')}</Text>
+              className="gap-2 py-2">
+              <View className="flex-row items-center gap-3">
+                <Text className="flex-1 font-luciole text-body text-ink/70 dark:text-ink-night/70">{t('activity.scans.rate')}</Text>
                 <Text className="font-luciole-bold text-body text-ink dark:text-ink-night">{t('activity.scans.percent', { rate: a.scans.rate })}</Text>
               </View>
               <View className="h-2 overflow-hidden rounded-full bg-ink/[0.06] dark:bg-ink-night/10">
@@ -175,7 +176,7 @@ function Empty() {
 
 function Card({ children }: { children: ReactNode }) {
   return (
-    <View style={E1} className="mx-5 gap-1 rounded-md bg-surface p-2 dark:bg-surface-night">
+    <View style={E1} className="mx-5 rounded-md bg-surface px-4 py-2 dark:bg-surface-night">
       {children}
     </View>
   );
@@ -190,7 +191,9 @@ function Tile({ value, label, a11y, onPress }: { value: number; label: string; a
       onPress={onPress}
       style={E1}
       className="flex-1 gap-1 rounded-md bg-surface p-4 active:opacity-80 dark:bg-surface-night">
-      <Text className="font-typolio text-[32px] leading-[36px] text-ink dark:text-ink-night">{value}</Text>
+      <Heading level="h3" className="text-ink dark:text-ink-night">
+        {value}
+      </Heading>
       <View className="flex-row items-center justify-between">
         <Text className="font-luciole text-legend text-muted dark:text-muted-night">{label}</Text>
         <Text className="font-luciole-bold text-body text-muted/[0.85] dark:text-muted-night">›</Text>
@@ -210,11 +213,11 @@ function Row({ label, value, tone = 'ink', onPress }: { label: string; value: nu
   );
 
   return onPress ? (
-    <Pressable accessibilityRole="link" accessibilityLabel={`${label} : ${value}`} onPress={onPress} className="min-h-[44px] flex-row items-center gap-3 rounded-sm px-2 active:bg-ink/[0.04]">
+    <Pressable accessibilityRole="link" accessibilityLabel={`${label} : ${value}`} onPress={onPress} className="min-h-[48px] flex-row items-center gap-3 active:opacity-60">
       {content}
     </Pressable>
   ) : (
-    <View accessible accessibilityLabel={`${label} : ${value}`} className="min-h-[44px] flex-row items-center gap-3 px-2">
+    <View accessible accessibilityLabel={`${label} : ${value}`} className="min-h-[48px] flex-row items-center gap-3">
       {content}
       <View className="w-3" />
     </View>
