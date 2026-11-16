@@ -14,6 +14,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\Requirement\Requirement;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * Signalements (maquettes « Admin — Signalements » et « Détail d'un
@@ -35,6 +36,7 @@ final class ReportController extends AbstractController
         private readonly EntityManagerInterface $em,
         private readonly ReportTargets $targets,
         private readonly ReportDesk $desk,
+        private readonly TranslatorInterface $translator,
     ) {
     }
 
@@ -79,7 +81,8 @@ final class ReportController extends AbstractController
         return $this->render('admin/reports/show.html.twig', [
             'report' => $report,
             'canHide' => null !== $target && ReportTargets::canHide($target),
-            'hideLabel' => ReportTargets::hideLabel($report->getTargetType()),
+            // Libellés écrits en français dans ReportTargets : traduits comme les messages (domaine admin_flash).
+            'hideLabel' => $this->translator->trans(ReportTargets::hideLabel($report->getTargetType()), [], 'admin_flash'),
             'actions' => $this->em->getRepository(ModerationAction::class)->findBy(['report' => $report], ['createdAt' => 'ASC', 'id' => 'ASC']),
             // Les autres signalements sur ce même contenu.
             'others' => $this->em->getRepository(Report::class)->count(['targetType' => $report->getTargetType(), 'targetId' => $report->getTargetId()]) - 1,
@@ -131,7 +134,7 @@ final class ReportController extends AbstractController
 
         return [
             'target' => $target,
-            'label' => null === $target ? 'Contenu supprimé' : ReportTargets::labelOf($target),
+            'label' => null === $target ? $this->translator->trans('Contenu supprimé', [], 'admin_flash') : $this->translator->trans(ReportTargets::labelOf($target), [], 'admin_flash'),
             'author' => null === $target ? null : ReportTargets::authorOf($target),
         ];
     }

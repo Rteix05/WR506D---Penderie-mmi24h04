@@ -1,35 +1,35 @@
 {% extends 'admin/base.html.twig' %}
 {% import 'admin/_ui.html.twig' as ui %}
 
-{% block title %}Litiges et remboursements{% endblock %}
+{% block title %}{{ 'disputes.pageTitle'|trans({}, 'admin') }}{% endblock %}
 {% block active %}disputes{% endblock %}
-{% block heading %}Litiges et remboursements{% endblock %}
-{% block subtitle %}{{ openCount }} litige{{ openCount > 1 ? 's' }} ouvert{{ openCount > 1 ? 's' }} · {{ refundCount }} remboursement{{ refundCount > 1 ? 's' }}{% endblock %}
-{% block search %}{{ ui.search('N° de commande…', query, {filter: tab}) }}{% endblock %}
+{% block heading %}{{ 'disputes.heading'|trans({}, 'admin') }}{% endblock %}
+{% block subtitle %}{{ 'disputes.subtitleOpenAndRefunds'|trans({openCount: openCount, refundCount: refundCount}, 'admin') }}{% endblock %}
+{% block search %}{{ ui.search('disputes.searchPlaceholder'|trans({}, 'admin'), query, {filter: tab}) }}{% endblock %}
 
 {% block body %}
-    {% set reasons = {NOT_RECEIVED: 'Colis jamais reçu', NOT_AS_DESCRIBED: 'Non conforme à l’annonce', DAMAGED: 'Endommagé à la réception', PAYMENT_ISSUE: 'Problème de paiement', OTHER: 'Autre'} %}
+    {% set reasons = {NOT_RECEIVED: 'disputes.reasonNotReceived'|trans({}, 'admin'), NOT_AS_DESCRIBED: 'disputes.reasonNotAsDescribed'|trans({}, 'admin'), DAMAGED: 'disputes.reasonDamaged'|trans({}, 'admin'), PAYMENT_ISSUE: 'disputes.reasonPaymentIssue'|trans({}, 'admin'), OTHER: 'disputes.reasonOther'|trans({}, 'admin')} %}
 
     {# Deux onglets, un seul actif (rail gris, onglet plein), comme la maquette. #}
-    <nav aria-label="Litiges ou remboursements" class="mb-6 flex rounded-full bg-ink/[0.05] p-1">
-        {% for key, label in {disputes: 'Litiges (' ~ openCount ~ ')', refunds: 'Remboursements (' ~ refundCount ~ ')'} %}
+    <nav aria-label="{{ 'disputes.filterAria'|trans({}, 'admin') }}" class="mb-6 flex rounded-full bg-ink/[0.05] p-1">
+        {% for key, label in {disputes: 'disputes.filterDisputes'|trans({openCount: openCount}, 'admin'), refunds: 'disputes.filterRefunds'|trans({refundCount: refundCount}, 'admin')} %}
             <a href="{{ path('admin_disputes', {filter: key, q: query}) }}" {% if key == tab %}aria-current="page"{% endif %}
                class="flex h-10 flex-1 items-center justify-center rounded-full text-legend font-bold {{ key == tab ? 'bg-surface text-ink shadow-[0_1px_3px_rgba(26,30,36,0.12)]' : 'text-muted hover:text-ink' }}">{{ label }}</a>
         {% endfor %}
     </nav>
 
-    <section class="{{ ui.card_class() }}" aria-label="{{ tab == 'refunds' ? 'Remboursements' : 'Litiges' }}">
+    <section class="{{ ui.card_class() }}" aria-label="{{ tab == 'refunds' ? 'disputes.sectionAriaRefunds'|trans({}, 'admin') : 'disputes.sectionAriaDisputes'|trans({}, 'admin') }}">
         {% if rows is empty %}
-            <p class="text-body text-muted">{{ tab == 'refunds' ? 'Aucun remboursement.' : 'Aucun litige : une vente qui se passe bien entre amis n’en a jamais.' }}</p>
+            <p class="text-body text-muted">{{ tab == 'refunds' ? 'disputes.emptyRefunds'|trans({}, 'admin') : 'disputes.emptyDisputes'|trans({}, 'admin') }}</p>
         {% elseif tab == 'refunds' %}
             <div class="overflow-x-auto">
                 <table class="w-full min-w-[720px] text-left">
                     <thead><tr class="text-legend font-bold text-muted">
-                        <th scope="col" class="pb-3">Commande</th><th scope="col" class="pb-3">Motif</th><th scope="col" class="pb-3">Demandé par</th>
-                        <th scope="col" class="pb-3">Montant</th><th scope="col" class="pb-3">Le</th><th scope="col" class="pb-3">Statut</th>
+                        <th scope="col" class="pb-3">{{ 'disputes.thOrder'|trans({}, 'admin') }}</th><th scope="col" class="pb-3">{{ 'disputes.thReason'|trans({}, 'admin') }}</th><th scope="col" class="pb-3">{{ 'disputes.thRequestedBy'|trans({}, 'admin') }}</th>
+                        <th scope="col" class="pb-3">{{ 'disputes.thAmount'|trans({}, 'admin') }}</th><th scope="col" class="pb-3">{{ 'disputes.thOn'|trans({}, 'admin') }}</th><th scope="col" class="pb-3">{{ 'disputes.thStatus'|trans({}, 'admin') }}</th>
                     </tr></thead>
                     <tbody>
-                    {% set refundStatus = {REQUESTED: ['Demandé', 'pink'], PROCESSING: ['En cours', 'pink'], SUCCEEDED: ['Remboursé', 'green'], FAILED: ['Échoué', 'red']} %}
+                    {% set refundStatus = {REQUESTED: ['disputes.refundStatusRequested'|trans({}, 'admin'), 'pink'], PROCESSING: ['disputes.refundStatusProcessing'|trans({}, 'admin'), 'pink'], SUCCEEDED: ['disputes.refundStatusSucceeded'|trans({}, 'admin'), 'green'], FAILED: ['disputes.refundStatusFailed'|trans({}, 'admin'), 'red']} %}
                     {% for refund in rows %}
                         {% set st = refundStatus[refund.status.value] ?? [refund.status.value, 'grey'] %}
                         <tr class="border-t border-ink/8 text-legend">
@@ -44,17 +44,17 @@
                     </tbody>
                 </table>
             </div>
-            {{ ui.pager(page, perPage, total, 'admin_disputes', {filter: tab, q: query}, 'exécutés par le prestataire de paiement') }}
+            {{ ui.pager(page, perPage, total, 'admin_disputes', {filter: tab, q: query}, 'disputes.pagerRefundNote'|trans({}, 'admin')) }}
         {% else %}
             <div class="overflow-x-auto">
                 <table class="w-full min-w-[820px] text-left">
                     <thead><tr class="text-legend font-bold text-muted">
-                        <th scope="col" class="pb-3">Commande</th><th scope="col" class="pb-3">Motif</th><th scope="col" class="pb-3">Acheteur</th>
-                        <th scope="col" class="pb-3">Vendeur</th><th scope="col" class="pb-3">Montant</th><th scope="col" class="pb-3">Ouvert le</th>
-                        <th scope="col" class="pb-3">Statut</th><th scope="col" class="pb-3"><span class="sr-only">Détail</span></th>
+                        <th scope="col" class="pb-3">{{ 'disputes.thOrder'|trans({}, 'admin') }}</th><th scope="col" class="pb-3">{{ 'disputes.thReason'|trans({}, 'admin') }}</th><th scope="col" class="pb-3">{{ 'disputes.thBuyer'|trans({}, 'admin') }}</th>
+                        <th scope="col" class="pb-3">{{ 'disputes.thSeller'|trans({}, 'admin') }}</th><th scope="col" class="pb-3">{{ 'disputes.thAmount'|trans({}, 'admin') }}</th><th scope="col" class="pb-3">{{ 'disputes.thOpenedOn'|trans({}, 'admin') }}</th>
+                        <th scope="col" class="pb-3">{{ 'disputes.thStatus'|trans({}, 'admin') }}</th><th scope="col" class="pb-3"><span class="sr-only">{{ 'disputes.thDetailSrOnly'|trans({}, 'admin') }}</span></th>
                     </tr></thead>
                     <tbody>
-                    {% set disputeStatus = {OPEN: ['Décision attendue', 'red'], UNDER_REVIEW: ['Pris en charge', 'pink'], RESOLVED: ['Résolu', 'green'], CLOSED: ['Clos', 'grey']} %}
+                    {% set disputeStatus = {OPEN: ['disputes.disputeStatusOpen'|trans({}, 'admin'), 'red'], UNDER_REVIEW: ['disputes.disputeStatusUnderReview'|trans({}, 'admin'), 'pink'], RESOLVED: ['disputes.disputeStatusResolved'|trans({}, 'admin'), 'green'], CLOSED: ['disputes.disputeStatusClosed'|trans({}, 'admin'), 'grey']} %}
                     {% for dispute in rows %}
                         {% set st = disputeStatus[dispute.status.value] %}
                         <tr class="border-t border-ink/8 text-legend">
@@ -65,13 +65,13 @@
                             <td class="py-3">{{ dispute.order.totalAmount|admin_euros }} €</td>
                             <td class="py-3">{{ dispute.createdAt|admin_date }}</td>
                             <td class="py-3">{{ ui.pill(st[0], st[1]) }}</td>
-                            <td class="py-3 text-right"><a class="font-bold text-primary hover:underline" href="{{ path('admin_dispute', {id: dispute.id}) }}">Voir<span class="sr-only"> le litige #{{ dispute.order.reference }}</span> ›</a></td>
+                            <td class="py-3 text-right"><a class="font-bold text-primary hover:underline" href="{{ path('admin_dispute', {id: dispute.id}) }}">{{ 'disputes.linkView'|trans({}, 'admin') }}<span class="sr-only">{{ 'disputes.linkViewSrOnly'|trans({reference: dispute.order.reference}, 'admin') }}</span> ›</a></td>
                         </tr>
                     {% endfor %}
                     </tbody>
                 </table>
             </div>
-            {{ ui.pager(page, perPage, total, 'admin_disputes', {filter: tab, q: query}, 'un litige qui se règle entre amis se clôt sans intervention') }}
+            {{ ui.pager(page, perPage, total, 'admin_disputes', {filter: tab, q: query}, 'disputes.pagerDisputeNote'|trans({}, 'admin')) }}
         {% endif %}
     </section>
 {% endblock %}

@@ -5,6 +5,7 @@ namespace App\Controller\Admin;
 use App\Service\Admin\DashboardStats;
 use Psr\Clock\ClockInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
@@ -23,11 +24,13 @@ final class DashboardController extends AbstractController
     }
 
     #[Route('/admin', name: 'admin_dashboard', methods: ['GET'])]
-    public function __invoke(): Response
+    public function __invoke(Request $request): Response
     {
-        $today = new \IntlDateFormatter('fr_FR', \IntlDateFormatter::FULL, \IntlDateFormatter::NONE, null, null, 'EEEE d MMMM y');
+        // La date du jour et l'initiale des jours dans la langue de la page.
+        $locale = $request->getLocale();
+        $today = new \IntlDateFormatter($locale, \IntlDateFormatter::FULL, \IntlDateFormatter::NONE, null, null, 'ja' === $locale ? 'y年M月d日 EEEE' : 'EEEE d MMMM y');
         $days = $this->stats->signupsLastWeek();
-        $weekday = new \IntlDateFormatter('fr_FR', \IntlDateFormatter::FULL, \IntlDateFormatter::NONE, null, null, 'EEEEE');
+        $weekday = new \IntlDateFormatter($locale, \IntlDateFormatter::FULL, \IntlDateFormatter::NONE, null, null, 'EEEEE');
 
         return $this->render('admin/dashboard.html.twig', [
             'today' => ucfirst((string) $today->format($this->clock->now())),

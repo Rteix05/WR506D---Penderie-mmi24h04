@@ -19,7 +19,8 @@ final class AdminUserChecker implements UserCheckerInterface
     public function checkPreAuth(UserInterface $user, ?TokenInterface $token = null): void
     {
         if (!$user instanceof Account || $user->isGhost() || !$user->isAdmin()) {
-            throw new CustomUserMessageAccountStatusException('Cet espace est réservé aux administrateurs de Penderie.');
+            // Une clé de traduction (domaine admin), affichée par la page de connexion.
+            throw new CustomUserMessageAccountStatusException('login.error.notAdmin');
         }
     }
 
