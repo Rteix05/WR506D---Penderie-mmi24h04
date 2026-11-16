@@ -4,7 +4,7 @@ import { Chips } from '@/components/form/Chips';
 import { LANGUAGES, setLanguage, type Language } from '@/i18n';
 
 /**
- * Le choix de la langue de l'app (Mon profil) : français, anglais,
+ * Le choix de la langue de l'app (Paramètres) : français, anglais,
  * japonais, chacune écrite dans sa propre langue. Par défaut, l'app suit la
  * langue du téléphone ; un choix ici est gardé sur le téléphone.
  */

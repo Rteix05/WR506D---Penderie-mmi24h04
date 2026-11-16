@@ -4,7 +4,6 @@ import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { LanguagePicker } from '@/components/profiles/LanguagePicker';
 import { ProfileCard } from '@/components/profiles/ProfileCard';
 import { Button } from '@/components/ui/Button';
 import { ScreenTitle } from '@/components/ui/ScreenTitle';
@@ -16,7 +15,7 @@ import { useAccountProfiles } from '@/lib/profiles';
  * « Mon profil » (entrée du panneau Profil) : le profil actif, les autres
  * profils du compte (un compte ouvre plusieurs profils : toi, tes enfants,
  * les proches que tu gères ; tout ce que l'app affiche dépend du profil
- * actif), puis la langue de l'app, le compte et la déconnexion.
+ * actif), puis le compte et la déconnexion (la langue est dans Paramètres).
  *
  * « Changer de profil » ouvre l'écran de la maquette (Compte — Changer de
  * profil) ; chaque profil ouvre sa fiche (Compte — Profil famille). Les
@@ -61,7 +60,6 @@ export default function ProfileScreen() {
         )}
 
         <View className="gap-3">
-          <LanguagePicker />
           {me.data && <Text className="font-luciole text-legend text-muted dark:text-muted-night">{t('tab.account', { email: me.data.account.email })}</Text>}
           <Button label={t('tab.logout')} variant="secondary" onPress={() => signOut.mutate()} loading={signOut.isPending} />
         </View>

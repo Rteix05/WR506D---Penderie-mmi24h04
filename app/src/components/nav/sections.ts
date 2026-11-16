@@ -76,7 +76,7 @@ export function sections(): Record<Section, { title: string; legend: string; ent
         menuEntry('Profil', 'shares'),
         menuEntry('Profil', 'selling'),
         menuEntry('Profil', 'purchases'),
-        menuEntry('Profil', 'settings'),
+        menuEntry('Profil', 'settings', '/parametres'),
       ],
     },
   };

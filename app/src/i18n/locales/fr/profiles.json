@@ -180,5 +180,10 @@
         "text": "Les objets en vente de ses amis"
       }
     }
+  },
+  "settings": {
+    "title": "Paramètres",
+    "legend": "Préférences de l’app",
+    "languageHint": "Par défaut, l’app suit la langue du téléphone. Ton choix est gardé sur ce téléphone."
   }
 }

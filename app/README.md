@@ -45,7 +45,7 @@ npm run i18n:check          # traductions : clés présentes dans les 3 langues,
 
 L'app parle français (langue source), anglais et japonais, avec **i18next** et **react-i18next** ; **expo-localization** lit la langue du téléphone.
 
-- **Langue choisie** : au premier lancement, celle du téléphone si l'app la parle, sinon le français. « Mon profil » permet d'en changer ; le choix est gardé sur le téléphone (`expo-secure-store`, `localStorage` sur le web) et relu avant le premier écran.
+- **Langue choisie** : au premier lancement, celle du téléphone si l'app la parle, sinon le français. **Paramètres** (panneau Profil › Paramètres, `/parametres`) permet d'en changer ; le choix est gardé sur le téléphone (`expo-secure-store`, `localStorage` sur le web) et relu avant le premier écran.
 - **Les textes** sont rangés par domaine, un fichier JSON par langue : `src/i18n/locales/<langue>/<domaine>.json` (`common`, `auth`, `home`, `inventory`, `add`, `places`, `loans`, `social`, `profiles`). Une clé absente d'une langue retombe sur le français.
 - **Dans un composant** : `const { t } = useTranslation('loans'); t('list.title')`. **Hors d'un composant** (fonction de `lib/`) : `i18n.t('loans:list.title')`, appelé au moment du rendu, jamais au chargement du module, sinon le texte resterait dans la langue du démarrage.
 - **Pluriels** : `t('list.loans', { count })` avec `loans_one` et `loans_other` (le japonais n'a que `_other`). Une phrase = une clé : on ne colle jamais des morceaux traduits.

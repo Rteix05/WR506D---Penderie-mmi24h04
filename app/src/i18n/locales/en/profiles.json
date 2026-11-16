@@ -180,5 +180,10 @@
         "text": "Items their friends are selling"
       }
     }
+  },
+  "settings": {
+    "title": "Settings",
+    "legend": "App preferences",
+    "languageHint": "By default, the app follows your phone’s language. Your choice is kept on this phone."
   }
 }
