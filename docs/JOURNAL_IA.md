@@ -459,3 +459,35 @@ Règles suivies avec l'outil de développement :
   - un test des signalements, déjà poussé, ne passait pas PHPStan : corrigé sur sa branche.
 - **Erreurs de l'IA** : une remise de côté (`git stash`) a échoué sur le fichier `api/nul`, au nom réservé sous Windows. Rien n'a été perdu : le travail est resté dans le dossier, et la copie en double a été supprimée après vérification. Les patchs passés par le shell ont encore abîmé des antislashs et des apostrophes ; l'IA est repassée à l'éditeur.
 - **Vérifié** : 240 tests OK, PHPStan 0 erreur, migrations réversibles ; écrans vus dans le navigateur.
+
+### 15-16/11 — Indicateurs du back-office, l'app en trois langues (PR #70, #71)
+
+- **Prompts** (mot pour mot) :
+  - « est ce que les kpi affiché dans le back-office sont les plus cohérents à montrer en priorité ? (utilisateurs actifs , scans réussis, pret en cours et vente du mois) » ;
+  - « fait chaque recommendation , puis quand le back office c'est fait tu installe i8n sur le projet (l'équivalent react) et tu fais une version Anglaise et Japonaise (avec les kanji) » ;
+  - « ou est-ce qu'on en est » ;
+  - « faudra vérifier la mise en page avec les textes traduis notamment le japonais vu que c'est des kanji » ;
+  - « le back office il manque quoi dessus ? » ;
+  - « fais l'écran des marques et le bouton signaler après l'i18n , d'ailleurs il fonctionne sur le back office aussi le i18n ? » ;
+  - « ouais ».
+- **Indicateurs (#70)** : trois recommandations de l'IA, appliquées.
+  - Une vraie mesure d'activité : `Account::lastSeenAt`, noté une fois par jour à la première requête de l'app. Les comptes existants sont estimés à partir de leurs jetons de rafraîchissement. « Utilisateurs actifs » compte maintenant les comptes venus ces 30 derniers jours.
+  - « Objets ajoutés · 7 j » remplace « Ventes du mois », qui restait à 0 puisque le paiement n'est pas branché. **À valider avec le client.**
+  - L'évolution par rapport à la période précédente sous chaque chiffre.
+  - Vérifié : 242 tests OK, PHPStan 0 erreur, migration réversible.
+- **L'app en trois langues (#71)** : i18next, react-i18next et expo-localization.
+  - **Langue** : au démarrage, celle du téléphone ; un sélecteur dans « Mon profil » permet d'en changer.
+  - **Textes** : 1 224 textes, rangés par domaine.
+  - **Délégation** : l'extraction des textes a été confiée à OpenCode, en six lots. Chaque lot a été vérifié avant d'être appliqué : texte français identique, clés présentes, contrôle des types. L'IA a écrit elle-même les traductions anglaises et japonaises.
+  - **Nouveau script `npm run i18n:check`** : vérifie que chaque clé existe dans les trois langues et qu'il ne reste aucun texte en dur.
+- **Vérification de la mise en page** (demandée par l'étudiant) : captures au format téléphone, en français, anglais et japonais côte à côte, sur 20 écrans. Corrections faites :
+  - kanji dessinés en glyphes chinois sur le web, par manque de l'attribut `lang` ;
+  - onglet « プロフィール » coupé sur deux lignes, remplacé par « マイページ » ;
+  - nombres séparés de leur unité en fin de ligne ;
+  - initiale « 一 » qu'on prend pour un tiret.
+- **Le back office n'est pas traduit** : il est en Twig, à part de l'app. L'étudiant a demandé de le traduire aussi. Ce sera fait avant l'écran de validation des marques (qui manque : les marques ajoutées ne pouvaient jamais être validées) et le bouton « Signaler » de l'app.
+- **Erreurs et incidents** :
+  - l'IA a laissé dans le README une phrase devenue fausse sur « Utilisateurs actifs » ; corrigé sur la branche de #70 ;
+  - un commit local a embarqué des dossiers générés (`dist-e2e`, `cypress`) ; retirés avant de pousser ;
+  - le manque de mémoire a arrêté le suivi des sous-agents, qui ont fini leur travail quand même ;
+  - le conteneur PHP ne démarrait plus (cache à moitié supprimé) ; il a été nettoyé.
