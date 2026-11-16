@@ -1,6 +1,7 @@
 import { useQuery, type QueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 
+import i18n from '@/i18n';
 import type { Location } from '@/lib/add-draft';
 import { apiGet, apiRequest } from '@/lib/api';
 import type { Kind } from '@/lib/possessions';
@@ -21,12 +22,16 @@ export type Move = {
   movedAt: string;
 };
 
-export const MOVE_REASON: Record<Move['reason'], string> = {
-  MANUAL_MOVE: 'Déplacé',
-  BOX_MOVED: 'Son carton a bougé',
-  LOAN_RETURN: 'Rangé au retour d’un prêt',
-  INITIAL: 'Premier rangement',
+const MOVE_REASON_KEY: Record<Move['reason'], string> = {
+  MANUAL_MOVE: 'inventory:moveReason.manual',
+  BOX_MOVED: 'inventory:moveReason.box',
+  LOAN_RETURN: 'inventory:moveReason.loanReturn',
+  INITIAL: 'inventory:moveReason.initial',
 };
+
+export function moveReason(reason: Move['reason']): string {
+  return i18n.t(MOVE_REASON_KEY[reason]);
+}
 
 const PATH: Record<Movable, string> = { item: '/api/items', garment: '/api/garments', box: '/api/boxes' };
 
@@ -35,7 +40,7 @@ const PATH: Record<Movable, string> = { item: '/api/items', garment: '/api/garme
  * rangement ; pour un carton, il n'y a pas de niveau conteneur.
  */
 export async function move(queryClient: QueryClient, kind: Movable, id: string, to: Location): Promise<void> {
-  if (!to.room) throw new Error('Choisis au moins une pièce.');
+  if (!to.room) throw new Error(i18n.t('inventory:move.noRoom'));
   const body = kind === 'box' ? { room: to.room.iri, storage: to.storage?.iri ?? null } : to.box ? { box: to.box.iri } : { room: to.room.iri, storage: to.storage?.iri ?? null };
   await apiRequest(`${PATH[kind]}/${id}/move`, { method: 'POST', body, accept: 'application/json' });
   await Promise.all(['inventory', 'locations', 'moves'].map((key) => queryClient.invalidateQueries({ queryKey: [key] })));

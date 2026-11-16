@@ -1,6 +1,7 @@
 import { type QueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
 
+import i18n from '@/i18n';
 import { apiRequest } from '@/lib/api';
 import { usePossessions, type Kind, type Possession } from '@/lib/possessions';
 import { useLocations, type Box, type Locations, type Place, type Room, type Storage } from '@/lib/reference';
@@ -25,71 +26,83 @@ export type PlaceType = 'HOUSE' | 'APARTMENT' | 'STORAGE_UNIT' | 'OTHER';
  */
 export type PlaceKind = { key: string; label: string; description: string; type: PlaceType; rooms: string[] };
 
-export const PLACE_KINDS: PlaceKind[] = [
-  { key: 'house', label: 'Maison', description: 'Plusieurs pièces, un garage, une cave', type: 'HOUSE', rooms: ['Salon', 'Cuisine', 'Bureau', 'Chambre', 'Garage', 'Cave', 'Grenier'] },
-  { key: 'apartment', label: 'Appartement', description: 'Quelques pièces, une cave', type: 'APARTMENT', rooms: ['Salon', 'Cuisine', 'Chambre', 'Salle de bain', 'Cave'] },
-  { key: 'studio', label: 'Studio', description: 'Une pièce à vivre', type: 'APARTMENT', rooms: ['Salon', 'Cuisine', 'Salle de bain'] },
-  { key: 'storage', label: 'Cave ou box', description: 'Un seul espace de stockage', type: 'STORAGE_UNIT', rooms: ['Cave'] },
-  { key: 'office', label: 'Bureau', description: 'Ton lieu de travail', type: 'OTHER', rooms: ['Bureau'] },
-  { key: 'other', label: 'Autre', description: 'À toi de le nommer', type: 'OTHER', rooms: [] },
-];
+/** Le nom affiché d'une pièce proposée (l'API l'enregistre ensuite comme donnée). */
+const room = (key: string) => i18n.t(`places:roomNames.${key}`);
 
-export const PLACE_TYPE_LABEL: Record<PlaceType, string> = { HOUSE: 'Maison', APARTMENT: 'Appartement', STORAGE_UNIT: 'Cave ou box', OTHER: 'Autre' };
+export function placeKinds(): PlaceKind[] {
+  return [
+    { key: 'house', label: i18n.t('places:kinds.house.label'), description: i18n.t('places:kinds.house.description'), type: 'HOUSE', rooms: [room('salon'), room('cuisine'), room('office'), room('bedroom'), room('garage'), room('cellar'), room('attic')] },
+    { key: 'apartment', label: i18n.t('places:kinds.apartment.label'), description: i18n.t('places:kinds.apartment.description'), type: 'APARTMENT', rooms: [room('salon'), room('cuisine'), room('bedroom'), room('bathroom'), room('cellar')] },
+    { key: 'studio', label: i18n.t('places:kinds.studio.label'), description: i18n.t('places:kinds.studio.description'), type: 'APARTMENT', rooms: [room('salon'), room('cuisine'), room('bathroom')] },
+    { key: 'storage', label: i18n.t('places:kinds.storage.label'), description: i18n.t('places:kinds.storage.description'), type: 'STORAGE_UNIT', rooms: [room('cellar')] },
+    { key: 'office', label: i18n.t('places:kinds.office.label'), description: i18n.t('places:kinds.office.description'), type: 'OTHER', rooms: [room('office')] },
+    { key: 'other', label: i18n.t('places:kinds.other.label'), description: i18n.t('places:kinds.other.description'), type: 'OTHER', rooms: [] },
+  ];
+}
+
+/** Les libellés des types de logement (enums de l'API). */
+export function placeTypeLabels(): Record<PlaceType, string> {
+  return { HOUSE: i18n.t('places:placeType.house'), APARTMENT: i18n.t('places:placeType.apartment'), STORAGE_UNIT: i18n.t('places:placeType.storageUnit'), OTHER: i18n.t('places:placeType.other') };
+}
 
 export type RoomType = 'LIVING_ROOM' | 'BEDROOM' | 'KITCHEN' | 'BATHROOM' | 'OFFICE' | 'ENTRANCE' | 'DRESSING' | 'LAUNDRY' | 'GARAGE' | 'CELLAR' | 'ATTIC' | 'OTHER';
 
 /** Les pièces proposées (Figma « Quelles pièces ? », 135:2480), par groupe, avec leur type d'API. */
-export const ROOM_GROUPS: { title: string; rooms: { name: string; type: RoomType }[] }[] = [
-  {
-    title: 'Pièces à vivre',
-    rooms: [
-      { name: 'Salon', type: 'LIVING_ROOM' },
-      { name: 'Cuisine', type: 'KITCHEN' },
-      { name: 'Salle à manger', type: 'LIVING_ROOM' },
-      { name: 'Bureau', type: 'OFFICE' },
-      { name: 'Salle de bain', type: 'BATHROOM' },
-      { name: 'Entrée', type: 'ENTRANCE' },
-    ],
-  },
-  {
-    title: 'Chambres',
-    rooms: [
-      { name: 'Chambre', type: 'BEDROOM' },
-      { name: 'Chambre 2', type: 'BEDROOM' },
-      { name: 'Chambre enfant', type: 'BEDROOM' },
-    ],
-  },
-  {
-    title: 'Rangement',
-    rooms: [
-      { name: 'Garage', type: 'GARAGE' },
-      { name: 'Cave', type: 'CELLAR' },
-      { name: 'Grenier', type: 'ATTIC' },
-      { name: 'Buanderie', type: 'LAUNDRY' },
-      { name: 'Dressing', type: 'DRESSING' },
-    ],
-  },
-];
+export function roomGroups(): { title: string; rooms: { name: string; type: RoomType }[] }[] {
+  return [
+    {
+      title: i18n.t('places:roomGroups.living'),
+      rooms: [
+        { name: room('salon'), type: 'LIVING_ROOM' },
+        { name: room('cuisine'), type: 'KITCHEN' },
+        { name: room('diningRoom'), type: 'LIVING_ROOM' },
+        { name: room('office'), type: 'OFFICE' },
+        { name: room('bathroom'), type: 'BATHROOM' },
+        { name: room('entrance'), type: 'ENTRANCE' },
+      ],
+    },
+    {
+      title: i18n.t('places:roomGroups.bedrooms'),
+      rooms: [
+        { name: room('bedroom'), type: 'BEDROOM' },
+        { name: room('bedroom2'), type: 'BEDROOM' },
+        { name: room('kidsRoom'), type: 'BEDROOM' },
+      ],
+    },
+    {
+      title: i18n.t('places:roomGroups.storage'),
+      rooms: [
+        { name: room('garage'), type: 'GARAGE' },
+        { name: room('cellar'), type: 'CELLAR' },
+        { name: room('attic'), type: 'ATTIC' },
+        { name: room('laundry'), type: 'LAUNDRY' },
+        { name: room('dressing'), type: 'DRESSING' },
+      ],
+    },
+  ];
+}
 
-export const ROOM_TYPES: { value: RoomType; label: string }[] = [
-  { value: 'LIVING_ROOM', label: 'Pièce à vivre' },
-  { value: 'BEDROOM', label: 'Chambre' },
-  { value: 'KITCHEN', label: 'Cuisine' },
-  { value: 'BATHROOM', label: 'Salle de bain' },
-  { value: 'OFFICE', label: 'Bureau' },
-  { value: 'ENTRANCE', label: 'Entrée' },
-  { value: 'DRESSING', label: 'Dressing' },
-  { value: 'LAUNDRY', label: 'Buanderie' },
-  { value: 'GARAGE', label: 'Garage' },
-  { value: 'CELLAR', label: 'Cave' },
-  { value: 'ATTIC', label: 'Grenier' },
-  { value: 'OTHER', label: 'Autre' },
-];
+export function roomTypes(): { value: RoomType; label: string }[] {
+  return [
+    { value: 'LIVING_ROOM', label: i18n.t('places:roomTypes.livingRoom') },
+    { value: 'BEDROOM', label: i18n.t('places:roomTypes.bedroom') },
+    { value: 'KITCHEN', label: i18n.t('places:roomTypes.kitchen') },
+    { value: 'BATHROOM', label: i18n.t('places:roomTypes.bathroom') },
+    { value: 'OFFICE', label: i18n.t('places:roomTypes.office') },
+    { value: 'ENTRANCE', label: i18n.t('places:roomTypes.entrance') },
+    { value: 'DRESSING', label: i18n.t('places:roomTypes.dressing') },
+    { value: 'LAUNDRY', label: i18n.t('places:roomTypes.laundry') },
+    { value: 'GARAGE', label: i18n.t('places:roomTypes.garage') },
+    { value: 'CELLAR', label: i18n.t('places:roomTypes.cellar') },
+    { value: 'ATTIC', label: i18n.t('places:roomTypes.attic') },
+    { value: 'OTHER', label: i18n.t('places:roomTypes.other') },
+  ];
+}
 
 /** Le type d'une pièce nommée à la main : celui d'une pièce proposée du même nom, sinon « Autre ». */
 export function roomTypeOf(name: string): RoomType {
   const key = name.trim().toLowerCase();
-  for (const group of ROOM_GROUPS) {
+  for (const group of roomGroups()) {
     const hit = group.rooms.find((r) => r.name.toLowerCase() === key);
     if (hit) return hit.type;
   }
@@ -99,30 +112,34 @@ export function roomTypeOf(name: string): RoomType {
 
 export type StorageType = 'WARDROBE' | 'CLOSET' | 'SHELF' | 'BOOKCASE' | 'CABINET' | 'DRESSER' | 'DRAWER' | 'RACK' | 'CHEST' | 'OTHER';
 
-export const STORAGE_TYPES: { value: StorageType; label: string }[] = [
-  { value: 'SHELF', label: 'Étagère' },
-  { value: 'CLOSET', label: 'Placard' },
-  { value: 'WARDROBE', label: 'Armoire' },
-  { value: 'RACK', label: 'Penderie' },
-  { value: 'BOOKCASE', label: 'Bibliothèque' },
-  { value: 'DRESSER', label: 'Commode' },
-  { value: 'CABINET', label: 'Meuble' },
-  { value: 'DRAWER', label: 'Tiroir' },
-  { value: 'CHEST', label: 'Coffre' },
-  { value: 'OTHER', label: 'Autre' },
-];
+export function storageTypes(): { value: StorageType; label: string }[] {
+  return [
+    { value: 'SHELF', label: i18n.t('places:storageTypes.shelf') },
+    { value: 'CLOSET', label: i18n.t('places:storageTypes.closet') },
+    { value: 'WARDROBE', label: i18n.t('places:storageTypes.wardrobe') },
+    { value: 'RACK', label: i18n.t('places:storageTypes.rack') },
+    { value: 'BOOKCASE', label: i18n.t('places:storageTypes.bookcase') },
+    { value: 'DRESSER', label: i18n.t('places:storageTypes.dresser') },
+    { value: 'CABINET', label: i18n.t('places:storageTypes.cabinet') },
+    { value: 'DRAWER', label: i18n.t('places:storageTypes.drawer') },
+    { value: 'CHEST', label: i18n.t('places:storageTypes.chest') },
+    { value: 'OTHER', label: i18n.t('places:storageTypes.other') },
+  ];
+}
 
 export type BoxType = 'CARTON' | 'SHELF' | 'DRAWER' | 'BIN' | 'SUITCASE' | 'BAG' | 'OTHER';
 
-export const BOX_TYPES: { value: BoxType; label: string }[] = [
-  { value: 'CARTON', label: 'Carton' },
-  { value: 'BIN', label: 'Bac' },
-  { value: 'DRAWER', label: 'Tiroir' },
-  { value: 'SHELF', label: 'Étagère' },
-  { value: 'SUITCASE', label: 'Valise' },
-  { value: 'BAG', label: 'Sac' },
-  { value: 'OTHER', label: 'Autre' },
-];
+export function boxTypes(): { value: BoxType; label: string }[] {
+  return [
+    { value: 'CARTON', label: i18n.t('places:boxTypes.carton') },
+    { value: 'BIN', label: i18n.t('places:boxTypes.bin') },
+    { value: 'DRAWER', label: i18n.t('places:boxTypes.drawer') },
+    { value: 'SHELF', label: i18n.t('places:boxTypes.shelf') },
+    { value: 'SUITCASE', label: i18n.t('places:boxTypes.suitcase') },
+    { value: 'BAG', label: i18n.t('places:boxTypes.bag') },
+    { value: 'OTHER', label: i18n.t('places:boxTypes.other') },
+  ];
+}
 
 export const labelOf = <T extends string>(list: { value: T; label: string }[], value: string) => list.find((o) => o.value === value)?.label ?? value;
 
@@ -164,9 +181,6 @@ export const inPlace = (d: PlacesData, place: Place) => {
 export const inRoom = (d: PlacesData, room: Room) => d.possessions.filter((p) => p.room === room.iri);
 export const inStorage = (d: PlacesData, storage: Storage) => d.possessions.filter((p) => p.storage === storage.iri);
 export const inBox = (d: PlacesData, box: Box) => d.possessions.filter((p) => p.box === box.iri);
-
-export const plural = (n: number, one: string, many: string) => `${n} ${n > 1 ? many : one}`;
-export const objects = (n: number) => plural(n, 'objet', 'objets');
 
 /** « Garage › Étagère 2 » : le chemin d'un conteneur à partir de la pièce. */
 export function boxPath(d: Locations, box: Box): string {

@@ -1,0 +1,186 @@
+{
+  "audience": {
+    "friends": {
+      "title": "Friends",
+      "chip": "Friends allowed",
+      "detail": "They can comment"
+    },
+    "followers": {
+      "title": "Followers",
+      "chip": "Followers allowed · read only",
+      "detail": "Your friends too; nobody can comment"
+    }
+  },
+  "since": {
+    "now": "just now",
+    "minutes": "{{minutes}} min ago",
+    "hours": "{{hours}} h ago",
+    "yesterday": "yesterday",
+    "days": "{{days}} d ago"
+  },
+  "lookStatus": {
+    "preparing": "In progress",
+    "ready": "Ready to post",
+    "posted": "Posted"
+  },
+  "look": {
+    "garmentName": "Garment {{position}}"
+  },
+  "feed": {
+    "title": "News feed",
+    "legend": "What your friends chose to show you",
+    "publish": "+ Post an outfit",
+    "noStrangers": "No strangers, no ads: only people who chose you appear here.",
+    "tabs": {
+      "feed": "Feed",
+      "mine": "My posts"
+    },
+    "emptyMineTitle": "Nothing posted",
+    "emptyFeedTitle": "Your feed is quiet",
+    "emptyMineBody": "Post your outfit of the day: your friends will see your tagged clothes.",
+    "emptyFeedBody": "Your friends haven't shared anything with you. You can show your outfit of the day to whoever you like.",
+    "emptyAction": "Post my outfit"
+  },
+  "post": {
+    "deleteTitle": "Delete the post?",
+    "deleteBody": "It disappears from the feed, and the mentioned clothes become private again. Your outfit stays.",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "deleteError": "The post couldn't be deleted.",
+    "noteFollowers": "Your followers see this post but can't comment on it.",
+    "noteCommentsSoon": "Comments are coming soon.",
+    "deleteAction": "Delete the post"
+  },
+  "profile": {
+    "self": "It's you",
+    "household": "Your household",
+    "friend": "You're friends",
+    "following": "You follow this account",
+    "showingSelf": "What you show",
+    "showingOther": "What {{name}} shows you",
+    "noGarments": "No visible clothes yet.",
+    "noteSelf": "These clothes are visible to the audience of your posts.",
+    "noteOther": "You only see what {{name}} chose to show you.",
+    "posts": "Posts",
+    "noPosts": "No visible posts.",
+    "size": "Size {{size}}"
+  },
+  "today": {
+    "title": "Outfit of the day",
+    "legend": "Today's outfit, ready for Instagram",
+    "error": "The photo couldn't be sent.",
+    "howTitle": "How it works",
+    "howPhotoTitle": "1. The photo",
+    "howPhotoBody": "Take a full-length photo of yourself",
+    "howTagsTitle": "2. The tags",
+    "howTagsBody": "Tap each garment you're wearing",
+    "howRecognitionTitle": "3. Recognition",
+    "howRecognitionBody": "AI finds the garment in your wardrobe, or offers to add it",
+    "howPostTitle": "4. The post",
+    "howPostBody": "2 images: your photo, then your clothes",
+    "note": "The photo stays private: only you see it in Penderie.",
+    "takePhoto": "Take my photo",
+    "chooseGallery": "Choose from gallery"
+  },
+  "lookDetail": {
+    "title": "Outfit of the day",
+    "saveError": "The outfit couldn't be saved.",
+    "deleteTitle": "Delete this outfit?",
+    "deleteBody": "The photo and its tags disappear. The clothes stay in your wardrobe.",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "deleteErrorTitle": "Couldn't delete it",
+    "hintLocked": "Tags can no longer be edited: set the outfit back to in progress to change them.",
+    "hintFull": "{{max}} garments at most per outfit.",
+    "hintEmpty": "Tap a garment on the photo to place a tag.",
+    "hintAdd": "Tap another garment to add a tag.",
+    "tags_one": "{{count}} garment",
+    "tags_other": "{{count}} garments",
+    "note": "Each tag must point to a garment in your wardrobe to prepare the post.",
+    "prepare": "Prepare the post",
+    "seePost": "View the post",
+    "editTags": "Edit the tags",
+    "deleteLook": "Delete this outfit",
+    "actionErrorTitle": "Couldn't do that",
+    "incomplete": "To complete",
+    "chooseGarment": "Choose the garment",
+    "complete": "Complete",
+    "change": "Change",
+    "chooseFromWardrobe": "Choose from the wardrobe",
+    "remove": "Remove"
+  },
+  "choose": {
+    "title": "Which garment?",
+    "legendPoint": "Tag {{position}} · {{name}}",
+    "legendNew": "The one you just tapped on the photo",
+    "notInWardrobe": "Not in your wardrobe?",
+    "placeholder": "Khaki jacket",
+    "hint": "A title is enough: it's added to your wardrobe as “to complete”, and you'll finish it later.",
+    "addQuoted": "Add “{{name}}”",
+    "add": "Add this garment",
+    "searchPlaceholder": "Search your wardrobe",
+    "noMatch": "No garment with that name.",
+    "wardrobeEmpty": "Your wardrobe is empty.",
+    "chosen": "Selected",
+    "alreadyOnLook": "Already on this outfit",
+    "incomplete": "To complete",
+    "chooseError": "Couldn't select this garment",
+    "addError": "Couldn't add this garment"
+  },
+  "lookPost": {
+    "title": "Your post",
+    "legend": "2 images for Instagram",
+    "saveError": "The outfit couldn't be saved.",
+    "postedTitle": "Outfit posted!",
+    "postedOn": "On {{date}}.",
+    "readyTitle": "Ready to post",
+    "readyBody": "Post these 2 images on Instagram, then mark the outfit as posted. You can also show it to your friends in Penderie.",
+    "imageOne": "Image 1 of 2: your photo",
+    "imageTwo": "Image 2 of 2: your clothes",
+    "imageOf": "Image {{page}} of 2",
+    "myLook": "My outfit of the day",
+    "caption": "Caption",
+    "captionPlaceholder": "My outfit today…",
+    "captionHint": "It goes with the post; 2,200 characters at most.",
+    "seeInFeed": "View the post in the feed",
+    "publishInPenderie": "Post in Penderie",
+    "markPosted": "Mark as posted",
+    "saveCaption": "Save the caption",
+    "editTags": "Edit the tags",
+    "backHome": "Back to home"
+  },
+  "publish": {
+    "title": "Post",
+    "legend": "Choose who to show your outfit to",
+    "error": "The outfit couldn't be posted.",
+    "lookOf": "Outfit of {{date}}",
+    "mentions_one": "{{count}} garment mentioned",
+    "mentions_other": "{{count}} garments mentioned",
+    "message": "Your message (optional)",
+    "placeholder": "My outfit today…",
+    "whoCanSee": "Who can see it",
+    "chosen": "Selected",
+    "note": "Nothing is public. The tagged clothes become visible to these people; deleting the post makes them private again.",
+    "submit": "Post"
+  },
+  "postCard": {
+    "profileOf": "{{name}}'s profile",
+    "specificAudience": "Selected people",
+    "tag": "Garment {{position}}: {{name}}",
+    "mentions_one": "{{count}} garment mentioned: tap the tag.",
+    "mentions_other": "{{count}} garments mentioned: tap a tag.",
+    "seePost": "View the post ›",
+    "garmentsOfLook": "The clothes in this outfit",
+    "size": "Size {{size}}",
+    "close": "Close",
+    "viewInWardrobe": "View in my wardrobe",
+    "viewOnProfile": "View on {{name}}'s profile",
+    "privateGarment": "{{name}} doesn't show you this garment: it stays private."
+  },
+  "lookPhoto": {
+    "placeHint": "Your photo: tap a garment to place a tag",
+    "photoTags_one": "Your photo, {{count}} garment tagged",
+    "photoTags_other": "Your photo, {{count}} garments tagged",
+    "tag": "Garment {{position}}"
+  }
+}

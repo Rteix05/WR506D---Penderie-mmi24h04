@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
 import { BackButton } from '@/components/ui/BackButton';
@@ -24,6 +25,8 @@ type Props = {
  * pour les étapes faites, encre 10 % sinon), puis le titre de page.
  */
 export function StepHeader({ title, legend, step, total = 4, close = false, onClose, banner }: Props) {
+  const { t } = useTranslation('add');
+
   return (
     <View className="gap-6">
       <View className="h-11 flex-row items-center px-5">
@@ -31,14 +34,14 @@ export function StepHeader({ title, legend, step, total = 4, close = false, onCl
       </View>
       {banner}
       {step !== undefined && (
-        <View accessible accessibilityLabel={`Étape ${step} sur ${total}`} className="flex-row gap-1 px-5">
+        <View accessible accessibilityLabel={t('stepHeader.progress', { step, total })} className="flex-row gap-1 px-5">
           {Array.from({ length: total }, (_, i) => i + 1).map((n) => (
             <View key={n} className={`h-1 flex-1 rounded-full ${n <= step ? 'bg-primary' : 'bg-ink/10 dark:bg-ink-night/15'}`} />
           ))}
         </View>
       )}
       <View className="px-5">
-        <ScreenTitle title={title} legend={legend ?? (step !== undefined ? `Étape ${step} sur ${total}` : undefined)} />
+        <ScreenTitle title={title} legend={legend ?? (step !== undefined ? t('stepHeader.progress', { step, total }) : undefined)} />
       </View>
     </View>
   );

@@ -1,5 +1,6 @@
 import { useQuery, type QueryClient } from '@tanstack/react-query';
 
+import { compareText } from '@/i18n';
 import { apiGet, apiRequest } from '@/lib/api';
 
 /** Une collection JSON-LD d'API Platform (préfixe hydra désactivé). */
@@ -142,7 +143,7 @@ export type Locations = { places: Place[]; rooms: Room[]; storages: Storage[]; b
 
 type LocatedRow = Named & { id: string; type: string };
 const toLocated = (row: LocatedRow) => ({ ...toRef(row), id: row.id, type: row.type });
-const byPosition = <T extends { position: number; name: string }>(a: T, b: T) => a.position - b.position || a.name.localeCompare(b.name, 'fr');
+const byPosition = <T extends { position: number; name: string }>(a: T, b: T) => a.position - b.position || compareText(a.name, b.name);
 
 /** Tous les emplacements visibles du profil, en une requête par niveau. */
 export function useLocations() {

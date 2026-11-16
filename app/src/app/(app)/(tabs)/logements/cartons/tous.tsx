@@ -1,13 +1,15 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
 import { EmptyState } from '@/components/inventory/EmptyState';
 import { FilterChips, SearchField } from '@/components/inventory/ListControls';
 import { Loading, RowCard } from '@/components/places/Blocks';
 import { PlaceScreen } from '@/components/places/PlaceScreen';
+import i18n from '@/i18n';
 import { normalize } from '@/lib/possessions';
-import { boxPath, inBox, objects, plural, usePlacesData } from '@/lib/places';
+import { boxPath, inBox, usePlacesData } from '@/lib/places';
 
 const ALL = '*';
 
@@ -18,6 +20,7 @@ const ALL = '*';
  * (« Voir tout » d'une pièce).
  */
 export default function AllBoxesScreen() {
+  const { t } = useTranslation('places');
   const params = useLocalSearchParams<{ room?: string }>();
   const { data, error } = usePlacesData();
   const [query, setQuery] = useState('');
@@ -27,8 +30,8 @@ export default function AllBoxesScreen() {
     if (!data) return [];
     const used = data.rooms.filter((r) => data.boxes.some((b) => b.room === r.iri));
 
-    return [{ value: ALL, label: 'Tous' }, ...used.map((r) => ({ value: r.id, label: r.name }))];
-  }, [data]);
+    return [{ value: ALL, label: t('allBoxes.all') }, ...used.map((r) => ({ value: r.id, label: r.name }))];
+  }, [data, t]);
 
   const shown = useMemo(() => {
     if (!data) return [];
@@ -43,12 +46,12 @@ export default function AllBoxesScreen() {
 
         return texts.some((t) => normalize(t).includes(q));
       })
-      .sort((a, b) => a.name.localeCompare(b.name, 'fr', { numeric: true }));
+      .sort((a, b) => a.name.localeCompare(b.name, i18n.language, { numeric: true }));
   }, [data, query, roomId]);
 
   if (!data) {
     return (
-      <PlaceScreen title="Tous mes cartons">
+      <PlaceScreen title={t('allBoxes.title')}>
         <Loading error={error} />
       </PlaceScreen>
     );
@@ -57,17 +60,17 @@ export default function AllBoxesScreen() {
   const inside = data.possessions.filter((p) => p.box).length;
 
   return (
-    <PlaceScreen title="Tous mes cartons" legend={`${plural(data.boxes.length, 'carton', 'cartons')} · ${objects(inside)}`}>
-      <SearchField value={query} onChange={setQuery} placeholder="Rechercher un carton..." />
+    <PlaceScreen title={t('allBoxes.title')} legend={[t('counts.boxes', { count: data.boxes.length }), t('counts.objects', { count: inside })].join(' · ')}>
+      <SearchField value={query} onChange={setQuery} placeholder={t('allBoxes.search')} />
       {chips.length > 2 && <FilterChips options={chips} value={roomId} onChange={setRoomId} />}
 
       {shown.length === 0 ? (
         <EmptyState
           icon="search"
-          title="Aucun carton trouvé"
-          text="Aucun carton ne correspond. Essaie le nom d'un objet qu'il contient."
+          title={t('allBoxes.emptyTitle')}
+          text={t('allBoxes.emptyText')}
           action={{
-            label: 'Tout afficher',
+            label: t('allBoxes.emptyAction'),
             onPress: () => {
               setQuery('');
               setRoomId(ALL);
@@ -80,7 +83,7 @@ export default function AllBoxesScreen() {
             <RowCard
               key={box.iri}
               title={box.name}
-              subtitle={[boxPath(data, box), objects(inBox(data, box).length)].filter(Boolean).join(' · ')}
+              subtitle={[boxPath(data, box), t('counts.objects', { count: inBox(data, box).length })].filter(Boolean).join(' · ')}
               onPress={() => router.push({ pathname: '/carton/[id]', params: { id: box.id } })}
             />
           ))}

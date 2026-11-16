@@ -1,6 +1,7 @@
 import { createContext, use, useMemo, useState, type PropsWithChildren } from 'react';
 
-import { PLACE_KINDS, roomTypeOf, type PlaceKind, type RoomType } from '@/lib/places';
+import i18n from '@/i18n';
+import { placeKinds, roomTypeOf, type PlaceKind, type RoomType } from '@/lib/places';
 
 /**
  * Brouillon du parcours « Ajouter un logement » (Figma 135:2402 à 135:2512) :
@@ -32,13 +33,17 @@ const Context = createContext<Api | null>(null);
 
 export function usePlaceDraft(): Api {
   const value = use(Context);
-  if (value === null) throw new Error('usePlaceDraft doit être utilisé dans le parcours « Ajouter un logement ».');
+  if (value === null) throw new Error(i18n.t('places:drafts.place'));
 
   return value;
 }
 
 export function PlaceDraftProvider({ children }: PropsWithChildren) {
-  const [draft, setDraft] = useState<PlaceDraft>({ kind: PLACE_KINDS[0], name: '', address: '', primary: null, rooms: PLACE_KINDS[0].rooms, custom: [] });
+  const [draft, setDraft] = useState<PlaceDraft>(() => {
+    const kind = placeKinds()[0];
+
+    return { kind, name: '', address: '', primary: null, rooms: kind.rooms, custom: [] };
+  });
   const [roomsTouched, setRoomsTouched] = useState(false);
 
   const value = useMemo<Api>(
@@ -53,7 +58,7 @@ export function PlaceDraftProvider({ children }: PropsWithChildren) {
           ...d,
           kind,
           // Le nom suit le type tant qu'il est celui d'un type (« Maison » → « Appartement »).
-          name: d.name.trim() === '' || PLACE_KINDS.some((k) => k.label === d.name) ? kind.label : d.name,
+          name: d.name.trim() === '' || placeKinds().some((k) => k.label === d.name) ? kind.label : d.name,
           rooms: roomsTouched ? d.rooms : kind.rooms,
         })),
       roomsToCreate: draft.rooms.map((name) => ({ name, type: roomTypeOf(name) })),

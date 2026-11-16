@@ -1,4 +1,5 @@
 import { router, useLocalSearchParams } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -20,6 +21,7 @@ import { ScreenTitle } from '@/components/ui/ScreenTitle';
  * tel quel au parcours d'ajout.
  */
 export default function AddChoiceScreen() {
+  const { t } = useTranslation('add');
   const { at } = useLocalSearchParams<{ at?: string }>();
   const params = at ? { at } : {};
   const toScan = () => router.replace({ pathname: '/ajout/scan', params });
@@ -32,18 +34,18 @@ export default function AddChoiceScreen() {
           <BackButton close />
         </View>
         <View className="px-5">
-          <ScreenTitle title="Tu ajoutes quoi ?" legend="Les deux se rangent au même endroit" />
+          <ScreenTitle title={t('choice.title')} legend={t('choice.legend')} />
         </View>
 
         <View className="gap-3 px-5">
-          <TypeCard kind="tshirt" title="Vêtement" description="Il rejoint ton dressing : taille, marque, couleur, historique de port." onPress={toGarment} />
-          <TypeCard kind="pantalon" title="Objet" description="Il rejoint ton inventaire : catégorie, état, rangement précis." onPress={toScan} />
+          <TypeCard kind="tshirt" title={t('choice.garmentTitle')} description={t('choice.garmentDescription')} onPress={toGarment} />
+          <TypeCard kind="pantalon" title={t('choice.itemTitle')} description={t('choice.itemDescription')} onPress={toScan} />
         </View>
 
         <View className="px-5">
           <View style={E1} className="rounded-md bg-surface p-4 dark:bg-surface-night">
             <Text className="font-luciole text-body text-muted dark:text-muted-night">
-              Un vêtement peut être prêté et vendu comme un objet. La différence est ce qu&apos;on te demande à l&apos;ajout, et l&apos;endroit où tu le retrouves.
+              {t('choice.note')}
             </Text>
           </View>
         </View>
@@ -51,13 +53,13 @@ export default function AddChoiceScreen() {
         <View className="px-5">
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Scanner à la place, photographie, on remplit pour toi"
+            accessibilityLabel={t('choice.scanA11y')}
             onPress={toScan}
             style={E1}
             className="flex-row items-center justify-between rounded-md bg-surface px-4 py-3 active:opacity-80 dark:bg-surface-night">
             <View className="flex-1 gap-0.5">
-              <Text className="font-luciole-bold text-body text-ink dark:text-ink-night">Scanner à la place</Text>
-              <Text className="font-luciole text-legend text-muted dark:text-muted-night">Photographie, on remplit pour toi</Text>
+              <Text className="font-luciole-bold text-body text-ink dark:text-ink-night">{t('choice.scanTitle')}</Text>
+              <Text className="font-luciole text-legend text-muted dark:text-muted-night">{t('choice.scanLegend')}</Text>
             </View>
             <Text className="font-luciole-bold text-body text-muted/[0.85] dark:text-muted-night">›</Text>
           </Pressable>

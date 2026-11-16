@@ -1,0 +1,186 @@
+{
+  "audience": {
+    "friends": {
+      "title": "Amis",
+      "chip": "Amis autorisés",
+      "detail": "Ils peuvent commenter"
+    },
+    "followers": {
+      "title": "Abonnés",
+      "chip": "Abonnés autorisés · lecture seule",
+      "detail": "Tes amis aussi ; personne ne commente"
+    }
+  },
+  "since": {
+    "now": "à l'instant",
+    "minutes": "il y a {{minutes}} min",
+    "hours": "il y a {{hours}} h",
+    "yesterday": "hier",
+    "days": "il y a {{days}} j"
+  },
+  "lookStatus": {
+    "preparing": "En préparation",
+    "ready": "Prêt à poster",
+    "posted": "Posté"
+  },
+  "look": {
+    "garmentName": "Vêtement {{position}}"
+  },
+  "feed": {
+    "title": "Fil d'actualité",
+    "legend": "Ce que tes amis ont choisi de te montrer",
+    "publish": "+ Publier un look",
+    "noStrangers": "Pas d'inconnus ni de publicité : seules les personnes qui t'ont choisi apparaissent ici.",
+    "tabs": {
+      "feed": "Fil",
+      "mine": "Mes publications"
+    },
+    "emptyMineTitle": "Rien de publié",
+    "emptyFeedTitle": "Ton fil est calme",
+    "emptyMineBody": "Publie ton look du jour : tes amis verront tes vêtements pointés.",
+    "emptyFeedBody": "Tes amis n'ont rien partagé avec toi. Tu peux montrer ton look du jour à qui tu veux.",
+    "emptyAction": "Publier mon look"
+  },
+  "post": {
+    "deleteTitle": "Supprimer la publication ?",
+    "deleteBody": "Elle disparaît du fil, et les vêtements mentionnés redeviennent privés. Ton look reste.",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "deleteError": "La publication n'a pas pu être supprimée.",
+    "noteFollowers": "Tes abonnés voient cette publication sans pouvoir la commenter.",
+    "noteCommentsSoon": "Les commentaires arrivent bientôt.",
+    "deleteAction": "Supprimer la publication"
+  },
+  "profile": {
+    "self": "C’est toi",
+    "household": "Ton foyer",
+    "friend": "Vous êtes amis",
+    "following": "Tu suis ce compte",
+    "showingSelf": "Ce que tu montres",
+    "showingOther": "Ce que {{name}} te montre",
+    "noGarments": "Aucun vêtement visible pour l'instant.",
+    "noteSelf": "Ces vêtements sont visibles par l’audience de tes publications.",
+    "noteOther": "Tu ne vois que ce que {{name}} a choisi de te montrer.",
+    "posts": "Publications",
+    "noPosts": "Aucune publication visible.",
+    "size": "Taille {{size}}"
+  },
+  "today": {
+    "title": "Look du jour",
+    "legend": "Ta tenue d'aujourd'hui, prête pour Instagram",
+    "error": "La photo n'a pas pu être envoyée.",
+    "howTitle": "Comment ça marche",
+    "howPhotoTitle": "1. La photo",
+    "howPhotoBody": "Prends-toi en photo, en pied",
+    "howTagsTitle": "2. Les points",
+    "howTagsBody": "Touche chaque vêtement porté",
+    "howRecognitionTitle": "3. La reconnaissance",
+    "howRecognitionBody": "L'IA retrouve le vêtement dans ton dressing, ou te propose de l'ajouter",
+    "howPostTitle": "4. Le post",
+    "howPostBody": "2 images : ta photo, puis tes vêtements",
+    "note": "La photo reste privée : toi seul la vois dans Penderie.",
+    "takePhoto": "Prendre ma photo",
+    "chooseGallery": "Choisir dans la galerie"
+  },
+  "lookDetail": {
+    "title": "Look du jour",
+    "saveError": "Le look n'a pas pu être enregistré.",
+    "deleteTitle": "Supprimer ce look ?",
+    "deleteBody": "La photo et ses points disparaissent. Les vêtements restent dans ton dressing.",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "deleteErrorTitle": "Suppression impossible",
+    "hintLocked": "Les points ne se modifient plus : repasse le look en préparation pour les changer.",
+    "hintFull": "{{max}} vêtements au plus par look.",
+    "hintEmpty": "Touche un vêtement sur la photo pour y poser un point.",
+    "hintAdd": "Touche un autre vêtement pour ajouter un point.",
+    "tags_one": "{{count}} vêtement",
+    "tags_other": "{{count}} vêtements",
+    "note": "Chaque point doit désigner un vêtement de ton dressing pour préparer le post.",
+    "prepare": "Préparer le post",
+    "seePost": "Voir le post",
+    "editTags": "Modifier les points",
+    "deleteLook": "Supprimer ce look",
+    "actionErrorTitle": "Action impossible",
+    "incomplete": "À compléter",
+    "chooseGarment": "Choisis le vêtement",
+    "complete": "Compléter",
+    "change": "Changer",
+    "chooseFromWardrobe": "Choisir dans le dressing",
+    "remove": "Retirer"
+  },
+  "choose": {
+    "title": "Quel vêtement ?",
+    "legendPoint": "Point {{position}} · {{name}}",
+    "legendNew": "Celui que tu viens de toucher sur la photo",
+    "notInWardrobe": "Pas dans ton dressing ?",
+    "placeholder": "Veste kaki",
+    "hint": "Un titre suffit : il est ajouté à ton dressing « à compléter », tu le termineras plus tard.",
+    "addQuoted": "Ajouter « {{name}} »",
+    "add": "Ajouter ce vêtement",
+    "searchPlaceholder": "Chercher dans ton dressing",
+    "noMatch": "Aucun vêtement de ce nom.",
+    "wardrobeEmpty": "Ton dressing est vide.",
+    "chosen": "Choisi",
+    "alreadyOnLook": "Déjà sur ce look",
+    "incomplete": "À compléter",
+    "chooseError": "Impossible de désigner ce vêtement",
+    "addError": "Impossible d'ajouter ce vêtement"
+  },
+  "lookPost": {
+    "title": "Ton post",
+    "legend": "2 images pour Instagram",
+    "saveError": "Le look n'a pas pu être enregistré.",
+    "postedTitle": "Look posté !",
+    "postedOn": "Le {{date}}.",
+    "readyTitle": "Prêt à poster",
+    "readyBody": "Publie ces 2 images sur Instagram, puis marque le look comme posté. Tu peux aussi le montrer à tes amis dans Penderie.",
+    "imageOne": "Image 1 sur 2 : ta photo",
+    "imageTwo": "Image 2 sur 2 : tes vêtements",
+    "imageOf": "Image {{page}} sur 2",
+    "myLook": "Mon look du jour",
+    "caption": "Légende",
+    "captionPlaceholder": "Ma tenue du jour…",
+    "captionHint": "Elle accompagne le post ; 2 200 caractères au plus.",
+    "seeInFeed": "Voir la publication dans le fil",
+    "publishInPenderie": "Publier dans Penderie",
+    "markPosted": "Marquer comme posté",
+    "saveCaption": "Enregistrer la légende",
+    "editTags": "Modifier les points",
+    "backHome": "Retour à l'accueil"
+  },
+  "publish": {
+    "title": "Publier",
+    "legend": "Choisis à qui montrer ton look",
+    "error": "Le look n'a pas pu être publié.",
+    "lookOf": "Look du {{date}}",
+    "mentions_one": "{{count}} vêtement mentionné",
+    "mentions_other": "{{count}} vêtements mentionnés",
+    "message": "Ton message (facultatif)",
+    "placeholder": "Ma tenue du jour…",
+    "whoCanSee": "Qui peut voir",
+    "chosen": "Choisi",
+    "note": "Rien n'est public. Les vêtements pointés deviennent visibles par ces personnes ; supprimer la publication les rend de nouveau privés.",
+    "submit": "Publier"
+  },
+  "postCard": {
+    "profileOf": "Profil de {{name}}",
+    "specificAudience": "Personnes choisies",
+    "tag": "Vêtement {{position}} : {{name}}",
+    "mentions_one": "{{count}} vêtement mentionné : touche le point.",
+    "mentions_other": "{{count}} vêtements mentionnés : touche un point.",
+    "seePost": "Voir la publication ›",
+    "garmentsOfLook": "Les vêtements du look",
+    "size": "Taille {{size}}",
+    "close": "Fermer",
+    "viewInWardrobe": "Voir dans mon dressing",
+    "viewOnProfile": "Voir sur le profil de {{name}}",
+    "privateGarment": "{{name}} ne te montre pas ce vêtement : il reste privé."
+  },
+  "lookPhoto": {
+    "placeHint": "Ta photo : touche un vêtement pour y poser un point",
+    "photoTags_one": "Ta photo, {{count}} vêtement pointé",
+    "photoTags_other": "Ta photo, {{count}} vêtements pointés",
+    "tag": "Vêtement {{position}}"
+  }
+}

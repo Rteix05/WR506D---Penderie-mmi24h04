@@ -1,0 +1,184 @@
+{
+  "language": {
+    "label": "Language"
+  },
+  "kind": {
+    "default": "Main profile",
+    "child": "Child profile",
+    "relative": "Family profile",
+    "adult": "Adult profile"
+  },
+  "meta": {
+    "age": "{{age}} years old",
+    "items_one": "{{count}} item",
+    "items_other": "{{count}} items"
+  },
+  "card": {
+    "active": "Active",
+    "activeA11y": "active"
+  },
+  "tab": {
+    "title": "My profile",
+    "legend": "Details and family profiles",
+    "active": "Active profile",
+    "change": "Switch profile",
+    "family": "Family profiles",
+    "addHint": "Add a profile for your children or a relative: each one gets their own wardrobe.",
+    "add": "Add a profile",
+    "account": "Account: {{email}}",
+    "logout": "Sign out"
+  },
+  "switch": {
+    "title": "Switch profile",
+    "legend": "Each profile has its own wardrobe",
+    "family": "Family profiles",
+    "manageHint": "Add, edit, delete",
+    "viewHint": "See the account’s profiles",
+    "manage": "Manage",
+    "note": "Each profile keeps its own inventory and wardrobe.",
+    "continue": "Continue",
+    "add": "Add a profile"
+  },
+  "new": {
+    "typeChild": "Child",
+    "typeRelative": "Family",
+    "titleChild": "New child profile",
+    "titleRelative": "New family profile",
+    "legendChild": "A wardrobe of their own, under your supervision",
+    "legendRelative": "An adult relative whose wardrobe you manage",
+    "firstName": "First name",
+    "firstNamePlaceholder": "Noah",
+    "birthDate": "Date of birth",
+    "birthPlaceholder": "DD/MM/YYYY",
+    "childHint": "A child profile is under 18.",
+    "relativeHint": "A family profile is 18 or older.",
+    "type": "Profile type",
+    "note": "You can set permissions right after.",
+    "dateError": "Date in DD/MM/YYYY format.",
+    "createError": "Couldn’t create it.",
+    "create": "Create"
+  },
+  "detail": {
+    "gone": "This profile no longer exists.",
+    "deleteTitle": "Delete {{name}}’s profile?",
+    "deleteText": "Their items, clothes and homes go back to {{name}}. Their friends, preferences and notifications are removed.",
+    "guardianFallback": "their guardian",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "deleteError": "Couldn’t delete it",
+    "createdOn": "Created on {{date}}",
+    "canDo": "What {{name}} can do",
+    "addItems": "Add items",
+    "lend": "Lend",
+    "borrow": "Borrow",
+    "sell": "Sell",
+    "wardrobe": "Their wardrobe",
+    "items": "Items",
+    "garments": "Clothes",
+    "activeLoans": "Ongoing loans",
+    "guardianship": "Guardianship",
+    "managedBy": "Managed by",
+    "use": "Use",
+    "edit": "Edit",
+    "permissions": "Permissions",
+    "myPermissions": "My permissions",
+    "deleteProfile": "Delete this profile"
+  },
+  "edit": {
+    "title": "Edit profile",
+    "identityBannerTitle": "Your identity is managed by your guardian",
+    "identityBannerText": "You can change your display name and bio.",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "displayName": "Display name",
+    "displayNameHint": "The one your friends see.",
+    "birthDate": "Date of birth",
+    "birthPlaceholder": "DD/MM/YYYY",
+    "bio": "Bio",
+    "bioPlaceholder": "Optional",
+    "dateError": "Date in DD/MM/YYYY format.",
+    "saveError": "Couldn’t save.",
+    "adultTitle": "{{name}} is an adult",
+    "adultText": "You can turn it into a family profile: child restrictions are lifted, and you still manage it.",
+    "toFamily": "Switch to a family profile",
+    "note": "Each profile keeps its own inventory and wardrobe.",
+    "save": "Save"
+  },
+  "modes": {
+    "allowed": "Yes",
+    "approval": "With my approval",
+    "denied": "No",
+    "allowedShort": "Yes",
+    "approvalShort": "With approval",
+    "deniedShort": "No"
+  },
+  "permissions": {
+    "title": "Permissions",
+    "createdTitle": "Profile created!",
+    "createdText": "Check what they’re allowed to do: the default settings are already applied.",
+    "managedBy": "Managed by {{name}}",
+    "supervised": "Supervised",
+    "guardianBannerTitle": "Set by your guardian",
+    "guardianBannerText": "Ask them if you’d like to change one.",
+    "custom": "{{text}} · Set by you",
+    "note": "With your approval: every request comes to you before it happens. You can change these settings at any time.",
+    "save": "Save",
+    "saveError": "Couldn’t save.",
+    "groups": {
+      "organize": "Organizing their things",
+      "loans": "Loans",
+      "relations": "Relationships",
+      "trade": "Selling and buying"
+    },
+    "items": {
+      "itemCreate": {
+        "title": "Add items",
+        "text": "In their wardrobe"
+      },
+      "garmentManage": {
+        "title": "Manage their clothes",
+        "text": "Add, edit, put away"
+      },
+      "collectionCreate": {
+        "title": "Create collections",
+        "text": "Group their items"
+      },
+      "mediaUpload": {
+        "title": "Add photos",
+        "text": "On their items and clothes"
+      },
+      "loanLend": {
+        "title": "Lend their items",
+        "text": "Only to their friends"
+      },
+      "loanBorrow": {
+        "title": "Borrow",
+        "text": "Their friends’ items"
+      },
+      "friendAdd": {
+        "title": "Add friends",
+        "text": "Send and accept requests"
+      },
+      "shareCreate": {
+        "title": "Share",
+        "text": "Their items, rooms, collections"
+      },
+      "commentWrite": {
+        "title": "Comment",
+        "text": "On items their friends share"
+      },
+      "follow": {
+        "title": "Follow and be followed",
+        "text": "Beyond friends"
+      },
+      "sell": {
+        "title": "Sell",
+        "text": "Put their items up for sale"
+      },
+      "purchase": {
+        "title": "Buy",
+        "text": "Items their friends are selling"
+      }
+    }
+  }
+}

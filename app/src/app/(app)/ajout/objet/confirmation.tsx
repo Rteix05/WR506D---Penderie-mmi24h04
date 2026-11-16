@@ -1,5 +1,6 @@
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { Text, View } from 'react-native';
 
 import { ActionBar, closeFlow, FlowScreen } from '@/components/add/FlowScreen';
@@ -16,16 +17,17 @@ import { locationPath, useDraft } from '@/lib/add-draft';
  * « Voir l'objet » ferme le parcours et ouvre sa fiche.
  */
 export default function ItemDoneScreen() {
+  const { t } = useTranslation('add');
   const { draft, created, reset } = useDraft();
   const total = created?.total ?? 0;
 
   return (
     <FlowScreen>
       <View className="pt-1">
-        <Banner tone="success" title="Objet ajouté !" text={`${total} ${total > 1 ? 'objets' : 'objet'} dans ta penderie.`} />
+        <Banner tone="success" title={t('itemDone.added')} text={t('itemDone.banner', { count: total })} />
       </View>
       <View className="px-5">
-        <ScreenTitle title={created?.name ?? draft.name} legend={['Disponible', draft.location.room?.name].filter(Boolean).join(' · ')} />
+        <ScreenTitle title={created?.name ?? draft.name} legend={[t('itemDone.available'), draft.location.room?.name].filter(Boolean).join(' · ')} />
       </View>
 
       <View style={E1} className="mx-5 flex-row items-center gap-3 rounded-md bg-surface p-4 dark:bg-surface-night">
@@ -40,22 +42,22 @@ export default function ItemDoneScreen() {
           <Text className="font-luciole-bold text-body text-ink dark:text-ink-night">{created?.name ?? draft.name}</Text>
           <Text className="font-luciole text-legend text-muted dark:text-muted-night">{locationPath(draft.location)}</Text>
         </View>
-        <Pill label="Disponible" />
+        <Pill label={t('itemDone.available')} />
       </View>
 
       <InfoCard
-        title="Et maintenant"
+        title={t('itemDone.now')}
         rows={[
-          ['Prêter', 'À un ami, en 3 étapes'],
-          ['Vendre', 'Visible par tes amis'],
-          ['Déplacer', 'Si tu le ranges ailleurs'],
+          [t('itemDone.lend'), t('itemDone.lendValue')],
+          [t('itemDone.sell'), t('itemDone.sellValue')],
+          [t('itemDone.move'), t('itemDone.moveValue')],
         ]}
       />
 
-      <ActionBar note={created?.photoSaved === false ? "La photo n'a pas pu être enregistrée : tu pourras l'ajouter depuis la fiche." : undefined}>
+      <ActionBar note={created?.photoSaved === false ? t('itemDone.photoFailed') : undefined}>
         {created && (
           <Button
-            label="Voir l'objet"
+            label={t('itemDone.see')}
             onPress={() => {
               closeFlow();
               router.push({ pathname: '/objet/[id]', params: { id: created.id } });
@@ -63,14 +65,14 @@ export default function ItemDoneScreen() {
           />
         )}
         <Button
-          label="Ajouter un autre objet"
+          label={t('itemDone.addAnother')}
           variant="secondary"
           onPress={() => {
             reset('item');
             router.dismissTo('/ajout/scan');
           }}
         />
-        <Button label="Retour à l'accueil" variant="ghost" onPress={closeFlow} />
+        <Button label={t('itemDone.home')} variant="ghost" onPress={closeFlow} />
       </ActionBar>
     </FlowScreen>
   );

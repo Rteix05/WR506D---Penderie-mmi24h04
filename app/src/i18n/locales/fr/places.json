@@ -1,0 +1,308 @@
+{
+  "kinds": {
+    "house": {
+      "label": "Maison",
+      "description": "Plusieurs pièces, un garage, une cave"
+    },
+    "apartment": {
+      "label": "Appartement",
+      "description": "Quelques pièces, une cave"
+    },
+    "studio": {
+      "label": "Studio",
+      "description": "Une pièce à vivre"
+    },
+    "storage": {
+      "label": "Cave ou box",
+      "description": "Un seul espace de stockage"
+    },
+    "office": {
+      "label": "Bureau",
+      "description": "Ton lieu de travail"
+    },
+    "other": {
+      "label": "Autre",
+      "description": "À toi de le nommer"
+    }
+  },
+  "placeType": {
+    "house": "Maison",
+    "apartment": "Appartement",
+    "storageUnit": "Cave ou box",
+    "other": "Autre"
+  },
+  "roomGroups": {
+    "living": "Pièces à vivre",
+    "bedrooms": "Chambres",
+    "storage": "Rangement"
+  },
+  "roomNames": {
+    "salon": "Salon",
+    "cuisine": "Cuisine",
+    "diningRoom": "Salle à manger",
+    "office": "Bureau",
+    "bathroom": "Salle de bain",
+    "entrance": "Entrée",
+    "bedroom": "Chambre",
+    "bedroom2": "Chambre 2",
+    "kidsRoom": "Chambre enfant",
+    "garage": "Garage",
+    "cellar": "Cave",
+    "attic": "Grenier",
+    "laundry": "Buanderie",
+    "dressing": "Dressing"
+  },
+  "roomTypes": {
+    "livingRoom": "Pièce à vivre",
+    "bedroom": "Chambre",
+    "kitchen": "Cuisine",
+    "bathroom": "Salle de bain",
+    "office": "Bureau",
+    "entrance": "Entrée",
+    "dressing": "Dressing",
+    "laundry": "Buanderie",
+    "garage": "Garage",
+    "cellar": "Cave",
+    "attic": "Grenier",
+    "other": "Autre"
+  },
+  "storageTypes": {
+    "shelf": "Étagère",
+    "closet": "Placard",
+    "wardrobe": "Armoire",
+    "rack": "Penderie",
+    "bookcase": "Bibliothèque",
+    "dresser": "Commode",
+    "cabinet": "Meuble",
+    "drawer": "Tiroir",
+    "chest": "Coffre",
+    "other": "Autre"
+  },
+  "boxTypes": {
+    "carton": "Carton",
+    "bin": "Bac",
+    "drawer": "Tiroir",
+    "shelf": "Étagère",
+    "suitcase": "Valise",
+    "bag": "Sac",
+    "other": "Autre"
+  },
+  "counts": {
+    "objects_one": "{{count}} objet",
+    "objects_other": "{{count}} objets",
+    "storedObjects_one": "{{count}} objet rangé",
+    "storedObjects_other": "{{count}} objets rangés",
+    "places_one": "{{count}} logement",
+    "places_other": "{{count}} logements",
+    "rooms_one": "{{count}} pièce",
+    "rooms_other": "{{count}} pièces",
+    "storages_one": "{{count}} rangement",
+    "storages_other": "{{count}} rangements",
+    "boxes_one": "{{count}} carton",
+    "boxes_other": "{{count}} cartons"
+  },
+  "actions": {
+    "continue": "Continuer",
+    "modify": "Modifier",
+    "saveError": "Enregistrement impossible."
+  },
+  "deleteLink": {
+    "title": "Supprimer {{what}} ?",
+    "body": "« {{name}} » disparaîtra de tes logements.",
+    "cancel": "Annuler",
+    "confirm": "Supprimer",
+    "busy": "Suppression…",
+    "errorTitle": "Suppression impossible"
+  },
+  "drafts": {
+    "place": "usePlaceDraft doit être utilisé dans le parcours « Ajouter un logement ».",
+    "box": "useBoxDraft doit être utilisé dans le parcours « Créer un carton »."
+  },
+  "breadcrumb": "Emplacement : {{path}}",
+  "possessionKinds": {
+    "garment": "Vêtement",
+    "item": "Objet"
+  },
+  "addPlaceCard": {
+    "title": "+ Ajouter un logement",
+    "hint": "Maison, appartement, cave, bureau"
+  },
+  "list": {
+    "title": "Mes logements",
+    "emptyTitle": "Aucun logement",
+    "emptyText": "Ajoute ton logement et ses pièces : tu sauras toujours où sont rangées tes affaires.",
+    "emptyAction": "Ajouter un logement"
+  },
+  "detail": {
+    "title": "Logement",
+    "noPlace": "Tu n'as pas encore de logement.",
+    "gone": "Ce logement n'existe plus.",
+    "addRoom": "+ Ajouter une pièce",
+    "addRoomHint": "Grenier, buanderie, dressing...",
+    "delete": "Supprimer ce logement",
+    "deleteWhat": "ce logement",
+    "deleteDetail": "Ses pièces vides et leurs rangements seront supprimés avec lui."
+  },
+  "room": {
+    "title": "Pièce",
+    "gone": "Cette pièce n'existe plus.",
+    "storages": "Rangements",
+    "boxes": "Cartons",
+    "seeAll": "Voir tout",
+    "onFloor": "Posé dans la pièce",
+    "inRoom": "Posés dans la pièce",
+    "noStorage": "Sans rangement",
+    "addStorage": "+ Ajouter un rangement",
+    "addStorageHint": "Étagère, placard, penderie...",
+    "share": "Partager cette pièce",
+    "shareHint": "Avec un ami ou ta famille",
+    "delete": "Supprimer cette pièce",
+    "deleteWhat": "cette pièce",
+    "deleteDetail": "Ses rangements et ses cartons vides seront supprimés avec elle."
+  },
+  "storage": {
+    "title": "Rangement",
+    "gone": "Ce rangement n'existe plus.",
+    "inside_one": "{{count}} objet à l'intérieur",
+    "inside_other": "{{count}} objets à l'intérieur",
+    "openBox": "Ouvrir le carton",
+    "inStorage": "Dans ce rangement",
+    "inBox": "Dans le {{name}}",
+    "nextToBoxes": "Posé à côté des cartons",
+    "empty": "Rien n'est encore rangé ici. Choisis ce rangement quand tu ajoutes un objet.",
+    "delete": "Supprimer ce rangement",
+    "deleteWhat": "ce rangement",
+    "deleteDetail": "Ses cartons resteront dans la pièce."
+  },
+  "boxes": {
+    "title": "Mes cartons",
+    "emptyTitle": "Aucun carton",
+    "emptyText": "Crée un carton, colle son étiquette, et retrouve en un instant ce qu'il contient.",
+    "emptyAction": "Créer un carton",
+    "recent": "Récemment ajoutés",
+    "seeAll": "Voir tout",
+    "all": "Tous mes cartons",
+    "allHint": "Rechercher, trier par pièce",
+    "create": "+ Créer un carton",
+    "createHint": "Étiquette, emplacement"
+  },
+  "allBoxes": {
+    "title": "Tous mes cartons",
+    "search": "Rechercher un carton...",
+    "all": "Tous",
+    "emptyTitle": "Aucun carton trouvé",
+    "emptyText": "Aucun carton ne correspond. Essaie le nom d'un objet qu'il contient.",
+    "emptyAction": "Tout afficher"
+  },
+  "box": {
+    "gone": "Ce carton n'existe plus.",
+    "lent_one": "dont {{count}} prêté",
+    "lent_other": "dont {{count}} prêtés",
+    "sealed": "Fermé",
+    "type": "Type",
+    "reference": "Étiquette",
+    "contents": "Ce qu'il contient",
+    "seeAll": "Voir les {{count}} objets ›",
+    "empty": "Ce carton est vide. Ajoute un objet : il sera rangé directement dedans.",
+    "addObject": "Ajouter un objet",
+    "move": "Déplacer le carton",
+    "delete": "Supprimer ce carton",
+    "deleteWhat": "ce carton"
+  },
+  "boxContents": {
+    "title": "Contenu du carton",
+    "gone": "Ce carton n'existe plus.",
+    "search": "Rechercher dans ce carton...",
+    "all": "Tous",
+    "items": "Objets",
+    "garments": "Vêtements",
+    "lent": "Prêtés",
+    "emptyTitle": "Aucun objet trouvé",
+    "emptyText": "Rien dans ce carton ne correspond à ta recherche.",
+    "emptyAction": "Tout afficher"
+  },
+  "newBox": {
+    "infos": {
+      "title": "Un nouveau carton",
+      "label": "Étiquette",
+      "labelPlaceholder": "Ex. Carton Bricolage",
+      "kind": "C'est un…",
+      "code": "Code (facultatif)",
+      "codePlaceholder": "Ex. C-12",
+      "codeHint": "Le numéro ou le QR code collé dessus.",
+      "helpTitle": "À quoi sert l'étiquette",
+      "helpText": "C'est le mot que tu liras sur le carton, et celui que tu chercheras dans six mois. Un nom précis vaut mieux qu'un numéro."
+    },
+    "emplacement": {
+      "title": "Où tu le poses ?",
+      "note": "Sans rangement, le carton est posé dans la pièce."
+    },
+    "verification": {
+      "title": "Vérifie ton carton",
+      "cardTitle": "Le carton",
+      "label": "Étiquette",
+      "type": "Type",
+      "code": "Code",
+      "location": "Emplacement",
+      "create": "Créer ce carton"
+    }
+  },
+  "newPlace": {
+    "yes": "Oui",
+    "no": "Non",
+    "type": {
+      "title": "C'est quoi ?",
+      "note": "Le type sert juste à te proposer les bonnes pièces ensuite."
+    },
+    "infos": {
+      "title": "Ton logement",
+      "name": "Nom",
+      "namePlaceholder": "Ex. Maison principale",
+      "type": "Type",
+      "address": "Adresse (facultatif)",
+      "addressPlaceholder": "Ex. 12 rue des Lilas, Paris",
+      "primary": "Logement principal",
+      "primaryWarning": "Il remplacera ton logement principal actuel.",
+      "addressNote": "L'adresse ne sert qu'à toi : elle n'est jamais montrée à tes amis, même sur un objet partagé."
+    },
+    "pieces": {
+      "title": "Quelles pièces ?",
+      "legend_one": "Étape 3 sur 4 · {{count}} sélectionnée",
+      "legend_other": "Étape 3 sur 4 · {{count}} sélectionnées",
+      "custom": "Ajoutées par toi",
+      "addRoom": "+ Ajouter une pièce",
+      "addRoomHint": "Si elle n'est pas dans la liste",
+      "roomName": "Nom de la pièce",
+      "roomNamePlaceholder": "Ex. Chambre de Léa",
+      "add": "Ajouter",
+      "note": "Tu pourras ajouter des pièces et des rangements plus tard."
+    },
+    "verification": {
+      "title": "Vérifie ton logement",
+      "cardTitle": "Le logement",
+      "name": "Nom",
+      "type": "Type",
+      "address": "Adresse",
+      "primary": "Principal",
+      "noRooms": "Aucune pour l’instant : tu les ajouteras depuis le logement.",
+      "failedTitle": "Logement ajouté",
+      "failedRooms": "Ces pièces n'ont pas pu être créées : {{rooms}}. Ajoute-les depuis le logement.",
+      "add": "Ajouter ce logement"
+    }
+  },
+  "newLocation": {
+    "roomTitle": "Nouvelle pièce",
+    "storageTitle": "Nouveau rangement",
+    "gone": "Cet emplacement n'existe plus.",
+    "in": "Dans {{name}}",
+    "name": "Nom",
+    "roomPlaceholder": "Ex. Chambre de Léa",
+    "storagePlaceholder": "Ex. Étagère 2",
+    "commonRooms": "Pièces courantes",
+    "type": "Type",
+    "roomNote": "Tu pourras y ajouter des rangements ensuite.",
+    "storageNote": "Tu pourras y poser des cartons ensuite.",
+    "addRoom": "Ajouter cette pièce",
+    "addStorage": "Ajouter ce rangement"
+  }
+}

@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Alert, Pressable, Text, View } from 'react-native';
 
 import type { ClothKind } from '@/components/home/ClothVisual';
@@ -7,10 +8,11 @@ import { BackButton } from '@/components/ui/BackButton';
 import { Button } from '@/components/ui/Button';
 import { Heading } from '@/components/ui/Heading';
 import { E1 } from '@/components/ui/elevation';
+import i18n from '@/i18n';
 
 /** Une action de la maquette qui attend sa route d'API (vente, partage, déplacement). */
 export function soon(what: string) {
-  Alert.alert(what, 'Cette action arrive bientôt.');
+  Alert.alert(what, i18n.t('inventory:detail.soon'));
 }
 
 /**
@@ -111,6 +113,8 @@ export function DetailActions({
   onDelete?: () => void;
   deleting?: boolean;
 }) {
+  const { t } = useTranslation('inventory');
+
   return (
     <View className="gap-3 px-5">
       {primary && <Button label={primary.label} onPress={primary.onPress} />}
@@ -124,7 +128,7 @@ export function DetailActions({
       {note && <Text className="text-center font-luciole text-legend text-muted dark:text-muted-night">{note}</Text>}
       {deleteLabel && onDelete && (
         <Pressable accessibilityRole="button" onPress={onDelete} disabled={deleting} hitSlop={8} className="self-center py-1">
-          <Text className={`font-luciole-bold text-legend text-error dark:text-error-night ${deleting ? 'opacity-50' : ''}`}>{deleting ? 'Suppression…' : deleteLabel}</Text>
+          <Text className={`font-luciole-bold text-legend text-error dark:text-error-night ${deleting ? 'opacity-50' : ''}`}>{deleting ? t('detail.deleting') : deleteLabel}</Text>
         </Pressable>
       )}
     </View>
@@ -132,9 +136,9 @@ export function DetailActions({
 }
 
 /** Demande confirmation avant de supprimer (action irréversible pour l'utilisateur). */
-export function confirmDelete(what: string, name: string, onConfirm: () => void) {
-  Alert.alert(`Supprimer ${what} ?`, `« ${name} » disparaîtra de ton inventaire.`, [
-    { text: 'Annuler', style: 'cancel' },
-    { text: 'Supprimer', style: 'destructive', onPress: onConfirm },
+export function confirmDelete(kind: 'item' | 'garment', name: string, onConfirm: () => void) {
+  Alert.alert(kind === 'item' ? i18n.t('inventory:detail.deleteItemTitle') : i18n.t('inventory:detail.deleteGarmentTitle'), i18n.t('inventory:detail.deleteBody', { name }), [
+    { text: i18n.t('inventory:detail.cancel'), style: 'cancel' },
+    { text: i18n.t('inventory:detail.confirm'), style: 'destructive', onPress: onConfirm },
   ]);
 }

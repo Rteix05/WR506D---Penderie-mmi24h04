@@ -2,12 +2,14 @@ import { useMutation } from '@tanstack/react-query';
 import { Image } from 'expo-image';
 import { Link } from 'expo-router';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/ui/Button';
 import { Heading } from '@/components/ui/Heading';
 import { TextField } from '@/components/ui/TextField';
+import i18n from '@/i18n';
 import { login } from '@/lib/api';
 
 /**
@@ -15,7 +17,7 @@ import { login } from '@/lib/api';
  * d'e-mails, Mailpit en dev). Le lien de la maquette est là, il explique.
  */
 function forgotPassword() {
-  Alert.alert('Mot de passe oublié', 'La réinitialisation par e-mail arrive bientôt. En attendant, demande à un administrateur de Penderie.');
+  Alert.alert(i18n.t('auth:login.forgotTitle'), i18n.t('auth:login.forgotBody'));
 }
 
 /**
@@ -33,6 +35,7 @@ function forgotPassword() {
  * l'app : pas de navigation à faire ici.
  */
 export default function LoginScreen() {
+  const { t } = useTranslation('auth');
   const insets = useSafeAreaInsets();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -43,18 +46,18 @@ export default function LoginScreen() {
     <KeyboardAvoidingView className="flex-1 bg-bg dark:bg-bg-night" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView contentContainerClassName="gap-6" contentContainerStyle={{ paddingBottom: insets.bottom + 40 }} keyboardShouldPersistTaps="handled">
         <View className="items-center gap-4 bg-primary/[0.06] px-5 pb-14" style={{ paddingTop: insets.top + 48 }}>
-          <Image source={require('@/assets/images/logo.png')} style={{ width: 72, height: 66 }} contentFit="contain" accessibilityLabel="Logo Penderie" />
+          <Image source={require('@/assets/images/logo.png')} style={{ width: 72, height: 66 }} contentFit="contain" accessibilityLabel={t('common:logo')} />
           <View className="items-center gap-2">
             <Heading level="h3" accessibilityRole="header" className="text-ink dark:text-ink-night">
               PENDERIE
             </Heading>
-            <Text className="text-center font-luciole text-body text-muted dark:text-muted-night">Range, retrouve, prête. Entre amis, et sans rien publier.</Text>
+            <Text className="text-center font-luciole text-body text-muted dark:text-muted-night">{t('login.tagline')}</Text>
           </View>
         </View>
 
         <View className="gap-5 px-5">
           <TextField
-            label="Adresse e-mail"
+            label={t('login.email')}
             value={email}
             onChangeText={setEmail}
             placeholder="mathis@example.com"
@@ -64,7 +67,7 @@ export default function LoginScreen() {
             returnKeyType="next"
           />
           <TextField
-            label="Mot de passe"
+            label={t('login.password')}
             value={password}
             onChangeText={setPassword}
             secureTextEntry
@@ -77,7 +80,7 @@ export default function LoginScreen() {
 
         <View className="items-end px-5">
           <Pressable accessibilityRole="link" onPress={forgotPassword} hitSlop={12} className="py-1">
-            <Text className="font-luciole text-legend text-primary dark:text-primary-night">Mot de passe oublié ?</Text>
+            <Text className="font-luciole text-legend text-primary dark:text-primary-night">{t('login.forgot')}</Text>
           </Pressable>
         </View>
 
@@ -87,12 +90,12 @@ export default function LoginScreen() {
               {submit.error.message}
             </Text>
           )}
-          <Button label="SE CONNECTER" onPress={() => submit.mutate()} disabled={!canSubmit} loading={submit.isPending} />
+          <Button label={t('login.submit')} onPress={() => submit.mutate()} disabled={!canSubmit} loading={submit.isPending} />
         </View>
 
         <View className="items-center px-5">
           <Link href="/inscription" className="py-3 font-luciole-bold text-legend text-primary dark:text-primary-night">
-            Pas encore de compte ? Créer un compte
+            {t('login.toSignUp')}
           </Link>
         </View>
       </ScrollView>

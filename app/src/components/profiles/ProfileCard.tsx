@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Pressable, Text, View } from 'react-native';
 
 import { E1 } from '@/components/ui/elevation';
@@ -24,11 +25,13 @@ export function ProfileAvatar({ name, size = 48, strong = false }: { name: strin
  * « Actif » ou un chevron.
  */
 export function ProfileCard({ profile, selected, onPress, aside }: { profile: AccountProfile; selected?: boolean; onPress: () => void; aside?: string }) {
+  const { t } = useTranslation('profiles');
+
   return (
     <Pressable
       accessibilityRole="button"
       aria-selected={selected}
-      accessibilityLabel={`${profile.displayName}, ${profileMeta(profile)}${profile.active ? ', actif' : ''}`}
+      accessibilityLabel={`${profile.displayName}, ${profileMeta(profile)}${profile.active ? `, ${t('card.activeA11y')}` : ''}`}
       onPress={onPress}
       style={E1}
       className={`min-h-[72px] flex-row items-center gap-4 rounded-md px-4 py-3 active:opacity-80 ${selected ? 'border-2 border-primary bg-primary/[0.06]' : 'bg-surface dark:bg-surface-night'}`}>
@@ -39,7 +42,7 @@ export function ProfileCard({ profile, selected, onPress, aside }: { profile: Ac
       </View>
       {profile.active ? (
         <View className="rounded-full bg-main-tint px-2 py-1 dark:bg-main-night/15">
-          <Text className="font-luciole-bold text-legend text-[#10786B] dark:text-main-night">Actif</Text>
+          <Text className="font-luciole-bold text-legend text-[#10786B] dark:text-main-night">{t('card.active')}</Text>
         </View>
       ) : (
         <Text className="font-luciole-bold text-body text-muted dark:text-muted-night">{aside ?? '>'}</Text>

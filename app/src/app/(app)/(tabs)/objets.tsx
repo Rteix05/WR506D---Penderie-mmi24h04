@@ -1,5 +1,6 @@
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -9,6 +10,7 @@ import { PossessionCard } from '@/components/inventory/PossessionCard';
 import { useOpenAddMenu } from '@/components/nav/AddMenu';
 import { BackButton } from '@/components/ui/BackButton';
 import { ScreenTitle } from '@/components/ui/ScreenTitle';
+import { compareText } from '@/i18n';
 import {
   artOf,
   AVAILABILITY,
@@ -16,9 +18,9 @@ import {
   normalize,
   rootCategory,
   roomName,
+  sorts,
   sortPossessions,
-  SORTS,
-  STATUS_FILTERS,
+  statusFilters,
   usePossessions,
   type Availability,
   type Possession,
@@ -27,7 +29,6 @@ import {
 import { useItemCategories, useLocations } from '@/lib/reference';
 
 const ALL = '*';
-const plural = (n: number, one: string, many: string) => `${n} ${n > 1 ? many : one}`;
 
 /**
  * « Mes objets » (Figma « Objet — Mes objets », 135:2156) : recherche,
@@ -40,6 +41,7 @@ const plural = (n: number, one: string, many: string) => `${n} ${n > 1 ? many : 
  *    utilises vraiment (la maquette en montre des exemples).
  */
 export default function ItemsScreen() {
+  const { t } = useTranslation('inventory');
   const items = usePossessions('item');
   const categories = useItemCategories();
   const locations = useLocations();
@@ -58,8 +60,8 @@ export default function ItemsScreen() {
       if (root) used.set(root.iri, root.name);
     }
 
-    return [{ value: ALL, label: 'Tous' }, ...[...used].sort((a, b) => a[1].localeCompare(b[1], 'fr')).map(([value, label]) => ({ value, label }))];
-  }, [all, categories.data]);
+    return [{ value: ALL, label: t('items.all') }, ...[...used].sort((a, b) => compareText(a[1], b[1])).map(([value, label]) => ({ value, label }))];
+  }, [all, categories.data, t]);
 
   const shown = useMemo(() => {
     const q = normalize(query);
@@ -78,10 +80,10 @@ export default function ItemsScreen() {
   const lent = all.filter((p) => p.availability === 'LENT').length;
   const borrowed = all.filter((p) => p.availability === 'BORROWED').length;
   const legend = items.data
-    ? [plural(all.length, 'objet', 'objets'), lent > 0 && plural(lent, 'prêté', 'prêtés'), borrowed > 0 && plural(borrowed, 'emprunté', 'empruntés')].filter(Boolean).join(' · ')
+    ? [t('items.count', { count: all.length }), lent > 0 && t('items.lent', { count: lent }), borrowed > 0 && t('items.borrowed', { count: borrowed })].filter(Boolean).join(' · ')
     : ' ';
 
-  const statusOptions = STATUS_FILTERS.map((s) => ({ value: (s.value ?? ALL) as Availability | typeof ALL, label: s.label }));
+  const statusOptions = statusFilters().map((s) => ({ value: (s.value ?? ALL) as Availability | typeof ALL, label: s.label }));
   const rows: Possession[][] = [];
   for (let i = 0; i < shown.length; i += 2) rows.push(shown.slice(i, i + 2));
 
@@ -92,7 +94,7 @@ export default function ItemsScreen() {
           <BackButton />
         </View>
         <View className="px-5">
-          <ScreenTitle title="Mes objets" legend={legend} />
+          <ScreenTitle title={t('items.title')} legend={legend} />
         </View>
 
         {items.isPending && <ActivityIndicator className="pt-8" />}
@@ -101,30 +103,30 @@ export default function ItemsScreen() {
         {items.data && all.length === 0 && (
           <EmptyState
             icon="search"
-            title="Ta penderie est vide"
-            text="Ajoute ton premier objet : tu sauras toujours où il est rangé et à qui tu l'as prêté."
-            action={{ label: 'Ajouter un objet', glyph: '+', onPress: openAdd }}
+            title={t('items.emptyTitle')}
+            text={t('items.emptyText')}
+            action={{ label: t('items.emptyAction'), glyph: '+', onPress: openAdd }}
           />
         )}
 
         {all.length > 0 && (
           <>
-            <SearchField value={query} onChange={setQuery} placeholder="Rechercher un objet..." />
+            <SearchField value={query} onChange={setQuery} placeholder={t('items.search')} />
             <View className="gap-3">
               <FilterChips options={chips} value={category} onChange={setCategory} />
               <View className="flex-row items-center justify-between px-5">
-                <SortChip prefix="Statut :" title="Statut" options={statusOptions} value={status} onChange={setStatus} />
-                <SortChip prefix="Trier :" title="Trier" options={SORTS} value={sort} onChange={setSort} />
+                <SortChip prefix={t('items.filterPrefix')} title={t('items.filterTitle')} options={statusOptions} value={status} onChange={setStatus} />
+                <SortChip prefix={t('items.sortPrefix')} title={t('items.sortTitle')} options={sorts()} value={sort} onChange={setSort} />
               </View>
             </View>
 
             {shown.length === 0 ? (
               <EmptyState
                 icon="search"
-                title="Aucun objet trouvé"
-                text="Aucun objet ne correspond à ta recherche. Vérifie l'orthographe ou essaie un autre mot."
+                title={t('items.notFoundTitle')}
+                text={t('items.notFoundText')}
                 action={{
-                  label: 'Tout afficher',
+                  label: t('items.showAll'),
                   onPress: () => {
                     setQuery('');
                     setCategory(ALL);
@@ -144,7 +146,7 @@ export default function ItemsScreen() {
                         <View key={p.id} className="flex-1">
                           <PossessionCard
                             name={p.name}
-                            meta={[categories.data?.find((c) => c.iri === p.category)?.name ?? rootOf(p)?.name, room ?? 'sans emplacement'].filter(Boolean).join(' · ')}
+                            meta={[categories.data?.find((c) => c.iri === p.category)?.name ?? rootOf(p)?.name, room ?? t('items.noLocation')].filter(Boolean).join(' · ')}
                             extra={lentLine(p)}
                             photo={p.photos?.[0]}
                             art={artOf('item', p, categories.data)}

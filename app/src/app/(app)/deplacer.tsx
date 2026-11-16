@@ -1,6 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Text } from 'react-native';
 
 import { ActionBar, FlowScreen } from '@/components/add/FlowScreen';
@@ -11,12 +12,6 @@ import { PathCard } from '@/components/ui/InfoCard';
 import { locationPath, type Location } from '@/lib/add-draft';
 import { move, type Movable } from '@/lib/moves';
 
-const WHAT: Record<Movable, { title: string; note: string }> = {
-  item: { title: 'Déplacer l’objet', note: 'L’ancien emplacement reste dans l’historique de l’objet.' },
-  garment: { title: 'Déplacer le vêtement', note: 'L’ancien emplacement reste dans l’historique du vêtement.' },
-  box: { title: 'Déplacer le carton', note: 'Tout ce qu’il contient le suit, et chaque objet garde la trace de son ancien emplacement.' },
-};
-
 /**
  * « Où tu le ranges ? » pour un bien déjà rangé, ou un carton (maquette,
  * « Objet — Localisation » et « Rangement — Carton », bouton « Déplacer ») :
@@ -26,12 +21,18 @@ const WHAT: Record<Movable, { title: string; note: string }> = {
  * Paramètres : kind (item, garment, box), id, name, from (chemin actuel).
  */
 export default function MoveScreen() {
+  const { t } = useTranslation('inventory');
   const { kind, id, name, from } = useLocalSearchParams<{ kind: Movable; id: string; name: string; from?: string }>();
   const queryClient = useQueryClient();
   const [location, setLocation] = useState<Location>({ place: null, room: null, storage: null, box: null });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const what = WHAT[kind] ?? WHAT.item;
+  const what: Record<Movable, { title: string; note: string }> = {
+    item: { title: t('move.itemTitle'), note: t('move.itemNote') },
+    garment: { title: t('move.garmentTitle'), note: t('move.garmentNote') },
+    box: { title: t('move.boxTitle'), note: t('move.boxNote') },
+  };
+  const copy = what[kind] ?? what.item;
 
   const save = async () => {
     setSaving(true);
@@ -41,23 +42,23 @@ export default function MoveScreen() {
       router.back();
     } catch (e) {
       setSaving(false);
-      setError(e instanceof Error ? e.message : 'Déplacement impossible.');
+      setError(e instanceof Error ? e.message : t('move.error'));
     }
   };
 
   return (
     <FlowScreen>
-      <StepHeader title={what.title} legend={name} close />
-      {from ? <PathCard title="Actuellement" path={from} /> : null}
+      <StepHeader title={copy.title} legend={name} close />
+      {from ? <PathCard title={t('move.current')} path={from} /> : null}
       <LocationStep kind={kind} location={location} onChange={setLocation} />
 
-      <ActionBar note={what.note}>
+      <ActionBar note={copy.note}>
         {error && (
           <Text accessibilityRole="alert" className="text-center font-luciole text-legend text-error dark:text-error-night">
             {error}
           </Text>
         )}
-        <Button label={location.room ? `Ranger : ${locationPath({ ...location, place: null })}` : 'Déplacer ici'} onPress={save} loading={saving} disabled={!location.room} />
+        <Button label={location.room ? t('move.store', { path: locationPath({ ...location, place: null }) }) : t('move.moveHere')} onPress={save} loading={saving} disabled={!location.room} />
       </ActionBar>
     </FlowScreen>
   );

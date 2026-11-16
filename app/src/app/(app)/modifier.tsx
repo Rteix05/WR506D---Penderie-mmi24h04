@@ -1,6 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Alert, Pressable, Text, View } from 'react-native';
 
 import { ActionBar, FlowScreen } from '@/components/add/FlowScreen';
@@ -14,7 +15,7 @@ import { TextField } from '@/components/ui/TextField';
 import { USAGES, type Usage } from '@/lib/add-draft';
 import { ApiError } from '@/lib/api';
 import { openMove } from '@/lib/moves';
-import { CONDITION_LABEL, deletePossession, locationOf, updatePossession, usePossession, type ConditionValue, type Kind, type Possession } from '@/lib/possessions';
+import { CONDITION_LABEL, deletePossession, locationOf, updatePossession, usePossession, USAGE_LABEL, type ConditionValue, type Kind, type Possession } from '@/lib/possessions';
 import { createBrand, useBrands, useColors, useGarmentCategories, useItemCategories, useLocations, useSizes, useStyles } from '@/lib/reference';
 
 /**
@@ -48,9 +49,10 @@ export default function EditScreen() {
   return <EditForm kind={kind} initial={possession.data} />;
 }
 
-const CONDITIONS: { value: ConditionValue; label: string }[] = (['NEW', 'EXCELLENT', 'GOOD', 'WORN', 'DAMAGED'] as const).map((value) => ({ value, label: CONDITION_LABEL[value] }));
+const conditionOptions = (): { value: ConditionValue; label: string }[] => (['NEW', 'EXCELLENT', 'GOOD', 'WORN', 'DAMAGED'] as const).map((value) => ({ value, label: CONDITION_LABEL[value] }));
 
 function EditForm({ kind, initial }: { kind: Kind; initial: Possession }) {
+  const { t } = useTranslation('inventory');
   const queryClient = useQueryClient();
   const itemCategories = useItemCategories();
   const garmentCategories = useGarmentCategories();
@@ -111,17 +113,17 @@ function EditForm({ kind, initial }: { kind: Kind; initial: Possession }) {
     } catch (e) {
       setSaving(false);
       if (e instanceof ApiError && Object.keys(e.violations).length > 0) setFieldErrors(e.violations);
-      setError(e instanceof Error ? e.message : 'Enregistrement impossible.');
+      setError(e instanceof Error ? e.message : t('edit.saveError'));
     }
   };
 
   const remove = () =>
-    confirmDelete(kind === 'item' ? 'cet objet' : 'ce vêtement', initial.name, async () => {
+    confirmDelete(kind, initial.name, async () => {
       try {
         await deletePossession(queryClient, kind, initial.id);
         router.dismissTo(back);
       } catch (e) {
-        Alert.alert('Suppression impossible', e instanceof Error ? e.message : '');
+        Alert.alert(t('edit.deleteError'), e instanceof Error ? e.message : '');
       }
     });
 
@@ -131,16 +133,16 @@ function EditForm({ kind, initial }: { kind: Kind; initial: Possession }) {
         <BackButton close />
       </View>
       <View className="px-5">
-        <ScreenTitle title="Modifier" legend={initial.name} />
+        <ScreenTitle title={t('edit.title')} legend={initial.name} />
       </View>
 
       <View className="gap-5 px-5">
-        <TextField label="Nom" value={name} onChangeText={setName} autoCapitalize="sentences" error={fieldErrors.name} />
+        <TextField label={t('edit.name')} value={name} onChangeText={setName} autoCapitalize="sentences" error={fieldErrors.name} />
 
         {kind === 'item' && (
           <SelectField
-            label="Catégorie"
-            placeholder="Facultatif"
+            label={t('edit.category')}
+            placeholder={t('edit.optional')}
             value={nameOf(itemCategories.data, category)}
             loading={itemCategories.isPending}
             clearable
@@ -152,14 +154,14 @@ function EditForm({ kind, initial }: { kind: Kind; initial: Possession }) {
         {kind === 'garment' && (
           <>
             <SelectField
-              label="Marque"
-              placeholder="Facultatif"
+              label={t('edit.brand')}
+              placeholder={t('edit.optional')}
               value={nameOf(brands.data, brand) ?? (addedBrand?.iri === brand ? addedBrand.name : null)}
               loading={brands.isPending}
               clearable
               options={(brands.data ?? []).map((b) => ({ key: b.iri, label: b.name }))}
               onSelect={setBrand}
-              createLabel="Pas dans la liste ? Ajoute ta marque"
+              createLabel={t('edit.brandCreate')}
               onCreate={async (typed) => {
                 const created = await createBrand(queryClient, typed);
                 setAddedBrand(created);
@@ -168,26 +170,26 @@ function EditForm({ kind, initial }: { kind: Kind; initial: Possession }) {
             />
             {scale.length > 0 && (
               <View className="gap-1">
-                <Chips label="Taille" options={scale.map((v) => ({ value: v.iri, label: v.name }))} selected={size ? [size] : []} onToggle={(iri) => setSize(size === iri ? null : iri)} />
+                <Chips label={t('edit.size')} options={scale.map((v) => ({ value: v.iri, label: v.name }))} selected={size ? [size] : []} onToggle={(iri) => setSize(size === iri ? null : iri)} />
                 {!size && initial.sizeLabel && (
-                  <Text className="font-luciole text-legend text-muted dark:text-muted-night">Taille notée : « {initial.sizeLabel} ». Gardée si tu n&apos;en choisis pas une.</Text>
+                  <Text className="font-luciole text-legend text-muted dark:text-muted-night">{t('edit.notedSize', { size: initial.sizeLabel })}</Text>
                 )}
                 {fieldErrors.size && <Text className="font-luciole text-legend text-error dark:text-error-night">{fieldErrors.size}</Text>}
               </View>
             )}
             <SelectField
-              label="Couleur"
-              placeholder="Facultatif"
+              label={t('edit.color')}
+              placeholder={t('edit.optional')}
               value={nameOf(colors.data, color)}
               loading={colors.isPending}
               clearable
               options={(colors.data ?? []).map((c) => ({ key: c.iri, label: c.name, swatch: c.hex }))}
               onSelect={setColor}
             />
-            <Chips label="Usage" options={USAGES} selected={[usage]} onToggle={setUsage} />
+            <Chips label={t('edit.usage')} options={USAGES.map(({ value }) => ({ value, label: USAGE_LABEL[value] }))} selected={[usage]} onToggle={setUsage} />
             {styles.data && (
               <Chips
-                label="Style (plusieurs choix)"
+                label={t('edit.styles')}
                 multiple
                 options={styles.data.map((s) => ({ value: s.iri, label: s.name }))}
                 selected={chosenStyles}
@@ -197,12 +199,12 @@ function EditForm({ kind, initial }: { kind: Kind; initial: Possession }) {
           </>
         )}
 
-        <Chips label="État" options={CONDITIONS} selected={condition ? [condition] : []} onToggle={(value) => setCondition(condition === value ? null : value)} />
-        <TextField label="Description (facultatif)" value={description} onChangeText={setDescription} multiline autoCapitalize="sentences" error={fieldErrors.description} />
-        <TextField label="Notes (visibles par toi seul)" value={notes} onChangeText={setNotes} multiline autoCapitalize="sentences" error={fieldErrors.notes} />
+        <Chips label={t('edit.condition')} options={conditionOptions()} selected={condition ? [condition] : []} onToggle={(value) => setCondition(condition === value ? null : value)} />
+        <TextField label={t('edit.description')} value={description} onChangeText={setDescription} multiline autoCapitalize="sentences" error={fieldErrors.description} />
+        <TextField label={t('edit.notes')} value={notes} onChangeText={setNotes} multiline autoCapitalize="sentences" error={fieldErrors.notes} />
 
         {initial.room && (
-          <Section title="Localisation" link={{ label: kind === 'item' ? "Déplacer l'objet" : 'Déplacer le vêtement', onPress: () => openMove(kind, initial.id, initial.name, locationOf(locations.data, initial)) }}>
+          <Section title={t('edit.location')} link={{ label: kind === 'item' ? t('itemDetail.moveItem') : t('garmentDetail.moveGarment'), onPress: () => openMove(kind, initial.id, initial.name, locationOf(locations.data, initial)) }}>
             <Text className="font-luciole-bold text-body text-ink dark:text-ink-night">{locationOf(locations.data, initial) ?? '…'}</Text>
           </Section>
         )}
@@ -214,9 +216,9 @@ function EditForm({ kind, initial }: { kind: Kind; initial: Possession }) {
             {error}
           </Text>
         )}
-        <Button label="Enregistrer" onPress={save} loading={saving} disabled={name.trim() === ''} />
+        <Button label={t('edit.save')} onPress={save} loading={saving} disabled={name.trim() === ''} />
         <Pressable accessibilityRole="button" onPress={remove} hitSlop={8} className="self-center py-1">
-          <Text className="font-luciole-bold text-legend text-error dark:text-error-night">{kind === 'item' ? 'Supprimer cet objet' : 'Supprimer ce vêtement'}</Text>
+          <Text className="font-luciole-bold text-legend text-error dark:text-error-night">{kind === 'item' ? t('edit.deleteItem') : t('edit.deleteGarment')}</Text>
         </Pressable>
       </ActionBar>
     </FlowScreen>

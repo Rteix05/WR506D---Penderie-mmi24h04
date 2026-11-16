@@ -1,6 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Text, View } from 'react-native';
 
 import { ActionBar, FlowScreen } from '@/components/add/FlowScreen';
@@ -9,7 +10,7 @@ import { Chips } from '@/components/form/Chips';
 import { Loading } from '@/components/places/Blocks';
 import { Button } from '@/components/ui/Button';
 import { TextField } from '@/components/ui/TextField';
-import { createRoom, createStorage, ROOM_GROUPS, ROOM_TYPES, roomTypeOf, STORAGE_TYPES, type RoomType, type StorageType } from '@/lib/places';
+import { createRoom, createStorage, roomGroups, roomTypeOf, roomTypes, storageTypes, type RoomType, type StorageType } from '@/lib/places';
 import { useLocations } from '@/lib/reference';
 
 /**
@@ -22,6 +23,7 @@ import { useLocations } from '@/lib/reference';
  * ou de la pièce.
  */
 export default function NewLocationScreen() {
+  const { t } = useTranslation('places');
   const { level, parent } = useLocalSearchParams<{ level: 'room' | 'storage'; parent: string }>();
   const locations = useLocations();
   const queryClient = useQueryClient();
@@ -39,14 +41,14 @@ export default function NewLocationScreen() {
   if (!data || (!place && !room)) {
     return (
       <FlowScreen>
-        <StepHeader title={isRoom ? 'Nouvelle pièce' : 'Nouveau rangement'} close />
-        {data ? <Text className="px-5 font-luciole text-body text-muted dark:text-muted-night">Cet emplacement n&apos;existe plus.</Text> : <Loading error={locations.error} />}
+        <StepHeader title={isRoom ? t('newLocation.roomTitle') : t('newLocation.storageTitle')} close />
+        {data ? <Text className="px-5 font-luciole text-body text-muted dark:text-muted-night">{t('newLocation.gone')}</Text> : <Loading error={locations.error} />}
       </FlowScreen>
     );
   }
 
   // Pièces courantes pas encore dans ce logement : en toucher une remplit le nom et le type.
-  const suggestions = ROOM_GROUPS.flatMap((g) => g.rooms).filter((r) => !data.rooms.some((x) => x.place === place?.iri && x.name === r.name));
+  const suggestions = roomGroups().flatMap((g) => g.rooms).filter((r) => !data.rooms.some((x) => x.place === place?.iri && x.name === r.name));
 
   const save = async () => {
     setSaving(true);
@@ -63,29 +65,29 @@ export default function NewLocationScreen() {
       router.back();
     } catch (e) {
       setSaving(false);
-      setError(e instanceof Error ? e.message : 'Enregistrement impossible.');
+      setError(e instanceof Error ? e.message : t('actions.saveError'));
     }
   };
 
   return (
     <FlowScreen>
-      <StepHeader title={isRoom ? 'Nouvelle pièce' : 'Nouveau rangement'} legend={`Dans ${place?.name ?? room?.name}`} close />
+      <StepHeader title={isRoom ? t('newLocation.roomTitle') : t('newLocation.storageTitle')} legend={t('newLocation.in', { name: place?.name ?? room?.name })} close />
 
       <View className="gap-5 px-5">
         <TextField
-          label="Nom"
+          label={t('newLocation.name')}
           value={name}
           onChangeText={setName}
           autoCapitalize="sentences"
           autoFocus
-          placeholder={isRoom ? 'Ex. Chambre de Léa' : 'Ex. Étagère 2'}
+          placeholder={isRoom ? t('newLocation.roomPlaceholder') : t('newLocation.storagePlaceholder')}
           returnKeyType="done"
         />
         {isRoom ? (
           <>
             {suggestions.length > 0 && (
               <Chips
-                label="Pièces courantes"
+                label={t('newLocation.commonRooms')}
                 options={suggestions.map((r) => ({ value: r.name, label: r.name }))}
                 selected={[name.trim()]}
                 onToggle={(value) => {
@@ -94,20 +96,20 @@ export default function NewLocationScreen() {
                 }}
               />
             )}
-            <Chips label="Type" options={ROOM_TYPES} selected={[roomType ?? roomTypeOf(name)]} onToggle={setRoomType} />
+            <Chips label={t('newLocation.type')} options={roomTypes()} selected={[roomType ?? roomTypeOf(name)]} onToggle={setRoomType} />
           </>
         ) : (
-          <Chips label="Type" options={STORAGE_TYPES} selected={[storageType]} onToggle={setStorageType} />
+          <Chips label={t('newLocation.type')} options={storageTypes()} selected={[storageType]} onToggle={setStorageType} />
         )}
       </View>
 
-      <ActionBar note={isRoom ? 'Tu pourras y ajouter des rangements ensuite.' : 'Tu pourras y poser des cartons ensuite.'}>
+      <ActionBar note={isRoom ? t('newLocation.roomNote') : t('newLocation.storageNote')}>
         {error && (
           <Text accessibilityRole="alert" className="text-center font-luciole text-legend text-error dark:text-error-night">
             {error}
           </Text>
         )}
-        <Button label={isRoom ? 'Ajouter cette pièce' : 'Ajouter ce rangement'} onPress={save} loading={saving} disabled={name.trim() === ''} />
+        <Button label={isRoom ? t('newLocation.addRoom') : t('newLocation.addStorage')} onPress={save} loading={saving} disabled={name.trim() === ''} />
       </ActionBar>
     </FlowScreen>
   );

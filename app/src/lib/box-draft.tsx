@@ -1,5 +1,6 @@
 import { createContext, use, useCallback, useMemo, useState, type PropsWithChildren } from 'react';
 
+import i18n from '@/i18n';
 import type { Location } from '@/lib/add-draft';
 import type { BoxType } from '@/lib/places';
 
@@ -16,7 +17,7 @@ const Context = createContext<Api | null>(null);
 
 export function useBoxDraft(): Api {
   const value = use(Context);
-  if (value === null) throw new Error('useBoxDraft doit être utilisé dans le parcours « Créer un carton ».');
+  if (value === null) throw new Error(i18n.t('places:drafts.box'));
 
   return value;
 }

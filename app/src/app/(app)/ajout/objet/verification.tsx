@@ -1,5 +1,6 @@
 import { useMutation } from '@tanstack/react-query';
 import { router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { Text } from 'react-native';
 
 import { ActionBar, FlowScreen } from '@/components/add/FlowScreen';
@@ -15,28 +16,29 @@ import { CONDITIONS, locationPath, useDraft } from '@/lib/add-draft';
  * privé par défaut : « Visible par toi seul ».
  */
 export default function ItemReviewScreen() {
+  const { t } = useTranslation('add');
   const { draft, submit } = useDraft();
   const save = useMutation({ mutationFn: submit, onSuccess: () => router.replace('/ajout/objet/confirmation') });
 
   return (
     <FlowScreen>
-      <StepHeader step={3} title="Vérifie ton objet" />
+      <StepHeader step={3} title={t('itemReview.title')} />
       <PhotoZone photo={draft.photo} art="pantalon" />
       <InfoCard
-        title="L'objet"
+        title={t('itemReview.object')}
         rows={[
-          ['Nom', draft.name.trim()],
-          ['Description', draft.description.trim()],
-          ['Catégorie', draft.category?.name],
-          ['État', CONDITIONS.find((c) => c.value === draft.condition)?.label],
+          [t('itemReview.name'), draft.name.trim()],
+          [t('itemReview.description'), draft.description.trim()],
+          [t('itemReview.category'), draft.category?.name],
+          [t('itemReview.condition'), CONDITIONS.find((c) => c.value === draft.condition)?.label],
         ]}
       />
-      <PathCard title="Localisation" path={locationPath(draft.location)} />
+      <PathCard title={t('itemReview.location')} path={locationPath(draft.location)} />
       <InfoCard
-        title="À l'ajout"
+        title={t('itemReview.onAdd')}
         rows={[
-          ['Statut', 'Disponible'],
-          ['Visible par', 'Toi seul'],
+          [t('itemReview.status'), t('itemReview.available')],
+          [t('itemReview.visibleBy'), t('itemReview.onlyYou')],
         ]}
       />
       <ActionBar>
@@ -45,8 +47,8 @@ export default function ItemReviewScreen() {
             {save.error.message}
           </Text>
         )}
-        <Button label="Ajouter cet objet" onPress={() => save.mutate()} loading={save.isPending} />
-        <Button label="Modifier" variant="secondary" onPress={() => router.dismissTo('/ajout/objet/infos')} disabled={save.isPending} />
+        <Button label={t('itemReview.submit')} onPress={() => save.mutate()} loading={save.isPending} />
+        <Button label={t('itemReview.edit')} variant="secondary" onPress={() => router.dismissTo('/ajout/objet/infos')} disabled={save.isPending} />
       </ActionBar>
     </FlowScreen>
   );

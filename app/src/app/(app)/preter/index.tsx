@@ -1,5 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 
 import { ActionBar, FlowScreen } from '@/components/add/FlowScreen';
@@ -20,6 +21,7 @@ import { normalize, type Kind } from '@/lib/possessions';
  * Paramètres : kind, id, iri, name de l'objet prêté (depuis sa fiche).
  */
 export default function LendWhoStep() {
+  const { t } = useTranslation('loans');
   const params = useLocalSearchParams<{ kind: Kind; id: string; iri: string; name: string }>();
   const { draft, update } = useLoanDraft();
   const candidates = useCandidates();
@@ -42,7 +44,7 @@ export default function LendWhoStep() {
         key={c.id}
         accessibilityRole="radio"
         aria-selected={on}
-        accessibilityLabel={`${c.displayName}, ${c.household ? 'profil de ton compte' : 'ami'}`}
+        accessibilityLabel={`${c.displayName}, ${c.household ? t('who.self') : t('who.friend')}`}
         onPress={() => update({ borrower: c })}
         style={E1}
         className={`mx-5 min-h-[72px] flex-row items-center gap-4 rounded-md px-4 py-3 active:opacity-80 ${on ? 'border-2 border-primary bg-primary/[0.06]' : 'bg-surface dark:bg-surface-night'}`}>
@@ -53,7 +55,7 @@ export default function LendWhoStep() {
         </View>
         {on && (
           <View className="rounded-full bg-primary/[0.12] px-2 py-1">
-            <Text className="font-luciole-bold text-legend text-[#C21B5E] dark:text-primary-night">Choisi</Text>
+            <Text className="font-luciole-bold text-legend text-[#C21B5E] dark:text-primary-night">{t('who.chosen')}</Text>
           </View>
         )}
       </Pressable>
@@ -62,37 +64,35 @@ export default function LendWhoStep() {
 
   return (
     <FlowScreen>
-      <StepHeader title="À qui tu le prêtes ?" legend={`Étape 1 sur 3 · ${name}`} step={1} total={3} close />
+      <StepHeader title={t('who.title')} legend={t('who.step', { name })} step={1} total={3} close />
 
       {candidates.isPending ? (
         <ActivityIndicator />
       ) : candidates.isError ? (
         <Text className="px-5 font-luciole text-body text-error dark:text-error-night">{candidates.error.message}</Text>
       ) : candidates.data.length === 0 ? (
-        <Text className="px-5 font-luciole text-body text-muted dark:text-muted-night">
-          Tu ne peux prêter qu’à un ami ou à un profil de ton compte. Ajoute d’abord un ami, ou un profil de la famille depuis « Mon profil ».
-        </Text>
+        <Text className="px-5 font-luciole text-body text-muted dark:text-muted-night">{t('who.empty')}</Text>
       ) : (
         <>
-          <SearchField value={query} onChange={setQuery} placeholder="Rechercher un ami..." />
+          <SearchField value={query} onChange={setQuery} placeholder={t('who.search')} />
           {household.length > 0 && (
             <View className="gap-3">
-              <SectionHeader title="Ton compte" />
+              <SectionHeader title={t('who.account')} />
               {household.map(row)}
             </View>
           )}
           {friends.length > 0 && (
             <View className="gap-3">
-              <SectionHeader title="Tous mes amis" aside={friends.length > 1 ? `${friends.length} amis` : undefined} />
+              <SectionHeader title={t('who.friends')} aside={friends.length > 1 ? t('who.friendsCount', { count: friends.length }) : undefined} />
               {friends.map(row)}
             </View>
           )}
-          {matches.length === 0 && <Text className="px-5 font-luciole text-body text-muted dark:text-muted-night">Personne ne s’appelle comme ça.</Text>}
+          {matches.length === 0 && <Text className="px-5 font-luciole text-body text-muted dark:text-muted-night">{t('who.noMatch')}</Text>}
         </>
       )}
 
       <ActionBar>
-        <Button label="Continuer" onPress={() => router.push('/preter/infos')} disabled={draft.borrower === null} />
+        <Button label={t('who.continue')} onPress={() => router.push('/preter/infos')} disabled={draft.borrower === null} />
       </ActionBar>
     </FlowScreen>
   );

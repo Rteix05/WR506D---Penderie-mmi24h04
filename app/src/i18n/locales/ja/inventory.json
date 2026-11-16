@@ -1,0 +1,182 @@
+{
+  "wardrobe": {
+    "title": "マイワードローブ",
+    "noResult": "該当なし",
+    "count_other": "服⁠{{count}}⁠点",
+    "lent_other": "貸出中⁠{{count}}⁠点",
+    "all": "すべて",
+    "incomplete": "要入力",
+    "emptyTitle": "ワードローブは空です",
+    "emptyText": "最初の服を追加しましょう。コーデに使えるようになり、しまい場所もわかります。",
+    "emptyAction": "服を追加",
+    "search": "服やブランドを検索...",
+    "filterPrefix": "絞り込み：",
+    "filterTitle": "ステータス",
+    "sortPrefix": "並べ替え：",
+    "sortTitle": "並べ替え",
+    "notFoundTitle": "服が見つかりません",
+    "notFoundText": "検索に一致する服はありません。綴りを確認するか、別の言葉で試してください。",
+    "clearSearch": "検索をクリア"
+  },
+  "items": {
+    "title": "マイアイテム",
+    "count_other": "アイテム⁠{{count}}⁠点",
+    "lent_other": "貸出中⁠{{count}}⁠点",
+    "borrowed_other": "借用中⁠{{count}}⁠点",
+    "all": "すべて",
+    "emptyTitle": "持ち物はまだありません",
+    "emptyText": "最初のアイテムを追加しましょう。しまい場所や貸した相手がいつでもわかります。",
+    "emptyAction": "アイテムを追加",
+    "search": "アイテムを検索...",
+    "filterPrefix": "ステータス：",
+    "filterTitle": "ステータス",
+    "sortPrefix": "並べ替え：",
+    "sortTitle": "並べ替え",
+    "notFoundTitle": "アイテムが見つかりません",
+    "notFoundText": "検索に一致するアイテムはありません。綴りを確認するか、別の言葉で試してください。",
+    "showAll": "すべて表示",
+    "noLocation": "収納場所なし"
+  },
+  "itemDetail": {
+    "deleteError": "削除できませんでした",
+    "location": "収納場所",
+    "moveItem": "アイテムを移動",
+    "details": "詳細",
+    "category": "カテゴリー",
+    "condition": "状態",
+    "description": "説明",
+    "notesAndMemory": "メモと思い出",
+    "editNote": "メモを編集",
+    "addNote": "メモを追加",
+    "noNotes": "まだありません。メモはあなただけに表示されます。",
+    "edit": "編集",
+    "share": "共有",
+    "sell": "売る",
+    "delete": "このアイテムを削除"
+  },
+  "garmentDetail": {
+    "deleteError": "削除できませんでした",
+    "inWardrobe": "ワードローブにあり",
+    "size": "サイズ {{size}}",
+    "incompleteTitle": "要入力",
+    "incompleteText": "今日のコーデから名前だけで追加された服です。カテゴリーを決めて、しまい場所を選んでください。",
+    "complete": "この服を仕上げる",
+    "location": "収納場所",
+    "moveGarment": "服を移動",
+    "description": "説明",
+    "notes": "メモ",
+    "editNote": "メモを編集",
+    "edit": "編集",
+    "move": "移動",
+    "sell": "売る",
+    "delete": "この服を削除"
+  },
+  "edit": {
+    "title": "編集",
+    "name": "名前",
+    "category": "カテゴリー",
+    "optional": "任意",
+    "brand": "ブランド",
+    "brandCreate": "一覧にない場合はブランドを追加",
+    "size": "サイズ",
+    "notedSize": "登録されたサイズ：「{{size}}」。選ばなければこのまま保存されます。",
+    "color": "色",
+    "usage": "用途",
+    "styles": "スタイル（複数選択可）",
+    "condition": "状態",
+    "description": "説明（任意）",
+    "notes": "メモ（あなただけに表示）",
+    "location": "収納場所",
+    "save": "保存",
+    "saveError": "保存できませんでした。",
+    "deleteError": "削除できませんでした",
+    "deleteItem": "このアイテムを削除",
+    "deleteGarment": "この服を削除"
+  },
+  "complete": {
+    "title": "仕上げる",
+    "alreadyTitle": "入力済み",
+    "alreadyText": "この服はカテゴリーと収納場所が登録済みです。",
+    "fromLookTitle": "コーデから追加",
+    "fromLookText": "カテゴリーを決めてしまい場所を選ぶと、住まいとコーデの提案に加わります。",
+    "error": "服を仕上げられませんでした。",
+    "category": "カテゴリー",
+    "note": "カテゴリーと部屋を選んでください。",
+    "finish": "完了",
+    "finishAndEdit": "完了して詳細を追加"
+  },
+  "move": {
+    "itemTitle": "アイテムを移動",
+    "itemNote": "以前の場所はアイテムの履歴に残ります。",
+    "garmentTitle": "服を移動",
+    "garmentNote": "以前の場所は服の履歴に残ります。",
+    "boxTitle": "収納箱を移動",
+    "boxNote": "中身もいっしょに移動し、各アイテムには以前の場所が記録されます。",
+    "error": "移動できませんでした。",
+    "current": "現在の場所",
+    "store": "収納先：{{path}}",
+    "moveHere": "ここに移動",
+    "noRoom": "部屋を選んでください。"
+  },
+  "detail": {
+    "soon": "この操作はまもなく利用できます。",
+    "deleting": "削除中…",
+    "deleteItemTitle": "このアイテムを削除しますか？",
+    "deleteGarmentTitle": "この服を削除しますか？",
+    "deleteBody": "「{{name}}」は持ち物から削除されます。",
+    "cancel": "キャンセル",
+    "confirm": "削除"
+  },
+  "history": {
+    "previous": "以前の収納場所",
+    "line": "{{date}} {{reason}} · {{by}}"
+  },
+  "availability": {
+    "available": "利用可能",
+    "lent": "貸出中",
+    "borrowed": "借用中",
+    "lost": "紛失",
+    "sold": "売却済み"
+  },
+  "statusFilter": {
+    "all": "すべて",
+    "available": "利用可能",
+    "lent": "貸出中",
+    "borrowed": "借用中",
+    "lost": "紛失",
+    "sold": "売却済み"
+  },
+  "condition": {
+    "new": "新品",
+    "excellent": "非常に良い",
+    "good": "良い",
+    "worn": "使用感あり",
+    "damaged": "傷みあり"
+  },
+  "usage": {
+    "everyday": "普段着",
+    "work": "仕事",
+    "sport": "スポーツ",
+    "evening": "パーティー"
+  },
+  "sort": {
+    "recent": "新しい順",
+    "old": "古い順",
+    "name": "名前順"
+  },
+  "lentLine": {
+    "at": "{{name}}さんの手元",
+    "overdue": "{{name}}さんの手元 · 期限切れ"
+  },
+  "moveReason": {
+    "manual": "移動",
+    "box": "収納箱ごと移動",
+    "loanReturn": "返却後に収納",
+    "initial": "最初の収納"
+  },
+  "relativeDay": {
+    "today": "今日",
+    "yesterday": "昨日",
+    "days": "⁠{{days}}⁠日前"
+  }
+}

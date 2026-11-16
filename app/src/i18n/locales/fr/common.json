@@ -1,0 +1,166 @@
+{
+  "logo": "Logo Penderie",
+  "navigation": {
+    "tabMenu": "{{label}}, menu",
+    "add": "Ajouter",
+    "sections": {
+      "accueil": {
+        "title": "Accueil",
+        "legend": "Tout ce qui se passe",
+        "dashboard": {
+          "title": "Tableau de bord",
+          "subtitle": "Ta penderie en un coup d'œil"
+        },
+        "feed": {
+          "title": "Fil d'actualité",
+          "subtitle": "Ce que tes amis t'ont montré"
+        },
+        "notifications": {
+          "title": "Notifications",
+          "subtitle": "Prêts, ventes, partages, demandes"
+        },
+        "search": {
+          "title": "Recherche",
+          "subtitle": "Un objet, une pièce, un ami"
+        }
+      },
+      "inventaire": {
+        "title": "Inventaire",
+        "legend": "Tout ce que tu possèdes",
+        "objects": {
+          "title": "Mes objets",
+          "subtitle": "Tes objets et leurs états"
+        },
+        "wardrobe": {
+          "title": "Mon dressing",
+          "subtitle": "Tes vêtements"
+        },
+        "outfits": {
+          "title": "Mes tenues",
+          "subtitle": "Suggestions et tenues enregistrées"
+        },
+        "collections": {
+          "title": "Mes collections",
+          "subtitle": "Tableaux privés par défaut"
+        },
+        "loans": {
+          "title": "Mes prêts",
+          "subtitle": "Prêtés et empruntés"
+        }
+      },
+      "logements": {
+        "title": "Logements",
+        "legend": "Où sont rangées tes affaires",
+        "places": {
+          "title": "Mes logements",
+          "subtitle": "Logements et pièces"
+        },
+        "main": {
+          "title": "Logement principal",
+          "subtitle": "Ses pièces et ses objets"
+        },
+        "boxes": {
+          "title": "Mes cartons",
+          "subtitle": "Cartons actifs"
+        },
+        "createBox": {
+          "title": "Créer un carton",
+          "subtitle": "Étiquette, emplacement"
+        }
+      },
+      "profil": {
+        "title": "Profil",
+        "legend": "Toi et tes proches",
+        "profile": {
+          "title": "Mon profil",
+          "subtitle": "Informations et profils de la famille"
+        },
+        "friends": {
+          "title": "Amis et abonnés",
+          "subtitle": "Amis, abonnés, demandes"
+        },
+        "shares": {
+          "title": "Mes partages",
+          "subtitle": "Partages actifs"
+        },
+        "selling": {
+          "title": "À vendre chez mes amis",
+          "subtitle": "Annonces de tes amis"
+        },
+        "purchases": {
+          "title": "Achats et ventes",
+          "subtitle": "Commandes, livraisons, remboursements"
+        },
+        "settings": {
+          "title": "Paramètres",
+          "subtitle": "Notifications, confidentialité"
+        }
+      }
+    }
+  },
+  "addMenu": {
+    "title": "Qu'est-ce que tu ajoutes ?",
+    "close": "Fermer",
+    "closeMenu": "Fermer le menu d'ajout",
+    "soon": "Ce parcours arrive bientôt.",
+    "bubbleLabel": "{{title}}, {{description}}",
+    "bubbleLabelSoon": "{{title}}, {{description}}, bientôt",
+    "contextError": "useOpenAddMenu doit être utilisé sous AddMenuContext.",
+    "bubbles": {
+      "clothes": {
+        "title": "Vêtements et Objets",
+        "description": "Un sweat, un CD"
+      },
+      "boxes": {
+        "title": "Cartons",
+        "description": "Créer un carton de rangement"
+      },
+      "place": {
+        "title": "Logement",
+        "description": "Maison, Appart, bureau"
+      },
+      "scan": {
+        "title": "Scanner",
+        "description": "Scanne pour remplir"
+      }
+    }
+  },
+  "menu": {
+    "close": "Fermer le menu",
+    "soon": "Bientôt",
+    "label": "{{title}}, {{subtitle}}",
+    "labelSoon": "{{title}}, bientôt disponible"
+  },
+  "backButton": {
+    "close": "Fermer",
+    "back": "Retour"
+  },
+  "select": {
+    "choose": "Choisir",
+    "loading": "Chargement…",
+    "fieldLabel": "{{label}} : {{value}}",
+    "close": "Fermer",
+    "search": "Rechercher",
+    "searchIn": "Rechercher dans {{title}}",
+    "empty": "Rien pour l’instant.",
+    "noResults": "Aucun résultat.",
+    "none": "Aucun",
+    "create": "Créer",
+    "name": "Nom",
+    "createError": "Création impossible."
+  },
+  "api": {
+    "loginFailed": "E-mail ou mot de passe incorrect.",
+    "loginError": "Connexion impossible",
+    "registerError": "Inscription impossible",
+    "refreshError": "Rafraîchissement de la session impossible",
+    "sessionExpired": "Session expirée, reconnecte-toi.",
+    "unexpectedResponse": "Le serveur a répondu de façon inattendue. Réessaie dans un instant.",
+    "invalidEmail": "Cette adresse e-mail ne semble pas valide.",
+    "leakedPassword": "Ce mot de passe figure dans une fuite de données connue : choisis-en un autre.",
+    "blankField": "Ce champ est obligatoire."
+  },
+  "session": {
+    "providerError": "useSessionStatus doit être utilisé sous <SessionProvider>."
+  }
+}

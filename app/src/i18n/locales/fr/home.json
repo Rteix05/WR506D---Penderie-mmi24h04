@@ -1,0 +1,34 @@
+{
+  "counts": {
+    "items_one": "{{count}} objet",
+    "items_other": "{{count}} objets",
+    "garments_one": "{{count}} vêtement",
+    "garments_other": "{{count}} vêtements",
+    "summary": "{{items}} · {{garments}}"
+  },
+  "dashboard": {
+    "greeting": "Bonjour {{name}}",
+    "greetingAnon": "Bonjour",
+    "scan": "Scanner",
+    "add": "Ajouter",
+    "inventory": "Inventaire",
+    "dressing": "Dressing",
+    "recent": "Derniers ajouts",
+    "emptyTitle": "Rien pour l'instant",
+    "emptyBody": "Scanne ou ajoute ton premier objet : il apparaîtra ici."
+  },
+  "topBar": {
+    "notifications": "Notifications",
+    "notificationsBody": "Les notifications arrivent bientôt.",
+    "profile": "Mon profil"
+  },
+  "look": {
+    "title": "Look du jour",
+    "empty": "Prends-toi en photo et pointe tes vêtements",
+    "tagging": "Pointe les vêtements sur ta photo",
+    "toCheck_one": "{{count}} vêtement à vérifier",
+    "toCheck_other": "{{count}} vêtements à vérifier",
+    "allChecked": "Tout est vérifié : prépare le post",
+    "accessibilityLabel": "Look du jour, {{text}}"
+  }
+}

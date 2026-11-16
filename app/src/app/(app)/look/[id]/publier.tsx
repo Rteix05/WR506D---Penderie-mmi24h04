@@ -2,6 +2,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Image } from 'expo-image';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 
 import { ActionBar, FlowScreen } from '@/components/add/FlowScreen';
@@ -10,8 +11,9 @@ import { Button } from '@/components/ui/Button';
 import { E1 } from '@/components/ui/elevation';
 import { ScreenTitle } from '@/components/ui/ScreenTitle';
 import { TextField } from '@/components/ui/TextField';
+import { dateLocale } from '@/i18n';
 import { mediaSource } from '@/lib/api';
-import { AUDIENCE, publishLook, type Audience } from '@/lib/feed';
+import { audienceLabels, publishLook, type Audience } from '@/lib/feed';
 import { useLook, type Look } from '@/lib/look';
 
 /**
@@ -20,6 +22,7 @@ import { useLook, type Look } from '@/lib/look';
  * pointés deviennent visibles, en lecture, par ces personnes.
  */
 export default function PublishLookScreen() {
+  const { t } = useTranslation('social');
   const { id } = useLocalSearchParams<{ id: string }>();
   const look = useLook(id);
 
@@ -29,7 +32,7 @@ export default function PublishLookScreen() {
         <BackButton close />
       </View>
       <View className="px-5">
-        <ScreenTitle title="Publier" legend="Choisis à qui montrer ton look" />
+        <ScreenTitle title={t('publish.title')} legend={t('publish.legend')} />
       </View>
       {look.isPending && <ActivityIndicator className="py-10" />}
       {look.isError && <Text className="px-5 font-luciole text-body text-error dark:text-error-night">{look.error.message}</Text>}
@@ -39,12 +42,14 @@ export default function PublishLookScreen() {
 }
 
 function PublishBody({ look }: { look: Look }) {
+  const { t } = useTranslation('social');
   const queryClient = useQueryClient();
   const [audience, setAudience] = useState<Audience>('FRIENDS');
   const [body, setBody] = useState(look.caption ?? '');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const day = new Date(`${look.wornOn}T12:00:00`).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' });
+  const day = new Date(`${look.wornOn}T12:00:00`).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'long' });
+  const audiences = audienceLabels();
 
   const publish = async () => {
     setBusy(true);
@@ -55,7 +60,7 @@ function PublishBody({ look }: { look: Look }) {
       router.back();
       router.push({ pathname: '/fil/[id]', params: { id: post.id } });
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Le look n'a pas pu être publié.");
+      setError(e instanceof Error ? e.message : t('publish.error'));
       setBusy(false);
     }
   };
@@ -66,20 +71,20 @@ function PublishBody({ look }: { look: Look }) {
         <View style={E1} className="flex-row items-center gap-3 rounded-lg bg-surface p-3 dark:bg-surface-night">
           <Image source={mediaSource(look.photo.url)} style={{ width: 56, height: 56, borderRadius: 8 }} contentFit="cover" accessible={false} />
           <View className="flex-1">
-            <Text className="font-luciole-bold text-body text-ink dark:text-ink-night">Look du {day}</Text>
+            <Text className="font-luciole-bold text-body text-ink dark:text-ink-night">{t('publish.lookOf', { date: day })}</Text>
             <Text className="font-luciole text-legend text-muted dark:text-muted-night">
-              {look.tags.length > 1 ? `${look.tags.length} vêtements mentionnés` : '1 vêtement mentionné'}
+              {t('publish.mentions', { count: look.tags.length })}
             </Text>
           </View>
         </View>
 
-        <TextField label="Ton message (facultatif)" value={body} onChangeText={setBody} placeholder="Ma tenue du jour…" multiline maxLength={2000} />
+        <TextField label={t('publish.message')} value={body} onChangeText={setBody} placeholder={t('publish.placeholder')} multiline maxLength={2000} />
 
         <View accessibilityRole="radiogroup" className="gap-3">
           <Text accessibilityRole="header" className="font-luciole-bold text-body text-ink dark:text-ink-night">
-            Qui peut voir
+            {t('publish.whoCanSee')}
           </Text>
-          {(Object.keys(AUDIENCE) as Audience[]).map((key) => {
+          {(Object.keys(audiences) as Audience[]).map((key) => {
             const on = audience === key;
             return (
               <Pressable
@@ -90,12 +95,12 @@ function PublishBody({ look }: { look: Look }) {
                 style={E1}
                 className={`flex-row items-center gap-3 rounded-md bg-surface p-4 active:opacity-80 dark:bg-surface-night ${on ? 'border-2 border-primary' : ''}`}>
                 <View className="flex-1 gap-0.5">
-                  <Text className="font-luciole-bold text-body text-ink dark:text-ink-night">{AUDIENCE[key].title}</Text>
-                  <Text className="font-luciole text-legend text-muted dark:text-muted-night">{AUDIENCE[key].detail}</Text>
+                  <Text className="font-luciole-bold text-body text-ink dark:text-ink-night">{audiences[key].title}</Text>
+                  <Text className="font-luciole text-legend text-muted dark:text-muted-night">{audiences[key].detail}</Text>
                 </View>
                 {on && (
                   <View className="rounded-full bg-primary/[0.12] px-2 py-1">
-                    <Text className="font-luciole-bold text-legend text-primary dark:text-primary-night">Choisi</Text>
+                    <Text className="font-luciole-bold text-legend text-primary dark:text-primary-night">{t('publish.chosen')}</Text>
                   </View>
                 )}
               </Pressable>
@@ -104,13 +109,13 @@ function PublishBody({ look }: { look: Look }) {
         </View>
       </View>
 
-      <ActionBar note="Rien n'est public. Les vêtements pointés deviennent visibles par ces personnes ; supprimer la publication les rend de nouveau privés.">
+      <ActionBar note={t('publish.note')}>
         {error && (
           <Text accessibilityRole="alert" className="text-center font-luciole text-legend text-error dark:text-error-night">
             {error}
           </Text>
         )}
-        <Button label="Publier" onPress={publish} loading={busy} />
+        <Button label={t('publish.submit')} onPress={publish} loading={busy} />
       </ActionBar>
     </>
   );

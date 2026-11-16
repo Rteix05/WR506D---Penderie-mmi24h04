@@ -1,5 +1,6 @@
 import { useQuery, type QueryClient } from '@tanstack/react-query';
 
+import i18n from '@/i18n';
 import { apiGet, apiRequest } from '@/lib/api';
 import type { ProfileType } from '@/lib/auth';
 
@@ -58,66 +59,76 @@ export type ProfilePermissions = {
 
 /** « Profil principal », « Profil famille », « Profil enfant » (vocabulaire de la maquette). */
 export function profileKind(p: Pick<AccountProfile, 'type' | 'isDefault'>): string {
-  if (p.isDefault) return 'Profil principal';
+  if (p.isDefault) return i18n.t('profiles:kind.default');
 
-  return p.type === 'CHILD' ? 'Profil enfant' : p.type === 'RELATIVE' ? 'Profil famille' : 'Profil adulte';
+  return p.type === 'CHILD' ? i18n.t('profiles:kind.child') : p.type === 'RELATIVE' ? i18n.t('profiles:kind.relative') : i18n.t('profiles:kind.adult');
 }
-
-const plural = (n: number, one: string, many: string) => `${n} ${n > 1 ? many : one}`;
 
 /** « Profil enfant · 9 ans · 18 objets » */
 export function profileMeta(p: AccountProfile): string {
   const owned = p.counts.items + p.counts.garments;
 
-  return [profileKind(p), p.type === 'CHILD' ? `${p.age} ans` : null, plural(owned, 'objet', 'objets')].filter(Boolean).join(' · ');
+  return [
+    profileKind(p),
+    p.type === 'CHILD' ? i18n.t('profiles:meta.age', { age: p.age }) : null,
+    i18n.t('profiles:meta.items', { count: owned }),
+  ]
+    .filter(Boolean)
+    .join(' · ');
 }
 
 /**
  * Les autorisations, groupées comme dans la maquette (« Autorisations
  * parentales ») : un titre et une ligne d'explication par permission.
  */
-export const PERMISSION_GROUPS: { title: string; items: { key: PermissionKey; title: string; text: string }[] }[] = [
-  {
-    title: 'Ranger ses affaires',
-    items: [
-      { key: 'ITEM_CREATE', title: 'Ajouter des objets', text: 'Dans sa penderie' },
-      { key: 'GARMENT_MANAGE', title: 'Gérer ses vêtements', text: 'Ajouter, modifier, ranger' },
-      { key: 'COLLECTION_CREATE', title: 'Créer des collections', text: 'Regrouper ses objets' },
-      { key: 'MEDIA_UPLOAD', title: 'Ajouter des photos', text: 'Sur ses objets et vêtements' },
-    ],
-  },
-  {
-    title: 'Prêts',
-    items: [
-      { key: 'LOAN_LEND', title: 'Prêter ses objets', text: 'Uniquement à ses amis' },
-      { key: 'LOAN_BORROW', title: 'Emprunter', text: 'Les objets de ses amis' },
-    ],
-  },
-  {
-    title: 'Relations',
-    items: [
-      { key: 'FRIEND_ADD', title: 'Ajouter des amis', text: 'Envoyer et accepter des demandes' },
-      { key: 'SHARE_CREATE', title: 'Partager', text: 'Ses objets, pièces, collections' },
-      { key: 'COMMENT_WRITE', title: 'Commenter', text: 'Les objets partagés par ses amis' },
-      { key: 'FOLLOW', title: "S'abonner et être suivi", text: 'Hors des amis' },
-    ],
-  },
-  {
-    title: 'Vendre et acheter',
-    items: [
-      { key: 'SELL', title: 'Vendre', text: 'Mettre ses objets en vente' },
-      { key: 'PURCHASE', title: 'Acheter', text: 'Les objets en vente de ses amis' },
-    ],
-  },
-];
+export function permissionGroups(): { title: string; items: { key: PermissionKey; title: string; text: string }[] }[] {
+  return [
+    {
+      title: i18n.t('profiles:permissions.groups.organize'),
+      items: [
+        { key: 'ITEM_CREATE', title: i18n.t('profiles:permissions.items.itemCreate.title'), text: i18n.t('profiles:permissions.items.itemCreate.text') },
+        { key: 'GARMENT_MANAGE', title: i18n.t('profiles:permissions.items.garmentManage.title'), text: i18n.t('profiles:permissions.items.garmentManage.text') },
+        { key: 'COLLECTION_CREATE', title: i18n.t('profiles:permissions.items.collectionCreate.title'), text: i18n.t('profiles:permissions.items.collectionCreate.text') },
+        { key: 'MEDIA_UPLOAD', title: i18n.t('profiles:permissions.items.mediaUpload.title'), text: i18n.t('profiles:permissions.items.mediaUpload.text') },
+      ],
+    },
+    {
+      title: i18n.t('profiles:permissions.groups.loans'),
+      items: [
+        { key: 'LOAN_LEND', title: i18n.t('profiles:permissions.items.loanLend.title'), text: i18n.t('profiles:permissions.items.loanLend.text') },
+        { key: 'LOAN_BORROW', title: i18n.t('profiles:permissions.items.loanBorrow.title'), text: i18n.t('profiles:permissions.items.loanBorrow.text') },
+      ],
+    },
+    {
+      title: i18n.t('profiles:permissions.groups.relations'),
+      items: [
+        { key: 'FRIEND_ADD', title: i18n.t('profiles:permissions.items.friendAdd.title'), text: i18n.t('profiles:permissions.items.friendAdd.text') },
+        { key: 'SHARE_CREATE', title: i18n.t('profiles:permissions.items.shareCreate.title'), text: i18n.t('profiles:permissions.items.shareCreate.text') },
+        { key: 'COMMENT_WRITE', title: i18n.t('profiles:permissions.items.commentWrite.title'), text: i18n.t('profiles:permissions.items.commentWrite.text') },
+        { key: 'FOLLOW', title: i18n.t('profiles:permissions.items.follow.title'), text: i18n.t('profiles:permissions.items.follow.text') },
+      ],
+    },
+    {
+      title: i18n.t('profiles:permissions.groups.trade'),
+      items: [
+        { key: 'SELL', title: i18n.t('profiles:permissions.items.sell.title'), text: i18n.t('profiles:permissions.items.sell.text') },
+        { key: 'PURCHASE', title: i18n.t('profiles:permissions.items.purchase.title'), text: i18n.t('profiles:permissions.items.purchase.text') },
+      ],
+    },
+  ];
+}
 
-export const MODES: { value: PermissionMode; label: string }[] = [
-  { value: 'ALLOWED', label: 'Oui' },
-  { value: 'REQUIRES_APPROVAL', label: 'Avec mon accord' },
-  { value: 'DENIED', label: 'Non' },
-];
+export function modes(): { value: PermissionMode; label: string }[] {
+  return [
+    { value: 'ALLOWED', label: i18n.t('profiles:modes.allowed') },
+    { value: 'REQUIRES_APPROVAL', label: i18n.t('profiles:modes.approval') },
+    { value: 'DENIED', label: i18n.t('profiles:modes.denied') },
+  ];
+}
 
-export const MODE_LABEL: Record<PermissionMode, string> = { ALLOWED: 'Oui', REQUIRES_APPROVAL: 'Avec accord', DENIED: 'Non' };
+export function modeLabel(mode: PermissionMode): string {
+  return { ALLOWED: i18n.t('profiles:modes.allowedShort'), REQUIRES_APPROVAL: i18n.t('profiles:modes.approvalShort'), DENIED: i18n.t('profiles:modes.deniedShort') }[mode];
+}
 
 export function useAccountProfiles() {
   return useQuery({ queryKey: ['account', 'profiles'], queryFn: ({ signal }) => apiRequest<AccountProfile[]>('/api/account/profiles', { signal, accept: 'application/json' }) });

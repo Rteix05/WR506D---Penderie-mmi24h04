@@ -1,5 +1,6 @@
 import { useQuery, type QueryClient } from '@tanstack/react-query';
 
+import i18n, { dateLocale } from '@/i18n';
 import { apiGet, apiRequest } from '@/lib/api';
 import type { ConditionValue, Kind } from '@/lib/possessions';
 
@@ -119,21 +120,21 @@ export function loanBadge(loan: Loan): { label: string; tint: string; text: stri
 
   switch (loan.status) {
     case 'REQUESTED':
-      return { label: 'Demandé', ...pink };
+      return { label: i18n.t('loans:badge.requested'), ...pink };
     case 'ACCEPTED':
-      return { label: 'À remettre', ...pink };
+      return { label: i18n.t('loans:badge.accepted'), ...pink };
     case 'ACTIVE':
-      if (loan.overdue) return { label: 'En retard', ...red };
-      if (loan.returnDeclaredAt) return { label: 'Rendu ?', ...pink };
-      return { label: 'En cours', ...green };
+      if (loan.overdue) return { label: i18n.t('loans:badge.overdue'), ...red };
+      if (loan.returnDeclaredAt) return { label: i18n.t('loans:badge.returnDeclared'), ...pink };
+      return { label: i18n.t('loans:badge.active'), ...green };
     case 'RETURNED':
-      return { label: loan.damaged ? 'Rendu abîmé' : 'Terminé', ...grey };
+      return { label: i18n.t(loan.damaged ? 'loans:badge.returnedDamaged' : 'loans:badge.returned'), ...grey };
     case 'DECLINED':
-      return { label: 'Refusé', ...grey };
+      return { label: i18n.t('loans:badge.declined'), ...grey };
     case 'CANCELLED':
-      return { label: 'Annulé', ...grey };
+      return { label: i18n.t('loans:badge.cancelled'), ...grey };
     case 'LOST':
-      return { label: 'Perdu', ...red };
+      return { label: i18n.t('loans:badge.lost'), ...red };
   }
 }
 
@@ -142,7 +143,7 @@ export function shortDate(iso: string, now = new Date()): string {
   const date = new Date(iso.length === 10 ? `${iso}T12:00:00` : iso);
   const sameYear = date.getFullYear() === now.getFullYear();
 
-  return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', ...(sameYear ? {} : { year: 'numeric' }) });
+  return date.toLocaleDateString(dateLocale(), { day: 'numeric', month: 'short', ...(sameYear ? {} : { year: 'numeric' }) });
 }
 
 /**
@@ -151,41 +152,50 @@ export function shortDate(iso: string, now = new Date()): string {
  */
 export function loanLine(loan: Loan): string {
   const lending = loan.role !== 'borrower';
-  const who = lending ? `Prêté à ${loan.borrower.displayName}` : `Emprunté à ${loan.lender.displayName}`;
-  const when = (() => {
-    switch (loan.status) {
-      case 'REQUESTED':
-        return lending ? 'demande à valider' : 'demande envoyée';
-      case 'RETURNED':
-        return loan.returnConfirmedAt ? `rendu le ${shortDate(loan.returnConfirmedAt)}` : 'rendu';
-      case 'DECLINED':
-        return 'demande refusée';
-      case 'CANCELLED':
-        return 'annulé';
-      case 'LOST':
-        return 'perdu';
-      default:
-        return loan.dueDate ? `retour ${shortDate(loan.dueDate)}` : 'retour non défini';
-    }
-  })();
+  const name = lending ? loan.borrower.displayName : loan.lender.displayName;
 
-  return `${loan.status === 'REQUESTED' && !lending ? `Demandé à ${loan.lender.displayName}` : who} · ${when}`;
+  switch (loan.status) {
+    case 'REQUESTED':
+      return i18n.t(lending ? 'loans:line.lentRequested' : 'loans:line.borrowedRequested', { name });
+    case 'RETURNED':
+      if (loan.returnConfirmedAt) {
+        return i18n.t(lending ? 'loans:line.lentReturned' : 'loans:line.borrowedReturned', { name, date: shortDate(loan.returnConfirmedAt) });
+      }
+
+      return i18n.t(lending ? 'loans:line.lentReturnedNoDate' : 'loans:line.borrowedReturnedNoDate', { name });
+    case 'DECLINED':
+      return i18n.t(lending ? 'loans:line.lentDeclined' : 'loans:line.borrowedDeclined', { name });
+    case 'CANCELLED':
+      return i18n.t(lending ? 'loans:line.lentCancelled' : 'loans:line.borrowedCancelled', { name });
+    case 'LOST':
+      return i18n.t(lending ? 'loans:line.lentLost' : 'loans:line.borrowedLost', { name });
+    default:
+      return loan.dueDate
+        ? i18n.t(lending ? 'loans:line.lentDue' : 'loans:line.borrowedDue', { name, date: shortDate(loan.dueDate) })
+        : i18n.t(lending ? 'loans:line.lentNoDue' : 'loans:line.borrowedNoDue', { name });
+  }
 }
 
 /** Les lignes du journal d'un prêt, en français. */
-export const EVENT_LABEL: Record<string, string> = {
-  REQUESTED: 'Demande envoyée',
-  ACCEPTED: 'Prêt accepté',
-  DECLINED: 'Demande refusée',
-  RECEIVED: 'Objet remis',
-  REMINDER_SENT: 'Rappel envoyé',
-  DUE_DATE_CHANGED: 'Date de retour changée',
-  RETURN_DECLARED: 'Retour déclaré',
-  RETURNED: 'Retour confirmé',
-  DAMAGE_REPORTED: 'Dommage constaté',
-  DECLARED_LOST: 'Déclaré perdu',
-  CANCELLED: 'Prêt annulé',
+const EVENT_KEYS: Record<string, string> = {
+  REQUESTED: 'events.requested',
+  ACCEPTED: 'events.accepted',
+  DECLINED: 'events.declined',
+  RECEIVED: 'events.received',
+  REMINDER_SENT: 'events.reminderSent',
+  DUE_DATE_CHANGED: 'events.dueDateChanged',
+  RETURN_DECLARED: 'events.returnDeclared',
+  RETURNED: 'events.returned',
+  DAMAGE_REPORTED: 'events.damageReported',
+  DECLARED_LOST: 'events.declaredLost',
+  CANCELLED: 'events.cancelled',
 };
+
+export function eventLabel(type: string): string {
+  const key = EVENT_KEYS[type];
+
+  return key ? i18n.t(`loans:${key}`) : type;
+}
 
 // ---------------------------------------------------------------------------
 // Date de retour
@@ -193,13 +203,15 @@ export const EVENT_LABEL: Record<string, string> = {
 
 export type DueChoice = 'week' | 'two-weeks' | 'month' | 'none' | 'other';
 
-export const DUE_CHOICES: { value: DueChoice; label: string }[] = [
-  { value: 'week', label: '1 semaine' },
-  { value: 'two-weeks', label: '2 semaines' },
-  { value: 'month', label: '1 mois' },
-  { value: 'none', label: 'Pas de date' },
-  { value: 'other', label: 'Autre date' },
-];
+export function dueChoices(): { value: DueChoice; label: string }[] {
+  return [
+    { value: 'week', label: i18n.t('loans:due.week') },
+    { value: 'two-weeks', label: i18n.t('loans:due.twoWeeks') },
+    { value: 'month', label: i18n.t('loans:due.month') },
+    { value: 'none', label: i18n.t('loans:due.none') },
+    { value: 'other', label: i18n.t('loans:due.other') },
+  ];
+}
 
 const iso = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 

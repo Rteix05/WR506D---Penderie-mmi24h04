@@ -1,6 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Alert, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -11,12 +12,12 @@ import { Banner } from '@/components/ui/Banner';
 import { Button } from '@/components/ui/Button';
 import { InfoCard } from '@/components/ui/InfoCard';
 import { TextField } from '@/components/ui/TextField';
-import { DUE_CHOICES, dueDateOf, EVENT_LABEL, loanBadge, loanGesture, shortDate, useLoan, type DueChoice, type Gesture, type Loan } from '@/lib/loans';
+import { dueChoices, dueDateOf, eventLabel, loanBadge, loanGesture, shortDate, useLoan, type DueChoice, type Gesture, type Loan } from '@/lib/loans';
 import { artOf, CONDITION_LABEL, type Possession } from '@/lib/possessions';
 
 const DONE = {
-  lent: { title: 'Prêt enregistré !', text: 'Une notification est partie.' },
-  returned: { title: 'Objet rendu !', text: 'Il est de retour dans ta penderie.' },
+  lent: { title: 'detail.done.lent.title', text: 'detail.done.lent.text' },
+  returned: { title: 'detail.done.returned.title', text: 'detail.done.returned.text' },
 } as const;
 
 /**
@@ -32,6 +33,7 @@ const DONE = {
  * Paramètre done (lent, returned) : le bandeau de confirmation d'un parcours.
  */
 export default function LoanScreen() {
+  const { t } = useTranslation('loans');
   const { id, done } = useLocalSearchParams<{ id: string; done?: keyof typeof DONE }>();
   const loan = useLoan(id);
   const queryClient = useQueryClient();
@@ -63,14 +65,14 @@ export default function LoanScreen() {
       await loanGesture(queryClient, l.id, gesture, body);
       setEditingDue(false);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Action impossible.');
+      setError(e instanceof Error ? e.message : t('detail.actionError'));
     } finally {
       setBusy(null);
     }
   };
   const confirm = (title: string, text: string, label: string, gesture: Gesture) =>
     Alert.alert(title, text, [
-      { text: 'Retour', style: 'cancel' },
+      { text: t('detail.cancel'), style: 'cancel' },
       { text: label, style: 'destructive', onPress: () => void act(gesture) },
     ]);
   const newDue = dueDateOf(due, otherDate);
@@ -81,35 +83,35 @@ export default function LoanScreen() {
         <SafeAreaView edges={['top']} className="bg-ink/[0.04] dark:bg-ink-night/[0.06]">
           <DetailHero photo={l.possession.photo ?? undefined} art={artOf(l.possession.kind, { id: l.possession.id } as Possession, undefined)} height={240} scale={150 / 44.1} />
         </SafeAreaView>
-        {done && DONE[done] && <Banner tone="success" title={DONE[done].title} text={DONE[done].text} />}
-        <DetailTitle name={l.possession.name} meta={borrower ? `Emprunté à ${l.lender.displayName}` : `Prêté à ${l.borrower.displayName}`} status={badge} />
+        {done && DONE[done] && <Banner tone="success" title={t(DONE[done].title)} text={t(DONE[done].text)} />}
+        <DetailTitle name={l.possession.name} meta={borrower ? t('detail.borrowedFrom', { name: l.lender.displayName }) : t('detail.lentTo', { name: l.borrower.displayName })} status={badge} />
 
         <View className="gap-3">
           <InfoCard
-            title={borrower ? `Objet emprunté à ${l.lender.displayName}` : 'Le prêt'}
+            title={borrower ? t('detail.borrowedTitle', { name: l.lender.displayName }) : t('detail.loanTitle')}
             rows={[
-              ['Propriétaire', borrower ? l.lender.displayName : lender ? 'Toi' : l.lender.displayName],
-              ['Emprunteur', borrower ? 'Toi' : l.borrower.displayName],
-              ['Demandé le', l.status === 'REQUESTED' || l.acceptedAt !== l.requestedAt ? shortDate(l.requestedAt) : null],
-              ['Remis le', l.receivedAt && shortDate(l.receivedAt)],
-              [l.status === 'ACTIVE' || l.status === 'ACCEPTED' ? 'À rendre avant le' : 'Retour prévu', l.dueDate ? shortDate(l.dueDate) : isPending(l) ? 'Non défini' : null],
-              ['Retour déclaré le', l.returnDeclaredAt && shortDate(l.returnDeclaredAt)],
-              ['Rendu le', l.returnConfirmedAt && shortDate(l.returnConfirmedAt)],
-              ['État au départ', l.conditionAtStart && CONDITION_LABEL[l.conditionAtStart]],
-              ['État au retour', l.conditionAtReturn && CONDITION_LABEL[l.conditionAtReturn]],
+              [t('detail.owner'), borrower ? l.lender.displayName : lender ? t('detail.you') : l.lender.displayName],
+              [t('detail.borrower'), borrower ? t('detail.you') : l.borrower.displayName],
+              [t('detail.requestedOn'), l.status === 'REQUESTED' || l.acceptedAt !== l.requestedAt ? shortDate(l.requestedAt) : null],
+              [t('detail.handedOn'), l.receivedAt && shortDate(l.receivedAt)],
+              [l.status === 'ACTIVE' || l.status === 'ACCEPTED' ? t('detail.dueBefore') : t('detail.expectedReturn'), l.dueDate ? shortDate(l.dueDate) : isPending(l) ? t('detail.notDefined') : null],
+              [t('detail.returnDeclaredOn'), l.returnDeclaredAt && shortDate(l.returnDeclaredAt)],
+              [t('detail.returnedOn'), l.returnConfirmedAt && shortDate(l.returnConfirmedAt)],
+              [t('detail.conditionStart'), l.conditionAtStart && CONDITION_LABEL[l.conditionAtStart]],
+              [t('detail.conditionReturn'), l.conditionAtReturn && CONDITION_LABEL[l.conditionAtReturn]],
             ]}
           />
-          {l.overdue && <Banner tone="error" title="En retard" text={`Le retour était prévu le ${shortDate(l.dueDate ?? '')}`} />}
+          {l.overdue && <Banner tone="error" title={t('detail.late')} text={t('detail.lateText', { date: shortDate(l.dueDate ?? '') })} />}
 
           {(l.note || l.returnNote) && (
             <View className="gap-3 px-5">
               {l.note && (
-                <Section title="Note">
+                <Section title={t('detail.note')}>
                   <Text className="font-luciole text-body text-ink dark:text-ink-night">{l.note}</Text>
                 </Section>
               )}
               {l.returnNote && (
-                <Section title="Au retour">
+                <Section title={t('detail.atReturn')}>
                   <Text className="font-luciole text-body text-ink dark:text-ink-night">{l.returnNote}</Text>
                 </Section>
               )}
@@ -118,13 +120,13 @@ export default function LoanScreen() {
 
           {lender && isPending(l) && (
             <View className="px-5">
-              <Section title="Date de retour" link={{ label: editingDue ? 'Garder la date' : 'Changer la date', onPress: () => setEditingDue(!editingDue) }}>
-                <Text className="font-luciole-bold text-body text-ink dark:text-ink-night">{l.dueDate ? shortDate(l.dueDate) : 'Non définie'}</Text>
+              <Section title={t('detail.dueDate')} link={{ label: editingDue ? t('detail.keepDate') : t('detail.changeDate'), onPress: () => setEditingDue(!editingDue) }}>
+                <Text className="font-luciole-bold text-body text-ink dark:text-ink-night">{l.dueDate ? shortDate(l.dueDate) : t('detail.notSet')}</Text>
                 {editingDue && (
                   <View className="gap-3">
-                    <Chips label="Nouvelle date" options={DUE_CHOICES} selected={[due]} onToggle={setDue} />
-                    {due === 'other' && <TextField label="Date de retour (JJ/MM/AAAA)" value={otherDate} onChangeText={setOtherDate} placeholder="20/12/2026" maxLength={10} keyboardType="numbers-and-punctuation" />}
-                    <Button label="Enregistrer la date" variant="secondary" onPress={() => void act('due-date', { dueDate: newDue })} disabled={newDue === undefined} loading={busy === 'due-date'} />
+                    <Chips label={t('detail.newDate')} options={dueChoices()} selected={[due]} onToggle={setDue} />
+                    {due === 'other' && <TextField label={t('detail.returnLabel')} value={otherDate} onChangeText={setOtherDate} placeholder="20/12/2026" maxLength={10} keyboardType="numbers-and-punctuation" />}
+                    <Button label={t('detail.saveDate')} variant="secondary" onPress={() => void act('due-date', { dueDate: newDue })} disabled={newDue === undefined} loading={busy === 'due-date'} />
                   </View>
                 )}
               </Section>
@@ -133,11 +135,11 @@ export default function LoanScreen() {
 
           {l.events && l.events.length > 0 && (
             <View className="px-5">
-              <Section title="Historique" gap="gap-3">
+              <Section title={t('detail.history')} gap="gap-3">
                 {l.events.map((e, i) => (
                   <View key={`${e.type}-${i}`} className="flex-row items-center justify-between gap-4">
                     <Text className="flex-1 font-luciole text-legend text-ink dark:text-ink-night">
-                      {EVENT_LABEL[e.type] ?? e.type}
+                      {eventLabel(e.type)}
                       {e.actor ? ` · ${e.actor}` : ''}
                     </Text>
                     <Text className="font-luciole text-legend text-muted dark:text-muted-night">{shortDate(e.occurredAt)}</Text>
@@ -157,35 +159,35 @@ export default function LoanScreen() {
 
           {lender && l.status === 'REQUESTED' && (
             <>
-              <Button label="Accepter" onPress={() => void act('accept')} loading={busy === 'accept'} />
-              <Button label="Refuser" variant="secondary" onPress={() => void act('decline')} loading={busy === 'decline'} />
+              <Button label={t('detail.accept')} onPress={() => void act('accept')} loading={busy === 'accept'} />
+              <Button label={t('detail.decline')} variant="secondary" onPress={() => void act('decline')} loading={busy === 'decline'} />
             </>
           )}
-          {borrower && l.status === 'ACCEPTED' && <Button label="J'ai l'objet" onPress={() => void act('received')} loading={busy === 'received'} />}
-          {borrower && l.status === 'ACTIVE' && !l.returnDeclaredAt && <Button label="Rendre" onPress={() => void act('declare-return')} loading={busy === 'declare-return'} />}
+          {borrower && l.status === 'ACCEPTED' && <Button label={t('detail.gotIt')} onPress={() => void act('received')} loading={busy === 'received'} />}
+          {borrower && l.status === 'ACTIVE' && !l.returnDeclaredAt && <Button label={t('detail.giveBack')} onPress={() => void act('declare-return')} loading={busy === 'declare-return'} />}
           {lender && l.status === 'ACTIVE' && (
             <>
-              <Button label={l.returnDeclaredAt ? `Confirmer le retour` : 'Objet rendu'} onPress={() => router.push({ pathname: '/pret/[id]/retour', params: { id: l.id } })} />
-              <Button label="Déclarer perdu" variant="secondary" onPress={() => confirm('Objet perdu ?', `« ${l.possession.name} » passera en « Perdu ». Le prêt sera clos.`, 'Déclarer perdu', 'lost')} loading={busy === 'lost'} />
+              <Button label={l.returnDeclaredAt ? t('detail.confirmReturn') : t('detail.objectReturned')} onPress={() => router.push({ pathname: '/pret/[id]/retour', params: { id: l.id } })} />
+              <Button label={t('detail.declareLost')} variant="secondary" onPress={() => confirm(t('detail.lostTitle'), t('detail.lostText', { name: l.possession.name }), t('detail.declareLost'), 'lost')} loading={busy === 'lost'} />
             </>
           )}
           {(l.status === 'REQUESTED' || l.status === 'ACCEPTED') && (lender || borrower) && (
             <Button
-              label={l.status === 'REQUESTED' && borrower ? 'Retirer ma demande' : 'Annuler le prêt'}
+              label={l.status === 'REQUESTED' && borrower ? t('detail.withdraw') : t('detail.cancelLoan')}
               variant="secondary"
-              onPress={() => confirm('Annuler le prêt ?', `Le prêt avec ${other} sera clos.`, 'Annuler le prêt', 'cancel')}
+              onPress={() => confirm(t('detail.cancelTitle'), t('detail.cancelText', { name: other }), t('detail.cancelLoan'), 'cancel')}
               loading={busy === 'cancel'}
             />
           )}
           {l.possession.canView && (
             <Button
-              label="Voir l'objet"
+              label={t('detail.viewObject')}
               variant="ghost"
               onPress={() => router.push({ pathname: l.possession.kind === 'item' ? '/objet/[id]' : '/vetement/[id]', params: { id: l.possession.id } })}
             />
           )}
           {borrower && l.status === 'ACTIVE' && l.returnDeclaredAt && (
-            <Text className="text-center font-luciole text-legend text-muted dark:text-muted-night">{`Tu as dit l’avoir rendu le ${shortDate(l.returnDeclaredAt)} : ${l.lender.displayName} doit confirmer.`}</Text>
+            <Text className="text-center font-luciole text-legend text-muted dark:text-muted-night">{t('detail.returnedDeclared', { date: shortDate(l.returnDeclaredAt), name: l.lender.displayName })}</Text>
           )}
         </View>
       </ScrollView>

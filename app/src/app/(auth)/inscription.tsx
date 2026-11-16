@@ -1,5 +1,6 @@
 import { useMutation } from '@tanstack/react-query';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { KeyboardAvoidingView, Platform, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -7,6 +8,7 @@ import { BackButton } from '@/components/ui/BackButton';
 import { Button } from '@/components/ui/Button';
 import { ScreenTitle } from '@/components/ui/ScreenTitle';
 import { TextField } from '@/components/ui/TextField';
+import i18n from '@/i18n';
 import { ApiError, register, type RegisterPayload } from '@/lib/api';
 
 type Form = Omit<RegisterPayload, 'dateOfBirth'> & { birthDate: string };
@@ -28,12 +30,12 @@ function toIsoDate(input: string): string | null {
 /** Vérifications faites sur le téléphone avant l'envoi ; l'API refait tout. */
 function check(form: Form): Errors {
   const errors: Errors = {};
-  if (form.firstName.trim() === '') errors.firstName = 'Indique ton prénom.';
-  if (form.lastName.trim() === '') errors.lastName = 'Indique ton nom.';
-  if (!/^[a-z0-9.-]{3,30}$/.test(form.username.trim())) errors.username = '3 à 30 caractères : minuscules, chiffres, tirets et points.';
-  if (toIsoDate(form.birthDate) === null) errors.birthDate = 'Au format JJ/MM/AAAA, par exemple 05/11/2001.';
-  if (!/^\S+@\S+\.\S+$/.test(form.email.trim())) errors.email = 'Cette adresse e-mail ne semble pas valide.';
-  if (form.password.length < 10) errors.password = 'Au moins 10 caractères.';
+  if (form.firstName.trim() === '') errors.firstName = i18n.t('auth:register.errors.firstName');
+  if (form.lastName.trim() === '') errors.lastName = i18n.t('auth:register.errors.lastName');
+  if (!/^[a-z0-9.-]{3,30}$/.test(form.username.trim())) errors.username = i18n.t('auth:register.errors.username');
+  if (toIsoDate(form.birthDate) === null) errors.birthDate = i18n.t('auth:register.errors.birthDate');
+  if (!/^\S+@\S+\.\S+$/.test(form.email.trim())) errors.email = i18n.t('auth:register.errors.email');
+  if (form.password.length < 10) errors.password = i18n.t('auth:register.errors.password');
 
   return errors;
 }
@@ -54,6 +56,7 @@ const API_FIELDS: Record<string, keyof Form> = {
  * (enfants, proches) s'ajouteront ensuite depuis « Mon profil ».
  */
 export default function RegisterScreen() {
+  const { t } = useTranslation('auth');
   const [form, setForm] = useState<Form>(EMPTY);
   const [errors, setErrors] = useState<Errors>({});
   const set = (field: keyof Form) => (value: string) => {
@@ -98,38 +101,38 @@ export default function RegisterScreen() {
         <ScrollView contentContainerClassName="gap-6 px-5 pb-10 pt-5" keyboardShouldPersistTaps="handled">
           <View className="items-start gap-6">
             <BackButton />
-            <ScreenTitle title="Créer un compte" legend="Ta penderie est privée : rien n'est visible tant que tu n'as rien partagé." />
+            <ScreenTitle title={t('register.title')} legend={t('register.legend')} />
           </View>
 
           <View className="gap-5">
-            <TextField label="Prénom" value={form.firstName} onChangeText={set('firstName')} error={errors.firstName} autoCapitalize="words" autoComplete="given-name" textContentType="givenName" />
-            <TextField label="Nom" value={form.lastName} onChangeText={set('lastName')} error={errors.lastName} autoCapitalize="words" autoComplete="family-name" textContentType="familyName" />
+            <TextField label={t('register.firstName')} value={form.firstName} onChangeText={set('firstName')} error={errors.firstName} autoCapitalize="words" autoComplete="given-name" textContentType="givenName" />
+            <TextField label={t('register.lastName')} value={form.lastName} onChangeText={set('lastName')} error={errors.lastName} autoCapitalize="words" autoComplete="family-name" textContentType="familyName" />
             <TextField
-              label="Identifiant"
+              label={t('register.username')}
               value={form.username}
               onChangeText={(value) => set('username')(value.toLowerCase())}
               error={errors.username}
-              hint="Ce que tes amis tapent pour te trouver. Minuscules, chiffres, tirets et points."
+              hint={t('register.usernameHint')}
               autoComplete="username-new"
               textContentType="username"
             />
             <TextField
-              label="Date de naissance"
+              label={t('register.birthDate')}
               value={form.birthDate}
               onChangeText={set('birthDate')}
               error={errors.birthDate}
-              hint="JJ/MM/AAAA"
-              placeholder="05/11/2001"
+              hint={t('register.birthDateHint')}
+              placeholder={t('register.birthDatePlaceholder')}
               keyboardType="numbers-and-punctuation"
               autoComplete="birthdate-full"
             />
-            <TextField label="Adresse e-mail" value={form.email} onChangeText={set('email')} error={errors.email} keyboardType="email-address" autoComplete="email" textContentType="emailAddress" />
+            <TextField label={t('register.email')} value={form.email} onChangeText={set('email')} error={errors.email} keyboardType="email-address" autoComplete="email" textContentType="emailAddress" />
             <TextField
-              label="Mot de passe"
+              label={t('register.password')}
               value={form.password}
               onChangeText={set('password')}
               error={errors.password}
-              hint="Au moins 10 caractères."
+              hint={t('register.passwordHint')}
               secureTextEntry
               autoComplete="new-password"
               textContentType="newPassword"
@@ -139,7 +142,7 @@ export default function RegisterScreen() {
                 {generalError}
               </Text>
             )}
-            <Button label="CRÉER MON COMPTE" onPress={onSubmit} loading={submit.isPending} />
+            <Button label={t('register.submit')} onPress={onSubmit} loading={submit.isPending} />
           </View>
         </ScrollView>
       </KeyboardAvoidingView>

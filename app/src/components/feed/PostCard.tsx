@@ -1,6 +1,7 @@
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Modal, Pressable, Text, View } from 'react-native';
 
 import { Illustration } from '@/components/inventory/PossessionCard';
@@ -10,7 +11,7 @@ import { Pill } from '@/components/ui/Banner';
 import { Button } from '@/components/ui/Button';
 import { E1 } from '@/components/ui/elevation';
 import { mediaSource } from '@/lib/api';
-import { AUDIENCE, since, type Mention, type Post } from '@/lib/feed';
+import { audienceLabels, since, type Mention, type Post } from '@/lib/feed';
 
 /** Les mentions d'une publication, au format des points de la photo. */
 const asTags = (mentions: Mention[]): PhotoTag[] => mentions.map((m) => ({ id: String(m.position), x: m.x, y: m.y, position: m.position, status: 'CONFIRMED' }));
@@ -22,15 +23,16 @@ const asTags = (mentions: Mention[]): PhotoTag[] => mentions.map((m) => ({ id: S
  * Dans le fil, la carte entière mène à la publication.
  */
 export function PostCard({ post, linked = false }: { post: Post; linked?: boolean }) {
+  const { t } = useTranslation('social');
   const [open, setOpen] = useState<Mention | null>(null);
   const mentions = post.look?.tags ?? [];
-  const audience = post.audience === 'SPECIFIC' ? 'Personnes choisies' : AUDIENCE[post.audience].chip;
+  const audience = post.audience === 'SPECIFIC' ? t('postCard.specificAudience') : audienceLabels()[post.audience].chip;
 
   return (
     <View style={E1} className="gap-3 rounded-lg bg-surface p-4 dark:bg-surface-night">
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={`Profil de ${post.author.displayName}`}
+        accessibilityLabel={t('postCard.profileOf', { name: post.author.displayName })}
         onPress={() => router.push({ pathname: '/fil/profil/[id]', params: { id: post.author.id } })}
         className="flex-row items-center gap-3 active:opacity-80">
         <ProfileAvatar name={post.author.displayName} size={40} />
@@ -48,12 +50,12 @@ export function PostCard({ post, linked = false }: { post: Post; linked?: boolea
         <LookPhoto
           look={{ photo: post.photo, tags: asTags(mentions) }}
           onTagPress={(tag) => setOpen(mentions.find((m) => m.position === tag.position) ?? null)}
-          tagLabel={(tag) => `Vêtement ${tag.position + 1} : ${mentions.find((m) => m.position === tag.position)?.garment.name ?? ''}`}
+          tagLabel={(tag) => t('postCard.tag', { position: tag.position + 1, name: mentions.find((m) => m.position === tag.position)?.garment.name ?? '' })}
         />
       )}
       {mentions.length > 0 && (
         <Text className="font-luciole text-legend text-muted dark:text-muted-night">
-          {mentions.length > 1 ? `${mentions.length} vêtements mentionnés : touche un point.` : '1 vêtement mentionné : touche le point.'}
+          {t('postCard.mentions', { count: mentions.length })}
         </Text>
       )}
 
@@ -63,7 +65,7 @@ export function PostCard({ post, linked = false }: { post: Post; linked?: boolea
           onPress={() => router.push({ pathname: '/fil/[id]', params: { id: post.id } })}
           hitSlop={8}
           className="self-end active:opacity-80">
-          <Text className="font-luciole-bold text-legend text-ink dark:text-ink-night">Voir la publication ›</Text>
+          <Text className="font-luciole-bold text-legend text-ink dark:text-ink-night">{t('postCard.seePost')}</Text>
         </Pressable>
       )}
 
@@ -74,6 +76,7 @@ export function PostCard({ post, linked = false }: { post: Post; linked?: boolea
 
 /** La liste numérotée des vêtements mentionnés (la 2e image du post, sur la page d'une publication). */
 export function MentionList({ post }: { post: Post }) {
+  const { t } = useTranslation('social');
   const [open, setOpen] = useState<Mention | null>(null);
   const mentions = post.look?.tags ?? [];
   if (mentions.length === 0) return null;
@@ -81,7 +84,7 @@ export function MentionList({ post }: { post: Post }) {
   return (
     <View style={E1} className="gap-3 rounded-lg bg-surface p-4 dark:bg-surface-night">
       <Text accessibilityRole="header" className="font-luciole-bold text-body text-ink dark:text-ink-night">
-        Les vêtements du look
+        {t('postCard.garmentsOfLook')}
       </Text>
       {mentions.map((m) => (
         <Pressable key={m.position} accessibilityRole="button" onPress={() => setOpen(m)} className="flex-row items-center gap-3 active:opacity-80">
@@ -117,9 +120,10 @@ export function GarmentThumb({ photo, size = 48 }: { photo?: string | null; size
  * montre (sinon, il reste privé).
  */
 function MentionSheet({ mention, post, onClose }: { mention: Mention | null; post: Post; onClose: () => void }) {
+  const { t } = useTranslation('social');
   const garment = mention?.garment;
   const mine = post.canDelete;
-  const details = garment ? [garment.brand, garment.size ? `Taille ${garment.size}` : null, garment.colors?.join(', ')].filter(Boolean).join(' · ') : '';
+  const details = garment ? [garment.brand, garment.size ? t('postCard.size', { size: garment.size }) : null, garment.colors?.join(', ')].filter(Boolean).join(' · ') : '';
 
   const open = () => {
     if (!garment) return;
@@ -133,7 +137,7 @@ function MentionSheet({ mention, post, onClose }: { mention: Mention | null; pos
 
   return (
     <Modal visible={mention !== null} transparent animationType="slide" onRequestClose={onClose}>
-      <Pressable accessibilityLabel="Fermer" onPress={onClose} className="flex-1 bg-ink/40" />
+      <Pressable accessibilityLabel={t('postCard.close')} onPress={onClose} className="flex-1 bg-ink/40" />
       {mention && garment && (
         <View className="gap-4 rounded-t-lg bg-bg px-5 pb-10 pt-5 dark:bg-bg-night">
           <View className="flex-row items-center gap-3">
@@ -148,11 +152,11 @@ function MentionSheet({ mention, post, onClose }: { mention: Mention | null; pos
             </View>
           </View>
           {garment.canView ? (
-            <Button label={mine ? 'Voir dans mon dressing' : `Voir sur le profil de ${post.author.displayName}`} onPress={open} />
+            <Button label={mine ? t('postCard.viewInWardrobe') : t('postCard.viewOnProfile', { name: post.author.displayName })} onPress={open} />
           ) : (
-            <Text className="font-luciole text-legend text-muted dark:text-muted-night">{post.author.displayName} ne te montre pas ce vêtement : il reste privé.</Text>
+            <Text className="font-luciole text-legend text-muted dark:text-muted-night">{t('postCard.privateGarment', { name: post.author.displayName })}</Text>
           )}
-          <Button label="Fermer" variant="ghost" onPress={onClose} />
+          <Button label={t('postCard.close')} variant="ghost" onPress={onClose} />
         </View>
       )}
     </Modal>

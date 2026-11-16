@@ -1,6 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Text, View } from 'react-native';
 
 import { ActionBar, FlowScreen } from '@/components/add/FlowScreen';
@@ -43,6 +44,7 @@ export default function EditProfileScreen() {
 }
 
 function EditForm({ profile }: { profile: AccountProfile }) {
+  const { t } = useTranslation('profiles');
   const queryClient = useQueryClient();
   const full = profile.canManage;
   const [firstName, setFirstName] = useState(profile.firstName);
@@ -56,7 +58,7 @@ function EditForm({ profile }: { profile: AccountProfile }) {
   const save = async (extra: { type?: 'RELATIVE' } = {}) => {
     const dateOfBirth = parseFrenchDate(birth);
     if (full && !dateOfBirth) {
-      setErrors({ dateOfBirth: 'Date au format JJ/MM/AAAA.' });
+      setErrors({ dateOfBirth: t('edit.dateError') });
 
       return;
     }
@@ -72,44 +74,44 @@ function EditForm({ profile }: { profile: AccountProfile }) {
       router.back();
     } catch (e) {
       setSaving(false);
-      setErrors(e instanceof ApiError && Object.keys(e.violations).length > 0 ? e.violations : { form: e instanceof Error ? e.message : 'Enregistrement impossible.' });
+      setErrors(e instanceof ApiError && Object.keys(e.violations).length > 0 ? e.violations : { form: e instanceof Error ? e.message : t('edit.saveError') });
     }
   };
 
   return (
     <>
       <View className="px-5">
-        <ScreenTitle title="Modifier le profil" legend={`${profile.displayName} · ${profileKind(profile).toLowerCase()}`} />
+        <ScreenTitle title={t('edit.title')} legend={`${profile.displayName} · ${profileKind(profile).toLowerCase()}`} />
       </View>
 
       <View style={E1} className="mx-5 items-center rounded-lg bg-surface py-5 dark:bg-surface-night">
         <ProfileAvatar name={displayName || profile.displayName} size={88} />
       </View>
 
-      {!full && <Banner tone="info" title="Ton identité est gérée par ton tuteur" text="Tu peux changer ton nom affiché et ta bio." />}
+      {!full && <Banner tone="info" title={t('edit.identityBannerTitle')} text={t('edit.identityBannerText')} />}
 
       <View className="gap-5 px-5">
-        {full && <TextField label="Prénom" value={firstName} onChangeText={setFirstName} autoCapitalize="words" error={errors.firstName} />}
-        {full && <TextField label="Nom" value={lastName} onChangeText={setLastName} autoCapitalize="words" error={errors.lastName} />}
-        <TextField label="Nom affiché" value={displayName} onChangeText={setDisplayName} hint="Celui que voient les amis." error={errors.displayName} />
-        {full && <TextField label="Date de naissance" value={birth} onChangeText={setBirth} placeholder="JJ/MM/AAAA" keyboardType="numbers-and-punctuation" error={errors.dateOfBirth} />}
-        <TextField label="Bio" value={bio} onChangeText={setBio} multiline maxLength={500} placeholder="Facultatif" error={errors.bio} />
+        {full && <TextField label={t('edit.firstName')} value={firstName} onChangeText={setFirstName} autoCapitalize="words" error={errors.firstName} />}
+        {full && <TextField label={t('edit.lastName')} value={lastName} onChangeText={setLastName} autoCapitalize="words" error={errors.lastName} />}
+        <TextField label={t('edit.displayName')} value={displayName} onChangeText={setDisplayName} hint={t('edit.displayNameHint')} error={errors.displayName} />
+        {full && <TextField label={t('edit.birthDate')} value={birth} onChangeText={setBirth} placeholder={t('edit.birthPlaceholder')} keyboardType="numbers-and-punctuation" error={errors.dateOfBirth} />}
+        <TextField label={t('edit.bio')} value={bio} onChangeText={setBio} multiline maxLength={500} placeholder={t('edit.bioPlaceholder')} error={errors.bio} />
       </View>
 
       {full && profile.type === 'CHILD' && profile.age >= 18 && (
         <View className="gap-2 px-5">
-          <Banner tone="success" title={`${profile.displayName} est majeur`} text="Tu peux en faire un profil famille : ses restrictions d'enfant sont levées, tu le gères toujours." />
-          <Button label="Passer en profil famille" variant="secondary" onPress={() => save({ type: 'RELATIVE' })} disabled={saving} />
+          <Banner tone="success" title={t('edit.adultTitle', { name: profile.displayName })} text={t('edit.adultText')} />
+          <Button label={t('edit.toFamily')} variant="secondary" onPress={() => save({ type: 'RELATIVE' })} disabled={saving} />
         </View>
       )}
 
-      <ActionBar note="Chaque profil garde son propre inventaire et son propre dressing.">
+      <ActionBar note={t('edit.note')}>
         {errors.form && (
           <Text accessibilityRole="alert" className="text-center font-luciole text-legend text-error dark:text-error-night">
             {errors.form}
           </Text>
         )}
-        <Button label="Enregistrer" onPress={() => save()} loading={saving} disabled={displayName.trim() === ''} />
+        <Button label={t('edit.save')} onPress={() => save()} loading={saving} disabled={displayName.trim() === ''} />
       </ActionBar>
     </>
   );

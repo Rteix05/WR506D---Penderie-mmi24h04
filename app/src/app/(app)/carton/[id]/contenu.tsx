@@ -1,5 +1,6 @@
 import { useLocalSearchParams } from 'expo-router';
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
 import { FlowScreen } from '@/components/add/FlowScreen';
@@ -9,7 +10,7 @@ import { Loading, Missing, PossessionRow } from '@/components/places/Blocks';
 import { BackButton } from '@/components/ui/BackButton';
 import { ScreenTitle } from '@/components/ui/ScreenTitle';
 import { normalize } from '@/lib/possessions';
-import { inBox, objects, usePlacesData } from '@/lib/places';
+import { inBox, usePlacesData } from '@/lib/places';
 
 type Filter = 'all' | 'item' | 'garment' | 'lent';
 
@@ -22,6 +23,7 @@ type Filter = 'all' | 'item' | 'garment' | 'lent';
  * « Visserie »).
  */
 export default function BoxContentsScreen() {
+  const { t } = useTranslation('places');
   const { id } = useLocalSearchParams<{ id: string }>();
   const { data, error } = usePlacesData();
   const [query, setQuery] = useState('');
@@ -46,20 +48,20 @@ export default function BoxContentsScreen() {
         <View className="h-11 flex-row items-center px-5">
           <BackButton />
         </View>
-        {data ? <Missing text="Ce carton n'existe plus." /> : <Loading error={error} />}
+        {data ? <Missing text={t('boxContents.gone')} /> : <Loading error={error} />}
       </FlowScreen>
     );
   }
 
   const chips: { value: Filter; label: string }[] = [
-    { value: 'all', label: 'Tous' },
+    { value: 'all', label: t('boxContents.all') },
     ...(contents.some((p) => p.kind === 'item') && contents.some((p) => p.kind === 'garment')
       ? [
-          { value: 'item' as const, label: 'Objets' },
-          { value: 'garment' as const, label: 'Vêtements' },
+          { value: 'item' as const, label: t('boxContents.items') },
+          { value: 'garment' as const, label: t('boxContents.garments') },
         ]
       : []),
-    ...(contents.some((p) => p.availability === 'LENT') ? [{ value: 'lent' as const, label: 'Prêtés' }] : []),
+    ...(contents.some((p) => p.availability === 'LENT') ? [{ value: 'lent' as const, label: t('boxContents.lent') }] : []),
   ];
 
   return (
@@ -68,19 +70,19 @@ export default function BoxContentsScreen() {
         <BackButton />
       </View>
       <View className="px-5">
-        <ScreenTitle title="Contenu du carton" legend={`${box.name} · ${objects(contents.length)}`} />
+        <ScreenTitle title={t('boxContents.title')} legend={`${box.name} · ${t('counts.objects', { count: contents.length })}`} />
       </View>
 
-      <SearchField value={query} onChange={setQuery} placeholder="Rechercher dans ce carton..." />
+      <SearchField value={query} onChange={setQuery} placeholder={t('boxContents.search')} />
       {chips.length > 1 && <FilterChips options={chips} value={filter} onChange={setFilter} />}
 
       {shown.length === 0 ? (
         <EmptyState
           icon="search"
-          title="Aucun objet trouvé"
-          text="Rien dans ce carton ne correspond à ta recherche."
+          title={t('boxContents.emptyTitle')}
+          text={t('boxContents.emptyText')}
           action={{
-            label: 'Tout afficher',
+            label: t('boxContents.emptyAction'),
             onPress: () => {
               setQuery('');
               setFilter('all');

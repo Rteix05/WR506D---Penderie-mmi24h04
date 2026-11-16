@@ -1,4 +1,5 @@
 import { router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
 import { ActionBar, closeFlow, FlowScreen } from '@/components/add/FlowScreen';
@@ -14,31 +15,32 @@ import { locationPath, useDraft } from '@/lib/add-draft';
  * 135:3164). « Voir le vêtement » ferme le parcours et ouvre sa fiche.
  */
 export default function GarmentDoneScreen() {
+  const { t } = useTranslation('add');
   const { draft, created, reset } = useDraft();
   const total = created?.total ?? 0;
 
   return (
     <FlowScreen>
       <View className="pt-1">
-        <Banner tone="success" title="Vêtement ajouté !" text={`${total} ${total > 1 ? 'vêtements' : 'vêtement'} dans ton dressing.`} />
+        <Banner tone="success" title={t('garmentDone.added')} text={t('garmentDone.banner', { count: total })} />
       </View>
       <View className="px-5">
-        <ScreenTitle title={created?.name ?? draft.name} legend={['Dans ma penderie', draft.location.room?.name].filter(Boolean).join(' · ')} />
+        <ScreenTitle title={created?.name ?? draft.name} legend={[t('garmentDone.legend'), draft.location.room?.name].filter(Boolean).join(' · ')} />
       </View>
       <PhotoZone photo={draft.photo} art={draft.garmentType?.art ?? 'tshirt'} />
-      <PathCard title="Localisation" path={locationPath(draft.location)} />
+      <PathCard title={t('garmentDone.location')} path={locationPath(draft.location)} />
       <InfoCard
-        title="Et maintenant"
+        title={t('garmentDone.now')}
         rows={[
-          ['Le porter', 'Il entre dans les suggestions de tenues'],
-          ['Le prêter', 'À un ami, en 3 étapes'],
-          ['Le vendre', 'Visible par tes amis'],
+          [t('garmentDone.wear'), t('garmentDone.wearValue')],
+          [t('garmentDone.lend'), t('garmentDone.lendValue')],
+          [t('garmentDone.sell'), t('garmentDone.sellValue')],
         ]}
       />
-      <ActionBar note={created?.photoSaved === false ? "La photo n'a pas pu être enregistrée : tu pourras l'ajouter depuis la fiche." : undefined}>
+      <ActionBar note={created?.photoSaved === false ? t('garmentDone.photoFailed') : undefined}>
         {created && (
           <Button
-            label="Voir le vêtement"
+            label={t('garmentDone.see')}
             onPress={() => {
               closeFlow();
               router.push({ pathname: '/vetement/[id]', params: { id: created.id } });
@@ -46,14 +48,14 @@ export default function GarmentDoneScreen() {
           />
         )}
         <Button
-          label="Ajouter un autre vêtement"
+          label={t('garmentDone.addAnother')}
           variant="secondary"
           onPress={() => {
             reset('garment');
             router.dismissTo('/ajout/vetement/type');
           }}
         />
-        <Button label="Retour à l'accueil" variant="ghost" onPress={closeFlow} />
+        <Button label={t('garmentDone.home')} variant="ghost" onPress={closeFlow} />
       </ActionBar>
     </FlowScreen>
   );

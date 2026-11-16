@@ -1,6 +1,7 @@
 import { useQuery, type QueryClient } from '@tanstack/react-query';
 import type { ImagePickerAsset } from 'expo-image-picker';
 
+import i18n from '@/i18n';
 import { apiGet, apiRequest, apiUpload } from '@/lib/api';
 import { fileFormData, preparePhoto, type ScanSuggestion } from '@/lib/scan';
 
@@ -57,14 +58,20 @@ export type Look = {
 export const MAX_TAGS = 12;
 
 export const LOOK_STATUS: Record<LookStatus, string> = {
-  TAGGING: 'En préparation',
-  READY: 'Prêt à poster',
-  POSTED: 'Posté',
+  get TAGGING() {
+    return i18n.t('social:lookStatus.preparing');
+  },
+  get READY() {
+    return i18n.t('social:lookStatus.ready');
+  },
+  get POSTED() {
+    return i18n.t('social:lookStatus.posted');
+  },
 };
 
 /** Le nom à afficher pour un point : son vêtement. */
 export function tagName(tag: LookTag): string {
-  return tag.garment?.name ?? tag.suggestion?.name ?? `Vêtement ${tag.position + 1}`;
+  return tag.garment?.name ?? tag.suggestion?.name ?? i18n.t('social:look.garmentName', { position: tag.position + 1 });
 }
 
 export const isReady = (look: Look) => look.tags.length > 0 && look.tags.every((t) => t.status === 'CONFIRMED');

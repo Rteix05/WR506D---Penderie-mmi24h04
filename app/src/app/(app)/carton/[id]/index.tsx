@@ -1,5 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { router, useLocalSearchParams } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { Text, View } from 'react-native';
 
 import { ActionBar, FlowScreen } from '@/components/add/FlowScreen';
@@ -13,7 +14,7 @@ import { Heading } from '@/components/ui/Heading';
 import { ScreenTitle } from '@/components/ui/ScreenTitle';
 import type { Location } from '@/lib/add-draft';
 import { openMove } from '@/lib/moves';
-import { BOX_TYPES, boxPath, deleteLocation, inBox, labelOf, objects, usePlacesData } from '@/lib/places';
+import { boxPath, boxTypes, deleteLocation, inBox, labelOf, usePlacesData } from '@/lib/places';
 
 /** Objets montrés avant « Voir les N objets ». */
 const PREVIEW = 3;
@@ -30,6 +31,7 @@ const PREVIEW = 3;
  * Supprimer : seulement un carton vide (l'API refuse sinon).
  */
 export default function BoxScreen() {
+  const { t } = useTranslation('places');
   const { id } = useLocalSearchParams<{ id: string }>();
   const { data, error } = usePlacesData();
   const queryClient = useQueryClient();
@@ -41,7 +43,7 @@ export default function BoxScreen() {
         <View className="h-11 flex-row items-center px-5">
           <BackButton />
         </View>
-        {data ? <Missing text="Ce carton n'existe plus." /> : <Loading error={error} />}
+        {data ? <Missing text={t('box.gone')} /> : <Loading error={error} />}
       </FlowScreen>
     );
   }
@@ -67,7 +69,7 @@ export default function BoxScreen() {
         <BackButton />
       </View>
       <View className="px-5">
-        <ScreenTitle title={box.name} legend={[path, objects(contents.length)].filter(Boolean).join(' · ')} />
+        <ScreenTitle title={box.name} legend={[path, t('counts.objects', { count: contents.length })].filter(Boolean).join(' · ')} />
       </View>
 
       <Breadcrumb
@@ -83,38 +85,40 @@ export default function BoxScreen() {
         <View className="flex-row items-start justify-between gap-3">
           <View className="flex-1 gap-1">
             <Heading level="h3" className="uppercase text-ink dark:text-ink-night">
-              {objects(contents.length)}
+              {t('counts.objects', { count: contents.length })}
             </Heading>
-            {lent > 0 && <Text className="font-luciole text-legend text-muted dark:text-muted-night">dont {lent} prêté{lent > 1 ? 's' : ''}</Text>}
+            {lent > 0 && (
+              <Text className="font-luciole text-legend text-muted dark:text-muted-night">{t('box.lent', { count: lent })}</Text>
+            )}
           </View>
           {box.sealed && (
             <View className="rounded-full bg-ink/[0.08] px-2 py-1 dark:bg-ink-night/[0.12]">
-              <Text className="font-luciole-bold text-legend text-muted dark:text-muted-night">Fermé</Text>
+              <Text className="font-luciole-bold text-legend text-muted dark:text-muted-night">{t('box.sealed')}</Text>
             </View>
           )}
         </View>
-        <InfoRow label="Type" value={labelOf(BOX_TYPES, box.type)} />
-        {box.reference && <InfoRow label="Étiquette" value={box.reference} />}
+        <InfoRow label={t('box.type')} value={labelOf(boxTypes(), box.type)} />
+        {box.reference && <InfoRow label={t('box.reference')} value={box.reference} />}
       </View>
 
       {contents.length > 0 ? (
         <View className="gap-3">
-          <SectionHeader title="Ce qu'il contient" aside={contents.length > PREVIEW ? `Voir les ${contents.length} objets ›` : undefined} onAside={seeAll} />
+          <SectionHeader title={t('box.contents')} aside={contents.length > PREVIEW ? t('box.seeAll', { count: contents.length }) : undefined} onAside={seeAll} />
           {contents.slice(0, PREVIEW).map((p) => (
             <PossessionRow key={p['@id']} possession={p} />
           ))}
         </View>
       ) : (
-        <Missing text="Ce carton est vide. Ajoute un objet : il sera rangé directement dedans." />
+        <Missing text={t('box.empty')} />
       )}
 
       <ActionBar>
-        <Button label="Ajouter un objet" onPress={() => router.push({ pathname: '/ajouter', params: { at: JSON.stringify(at) } })} />
-        <Button label="Déplacer le carton" variant="secondary" onPress={() => openMove('box', box.id, box.name, path)} />
+        <Button label={t('box.addObject')} onPress={() => router.push({ pathname: '/ajouter', params: { at: JSON.stringify(at) } })} />
+        <Button label={t('box.move')} variant="secondary" onPress={() => openMove('box', box.id, box.name, path)} />
         {contents.length === 0 && (
           <DeleteLink
-            label="Supprimer ce carton"
-            what="ce carton"
+            label={t('box.delete')}
+            what={t('box.deleteWhat')}
             name={box.name}
             onConfirm={async () => {
               await deleteLocation(queryClient, 'box', box.id);

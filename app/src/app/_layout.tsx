@@ -3,8 +3,10 @@ import '../global.css';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { useFonts } from 'expo-font';
 import { SplashScreen, Stack } from 'expo-router';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
+// Avant tout écran : i18next est initialisé à l'import (langue du téléphone).
+import { restoreLanguage } from '@/i18n';
 import { SessionProvider, useSessionStatus } from '@/lib/auth';
 import { queryClient } from '@/lib/query-client';
 
@@ -39,8 +41,13 @@ function RootNavigator() {
     Luciole: require('@/assets/fonts/Luciole-Regular.ttf'),
     'Luciole-Bold': require('@/assets/fonts/Luciole-Bold.ttf'),
   });
+  // La langue choisie dans l'app (si elle l'a été) est relue avant le premier écran.
+  const [languageReady, setLanguageReady] = useState(false);
+  useEffect(() => {
+    restoreLanguage().finally(() => setLanguageReady(true));
+  }, []);
   // Si une police ne charge pas, l'app s'ouvre quand même, en police système.
-  const ready = status !== 'loading' && (fontsLoaded || fontError !== null);
+  const ready = status !== 'loading' && languageReady && (fontsLoaded || fontError !== null);
 
   useEffect(() => {
     if (ready) SplashScreen.hide();

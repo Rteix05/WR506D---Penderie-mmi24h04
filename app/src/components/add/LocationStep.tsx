@@ -1,5 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Pressable, Text, View } from 'react-native';
 
 import { SelectField } from '@/components/form/SelectField';
@@ -31,6 +32,7 @@ const find = (list: Ref[], iri: string | null | undefined): Ref | null => (iri ?
  * pas de niveau Conteneur, et les emplacements récents comptent les cartons.
  */
 export function LocationStep({ kind, location, onChange }: Props) {
+  const { t } = useTranslation('add');
   const locations = useLocations();
   const queryClient = useQueryClient();
   const data = locations.data;
@@ -55,54 +57,54 @@ export function LocationStep({ kind, location, onChange }: Props) {
     return ref;
   };
 
-  const boxLabel = kind === 'garment' ? 'Étagère' : 'Conteneur';
+  const boxLabel = kind === 'garment' ? t('locationStep.shelf') : t('locationStep.box');
   const path = locationPath(location);
 
   return (
     <View className="gap-6">
-      <PathCard title="Emplacement choisi" path={path || 'Choisis au moins un logement et une pièce'} />
+      <PathCard title={t('locationStep.path')} path={path || t('locationStep.emptyPath')} />
 
       <View className="gap-5 px-5">
         <SelectField
-          label="Logement"
+          label={t('locationStep.place')}
           value={location.place?.name ?? null}
           loading={locations.isPending}
           options={(data?.places ?? []).map((p) => ({ key: p.iri, label: p.name }))}
           onSelect={(iri) => onChange({ place: find(data?.places ?? [], iri), room: null, storage: null, box: null })}
           onCreate={async (name) => onChange({ place: await created('place', name), room: null, storage: null, box: null })}
-          createLabel="Nouveau logement"
+          createLabel={t('locationStep.newPlace')}
         />
         <SelectField
-          label="Pièce"
+          label={t('locationStep.room')}
           value={location.room?.name ?? null}
           disabled={!location.place}
           options={rooms.map((r) => ({ key: r.iri, label: r.name }))}
           onSelect={(iri) => onChange({ ...location, room: find(rooms, iri), storage: null, box: null })}
           onCreate={async (name) => onChange({ ...location, room: await created('room', name), storage: null, box: null })}
-          createLabel="Nouvelle pièce"
+          createLabel={t('locationStep.newRoom')}
         />
         <SelectField
-          label="Rangement"
-          placeholder="Facultatif"
+          label={t('locationStep.storage')}
+          placeholder={t('locationStep.optional')}
           value={location.storage?.name ?? null}
           disabled={!location.room}
           clearable
           options={storages.map((s) => ({ key: s.iri, label: s.name }))}
           onSelect={(iri) => onChange({ ...location, storage: find(storages, iri), box: null })}
           onCreate={async (name) => onChange({ ...location, storage: await created('storage', name), box: null })}
-          createLabel="Nouveau rangement"
+          createLabel={t('locationStep.newStorage')}
         />
         {kind !== 'box' && (
           <SelectField
             label={boxLabel}
-            placeholder="Facultatif"
+            placeholder={t('locationStep.optional')}
             value={location.box?.name ?? null}
             disabled={!location.room}
             clearable
             options={boxes.map((b) => ({ key: b.iri, label: b.name }))}
             onSelect={(iri) => onChange({ ...location, box: find(boxes, iri) })}
             onCreate={async (name) => onChange({ ...location, box: await created('box', name) })}
-            createLabel={kind === 'garment' ? 'Nouvelle étagère' : 'Nouveau conteneur'}
+            createLabel={kind === 'garment' ? t('locationStep.newShelf') : t('locationStep.newBox')}
           />
         )}
       </View>
@@ -120,6 +122,7 @@ type Possession = { room?: string; storage?: string | null; box?: string | null 
  * les niveaux d'un coup.
  */
 function RecentPlaces({ kind, locations, onPick }: { kind: Draft['kind'] | 'box'; locations: Locations; onPick: (l: Location) => void }) {
+  const { t } = useTranslation('add');
   const possessions = useQuery({
     queryKey: ['inventory', 'locations', kind],
     queryFn: ({ signal }) => apiGetAll<Possession>(kind === 'item' ? '/api/items' : '/api/garments', signal),
@@ -157,27 +160,22 @@ function RecentPlaces({ kind, locations, onPick }: { kind: Draft['kind'] | 'box'
   }, [kind, possessions.data, locations]);
 
   if (recents.length === 0) return null;
-  const unit = {
-    item: ['objet rangé ici', 'objets rangés ici'],
-    garment: ['vêtement rangé ici', 'vêtements rangés ici'],
-    box: ['carton déjà posé ici', 'cartons déjà posés ici'],
-  }[kind];
 
   return (
     <View className="gap-3 px-5">
       <Text accessibilityRole="header" className="font-luciole-bold text-body text-ink dark:text-ink-night">
-        Emplacements récents
+        {t('locationStep.recent')}
       </Text>
       {recents.map(({ location, count }) => {
         // Comme la maquette : à partir de la pièce (« Garage › Étagère 2 »).
         const label = locationPath({ ...location, place: null });
-        const meta = `${count} ${count > 1 ? unit[1] : unit[0]}`;
+        const meta = kind === 'item' ? t('locationStep.recentItem', { count }) : kind === 'garment' ? t('locationStep.recentGarment', { count }) : t('locationStep.recentBox', { count });
 
         return (
           <Pressable
             key={label}
             accessibilityRole="button"
-            accessibilityLabel={`${label}, ${meta}`}
+            accessibilityLabel={t('locationStep.recentA11y', { label, meta })}
             onPress={() => onPick(location)}
             style={E1}
             className="flex-row items-center justify-between rounded-md bg-surface px-4 py-3 active:opacity-80 dark:bg-surface-night">

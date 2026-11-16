@@ -1,6 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Alert, Text, View } from 'react-native';
 
 import { ActionBar, FlowScreen } from '@/components/add/FlowScreen';
@@ -31,15 +32,16 @@ export default function PostScreen() {
 }
 
 function PostBody({ post }: { post: Post }) {
+  const { t } = useTranslation('social');
   const queryClient = useQueryClient();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const remove = () =>
-    Alert.alert('Supprimer la publication ?', 'Elle disparaît du fil, et les vêtements mentionnés redeviennent privés. Ton look reste.', [
-      { text: 'Annuler', style: 'cancel' },
+    Alert.alert(t('post.deleteTitle'), t('post.deleteBody'), [
+      { text: t('post.cancel'), style: 'cancel' },
       {
-        text: 'Supprimer',
+        text: t('post.delete'),
         style: 'destructive',
         onPress: async () => {
           setBusy(true);
@@ -48,7 +50,7 @@ function PostBody({ post }: { post: Post }) {
             await deletePost(queryClient, post.id);
             router.back();
           } catch (e) {
-            setError(e instanceof Error ? e.message : "La publication n'a pas pu être supprimée.");
+            setError(e instanceof Error ? e.message : t('post.deleteError'));
             setBusy(false);
           }
         },
@@ -61,13 +63,13 @@ function PostBody({ post }: { post: Post }) {
         <PostCard post={post} />
         <MentionList post={post} />
       </View>
-      <ActionBar note={post.audience === 'FOLLOWERS' ? 'Tes abonnés voient cette publication sans pouvoir la commenter.' : 'Les commentaires arrivent bientôt.'}>
+      <ActionBar note={post.audience === 'FOLLOWERS' ? t('post.noteFollowers') : t('post.noteCommentsSoon')}>
         {error && (
           <Text accessibilityRole="alert" className="text-center font-luciole text-legend text-error dark:text-error-night">
             {error}
           </Text>
         )}
-        {post.canDelete && <Button label="Supprimer la publication" variant="secondary" onPress={remove} loading={busy} />}
+        {post.canDelete && <Button label={t('post.deleteAction')} variant="secondary" onPress={remove} loading={busy} />}
       </ActionBar>
     </>
   );

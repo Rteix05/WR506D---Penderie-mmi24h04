@@ -1,5 +1,6 @@
 import { useInfiniteQuery, useQuery, type QueryClient } from '@tanstack/react-query';
 
+import i18n, { dateLocale } from '@/i18n';
 import { apiGet, apiRequest } from '@/lib/api';
 
 /**
@@ -11,10 +12,12 @@ import { apiGet, apiRequest } from '@/lib/api';
  */
 export type Audience = 'FRIENDS' | 'FOLLOWERS';
 
-export const AUDIENCE: Record<Audience, { title: string; chip: string; detail: string }> = {
-  FRIENDS: { title: 'Amis', chip: 'Amis autorisés', detail: 'Ils peuvent commenter' },
-  FOLLOWERS: { title: 'Abonnés', chip: 'Abonnés autorisés · lecture seule', detail: 'Tes amis aussi ; personne ne commente' },
-};
+export function audienceLabels(): Record<Audience, { title: string; chip: string; detail: string }> {
+  return {
+    FRIENDS: { title: i18n.t('social:audience.friends.title'), chip: i18n.t('social:audience.friends.chip'), detail: i18n.t('social:audience.friends.detail') },
+    FOLLOWERS: { title: i18n.t('social:audience.followers.title'), chip: i18n.t('social:audience.followers.chip'), detail: i18n.t('social:audience.followers.detail') },
+  };
+}
 
 export type PostAuthor = { id: string; displayName: string; username: string };
 
@@ -97,13 +100,13 @@ export async function deletePost(queryClient: QueryClient, id: string): Promise<
 export function since(iso: string, now = new Date()): string {
   const date = new Date(iso);
   const minutes = Math.floor((now.getTime() - date.getTime()) / 60000);
-  if (minutes < 1) return "à l'instant";
-  if (minutes < 60) return `il y a ${minutes} min`;
+  if (minutes < 1) return i18n.t('social:since.now');
+  if (minutes < 60) return i18n.t('social:since.minutes', { minutes });
   const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `il y a ${hours} h`;
+  if (hours < 24) return i18n.t('social:since.hours', { hours });
   const days = Math.floor(hours / 24);
-  if (days === 1) return 'hier';
-  if (days < 7) return `il y a ${days} j`;
+  if (days === 1) return i18n.t('social:since.yesterday');
+  if (days < 7) return i18n.t('social:since.days', { days });
 
-  return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' });
+  return date.toLocaleDateString(dateLocale(), { day: 'numeric', month: 'long' });
 }

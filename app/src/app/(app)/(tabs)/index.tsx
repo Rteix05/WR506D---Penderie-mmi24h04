@@ -1,5 +1,6 @@
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -13,8 +14,6 @@ import { useActiveProfile } from '@/lib/auth';
 import { relativeDay, useInventoryOverview, type RecentEntry } from '@/lib/inventory';
 import { LOOK_STATUS, useTodayLook } from '@/lib/look';
 
-const plural = (n: number, one: string, many: string) => `${n} ${n > 1 ? many : one}`;
-
 /**
  * Accueil — Tableau de bord, d'après Figma (page « Maquette v2 », node
  * 135:1797) : barre haute (marque, notifications, avatar), salutation et
@@ -27,10 +26,16 @@ const plural = (n: number, one: string, many: string) => `${n} ${n > 1 ? many : 
  * elles, plutôt que d'afficher des données d'exemple.
  */
 export default function HomeScreen() {
+  const { t } = useTranslation('home');
   const profile = useActiveProfile();
   const overview = useInventoryOverview();
   const openAdd = useOpenAddMenu();
-  const counts = overview.data ? `${plural(overview.data.items, 'objet', 'objets')} · ${plural(overview.data.garments, 'vêtement', 'vêtements')}` : ' ';
+  const counts = overview.data
+    ? t('counts.summary', {
+        items: t('counts.items', { count: overview.data.items }),
+        garments: t('counts.garments', { count: overview.data.garments }),
+      })
+    : ' ';
 
   return (
     <SafeAreaView edges={['top']} className="flex-1 bg-bg dark:bg-bg-night">
@@ -39,36 +44,36 @@ export default function HomeScreen() {
 
         <View className="gap-1 px-5">
           <Heading level="h3" accessibilityRole="header" className="uppercase text-ink dark:text-ink-night">
-            {profile ? `Bonjour ${profile.displayName}` : 'Bonjour'}
+            {profile ? t('dashboard.greeting', { name: profile.displayName }) : t('dashboard.greetingAnon')}
           </Heading>
           <Text className="font-luciole text-legend text-muted dark:text-muted-night">{counts}</Text>
         </View>
 
         <View className="flex-row gap-3 px-5">
           <View className="flex-1">
-            <Button glyph="[ ]" label="Scanner" onPress={() => router.push('/ajout/scan')} />
+            <Button glyph="[ ]" label={t('dashboard.scan')} onPress={() => router.push('/ajout/scan')} />
           </View>
           <View className="flex-1">
-            <Button glyph="+" label="Ajouter" variant="secondary" onPress={openAdd} />
+            <Button glyph="+" label={t('dashboard.add')} variant="secondary" onPress={openAdd} />
           </View>
         </View>
 
         <LookCard />
 
         <View className="flex-row gap-3 px-5">
-          <Preview title="Inventaire" meta={overview.data ? plural(overview.data.items, 'objet', 'objets') : ' '} tint="bg-primary/[0.08]" art={['baskets', 'casquette', 'pantalon', 'veste']} onPress={() => router.navigate('/objets')} />
-          <Preview title="Dressing" meta={overview.data ? plural(overview.data.garments, 'vêtement', 'vêtements') : ' '} tint="bg-cloth/[0.08]" art={['tshirt', 'veste', 'robe', 'casquette']} onPress={() => router.navigate('/dressing')} />
+          <Preview title={t('dashboard.inventory')} meta={overview.data ? t('counts.items', { count: overview.data.items }) : ' '} tint="bg-primary/[0.08]" art={['baskets', 'casquette', 'pantalon', 'veste']} onPress={() => router.navigate('/objets')} />
+          <Preview title={t('dashboard.dressing')} meta={overview.data ? t('counts.garments', { count: overview.data.garments }) : ' '} tint="bg-cloth/[0.08]" art={['tshirt', 'veste', 'robe', 'casquette']} onPress={() => router.navigate('/dressing')} />
         </View>
 
         <View className="gap-3">
           <Text accessibilityRole="header" className="px-5 font-luciole-bold text-body text-ink dark:text-ink-night">
-            Derniers ajouts
+            {t('dashboard.recent')}
           </Text>
           {overview.isError && <Text className="px-5 font-luciole text-body text-error dark:text-error-night">{overview.error.message}</Text>}
           {overview.data && overview.data.recent.length === 0 && (
             <View style={E1} className="mx-5 gap-1 rounded-md bg-surface p-4 dark:bg-surface-night">
-              <Text className="font-luciole-bold text-body text-ink dark:text-ink-night">Rien pour l&apos;instant</Text>
-              <Text className="font-luciole text-legend text-muted dark:text-muted-night">Scanne ou ajoute ton premier objet : il apparaîtra ici.</Text>
+              <Text className="font-luciole-bold text-body text-ink dark:text-ink-night">{t('dashboard.emptyTitle')}</Text>
+              <Text className="font-luciole text-legend text-muted dark:text-muted-night">{t('dashboard.emptyBody')}</Text>
             </View>
           )}
           {overview.data && overview.data.recent.length > 0 && (
@@ -86,6 +91,8 @@ export default function HomeScreen() {
 
 /** Barre haute (Figma « Barre haute ») : logo 28 + PENDERIE, puis « ! » et l'avatar, ronds de 36. */
 function TopBar({ initial }: { initial: string }) {
+  const { t } = useTranslation('home');
+
   return (
     <View className="h-14 flex-row items-center justify-between px-5">
       <View className="flex-row items-center gap-2">
@@ -95,8 +102,8 @@ function TopBar({ initial }: { initial: string }) {
       <View className="flex-row items-center gap-3">
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Notifications"
-          onPress={() => Alert.alert('Notifications', 'Les notifications arrivent bientôt.')}
+          accessibilityLabel={t('topBar.notifications')}
+          onPress={() => Alert.alert(t('topBar.notifications'), t('topBar.notificationsBody'))}
           hitSlop={4}
           style={E1}
           className="h-9 w-9 items-center justify-center rounded-full bg-surface active:opacity-80 dark:bg-surface-night">
@@ -104,7 +111,7 @@ function TopBar({ initial }: { initial: string }) {
         </Pressable>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Mon profil"
+          accessibilityLabel={t('topBar.profile')}
           onPress={() => router.navigate('/profil')}
           hitSlop={4}
           className="h-9 w-9 items-center justify-center rounded-full bg-primary/[0.12] active:opacity-80">
@@ -120,23 +127,24 @@ function TopBar({ initial }: { initial: string }) {
  * l'invitation à prendre la photo, puis où en est le look du jour.
  */
 function LookCard() {
+  const { t } = useTranslation('home');
   const today = useTodayLook();
   const look = today.data;
   const pending = look ? look.tags.filter((t) => t.status !== 'CONFIRMED').length : 0;
   const text = !look
-    ? 'Prends-toi en photo et pointe tes vêtements'
+    ? t('look.empty')
     : look.status !== 'TAGGING'
-      ? `${LOOK_STATUS[look.status]} · ${plural(look.tags.length, 'vêtement', 'vêtements')}`
+      ? `${LOOK_STATUS[look.status]} · ${t('counts.garments', { count: look.tags.length })}`
       : look.tags.length === 0
-        ? 'Pointe les vêtements sur ta photo'
+        ? t('look.tagging')
         : pending > 0
-          ? `${plural(pending, 'vêtement', 'vêtements')} à vérifier`
-          : 'Tout est vérifié : prépare le post';
+          ? t('look.toCheck', { count: pending })
+          : t('look.allChecked');
 
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`Look du jour, ${text}`}
+      accessibilityLabel={t('look.accessibilityLabel', { text })}
       onPress={() => router.push(look ? { pathname: '/look/[id]', params: { id: look.id } } : '/look')}
       style={E1}
       className="mx-5 flex-row items-center gap-3 rounded-md bg-surface p-3 active:opacity-80 dark:bg-surface-night">
@@ -144,7 +152,7 @@ function LookCard() {
         {look ? <Image source={mediaSource(look.photo.url)} style={{ width: 56, height: 56 }} contentFit="cover" accessible={false} /> : <ClothVisual kind="veste" />}
       </View>
       <View className="flex-1 gap-0.5">
-        <Text className="font-luciole-bold text-body text-ink dark:text-ink-night">Look du jour</Text>
+        <Text className="font-luciole-bold text-body text-ink dark:text-ink-night">{t('look.title')}</Text>
         <Text className="font-luciole text-legend text-muted dark:text-muted-night">{text}</Text>
       </View>
       <Text className="font-luciole-bold text-body text-muted dark:text-muted-night">{'>'}</Text>

@@ -1,6 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { Redirect, router } from 'expo-router';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Text, View } from 'react-native';
 
 import { ActionBar, FlowScreen } from '@/components/add/FlowScreen';
@@ -20,6 +21,7 @@ import { pickPhoto } from '@/lib/photo';
  * du parcours d'ajout (titre, carte d'explication, barre d'actions).
  */
 export default function TodayLookScreen() {
+  const { t } = useTranslation('social');
   const today = useTodayLook();
   const queryClient = useQueryClient();
   const [busy, setBusy] = useState<'camera' | 'library' | null>(null);
@@ -45,7 +47,7 @@ export default function TodayLookScreen() {
 
         return;
       }
-      setError(e instanceof Error ? e.message : "La photo n'a pas pu être envoyée.");
+      setError(e instanceof Error ? e.message : t('today.error'));
     }
   };
 
@@ -55,31 +57,31 @@ export default function TodayLookScreen() {
         <BackButton />
       </View>
       <View className="px-5">
-        <ScreenTitle title="Look du jour" legend="Ta tenue d'aujourd'hui, prête pour Instagram" />
+        <ScreenTitle title={t('today.title')} legend={t('today.legend')} />
       </View>
 
       {today.isPending ? (
         <ActivityIndicator className="py-10" />
       ) : (
         <InfoCard
-          title="Comment ça marche"
+          title={t('today.howTitle')}
           rows={[
-            ['1. La photo', 'Prends-toi en photo, en pied'],
-            ['2. Les points', 'Touche chaque vêtement porté'],
-            ['3. La reconnaissance', "L'IA retrouve le vêtement dans ton dressing, ou te propose de l'ajouter"],
-            ['4. Le post', '2 images : ta photo, puis tes vêtements'],
+            [t('today.howPhotoTitle'), t('today.howPhotoBody')],
+            [t('today.howTagsTitle'), t('today.howTagsBody')],
+            [t('today.howRecognitionTitle'), t('today.howRecognitionBody')],
+            [t('today.howPostTitle'), t('today.howPostBody')],
           ]}
         />
       )}
 
-      <ActionBar note="La photo reste privée : toi seul la vois dans Penderie.">
+      <ActionBar note={t('today.note')}>
         {(error || today.isError) && (
           <Text accessibilityRole="alert" className="text-center font-luciole text-legend text-error dark:text-error-night">
             {error ?? today.error?.message}
           </Text>
         )}
-        <Button glyph="[ ]" label="Prendre ma photo" onPress={() => start('camera')} loading={busy === 'camera'} disabled={busy !== null || today.isPending} />
-        <Button label="Choisir dans la galerie" variant="secondary" onPress={() => start('library')} loading={busy === 'library'} disabled={busy !== null || today.isPending} />
+        <Button glyph="[ ]" label={t('today.takePhoto')} onPress={() => start('camera')} loading={busy === 'camera'} disabled={busy !== null || today.isPending} />
+        <Button label={t('today.chooseGallery')} variant="secondary" onPress={() => start('library')} loading={busy === 'library'} disabled={busy !== null || today.isPending} />
       </ActionBar>
     </FlowScreen>
   );

@@ -1,6 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Text, View } from 'react-native';
 
 import { ActionBar, FlowScreen } from '@/components/add/FlowScreen';
@@ -17,9 +18,9 @@ import { CONDITION_LABEL, type ConditionValue } from '@/lib/possessions';
 const CONDITIONS = (Object.keys(CONDITION_LABEL) as ConditionValue[]).map((value) => ({ value, label: CONDITION_LABEL[value] }));
 
 type Where = 'usual' | 'elsewhere';
-const WHERE: { value: Where; label: string }[] = [
-  { value: 'usual', label: 'À sa place habituelle' },
-  { value: 'elsewhere', label: 'Ailleurs' },
+const WHERE: { value: Where; labelKey: 'return.whereUsual' | 'return.whereElsewhere' }[] = [
+  { value: 'usual', labelKey: 'return.whereUsual' },
+  { value: 'elsewhere', labelKey: 'return.whereElsewhere' },
 ];
 
 /**
@@ -29,6 +30,7 @@ const WHERE: { value: Where; label: string }[] = [
  * place habituelle ou ailleurs (le déplacement est tracé).
  */
 export default function ReturnScreen() {
+  const { t } = useTranslation('loans');
   const { id } = useLocalSearchParams<{ id: string }>();
   const loan = useLoan(id);
   const queryClient = useQueryClient();
@@ -42,7 +44,7 @@ export default function ReturnScreen() {
   if (!loan.data) {
     return (
       <FlowScreen>
-        <StepHeader title="Objet rendu ?" close />
+        <StepHeader title={t('return.title')} close />
         {loan.isError ? <Text className="px-5 font-luciole text-body text-error dark:text-error-night">{loan.error.message}</Text> : <ActivityIndicator />}
       </FlowScreen>
     );
@@ -65,40 +67,45 @@ export default function ReturnScreen() {
       router.back();
     } catch (e) {
       setSaving(false);
-      setError(e instanceof Error ? e.message : 'Enregistrement impossible.');
+      setError(e instanceof Error ? e.message : t('return.saveError'));
     }
   };
 
   return (
     <FlowScreen>
-      <StepHeader title="Objet rendu ?" legend={`${l.possession.name} · prêté à ${l.borrower.displayName}`} close />
+      <StepHeader title={t('return.title')} legend={t('return.legend', { name: l.possession.name, borrower: l.borrower.displayName })} close />
 
       <InfoCard
-        title="Le prêt"
+        title={t('return.loan')}
         rows={[
-          ['Prêté le', l.receivedAt && shortDate(l.receivedAt)],
-          ['Retour prévu', l.dueDate ? shortDate(l.dueDate) : 'Non défini'],
-          ['Rendu selon lui', l.returnDeclaredAt && shortDate(l.returnDeclaredAt)],
+          [t('return.lentOn'), l.receivedAt && shortDate(l.receivedAt)],
+          [t('return.expectedReturn'), l.dueDate ? shortDate(l.dueDate) : t('return.notDefined')],
+          [t('return.returnedSaid'), l.returnDeclaredAt && shortDate(l.returnDeclaredAt)],
         ]}
       />
 
       <View className="gap-6 px-5">
-        <Chips label={`État au retour${l.conditionAtStart ? ` (au départ : ${CONDITION_LABEL[l.conditionAtStart]})` : ''}`} options={CONDITIONS} selected={state ? [state] : []} onToggle={setCondition} />
-        {worse && <Text className="font-luciole text-legend text-error dark:text-error-night">Plus abîmé qu’au départ : un dommage sera noté dans l’historique du prêt.</Text>}
-        <Chips label="Où tu le ranges ?" options={WHERE} selected={[where]} onToggle={setWhere} />
+        <Chips
+          label={l.conditionAtStart ? t('return.conditionWithStart', { condition: CONDITION_LABEL[l.conditionAtStart] }) : t('return.condition')}
+          options={CONDITIONS}
+          selected={state ? [state] : []}
+          onToggle={setCondition}
+        />
+        {worse && <Text className="font-luciole text-legend text-error dark:text-error-night">{t('return.worse')}</Text>}
+        <Chips label={t('return.where')} options={WHERE.map((w) => ({ value: w.value, label: t(w.labelKey) }))} selected={[where]} onToggle={setWhere} />
       </View>
       {elsewhere && <LocationStep kind={l.possession.kind} location={location} onChange={setLocation} />}
       <View className="px-5">
-        <TextField label="Note (facultatif)" value={note} onChangeText={setNote} placeholder="Rendue propre, merci !" autoCapitalize="sentences" multiline maxLength={1000} />
+        <TextField label={t('return.note')} value={note} onChangeText={setNote} placeholder={t('return.notePlaceholder')} autoCapitalize="sentences" multiline maxLength={1000} />
       </View>
 
-      <ActionBar note={elsewhere ? 'L’objet repasse en « Disponible » à l’emplacement choisi.' : 'L’objet repasse en « Disponible » à son emplacement habituel.'}>
+      <ActionBar note={elsewhere ? t('return.actionElsewhere') : t('return.actionUsual')}>
         {error && (
           <Text accessibilityRole="alert" className="text-center font-luciole text-legend text-error dark:text-error-night">
             {error}
           </Text>
         )}
-        <Button label="Confirmer le retour" onPress={save} loading={saving} disabled={elsewhere && !location.room} />
+        <Button label={t('return.confirm')} onPress={save} loading={saving} disabled={elsewhere && !location.room} />
       </ActionBar>
     </FlowScreen>
   );

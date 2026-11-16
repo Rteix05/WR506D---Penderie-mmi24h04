@@ -1,6 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Text, View } from 'react-native';
 
 import { ActionBar, FlowScreen } from '@/components/add/FlowScreen';
@@ -21,6 +22,7 @@ import { useGarmentCategories } from '@/lib/reference';
  * taille, les couleurs ou la marque s'ajoutent ensuite par « Modifier ».
  */
 export default function CompleteGarmentScreen() {
+  const { t } = useTranslation('inventory');
   const { id } = useLocalSearchParams<{ id: string }>();
   const garment = usePossession('garment', id);
   const categories = useGarmentCategories();
@@ -47,7 +49,7 @@ export default function CompleteGarmentScreen() {
         router.back();
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Le vêtement n'a pas pu être complété.");
+      setError(e instanceof Error ? e.message : t('complete.error'));
       setSaving(false);
     }
   };
@@ -58,17 +60,17 @@ export default function CompleteGarmentScreen() {
         <BackButton close />
       </View>
       <View className="px-5">
-        <ScreenTitle title="Compléter" legend={garment.data?.name} />
+        <ScreenTitle title={t('complete.title')} legend={garment.data?.name} />
       </View>
       {garment.isPending && <ActivityIndicator className="py-10" />}
       {garment.isError && <Text className="px-5 font-luciole text-body text-error dark:text-error-night">{garment.error.message}</Text>}
-      {garment.data && !garment.data.incomplete && <Banner tone="success" title="Déjà complet" text="Ce vêtement a sa catégorie et son emplacement." />}
+      {garment.data && !garment.data.incomplete && <Banner tone="success" title={t('complete.alreadyTitle')} text={t('complete.alreadyText')} />}
       {garment.data?.incomplete && (
         <>
-          <Banner tone="info" title="Ajouté depuis ton look" text="Donne-lui une catégorie et range-le : il rejoindra tes logements et les suggestions de tenues." />
+          <Banner tone="info" title={t('complete.fromLookTitle')} text={t('complete.fromLookText')} />
           <View className="px-5">
             <SelectField
-              label="Catégorie"
+              label={t('complete.category')}
               value={categories.data?.find((c) => c.iri === category)?.name ?? null}
               loading={categories.isPending}
               options={(categories.data ?? []).map((c) => ({ key: c.iri, label: c.name }))}
@@ -76,14 +78,14 @@ export default function CompleteGarmentScreen() {
             />
           </View>
           <LocationStep kind="garment" location={location} onChange={setLocation} />
-          <ActionBar note={!category || !location.room ? 'Choisis une catégorie et au moins une pièce.' : undefined}>
+          <ActionBar note={!category || !location.room ? t('complete.note') : undefined}>
             {error && (
               <Text accessibilityRole="alert" className="text-center font-luciole text-legend text-error dark:text-error-night">
                 {error}
               </Text>
             )}
-            <Button label="Terminer" onPress={() => done(false)} disabled={!category || !location.room} loading={saving} />
-            <Button label="Terminer et ajouter les détails" variant="secondary" onPress={() => done(true)} disabled={!category || !location.room || saving} />
+            <Button label={t('complete.finish')} onPress={() => done(false)} disabled={!category || !location.room} loading={saving} />
+            <Button label={t('complete.finishAndEdit')} variant="secondary" onPress={() => done(true)} disabled={!category || !location.room || saving} />
           </ActionBar>
         </>
       )}

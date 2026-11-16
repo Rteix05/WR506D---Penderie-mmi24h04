@@ -1,4 +1,5 @@
 import { router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 
 import { ActionBar, closeFlow, FlowScreen } from '@/components/add/FlowScreen';
 import { PhotoZone } from '@/components/add/PhotoZone';
@@ -14,6 +15,7 @@ import { useDraft } from '@/lib/add-draft';
  * viseur ; Ajouter manuellement garde la photo.
  */
 export default function FailScreen() {
+  const { t } = useTranslation('add');
   const { draft, reset } = useDraft();
 
   return (
@@ -21,25 +23,25 @@ export default function FailScreen() {
       <StepHeader
         close
         onClose={closeFlow}
-        banner={<Banner tone="error" title="Impossible d'identifier cet objet" text="Ta photo est gardée pour la suite." />}
-        title="Pas reconnu"
-        legend="Ça arrive, tu n'es pas bloqué"
+        banner={<Banner tone="error" title={t('failure.bannerTitle')} text={t('failure.bannerText')} />}
+        title={t('failure.title')}
+        legend={t('failure.legend')}
       />
       <PhotoZone photo={draft.photo} art="pantalon" />
 
       <InfoCard
-        title="Pour un meilleur résultat"
+        title={t('failure.better')}
         rows={[
-          ['Lumière', 'Pas de contre-jour'],
-          ['Cadrage', "L'objet en entier"],
-          ['Étiquette', 'Visible si possible'],
+          [t('failure.light'), t('failure.lightValue')],
+          [t('failure.framing'), t('failure.framingValue')],
+          [t('failure.label'), t('failure.labelValue')],
         ]}
       />
 
-      <ActionBar note="En manuel, ta photo est déjà ajoutée : il reste le nom et la catégorie.">
-        <Button label="Réessayer" onPress={() => router.back()} />
+      <ActionBar note={t('failure.note')}>
+        <Button label={t('failure.retry')} onPress={() => router.back()} />
         <Button
-          label="Ajouter manuellement"
+          label={t('failure.manual')}
           variant="secondary"
           onPress={() => {
             reset('item', true);

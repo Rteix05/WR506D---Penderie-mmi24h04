@@ -1,10 +1,11 @@
 import { router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
 import { EmptyState } from '@/components/inventory/EmptyState';
 import { Grid, Loading, RowCard, TileCard } from '@/components/places/Blocks';
 import { PlaceScreen } from '@/components/places/PlaceScreen';
-import { inPlace, objects, plural, usePlacesData } from '@/lib/places';
+import { inPlace, usePlacesData } from '@/lib/places';
 
 /**
  * « Mes logements » (Figma « Logement — Mes logements », 135:2549) : les
@@ -15,28 +16,29 @@ import { inPlace, objects, plural, usePlacesData } from '@/lib/places';
  * « à ranger » hors logement.
  */
 export default function PlacesScreen() {
+  const { t } = useTranslation('places');
   const { data, error } = usePlacesData();
   const addPlace = () => router.push('/nouveau-logement/type');
 
   if (!data) {
     return (
-      <PlaceScreen title="Mes logements">
+      <PlaceScreen title={t('list.title')}>
         <Loading error={error} />
       </PlaceScreen>
     );
   }
 
   const stored = data.possessions.filter((p) => p.room).length;
-  const legend = `${plural(data.places.length, 'logement', 'logements')} · ${plural(stored, 'objet rangé', 'objets rangés')}`;
+  const legend = [t('counts.places', { count: data.places.length }), t('counts.storedObjects', { count: stored })].join(' · ');
 
   return (
-    <PlaceScreen title="Mes logements" legend={legend}>
+    <PlaceScreen title={t('list.title')} legend={legend}>
       {data.places.length === 0 ? (
         <EmptyState
           icon="search"
-          title="Aucun logement"
-          text="Ajoute ton logement et ses pièces : tu sauras toujours où sont rangées tes affaires."
-          action={{ label: 'Ajouter un logement', glyph: '+', onPress: addPlace }}
+          title={t('list.emptyTitle')}
+          text={t('list.emptyText')}
+          action={{ label: t('list.emptyAction'), glyph: '+', onPress: addPlace }}
         />
       ) : (
         <>
@@ -49,7 +51,7 @@ export default function PlacesScreen() {
               return (
                 <TileCard
                   title={place.name}
-                  meta={`${plural(rooms, 'pièce', 'pièces')} · ${objects(inPlace(data, place).length)}`}
+                  meta={[t('counts.rooms', { count: rooms }), t('counts.objects', { count: inPlace(data, place).length })].join(' · ')}
                   accent={i === 0}
                   onPress={() => router.push({ pathname: '/logements/[id]', params: { id: place.id } })}
                 />
@@ -57,7 +59,7 @@ export default function PlacesScreen() {
             }}
           />
           <View>
-            <RowCard title="+ Ajouter un logement" subtitle="Maison, appartement, cave, bureau" onPress={addPlace} />
+            <RowCard title={t('addPlaceCard.title')} subtitle={t('addPlaceCard.hint')} onPress={addPlace} />
           </View>
         </>
       )}
