@@ -184,31 +184,53 @@
   "activity": {
     "title": "My activity",
     "legend": "This profile’s numbers",
+    "legendNamed": "{{name}}’s numbers",
+    "loading": "Loading your numbers",
+    "error": "Couldn’t load your numbers",
+    "retry": "Try again",
+    "empty": {
+      "title": "Nothing to count yet",
+      "text": "Your items, loans and scans will show up here. Start by scanning your first item.",
+      "action": "Scan an item"
+    },
     "inventory": {
       "title": "Inventory",
-      "items": "Items",
-      "garments": "Clothes",
-      "addedThisMonth": "Added this month"
+      "items_one": "item",
+      "items_other": "items",
+      "garments_one": "piece of clothing",
+      "garments_other": "clothes",
+      "itemsA11y_one": "{{count}} item, open my items",
+      "itemsA11y_other": "{{count}} items, open my items",
+      "garmentsA11y_one": "{{count}} piece of clothing, open the wardrobe",
+      "garmentsA11y_other": "{{count}} clothes, open the wardrobe",
+      "addedThisMonth_one": "+ {{count}} added this month",
+      "addedThisMonth_other": "+ {{count}} added this month"
     },
     "loans": {
       "title": "Loans",
+      "seeAll": "See my loans",
+      "overdue_one": "Overdue",
+      "overdue_other": "Overdue",
       "lent": "Lent out now",
-      "overdue": "Of which overdue",
       "borrowed": "Borrowed now",
       "returned": "Finished loans"
     },
     "sales": {
       "title": "Sales",
+      "none": "No sales or purchases yet.",
       "onSale": "For sale",
       "sold": "Sold",
       "bought": "Bought"
     },
     "scans": {
       "title": "Scans",
-      "total": "Scans made",
+      "scan": "Scan",
+      "none": "No scans yet: scan a barcode or a photo and the app fills in the details for you.",
       "rate": "Recognised first time",
       "percent": "{{rate}}%",
-      "none": "No scans yet"
+      "detail_one": "{{recognised}} of {{count}} scan",
+      "detail_other": "{{recognised}} of {{count}} scans",
+      "a11y": "{{rate}}% of scans recognised first time, {{recognised}} of {{total}}"
     }
   },
   "settings": {

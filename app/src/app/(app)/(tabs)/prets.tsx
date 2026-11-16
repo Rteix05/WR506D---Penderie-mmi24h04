@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
@@ -27,7 +27,9 @@ const TABS: { value: Tab; labelKey: 'list.tabLent' | 'list.tabBorrowed' }[] = [
  */
 export default function LoansScreen() {
   const { t } = useTranslation('loans');
-  const [tab, setTab] = useState<Tab>('lender');
+  // « Mon activité » ouvre directement l'onglet des emprunts (?onglet=emprunts).
+  const { onglet } = useLocalSearchParams<{ onglet?: string }>();
+  const [tab, setTab] = useState<Tab>(onglet === 'emprunts' ? 'borrower' : 'lender');
   const loans = useLoans(tab);
   const all = loans.data ?? [];
   const open = all.filter(isOpen);

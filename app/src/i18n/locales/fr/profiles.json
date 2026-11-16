@@ -184,31 +184,53 @@
   "activity": {
     "title": "Mon activité",
     "legend": "Les chiffres de ce profil",
+    "legendNamed": "Les chiffres de {{name}}",
+    "loading": "Chargement des chiffres",
+    "error": "Impossible de charger tes chiffres",
+    "retry": "Réessayer",
+    "empty": {
+      "title": "Rien à compter pour l’instant",
+      "text": "Tes objets, tes prêts et tes scans apparaîtront ici. Commence par scanner un premier objet.",
+      "action": "Scanner un objet"
+    },
     "inventory": {
       "title": "Inventaire",
-      "items": "Objets",
-      "garments": "Vêtements",
-      "addedThisMonth": "Ajoutés ce mois-ci"
+      "items_one": "objet",
+      "items_other": "objets",
+      "garments_one": "vêtement",
+      "garments_other": "vêtements",
+      "itemsA11y_one": "{{count}} objet, ouvrir mes objets",
+      "itemsA11y_other": "{{count}} objets, ouvrir mes objets",
+      "garmentsA11y_one": "{{count}} vêtement, ouvrir le dressing",
+      "garmentsA11y_other": "{{count}} vêtements, ouvrir le dressing",
+      "addedThisMonth_one": "+ {{count}} ajouté ce mois-ci",
+      "addedThisMonth_other": "+ {{count}} ajoutés ce mois-ci"
     },
     "loans": {
       "title": "Prêts",
+      "seeAll": "Voir mes prêts",
+      "overdue_one": "En retard",
+      "overdue_other": "En retard",
       "lent": "Prêtés en ce moment",
-      "overdue": "Dont en retard",
       "borrowed": "Empruntés en ce moment",
       "returned": "Prêts terminés"
     },
     "sales": {
       "title": "Ventes",
+      "none": "Aucune vente ni achat pour l’instant.",
       "onSale": "En vente",
       "sold": "Vendus",
       "bought": "Achetés"
     },
     "scans": {
       "title": "Scans",
-      "total": "Scans faits",
+      "scan": "Scanner",
+      "none": "Aucun scan pour l’instant : scanne un code-barres ou une photo, l’app remplit la fiche pour toi.",
       "rate": "Reconnus du premier coup",
       "percent": "{{rate}} %",
-      "none": "Aucun scan"
+      "detail_one": "{{recognised}} sur {{count}} scan",
+      "detail_other": "{{recognised}} sur {{count}} scans",
+      "a11y": "{{rate}} % des scans reconnus du premier coup, {{recognised}} sur {{total}}"
     }
   },
   "settings": {
