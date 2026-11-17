@@ -322,6 +322,40 @@ Un prêt (`Loan`) suit un cycle de vie porté par l'entité : `REQUESTED` › `A
 
 **Profil enfant.** `LOAN_LEND` et `LOAN_BORROW` demandent l'accord du tuteur : tant que ce parcours n'est pas exposé, un enfant ne prête ni n'emprunte (403). Un adulte peut prêter au profil de son enfant (foyer).
 
+## Amis et abonnements
+
+| Route | Rôle |
+|---|---|
+| `GET /api/people/search?q=` | trouver quelqu'un par identifiant ou nom affiché (au moins 2 caractères), avec la relation actuelle |
+| `GET /api/friends` | mes amis |
+| `GET /api/friends/requests` | demandes reçues et envoyées, en attente |
+| `POST /api/friends/requests` | `{profile}` : demander. Si l'autre m'avait déjà demandé, c'est accepté d'emblée |
+| `POST /api/friends/requests/{id}/accept` · `/decline` | le destinataire, ou son tuteur pour un profil enfant |
+| `DELETE /api/friends/requests/{id}` | retirer sa demande |
+| `DELETE /api/friends/{profileId}` | ne plus être amis (sans prévenir l'autre ; les partages ne changent pas) |
+| `GET /api/follows` | mes abonnements et mes abonnés |
+| `POST /api/follows` · `DELETE /api/follows/{profileId}` | s'abonner, se désabonner (permission `FOLLOW`) |
+| `GET /api/approvals` · `POST /api/approvals/{id}/approve` · `/reject` | l'accord du tuteur |
+
+**Profil enfant.** Quand la permission `FRIEND_ADD` d'un enfant est « avec accord », sa demande crée une `ApprovalRequest`. Le tuteur reçoit « Demande pour Noé », et l'autre profil ne voit rien avant l'accord. Une demande reçue par un enfant prévient aussi son tuteur, qui peut répondre à sa place. Les profils d'un même compte ne deviennent pas amis : ils forment déjà un foyer. La page d'un profil (`GET /api/profiles/{id}/page`) porte la relation complète : `friend`, `request {id, direction, awaitingGuardian}`, `following`, `followsMe`.
+
+Chaque geste notifie l'autre : `FRIEND_REQUEST`, `FRIEND_ACCEPTED`, `FOLLOW_NEW`, ou `FOLLOW_MUTUAL` si l'abonnement devient réciproque.
+
+## Notifications et push
+
+Toute notification enregistrée en base (`Notification`) apparaît dans l'app (`/api/notifications`) **et** part en push. Cela couvre les prêts, les rappels, les commentaires, les amis, les abonnements, les partages, les propositions et la modération. `PushOnNotificationSubscriber` relève chaque notification créée, et `PushSender` l'envoie après la réponse (`kernel.terminate`) ou à la fin d'une commande (`console.terminate`). L'envoi passe par **Expo Push** (`https://exp.host/--/api/v2/push/send`), sans clé côté API.
+
+- **Contenu** : le push reprend le titre, le texte et les données de la notification, plus `notificationId` et `profileId`. Toucher le push ouvre donc le même écran que dans l'app, sur le bon profil du compte, et marque la notification lue.
+- **Appareils** : `PUT /api/device-tokens {token, platform}` à chaque ouverture de l'app, `DELETE` à la déconnexion. Le jeton appartient au compte : il sert à tous ses profils. Un appareil qu'Expo déclare désinscrit est oublié.
+- **Réglages** : `GET` et `PUT /api/notification-preferences {group, push}` règlent le push par famille (`social`, `loans`, `sales`, `family`, `moderation`), pour le profil actif. Les notifications restent toujours visibles dans l'app.
+- **Côté app** : il faut un identifiant de projet Expo (EAS). Dans `app/`, `npx eas-cli init` l'écrit dans `app.json` (`extra.eas.projectId`). Sans lui, l'app garde ses notifications à l'écran mais ne reçoit pas de push. Sur iPhone, Expo Go reçoit les push ; sur Android, depuis le SDK 53, il faut un *development build*.
+
+**Rappels de prêt** : `php bin/console app:loans:remind`, à lancer une fois par jour (cron, planificateur).
+- la veille du retour, `LOAN_DUE_SOON` à l'emprunteur et au prêteur ;
+- en retard, `LOAN_OVERDUE`, le lendemain de la date puis à 3, 7, 14 et 30 jours.
+
+Relancée le même jour, la commande n'envoie rien deux fois.
+
 ## Signaler un contenu
 
 `POST /api/reports` `{targetType, targetId, reason, description?}` : `targetType` vaut `PROFILE`, `ITEM`, `GARMENT`, `COMMENT`, `LISTING`, `COLLECTION` ou `POST` ; `reason` vaut `SPAM`, `INAPPROPRIATE`, `COUNTERFEIT`, `HARASSMENT` ou `OTHER`. On ne signale que ce qu'on voit (404 sinon), jamais son propre contenu ni celui de son compte (422), et une seule fois tant que le premier signalement n'est pas traité (409). Le signalement (`Report`, V2 du MDD) garde une référence souple à sa cible : il survit à la suppression du contenu. Il se traite dans le back-office.

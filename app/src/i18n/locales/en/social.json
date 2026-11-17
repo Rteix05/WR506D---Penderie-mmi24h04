@@ -263,6 +263,68 @@
       "week": "This week",
       "earlier": "Earlier"
     },
-    "unreadA11y": "Unread: "
+    "unreadA11y": "Unread: ",
+    "settings": "Notification settings"
+  },
+  "relation": {
+    "add": "Add friend",
+    "sent": "Request sent",
+    "received": "Request received",
+    "awaitingGuardian": "Waiting for your guardian",
+    "cancel": "Withdraw",
+    "cancelHint": "Tap “Request sent” to withdraw it.",
+    "accept": "Accept",
+    "decline": "Decline",
+    "friends": "Friends",
+    "unfriend": "Remove",
+    "unfriendTitle": "Stop being friends with {{name}}?",
+    "unfriendBody": "Your shares don't change: remove them separately if needed.",
+    "follow": "Follow",
+    "followBack": "Follow back",
+    "following": "Following · unfollow"
+  },
+  "friends": {
+    "title": "Friends and followers",
+    "count_one": "{{count}} friend",
+    "count_other": "{{count}} friends",
+    "search": "Search a name or username",
+    "results": "Results",
+    "noResult": "Nobody by that name.",
+    "approvals": "To approve",
+    "approvalLine": "{{child}} would like to be friends with {{other}}.",
+    "allow": "Allow",
+    "refuse": "Refuse",
+    "received_one": "Request received",
+    "received_other": "Requests received ({{count}})",
+    "sent": "Requests sent",
+    "mine": "My friends",
+    "none": "No friends yet: search for someone above."
+  },
+  "pushSettings": {
+    "title": "Notifications",
+    "legend": "What also reaches your phone",
+    "note": "Everything stays visible in the app: only phone delivery is turned off. Notifications must also be allowed for Penderie in your phone's settings.",
+    "group": {
+      "social": {
+        "title": "Friends and shares",
+        "detail": "Friend requests, followers, comments, shares"
+      },
+      "loans": {
+        "title": "Loans",
+        "detail": "Requests, return reminders, overdue, returns"
+      },
+      "sales": {
+        "title": "Sales",
+        "detail": "Sales, payments, shipping, refunds"
+      },
+      "family": {
+        "title": "Family",
+        "detail": "Child profile approvals, suggestions"
+      },
+      "moderation": {
+        "title": "Moderation",
+        "detail": "Warnings, outcome of your reports"
+      }
+    }
   }
 }

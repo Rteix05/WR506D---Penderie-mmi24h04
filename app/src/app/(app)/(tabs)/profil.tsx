@@ -8,6 +8,7 @@ import { ProfileCard } from '@/components/profiles/ProfileCard';
 import { Button } from '@/components/ui/Button';
 import { ScreenTitle } from '@/components/ui/ScreenTitle';
 import { logout } from '@/lib/api';
+import { forgetPushToken } from '@/lib/push';
 import { useMe } from '@/lib/auth';
 import { useAccountProfiles } from '@/lib/profiles';
 
@@ -26,7 +27,8 @@ export default function ProfileScreen() {
   const { t } = useTranslation('profiles');
   const me = useMe();
   const profiles = useAccountProfiles();
-  const signOut = useMutation({ mutationFn: logout });
+  // Ce téléphone cesse de recevoir les push du compte, puis on se déconnecte.
+  const signOut = useMutation({ mutationFn: async () => { await forgetPushToken(); await logout(); } });
   const active = profiles.data?.find((p) => p.active);
   const others = profiles.data?.filter((p) => !p.active) ?? [];
   const open = (id: string) => router.push({ pathname: '/profils/[id]', params: { id } });

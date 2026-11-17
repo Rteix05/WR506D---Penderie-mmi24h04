@@ -20,6 +20,11 @@ framework:
                     # Facultatifs : identifient l'app dans le tableau de bord OpenRouter.
                     HTTP-Referer: 'https://github.com/Rteix05/WR506D---Penderie-mmi24h04'
                     X-Title: 'Penderie'
+            # Les notifications push, par le service Expo Push (voir App\Service\Notification\PushSender).
+            expo.push.client:
+                base_uri: 'https://exp.host/--/api/v2/'
+                headers:
+                    Accept: 'application/json'
 
     #esi: true
     #fragments: true

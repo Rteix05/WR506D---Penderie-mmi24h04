@@ -6,6 +6,7 @@ import { FlowScreen } from '@/components/add/FlowScreen';
 import { GarmentThumb, PostCard } from '@/components/feed/PostCard';
 import { ProfileAvatar } from '@/components/profiles/ProfileCard';
 import { Pill } from '@/components/ui/Banner';
+import { RelationButtons } from '@/components/relations/RelationButtons';
 import { ReportLink } from '@/components/report/ReportSheet';
 import { BackButton } from '@/components/ui/BackButton';
 import { E1 } from '@/components/ui/elevation';
@@ -62,6 +63,7 @@ function Body({ page, highlight }: { page: ProfilePage; highlight?: string }) {
           </View>
         )}
         {profile.bio && <Text className="text-center font-luciole text-body text-ink dark:text-ink-night">{profile.bio}</Text>}
+        {!relation.self && !relation.household && <RelationButtons profileId={profile.id} name={profile.displayName} relation={relation} />}
         {!relation.self && !relation.household && <ReportLink targetType="PROFILE" targetId={profile.id} label={t('report.profile')} />}
       </View>
 

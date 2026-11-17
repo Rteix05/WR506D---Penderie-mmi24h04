@@ -66,11 +66,22 @@ export async function markAllRead(queryClient: QueryClient): Promise<void> {
 
 /** L'écran à ouvrir pour une notification, ou null s'il n'y a rien à ouvrir (résultat d'un signalement…). */
 export function targetOf(n: AppNotification): Href | null {
-  const d = n.data;
-  if (d.post) return { pathname: '/fil/[id]', params: { id: d.post } };
-  if (d.loan) return { pathname: '/pret/[id]', params: { id: d.loan } };
-  if (d.targetType === 'ITEM' && d.targetId) return { pathname: '/objet/[id]', params: { id: d.targetId } };
-  if (d.targetType === 'GARMENT' && d.targetId) return { pathname: '/vetement/[id]', params: { id: d.targetId } };
+  return targetOfData(n.data);
+}
+
+/**
+ * La même règle pour une notification de l'app et pour un push (ses
+ * données sont celles de la notification) : toucher l'une ou l'autre
+ * ouvre le même écran.
+ */
+export function targetOfData(d: Record<string, unknown>): Href | null {
+  const id = (key: string) => (typeof d[key] === 'string' ? (d[key] as string) : null);
+  if (id('post')) return { pathname: '/fil/[id]', params: { id: id('post')! } };
+  if (id('loan')) return { pathname: '/pret/[id]', params: { id: id('loan')! } };
+  if (id('targetType') === 'ITEM' && id('targetId')) return { pathname: '/objet/[id]', params: { id: id('targetId')! } };
+  if (id('targetType') === 'GARMENT' && id('targetId')) return { pathname: '/vetement/[id]', params: { id: id('targetId')! } };
+  if (id('approval')) return '/amis';
+  if (id('profile')) return { pathname: '/fil/profil/[id]', params: { id: id('profile')! } };
 
   return null;
 }

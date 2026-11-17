@@ -2,6 +2,7 @@ import { useInfiniteQuery, useQuery, type InfiniteData, type QueryClient } from 
 
 import i18n, { dateLocale } from '@/i18n';
 import { apiGet, apiRequest } from '@/lib/api';
+import type { Relation } from '@/lib/relations';
 
 /**
  * Le fil d'actualité (API /api/feed, /api/posts, /api/profiles/{id}/page).
@@ -54,7 +55,7 @@ export type Post = {
 
 export type ProfilePage = {
   profile: PostAuthor & { bio: string | null };
-  relation: { self: boolean; household: boolean; friend: boolean; following: boolean };
+  relation: { self: boolean; household: boolean } & Relation;
   posts: Post[];
   garments: MentionGarment[];
 };

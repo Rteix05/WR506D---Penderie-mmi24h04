@@ -1,10 +1,15 @@
 import { Stack } from 'expo-router';
 
+import { usePush } from '@/lib/push';
+
 /**
  * L'app connectée : les onglets, et par-dessus les écrans qui s'ouvrent
  * depuis plusieurs endroits (choix du type, parcours d'ajout…).
  */
 export default function AppLayout() {
+  // Le push : enregistrement du téléphone, et un push touché ouvre le même écran que dans l'app.
+  usePush();
+
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(tabs)" />
@@ -39,6 +44,8 @@ export default function AppLayout() {
       <Stack.Screen name="parametres" />
       <Stack.Screen name="activite" />
       <Stack.Screen name="notifications" />
+      <Stack.Screen name="notifications-reglages" />
+      <Stack.Screen name="amis" />
       <Stack.Screen name="tenue" options={{ presentation: 'modal' }} />
     </Stack>
   );

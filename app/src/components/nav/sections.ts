@@ -73,7 +73,7 @@ export function sections(): Record<Section, { title: string; legend: string; ent
       entries: [
         menuEntry('Profil', 'profile', '/profil'),
         menuEntry('Profil', 'activity', '/activite'),
-        menuEntry('Profil', 'friends'),
+        menuEntry('Profil', 'friends', '/amis'),
         menuEntry('Profil', 'shares'),
         menuEntry('Profil', 'selling'),
         menuEntry('Profil', 'purchases'),

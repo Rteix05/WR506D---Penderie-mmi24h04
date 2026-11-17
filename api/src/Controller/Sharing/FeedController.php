@@ -16,6 +16,7 @@ use App\Enum\Relation\FriendshipStatus;
 use App\Enum\Sharing\ShareAudience;
 use App\Security\CurrentProfile;
 use App\Security\ResourceAccess;
+use App\Service\Relation\RelationState;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -55,6 +56,7 @@ final class FeedController extends AbstractController
         private readonly EntityManagerInterface $em,
         private readonly CurrentProfile $current,
         private readonly ResourceAccess $access,
+        private readonly RelationState $relations,
     ) {
     }
 
@@ -177,7 +179,7 @@ final class FeedController extends AbstractController
                 'household' => !$self && $this->access->isHousehold($me, $profile),
                 'friend' => !$self && \in_array($profile, $this->friendsOf($me), true),
                 'following' => !$self && \in_array($profile, $this->followedBy($me), true),
-            ],
+            ] + ($self ? ['request' => null, 'followsMe' => false] : $this->relations->between($me, $profile)),
             'posts' => $this->describeAll($posts),
             'garments' => array_values($garments),
         ]);
