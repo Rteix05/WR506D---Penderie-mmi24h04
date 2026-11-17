@@ -1,9 +1,9 @@
 {% extends 'admin/base.html.twig' %}
 {% import 'admin/_ui.html.twig' as ui %}
 
-{% block title %}Tableau de bord{% endblock %}
+{% block title %}{{ 'dashboard.title'|trans({}, 'admin') }}{% endblock %}
 {% block active %}dashboard{% endblock %}
-{% block heading %}Tableau de bord{% endblock %}
+{% block heading %}{{ 'dashboard.title'|trans({}, 'admin') }}{% endblock %}
 {% block subtitle %}{{ today }}{% endblock %}
 
 {% block body %}
@@ -15,39 +15,39 @@
      #}
     <div class="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
         {{ ui.kpi(
-            'Utilisateurs actifs · 30 j',
+            'dashboard.kpi.activeUsers'|trans({}, 'admin'),
             accounts.active|number_format(0, ',', ' '),
-            'sur ' ~ accounts.total|number_format(0, ',', ' ') ~ ' comptes',
+            'dashboard.kpi.activeUsersDetail'|trans({count: accounts.total|number_format(0, ',', ' ')}, 'admin'),
             'grey',
-            '+' ~ accounts.thisWeek ~ ' nouveau' ~ (accounts.thisWeek > 1 ? 'x') ~ ' cette semaine · ' ~ ui.delta(accounts.thisWeek, accounts.lastWeek, 'la précédente')
+            'dashboard.kpi.newAccountsTrend'|trans({count: accounts.thisWeek, delta: ui.delta(accounts.thisWeek, accounts.lastWeek, 'dashboard.kpi.previousPeriod'|trans({}, 'admin'))}, 'admin')
         ) }}
         {{ ui.kpi(
-            'Scans réussis · 30 j',
+            'dashboard.kpi.scans'|trans({}, 'admin'),
             scans.rate is null ? '—' : scans.rate ~ ' %',
-            scans.scans == 0 ? 'Aucun scan ce mois-ci' : scans.failedThisWeek ~ (scans.failedThisWeek > 1 ? ' échecs' : ' échec') ~ ' cette semaine',
+            scans.scans == 0 ? 'dashboard.kpi.scansDetailEmpty'|trans({}, 'admin') : 'dashboard.kpi.failedScansThisWeek'|trans({count: scans.failedThisWeek}, 'admin'),
             scans.failedThisWeek > 0 ? 'red' : 'grey',
-            ui.delta(scans.rate, scans.previousRate, 'les 30 j précédents', ' pts')
+            ui.delta(scans.rate, scans.previousRate, 'dashboard.kpi.scansPeriod'|trans({}, 'admin'), ' pts')
         ) }}
         {{ ui.kpi(
-            'Prêts en cours',
+            'dashboard.kpi.activeLoans'|trans({}, 'admin'),
             loans.active|number_format(0, ',', ' '),
-            loans.overdue ~ ' en retard',
+            'dashboard.kpi.overdueLoans'|trans({count: loans.overdue}, 'admin'),
             loans.overdue > 0 ? 'pink' : 'grey',
-            loans.thisMonth ~ ' remis ce mois-ci · ' ~ ui.delta(loans.thisMonth, loans.lastMonth, 'le mois dernier')
+            'dashboard.kpi.returnedThisMonth'|trans({count: loans.thisMonth, delta: ui.delta(loans.thisMonth, loans.lastMonth, 'dashboard.kpi.lastMonthPeriod'|trans({}, 'admin'))}, 'admin')
         ) }}
         {{ ui.kpi(
-            'Objets ajoutés · 7 j',
+            'dashboard.kpi.addedItems'|trans({}, 'admin'),
             possessions.thisWeek|number_format(0, ',', ' '),
-            possessions.total|number_format(0, ',', ' ') ~ ' dans les inventaires',
+            'dashboard.kpi.itemsInInventories'|trans({count: possessions.total|number_format(0, ',', ' ')}, 'admin'),
             'green',
-            ui.delta(possessions.thisWeek, possessions.lastWeek, 'la semaine précédente')
+            ui.delta(possessions.thisWeek, possessions.lastWeek, 'dashboard.kpi.lastWeekPeriod'|trans({}, 'admin'))
         ) }}
     </div>
 
     <div class="mt-6 grid gap-6 xl:grid-cols-[minmax(0,640px)_1fr]">
         {# Nouveaux inscrits : barres à l'échelle du meilleur jour, le meilleur en rose plein. #}
         <section class="rounded-md bg-surface p-6 shadow-[0_1px_3px_rgba(26,30,36,0.08)]" aria-labelledby="inscrits">
-            <h2 id="inscrits" class="text-legend font-bold text-muted">Nouveaux inscrits · 7 derniers jours</h2>
+            <h2 id="inscrits" class="text-legend font-bold text-muted">{{ 'dashboard.signups.title'|trans({}, 'admin') }}</h2>
             <p class="mt-1 font-typolio text-h3">{{ signups|reduce((sum, d) => sum + d.count, 0) }}</p>
             <ol class="mt-6 grid h-52 grid-cols-7 items-end gap-3 sm:gap-6">
                 {% for day in signups %}
@@ -58,16 +58,16 @@
                               style="height: {{ max(4, (day.count / signupsMax * 160)|round) }}px"
                               aria-hidden="true"></span>
                         <span class="text-legend text-muted" title="{{ day.date|date('d/m') }}">{{ day.letter }}</span>
-                        <span class="sr-only">{{ day.count }} le {{ day.date|date('d/m') }}</span>
+                        <span class="sr-only">{{ 'dashboard.signups.dayAria'|trans({count: day.count, date: day.date|date('d/m')}, 'admin') }}</span>
                     </li>
                 {% endfor %}
             </ol>
         </section>
 
         <section class="rounded-md bg-surface p-6 shadow-[0_1px_3px_rgba(26,30,36,0.08)]" aria-labelledby="priorites">
-            <h2 id="priorites" class="text-legend font-bold text-muted">À traiter en priorité</h2>
+            <h2 id="priorites" class="text-legend font-bold text-muted">{{ 'dashboard.priorities.title'|trans({}, 'admin') }}</h2>
             {% if priorities is empty %}
-                <p class="mt-4 text-body text-muted">Rien à traiter : aucun signalement, aucun litige ouvert, aucun prêt en retard.</p>
+                <p class="mt-4 text-body text-muted">{{ 'dashboard.priorities.empty'|trans({}, 'admin') }}</p>
             {% else %}
                 <ul class="mt-4 flex flex-col gap-3">
                     {% for item in priorities %}
@@ -92,19 +92,19 @@
     </div>
 
     <section class="mt-6 rounded-md bg-surface p-6 shadow-[0_1px_3px_rgba(26,30,36,0.08)]" aria-labelledby="transactions">
-        <h2 id="transactions" class="sr-only">Dernières transactions</h2>
+        <h2 id="transactions" class="sr-only">{{ 'dashboard.transactions.title'|trans({}, 'admin') }}</h2>
         {% if orders is empty %}
-            <p class="text-body text-muted">Aucune transaction pour l’instant.</p>
+            <p class="text-body text-muted">{{ 'dashboard.transactions.empty'|trans({}, 'admin') }}</p>
         {% else %}
             <div class="overflow-x-auto">
                 <table class="w-full min-w-[640px] text-left">
                     <thead>
                     <tr class="text-legend font-bold text-muted">
-                        <th scope="col" class="pb-3">Commande</th>
-                        <th scope="col" class="pb-3">Article</th>
-                        <th scope="col" class="pb-3">Vendeur → Acheteur</th>
-                        <th scope="col" class="pb-3">Montant</th>
-                        <th scope="col" class="pb-3">Paiement</th>
+                        <th scope="col" class="pb-3">{{ 'dashboard.table.order'|trans({}, 'admin') }}</th>
+                        <th scope="col" class="pb-3">{{ 'dashboard.table.listing'|trans({}, 'admin') }}</th>
+                        <th scope="col" class="pb-3">{{ 'dashboard.table.parties'|trans({}, 'admin') }}</th>
+                        <th scope="col" class="pb-3">{{ 'dashboard.table.amount'|trans({}, 'admin') }}</th>
+                        <th scope="col" class="pb-3">{{ 'dashboard.table.payment'|trans({}, 'admin') }}</th>
                     </tr>
                     </thead>
                     <tbody>

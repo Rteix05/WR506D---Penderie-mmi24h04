@@ -16,6 +16,7 @@ use App\Enum\Notification\ReportStatus;
 use App\Enum\Sale\DisputeStatus;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Clock\ClockInterface;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * Les chiffres du tableau de bord du back-office (maquette « Admin —
@@ -28,12 +29,10 @@ use Psr\Clock\ClockInterface;
  */
 final class DashboardStats
 {
-    /** Le motif d'un signalement, dans « À traiter en priorité ». */
-    private const REASONS = ['SPAM' => 'spam', 'INAPPROPRIATE' => 'contenu inapproprié', 'COUNTERFEIT' => 'contrefaçon', 'HARASSMENT' => 'harcèlement', 'OTHER' => 'autre motif'];
-
     public function __construct(
         private readonly EntityManagerInterface $em,
         private readonly ClockInterface $clock,
+        private readonly TranslatorInterface $translator,
     ) {
     }
 
@@ -217,11 +216,12 @@ final class DashboardStats
             ->where('r.status = :open')->setParameter('open', ReportStatus::Open)
             ->orderBy('r.createdAt', 'ASC')->setMaxResults($limit)
             ->getQuery()->getResult();
-        $types = ['PROFILE' => 'Profil', 'ITEM' => 'Objet', 'GARMENT' => 'Vêtement', 'COMMENT' => 'Commentaire', 'LISTING' => 'Annonce', 'COLLECTION' => 'Collection', 'POST' => 'Publication'];
-        $items = array_map(static fn (Report $r) => [
+        // Les textes dans la langue de la page (domaine admin, dashboard.priority.*).
+        $t = fn (string $key, array $params = []): string => $this->translator->trans("dashboard.priority.$key", $params, 'admin');
+        $items = array_map(fn (Report $r) => [
             'kind' => 'report',
-            'title' => $types[$r->getTargetType()->value].' signalé',
-            'detail' => 'par '.$r->getReporter()->getDisplayName().' · '.self::REASONS[$r->getReason()->value],
+            'title' => $t('report.'.$r->getTargetType()->value),
+            'detail' => $t('reportDetail', ['name' => $r->getReporter()->getDisplayName(), 'reason' => $t('reason.'.$r->getReason()->value)]),
             'since' => $r->getCreatedAt(),
             'id' => (string) $r->getId(),
         ], $reports);
@@ -236,8 +236,8 @@ final class DashboardStats
             foreach ($disputes as $d) {
                 $items[] = [
                     'kind' => 'dispute',
-                    'title' => 'Litige #'.$d->getOrder()->getReference(),
-                    'detail' => \sprintf('%s · %s €', $d->getOrder()->getListing()->getPossession()->getName(), self::euros($d->getOrder()->getTotalAmount())),
+                    'title' => $t('dispute', ['reference' => $d->getOrder()->getReference()]),
+                    'detail' => \sprintf('%s · %s €', $d->getOrder()->getListing()->getPossession()->getName(), self::euros($d->getOrder()->getTotalAmount(), $this->translator->getLocale())),
                     'since' => $d->getCreatedAt(),
                     'id' => (string) $d->getId(),
                 ];
@@ -255,8 +255,13 @@ final class DashboardStats
             foreach ($late as $loan) {
                 $items[] = [
                     'kind' => 'loan',
-                    'title' => 'Prêt en retard',
-                    'detail' => \sprintf('« %s » · %s → %s · prévu le %s', $loan->getPossession()->getName(), $loan->getLender()->getDisplayName(), $loan->getBorrower()->getDisplayName(), $loan->getDueDate()?->format('d/m') ?? ''),
+                    'title' => $t('loan'),
+                    'detail' => $t('loanDetail', [
+                        'name' => $loan->getPossession()->getName(),
+                        'lender' => $loan->getLender()->getDisplayName(),
+                        'borrower' => $loan->getBorrower()->getDisplayName(),
+                        'due' => $loan->getDueDate() ?? new \DateTimeImmutable(),
+                    ]),
                     'since' => $loan->getDueDate() ?? $loan->getRequestedAt(),
                 ];
             }
@@ -291,13 +296,19 @@ final class DashboardStats
         return $this->em->getRepository(Order::class)->findBy([], ['createdAt' => 'DESC'], $limit);
     }
 
-    /** « 38 520 » : un montant decimal en euros, sans centimes nuls, espaces fines des milliers. */
-    public static function euros(string $amount): string
+    /**
+     * Un montant en euros, sans centimes nuls : « 38 520 », « 12,50 » en
+     * français (espaces fines des milliers) ; « 38,520 », « 12.50 » en
+     * anglais et en japonais.
+     */
+    public static function euros(string $amount, string $locale = 'fr'): string
     {
         $value = (float) $amount;
         $decimals = fmod($value, 1.0) === 0.0 ? 0 : 2;
 
-        return number_format($value, $decimals, ',', "\u{202F}");
+        return 'fr' === $locale
+            ? number_format($value, $decimals, ',', "\u{202F}")
+            : number_format($value, $decimals, '.', ',');
     }
 
     private function today(): \DateTimeImmutable

@@ -5,71 +5,71 @@
 {% block title %}{{ name }}{% endblock %}
 {% block active %}users{% endblock %}
 {% block heading %}{{ name }}{% endblock %}
-{% block subtitle %}<a class="hover:underline" href="{{ path('admin_users') }}">Utilisateurs</a> › {{ name }}{% endblock %}
+{% block subtitle %}<a class="hover:underline" href="{{ path('admin_users') }}">{{ 'users.heading'|trans({}, 'admin') }}</a> › {{ name }}{% endblock %}
 
 {% block body %}
-    {% set types = {ADULT: 'Adulte', CHILD: 'Enfant', RELATIVE: 'Proche'} %}
-    {% set actions = {BAN_ACCOUNT: 'Compte suspendu', RESTORE: 'Compte réactivé', SUSPEND_PROFILE: 'Profil suspendu', WARN: 'Avertissement', HIDE_CONTENT: 'Contenu masqué', DELETE_CONTENT: 'Contenu supprimé'} %}
+    {% set types = {ADULT: 'users.profileType.adult'|trans({}, 'admin'), CHILD: 'users.profileType.child'|trans({}, 'admin'), RELATIVE: 'users.profileType.relative'|trans({}, 'admin')} %}
+    {% set actions = {BAN_ACCOUNT: 'users.action.banAccount'|trans({}, 'admin'), RESTORE: 'users.action.restore'|trans({}, 'admin'), SUSPEND_PROFILE: 'users.action.suspendProfile'|trans({}, 'admin'), WARN: 'users.action.warn'|trans({}, 'admin'), HIDE_CONTENT: 'users.action.hideContent'|trans({}, 'admin'), DELETE_CONTENT: 'users.action.deleteContent'|trans({}, 'admin')} %}
 
     <div class="grid gap-6 xl:grid-cols-[minmax(0,360px)_1fr]">
         <div class="flex flex-col gap-6">
-            <section class="{{ ui.card_class() }}" aria-label="Compte">
+            <section class="{{ ui.card_class() }}" aria-label="{{ 'users.show.account'|trans({}, 'admin') }}">
                 <p class="text-body font-bold">{{ name }}</p>
                 <p class="text-legend text-muted">{% if profile %}@{{ profile.username }} · {% endif %}{{ account.email }}</p>
                 <dl class="mt-4 flex flex-col gap-2 text-legend">
-                    <div class="flex justify-between gap-4"><dt class="text-muted">Inscrit le</dt><dd class="text-body font-bold">{{ account.createdAt|admin_date }}</dd></div>
-                    <div class="flex justify-between gap-4"><dt class="text-muted">Statut</dt><dd>{{ suspended ? ui.pill('Suspendu', 'red') : ui.pill('Actif', 'green') }}</dd></div>
-                    {% if suspended and suspension %}<div class="flex justify-between gap-4"><dt class="text-muted">Jusqu’au</dt><dd class="text-body font-bold">{{ suspension.expiresAt ? suspension.expiresAt|admin_date : 'réactivation' }}</dd></div>{% endif %}
-                    {% if account.admin %}<div class="flex justify-between gap-4"><dt class="text-muted">Rôle</dt><dd>{{ ui.pill('Administrateur', 'pink') }}</dd></div>{% endif %}
+                    <div class="flex justify-between gap-4"><dt class="text-muted">{{ 'users.show.registeredAt'|trans({}, 'admin') }}</dt><dd class="text-body font-bold">{{ account.createdAt|admin_date }}</dd></div>
+                    <div class="flex justify-between gap-4"><dt class="text-muted">{{ 'users.show.status'|trans({}, 'admin') }}</dt><dd>{{ suspended ? ui.pill('users.status.suspended'|trans({}, 'admin'), 'red') : ui.pill('users.status.active'|trans({}, 'admin'), 'green') }}</dd></div>
+                    {% if suspended and suspension %}<div class="flex justify-between gap-4"><dt class="text-muted">{{ 'users.show.until'|trans({}, 'admin') }}</dt><dd class="text-body font-bold">{{ suspension.expiresAt ? suspension.expiresAt|admin_date : 'users.show.reactivation'|trans({}, 'admin') }}</dd></div>{% endif %}
+                    {% if account.admin %}<div class="flex justify-between gap-4"><dt class="text-muted">{{ 'users.show.role'|trans({}, 'admin') }}</dt><dd>{{ ui.pill('users.role.admin'|trans({}, 'admin'), 'pink') }}</dd></div>{% endif %}
                 </dl>
             </section>
 
             <section class="{{ ui.card_class() }}" aria-labelledby="activite">
-                <h2 id="activite" class="text-legend font-bold text-muted">Activité</h2>
+                <h2 id="activite" class="text-legend font-bold text-muted">{{ 'users.show.activity'|trans({}, 'admin') }}</h2>
                 <dl class="mt-3 flex flex-col gap-2 text-legend">
-                    <div class="flex justify-between gap-4"><dt class="text-muted">Objets et vêtements</dt><dd class="text-body font-bold">{{ possessions }}</dd></div>
-                    <div class="flex justify-between gap-4"><dt class="text-muted">Ventes · achats</dt><dd class="text-body font-bold">{{ sales }} · {{ purchases }}</dd></div>
-                    <div class="flex justify-between gap-4"><dt class="text-muted">Litiges</dt><dd class="text-body font-bold">{{ disputes }}</dd></div>
+                    <div class="flex justify-between gap-4"><dt class="text-muted">{{ 'users.show.itemsAndClothes'|trans({}, 'admin') }}</dt><dd class="text-body font-bold">{{ possessions }}</dd></div>
+                    <div class="flex justify-between gap-4"><dt class="text-muted">{{ 'users.show.salesPurchases'|trans({}, 'admin') }}</dt><dd class="text-body font-bold">{{ sales }} · {{ purchases }}</dd></div>
+                    <div class="flex justify-between gap-4"><dt class="text-muted">{{ 'users.show.disputes'|trans({}, 'admin') }}</dt><dd class="text-body font-bold">{{ disputes }}</dd></div>
                 </dl>
             </section>
 
                 <section class="{{ ui.card_class() }}" aria-labelledby="actions" data-controller="dialog">
-                    <h2 id="actions" class="text-legend font-bold text-muted">Actions</h2>
+                    <h2 id="actions" class="text-legend font-bold text-muted">{{ 'users.show.actions'|trans({}, 'admin') }}</h2>
                     {% if account.id == app.user.id %}
-                        <p class="mt-3 text-legend text-muted">C’est ton propre compte : il ne se suspend pas d’ici.</p>
+                        <p class="mt-3 text-legend text-muted">{{ 'users.show.ownAccount'|trans({}, 'admin') }}</p>
                     {% else %}
                         <button type="button" class="mt-3 {{ ui.button_class(suspended ? 'primary' : 'danger') }}" data-action="dialog#open">
-                            {{ suspended ? 'Réactiver le compte' : 'Suspendre le compte' }}
+                            {{ suspended ? 'users.show.reactivateAccount'|trans({}, 'admin') : 'users.show.suspendAccount'|trans({}, 'admin') }}
                         </button>
                         <dialog data-dialog-target="dialog" data-action="click->dialog#backdrop" aria-labelledby="confirmation"
                                 class="m-auto w-[min(92vw,30rem)] rounded-lg bg-surface p-6 text-ink backdrop:bg-ink/55">
                             <form method="post" action="{{ path(suspended ? 'admin_user_reinstate' : 'admin_user_suspend', {id: account.id}) }}" class="flex flex-col gap-4">
-                                <h2 id="confirmation" class="font-typolio text-h4 uppercase">{{ suspended ? 'Réactiver' : 'Suspendre' }} le compte de {{ profile ? '@' ~ profile.username : account.email }} ?</h2>
+                                <h2 id="confirmation" class="font-typolio text-h4 uppercase">{{ (suspended ? 'users.show.dialog.reactivateTitle' : 'users.show.dialog.suspendTitle')|trans({name: profile ? '@' ~ profile.username : account.email}, 'admin') }}</h2>
                                 <p class="text-legend">
                                     {% if suspended %}
-                                        Ses profils retrouvent l’accès à l’application.
+                                        {{ 'users.show.dialog.reactivateText'|trans({}, 'admin') }}
                                     {% else %}
-                                        {{ profiles|length > 1 ? 'Ses ' ~ profiles|length ~ ' profils ne pourront' : 'Son profil ne pourra' }} plus utiliser l’application pendant la durée choisie : la suspension se lève ensuite toute seule. Ses objets, ses prêts et ses ventes restent en place.
+                                        {{ 'users.show.dialog.suspendText'|trans({count: profiles|length}, 'admin') }}
                                     {% endif %}
                                 </p>
                                 {% if not suspended %}
                                     <label class="flex flex-col gap-1">
-                                        <span class="text-legend font-bold text-muted">Durée</span>
+                                        <span class="text-legend font-bold text-muted">{{ 'users.show.dialog.duration'|trans({}, 'admin') }}</span>
                                         <select name="days" class="h-12 rounded-sm bg-bg px-4 text-body outline-none focus:ring-2 focus:ring-primary">
-                                            {% for d in durations %}<option value="{{ d }}" {% if d == 30 %}selected{% endif %}>{{ d }} jours</option>{% endfor %}
-                                            <option value="">Jusqu’à réactivation</option>
+                                            {% for d in durations %}<option value="{{ d }}" {% if d == 30 %}selected{% endif %}>{{ 'users.show.dialog.days'|trans({count: d}, 'admin') }}</option>{% endfor %}
+                                            <option value="">{{ 'users.show.dialog.untilReactivation'|trans({}, 'admin') }}</option>
                                         </select>
                                     </label>
                                 {% endif %}
                                 <label class="flex flex-col gap-1">
-                                    <span class="text-legend font-bold text-muted">Motif (gardé dans le journal)</span>
+                                    <span class="text-legend font-bold text-muted">{{ 'users.show.dialog.reason'|trans({}, 'admin') }}</span>
                                     <textarea name="reason" required maxlength="500" rows="3" class="rounded-sm bg-bg px-4 py-3 text-body outline-none focus:ring-2 focus:ring-primary"></textarea>
                                 </label>
-                                <p class="rounded-sm bg-ink/[0.04] px-3 py-2 text-legend text-muted">Réversible depuis cette fiche. L’action est enregistrée à ton nom.</p>
+                                <p class="rounded-sm bg-ink/[0.04] px-3 py-2 text-legend text-muted">{{ 'users.show.dialog.reversible'|trans({}, 'admin') }}</p>
                                 <input type="hidden" name="_token" value="{{ csrf_token('moderate-' ~ account.id) }}">
                                 <div class="flex justify-end gap-3">
-                                    <button type="button" class="rounded-md px-4 py-2 text-body font-bold hover:bg-bg" data-action="dialog#close">Annuler</button>
-                                    <button type="submit" class="rounded-md px-4 py-2 text-body font-bold text-white {{ suspended ? 'bg-primary' : 'bg-error' }}">{{ suspended ? 'Réactiver' : 'Suspendre' }}</button>
+                                    <button type="button" class="rounded-md px-4 py-2 text-body font-bold hover:bg-bg" data-action="dialog#close">{{ 'users.show.dialog.cancel'|trans({}, 'admin') }}</button>
+                                    <button type="submit" class="rounded-md px-4 py-2 text-body font-bold text-white {{ suspended ? 'bg-primary' : 'bg-error' }}">{{ suspended ? 'users.show.dialog.reactivate'|trans({}, 'admin') : 'users.show.dialog.suspend'|trans({}, 'admin') }}</button>
                                 </div>
                             </form>
                         </dialog>
@@ -78,15 +78,15 @@
         </div>
 
         <div class="flex flex-col gap-6">
-            <section class="{{ ui.card_class() }}" aria-label="Profils">
+            <section class="{{ ui.card_class() }}" aria-label="{{ 'users.show.profiles'|trans({}, 'admin') }}">
                 <div class="overflow-x-auto">
                     <table class="w-full min-w-[520px] text-left">
                         <thead>
                         <tr class="text-legend font-bold text-muted">
-                            <th scope="col" class="pb-3">Profil</th>
-                            <th scope="col" class="pb-3">Type</th>
-                            <th scope="col" class="pb-3">Objets</th>
-                            <th scope="col" class="pb-3">Contrôle parental</th>
+                            <th scope="col" class="pb-3">{{ 'users.show.table.profile'|trans({}, 'admin') }}</th>
+                            <th scope="col" class="pb-3">{{ 'users.show.table.type'|trans({}, 'admin') }}</th>
+                            <th scope="col" class="pb-3">{{ 'users.show.table.items'|trans({}, 'admin') }}</th>
+                            <th scope="col" class="pb-3">{{ 'users.show.table.parentalControl'|trans({}, 'admin') }}</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -95,11 +95,11 @@
                             <tr class="border-t border-ink/8 text-legend">
                                 <td class="py-3">
                                     <p class="text-body font-bold">{{ p.displayName }}</p>
-                                    <p class="text-muted">@{{ p.username }}{% if p.default %} · principal{% endif %}{% if p.child %} · {{ p.age }} ans{% endif %}</p>
+                                    <p class="text-muted">@{{ p.username }}{% if p.default %} · {{ 'users.show.main'|trans({}, 'admin') }}{% endif %}{% if p.child %} · {{ 'users.show.age'|trans({age: p.age}, 'admin') }}{% endif %}</p>
                                 </td>
-                                <td class="py-3">{{ p.child ? ui.pill('Enfant', 'pink') : types[p.type.value] }}{% if p.suspendedAt %} {{ ui.pill('Suspendu', 'red') }}{% endif %}</td>
+                                <td class="py-3">{{ p.child ? ui.pill('users.profileType.child'|trans({}, 'admin'), 'pink') : types[p.type.value] }}{% if p.suspendedAt %} {{ ui.pill('users.status.suspended'|trans({}, 'admin'), 'red') }}{% endif %}</td>
                                 <td class="py-3">{{ row.possessions }}</td>
-                                <td class="py-3">{{ p.guardian ? 'Tuteur : ' ~ p.guardian.displayName : '—' }}</td>
+                                <td class="py-3">{{ p.guardian ? 'users.show.guardian'|trans({name: p.guardian.displayName}, 'admin') : 'users.show.none'|trans({}, 'admin') }}</td>
                             </tr>
                         {% endfor %}
                         </tbody>
@@ -108,9 +108,9 @@
             </section>
 
             <section class="{{ ui.card_class() }}" aria-labelledby="journal">
-                <h2 id="journal" class="text-legend font-bold text-muted">Journal d’administration</h2>
+                <h2 id="journal" class="text-legend font-bold text-muted">{{ 'users.show.adminLog'|trans({}, 'admin') }}</h2>
                 {% if history is empty %}
-                    <p class="mt-3 flex items-start gap-3 text-legend"><span class="mt-1 size-2 shrink-0 rounded-full bg-main" aria-hidden="true"></span><span><span class="text-body font-bold">Aucune sanction</span><br><span class="text-muted">Ce compte n’a jamais été suspendu.</span></span></p>
+                    <p class="mt-3 flex items-start gap-3 text-legend"><span class="mt-1 size-2 shrink-0 rounded-full bg-main" aria-hidden="true"></span><span><span class="text-body font-bold">{{ 'users.show.noSanction'|trans({}, 'admin') }}</span><br><span class="text-muted">{{ 'users.show.neverSuspended'|trans({}, 'admin') }}</span></span></p>
                 {% else %}
                     <ol class="mt-3 flex flex-col gap-3">
                         {% for action in history %}
@@ -118,7 +118,7 @@
                                 <span class="mt-1 size-2 shrink-0 rounded-full {{ action.actionType.value == 'RESTORE' ? 'bg-main' : 'bg-error' }}" aria-hidden="true"></span>
                                 <span>
                                     <span class="text-body font-bold">{{ actions[action.actionType.value] ?? action.actionType.value }}</span>
-                                    <span class="text-muted">{{ action.createdAt|admin_date(true) }} · par {{ action.admin.email }}{% if action.actionType.value == 'BAN_ACCOUNT' %} · {{ action.expiresAt ? 'jusqu’au ' ~ action.expiresAt|admin_date : 'sans limite' }}{% endif %}</span><br>
+                                    <span class="text-muted">{{ action.createdAt|admin_date(true) }} · {{ 'users.show.by'|trans({email: action.admin.email}, 'admin') }}{% if action.actionType.value == 'BAN_ACCOUNT' %} · {{ action.expiresAt ? 'users.show.untilDate'|trans({date: action.expiresAt|admin_date}, 'admin') : 'users.show.noLimit'|trans({}, 'admin') }}{% endif %}</span><br>
                                     « {{ action.reason }} »
                                 </span>
                             </li>

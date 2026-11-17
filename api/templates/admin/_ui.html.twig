@@ -35,20 +35,20 @@
     {%- if previous is null or current is null -%}
     {%- else -%}
         {%- set d = current - previous -%}
-        {{- d > 0 ? '↑ ' ~ d : (d < 0 ? '↓ ' ~ (-d) : '=') }}{{ d != 0 ? unit }} vs {{ period }} ({{ previous }}{{ unit == ' pts' ? ' %' : '' }})
+        {{- d > 0 ? '↑ ' ~ d : (d < 0 ? '↓ ' ~ (-d) : '=') }}{{ d != 0 ? unit }} {{ 'ui.delta.vs'|trans({}, 'admin') }} {{ period }} ({{ previous }}{{ unit == ' pts' ? ' %' : '' }})
     {%- endif -%}
 {% endmacro %}
 
 {% macro order_status(status) %}
     {% set labels = {
-        PENDING_PAYMENT: ['En attente', 'pink'],
-        AWAITING_HANDOVER: ['À remettre', 'pink'],
-        PAID: ['Payé', 'green'],
-        SHIPPED: ['Expédié', 'green'],
-        DELIVERED: ['Livré', 'green'],
-        COMPLETED: ['Terminé', 'green'],
-        CANCELLED: ['Annulé', 'grey'],
-        REFUNDED: ['Remboursé', 'grey'],
+        PENDING_PAYMENT: ['ui.orderStatus.pendingPayment'|trans({}, 'admin'), 'pink'],
+        AWAITING_HANDOVER: ['ui.orderStatus.awaitingHandover'|trans({}, 'admin'), 'pink'],
+        PAID: ['ui.orderStatus.paid'|trans({}, 'admin'), 'green'],
+        SHIPPED: ['ui.orderStatus.shipped'|trans({}, 'admin'), 'green'],
+        DELIVERED: ['ui.orderStatus.delivered'|trans({}, 'admin'), 'green'],
+        COMPLETED: ['ui.orderStatus.completed'|trans({}, 'admin'), 'green'],
+        CANCELLED: ['ui.orderStatus.cancelled'|trans({}, 'admin'), 'grey'],
+        REFUNDED: ['ui.orderStatus.refunded'|trans({}, 'admin'), 'grey'],
     } %}
     {% set entry = labels[status.value] ?? [status.value, 'grey'] %}
     {{ _self.pill(entry[0], entry[1]) }}
@@ -60,7 +60,7 @@
         {% for name, v in params %}<input type="hidden" name="{{ name }}" value="{{ v }}">{% endfor %}
         <label class="flex h-12 items-center gap-2 rounded-sm bg-surface px-4 shadow-[0_1px_3px_rgba(26,30,36,0.08)] focus-within:ring-2 focus-within:ring-primary">
             <span class="text-legend font-bold text-muted" aria-hidden="true">o-</span>
-            <span class="sr-only">Rechercher</span>
+            <span class="sr-only">{{ 'ui.search.label'|trans({}, 'admin') }}</span>
             <input type="search" name="q" value="{{ value }}" placeholder="{{ placeholder }}" class="w-full bg-transparent text-body outline-none">
         </label>
     </form>
@@ -71,7 +71,7 @@
  #   tabs([{key, label}], current, route, {q: …})
  #}
 {% macro tabs(items, current, route, params = {}) %}
-    <nav aria-label="Filtres" class="mb-6 flex flex-wrap gap-2">
+    <nav aria-label="{{ 'ui.tabs.label'|trans({}, 'admin') }}" class="mb-6 flex flex-wrap gap-2">
         {% for item in items %}
             {% set on = item.key == current %}
             <a href="{{ path(route, params|merge({filter: item.key})) }}" {% if on %}aria-current="page"{% endif %}
@@ -83,11 +83,12 @@
 {# Bas de tableau : « 20 sur 134 » et les pages précédente / suivante. #}
 {% macro pager(page, perPage, total, route, params = {}, note = null) %}
     {% set shown = min(total, page * perPage) %}
+    {% set from = (total == 0 ? 0 : (page - 1) * perPage + 1) ~ '' %}
     <div class="mt-4 flex flex-wrap items-center justify-between gap-3 text-legend">
-        <p class="text-muted">{{ total == 0 ? 0 : (page - 1) * perPage + 1 }}–{{ shown }} sur {{ total|number_format(0, ',', ' ') }}{% if note %} · {{ note }}{% endif %}</p>
+        <p class="text-muted">{{ 'ui.pager.range'|trans({from: from, to: shown ~ '', total: total|number_format(0, ',', ' ')}, 'admin') }}{% if note %} · {{ note }}{% endif %}</p>
         <p class="flex gap-4 font-bold">
-            {% if page > 1 %}<a class="text-primary hover:underline" href="{{ path(route, params|merge({page: page - 1})) }}">‹ Page précédente</a>{% endif %}
-            {% if shown < total %}<a class="text-primary hover:underline" href="{{ path(route, params|merge({page: page + 1})) }}">Page suivante ›</a>{% endif %}
+            {% if page > 1 %}<a class="text-primary hover:underline" href="{{ path(route, params|merge({page: page - 1})) }}">{{ 'ui.pager.previous'|trans({}, 'admin') }}</a>{% endif %}
+            {% if shown < total %}<a class="text-primary hover:underline" href="{{ path(route, params|merge({page: page + 1})) }}">{{ 'ui.pager.next'|trans({}, 'admin') }}</a>{% endif %}
         </p>
     </div>
 {% endmacro %}

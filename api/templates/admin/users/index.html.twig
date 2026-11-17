@@ -1,34 +1,34 @@
 {% extends 'admin/base.html.twig' %}
 {% import 'admin/_ui.html.twig' as ui %}
 
-{% block title %}Utilisateurs{% endblock %}
+{% block title %}{{ 'users.pageTitle'|trans({}, 'admin') }}{% endblock %}
 {% block active %}users{% endblock %}
-{% block heading %}Utilisateurs{% endblock %}
-{% block subtitle %}{{ counts.all|number_format(0, ',', ' ') }} comptes · {{ counts.children|number_format(0, ',', ' ') }} avec un profil enfant{% endblock %}
-{% block search %}{{ ui.search('Nom, e-mail, identifiant…', query, {filter: filter}) }}{% endblock %}
+{% block heading %}{{ 'users.heading'|trans({}, 'admin') }}{% endblock %}
+{% block subtitle %}{{ 'users.subtitle'|trans({all: counts.all|number_format(0, ',', ' '), children: counts.children|number_format(0, ',', ' ')}, 'admin') }}{% endblock %}
+{% block search %}{{ ui.search('users.searchPlaceholder'|trans({}, 'admin'), query, {filter: filter}) }}{% endblock %}
 
 {% block body %}
     {{ ui.tabs([
-        {key: 'all', label: 'Tous'},
-        {key: 'active', label: 'Actifs'},
-        {key: 'suspended', label: 'Suspendus (' ~ counts.suspended ~ ')'},
-        {key: 'children', label: 'Avec profil enfant'},
+        {key: 'all', label: 'users.tabs.all'|trans({}, 'admin')},
+        {key: 'active', label: 'users.tabs.active'|trans({}, 'admin')},
+        {key: 'suspended', label: 'users.tabs.suspended'|trans({count: counts.suspended}, 'admin')},
+        {key: 'children', label: 'users.tabs.withChildProfile'|trans({}, 'admin')},
     ], filter, 'admin_users', {q: query}) }}
 
-    <section class="{{ ui.card_class() }}" aria-label="Comptes">
+    <section class="{{ ui.card_class() }}" aria-label="{{ 'users.aria.accounts'|trans({}, 'admin') }}">
         {% if rows is empty %}
-            <p class="text-body text-muted">{{ query ? 'Aucun compte ne correspond à « ' ~ query ~ ' ».' : 'Aucun compte ici.' }}</p>
+            <p class="text-body text-muted">{{ query ? 'users.empty.search'|trans({query: query}, 'admin') : 'users.empty.none'|trans({}, 'admin') }}</p>
         {% else %}
             <div class="overflow-x-auto">
                 <table class="w-full min-w-[720px] text-left">
                     <thead>
                     <tr class="text-legend font-bold text-muted">
-                        <th scope="col" class="pb-3">Utilisateur</th>
-                        <th scope="col" class="pb-3">Profils</th>
-                        <th scope="col" class="pb-3">Inscrit le</th>
-                        <th scope="col" class="pb-3">Objets</th>
-                        <th scope="col" class="pb-3">Statut</th>
-                        <th scope="col" class="pb-3"><span class="sr-only">Fiche</span></th>
+                        <th scope="col" class="pb-3">{{ 'users.table.user'|trans({}, 'admin') }}</th>
+                        <th scope="col" class="pb-3">{{ 'users.table.profiles'|trans({}, 'admin') }}</th>
+                        <th scope="col" class="pb-3">{{ 'users.table.registeredAt'|trans({}, 'admin') }}</th>
+                        <th scope="col" class="pb-3">{{ 'users.table.items'|trans({}, 'admin') }}</th>
+                        <th scope="col" class="pb-3">{{ 'users.table.status'|trans({}, 'admin') }}</th>
+                        <th scope="col" class="pb-3"><span class="sr-only">{{ 'users.table.sheet'|trans({}, 'admin') }}</span></th>
                     </tr>
                     </thead>
                     <tbody>
@@ -38,12 +38,12 @@
                                 <p class="text-body font-bold">{{ row.profile ? row.profile.displayName : row.account.email }}</p>
                                 <p class="text-muted">{{ row.account.email }}</p>
                             </td>
-                            <td class="py-3">{{ row.profiles }}{% if row.children %} · dont {{ row.children }} {{ row.children > 1 ? 'enfants' : 'enfant' }}{% endif %}</td>
+                            <td class="py-3">{{ row.profiles }}{% if row.children %} · {{ 'users.childrenCount'|trans({count: row.children}, 'admin') }}{% endif %}</td>
                             <td class="py-3">{{ row.account.createdAt|admin_date }}</td>
                             <td class="py-3">{{ row.possessions }}</td>
-                            <td class="py-3">{{ row.suspended ? ui.pill('Suspendu', 'red') : ui.pill('Actif', 'green') }}</td>
+                            <td class="py-3">{{ row.suspended ? ui.pill('users.status.suspended'|trans({}, 'admin'), 'red') : ui.pill('users.status.active'|trans({}, 'admin'), 'green') }}</td>
                             <td class="py-3 text-right">
-                                <a class="font-bold text-primary hover:underline" href="{{ path('admin_user', {id: row.account.id}) }}">Voir<span class="sr-only"> la fiche de {{ row.account.email }}</span> ›</a>
+                                <a class="font-bold text-primary hover:underline" href="{{ path('admin_user', {id: row.account.id}) }}">{{ 'users.view'|trans({}, 'admin') }}<span class="sr-only"> {{ 'users.viewSheetOf'|trans({email: row.account.email}, 'admin') }}</span> ›</a>
                             </td>
                         </tr>
                     {% endfor %}
