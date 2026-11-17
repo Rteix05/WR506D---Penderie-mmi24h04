@@ -1,0 +1,40 @@
+{#
+ # Le code de vérification (maquette « Admin — Connexion », champ « Code de
+ # vérification ») : deuxième étape, après l'e-mail et le mot de passe. Les
+ # variables viennent de scheb/2fa-bundle (voir son gabarit form.html.twig).
+ #}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Code de vérification · Back-office · Penderie</title>
+    {{ importmap('app') }}
+</head>
+<body class="grid min-h-screen place-items-center bg-ink px-5 py-10">
+<main class="w-full max-w-sm rounded-lg bg-surface p-8">
+    <p class="flex items-center gap-2 font-typolio text-[20px]">PENDERIE <span class="rounded-full bg-primary px-2 py-0.5 font-luciole text-legend font-bold text-white">ADMIN</span></p>
+    <h1 class="mt-6 font-typolio text-h4 uppercase">Code de vérification</h1>
+    <p class="mt-1 text-legend text-muted">Saisis le code à 6 chiffres de ton application d’authentification.</p>
+
+    {% if authenticationError %}
+        {# Message de scheb (« code_invalid ») : pas de composant de traduction, on l'écrit ici. #}
+        <p role="alert" class="mt-6 rounded-sm bg-error/10 px-4 py-3 text-legend font-bold text-error">Ce code ne correspond pas. Saisis celui affiché maintenant.</p>
+    {% endif %}
+
+    <form method="post" action="{{ checkPathUrl ? checkPathUrl : path(checkPathRoute) }}" class="mt-6 flex flex-col gap-5">
+        <label class="flex flex-col gap-1">
+            <span class="text-legend font-bold text-muted">Code de vérification</span>
+            <input type="text" name="{{ authCodeParameterName }}" required autofocus autocomplete="one-time-code" inputmode="numeric" pattern="[0-9 ]{6,7}" maxlength="7"
+                   class="h-12 rounded-sm bg-surface px-4 text-body tracking-[0.3em] shadow-[0_1px_3px_rgba(26,30,36,0.12)] outline-none focus:ring-2 focus:ring-primary">
+        </label>
+        {% if isCsrfProtectionEnabled %}<input type="hidden" name="{{ csrfParameterName }}" value="{{ csrf_token(csrfTokenId) }}">{% endif %}
+        <button type="submit" class="h-12 rounded-md bg-primary text-body font-bold text-white hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">Vérifier</button>
+    </form>
+
+    <p class="mt-6 text-center text-legend text-muted">Double authentification obligatoire. Chaque action est enregistrée dans le journal.</p>
+    <p class="mt-2 text-center text-legend"><a class="font-bold text-primary hover:underline" href="{{ logoutPath }}">Annuler</a></p>
+</main>
+</body>
+</html>
