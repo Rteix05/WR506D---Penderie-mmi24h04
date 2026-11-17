@@ -7,17 +7,41 @@
 {% block subtitle %}{{ today }}{% endblock %}
 
 {% block body %}
-    {# Quatre indicateurs ; ceux du milieu à la demande du client (09/11). #}
+    {#
+     # Quatre indicateurs de santé de la plateforme (les urgences sont dans
+     # « À traiter en priorité » et les pastilles du menu). Ceux du milieu à
+     # la demande du client (09/11) ; « Objets ajoutés » remplace les ventes
+     # tant que la vente n'est pas lancée (15/11), les ventes ont leur écran.
+     #}
     <div class="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
-        {{ ui.kpi('Utilisateurs actifs', accounts.total|number_format(0, ',', ' '), '+' ~ accounts.thisWeek ~ ' cette semaine', 'green') }}
         {{ ui.kpi(
-            'Scans réussis',
+            'Utilisateurs actifs · 30 j',
+            accounts.active|number_format(0, ',', ' '),
+            'sur ' ~ accounts.total|number_format(0, ',', ' ') ~ ' comptes',
+            'grey',
+            '+' ~ accounts.thisWeek ~ ' nouveau' ~ (accounts.thisWeek > 1 ? 'x') ~ ' cette semaine · ' ~ ui.delta(accounts.thisWeek, accounts.lastWeek, 'la précédente')
+        ) }}
+        {{ ui.kpi(
+            'Scans réussis · 30 j',
             scans.rate is null ? '—' : scans.rate ~ ' %',
             scans.scans == 0 ? 'Aucun scan ce mois-ci' : scans.failedThisWeek ~ (scans.failedThisWeek > 1 ? ' échecs' : ' échec') ~ ' cette semaine',
-            scans.failedThisWeek > 0 ? 'red' : 'grey'
+            scans.failedThisWeek > 0 ? 'red' : 'grey',
+            ui.delta(scans.rate, scans.previousRate, 'les 30 j précédents', ' pts')
         ) }}
-        {{ ui.kpi('Prêts en cours', loans.active|number_format(0, ',', ' '), loans.overdue ~ ' en retard', loans.overdue > 0 ? 'pink' : 'grey') }}
-        {{ ui.kpi('Ventes du mois', sales.count|number_format(0, ',', ' '), sales.amount|admin_euros ~ ' € encaissés', 'grey') }}
+        {{ ui.kpi(
+            'Prêts en cours',
+            loans.active|number_format(0, ',', ' '),
+            loans.overdue ~ ' en retard',
+            loans.overdue > 0 ? 'pink' : 'grey',
+            loans.thisMonth ~ ' remis ce mois-ci · ' ~ ui.delta(loans.thisMonth, loans.lastMonth, 'le mois dernier')
+        ) }}
+        {{ ui.kpi(
+            'Objets ajoutés · 7 j',
+            possessions.thisWeek|number_format(0, ',', ' '),
+            possessions.total|number_format(0, ',', ' ') ~ ' dans les inventaires',
+            'green',
+            ui.delta(possessions.thisWeek, possessions.lastWeek, 'la semaine précédente')
+        ) }}
     </div>
 
     <div class="mt-6 grid gap-6 xl:grid-cols-[minmax(0,640px)_1fr]">

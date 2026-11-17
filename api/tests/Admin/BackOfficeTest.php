@@ -151,6 +151,9 @@ final class BackOfficeTest extends WebTestCase
         foreach ([$place, $room, $perceuse, $tente, $late, $onTime] as $entity) {
             $this->em->persist($entity);
         }
+        // Alice a utilisé l'app aujourd'hui, Bruno il y a 40 jours, Camille jamais.
+        $alice->getAccount()->markSeen(new \DateTimeImmutable());
+        $bruno->getAccount()->markSeen(new \DateTimeImmutable('-40 days'));
         $this->em->flush();
 
         $this->client->loginUser($admin->getAccount(), 'admin');
@@ -158,9 +161,11 @@ final class BackOfficeTest extends WebTestCase
         self::assertResponseIsSuccessful();
 
         $kpi = static fn (string $label) => trim(preg_replace('/\s+/u', ' ', $crawler->filter(\sprintf('section[aria-label="%s"]', $label))->text()));
-        self::assertStringContainsString('Scans réussis 75 % 1 échec cette semaine', $kpi('Scans réussis'), '3 réussis sur 4');
-        self::assertStringContainsString('Prêts en cours 2 1 en retard', $kpi('Prêts en cours'));
-        self::assertStringContainsString('+3 cette semaine', $kpi('Utilisateurs actifs'), 'les trois comptes du test viennent d\'être créés');
+        self::assertStringContainsString('Scans réussis · 30 j 75 % 1 échec cette semaine', $kpi('Scans réussis · 30 j'), '3 réussis sur 4');
+        self::assertStringContainsString('Prêts en cours 2 1 en retard 2 remis ce mois-ci', $kpi('Prêts en cours'));
+        self::assertStringContainsString('Utilisateurs actifs · 30 j 1 sur 3 comptes', $kpi('Utilisateurs actifs · 30 j'), 'seule Alice est venue ces 30 jours');
+        self::assertStringContainsString('+3 nouveaux cette semaine · ↑ 3 vs la précédente (0)', $kpi('Utilisateurs actifs · 30 j'));
+        self::assertStringContainsString('Objets ajoutés · 7 j 2 2 dans les inventaires ↑ 2 vs la semaine précédente (0)', $kpi('Objets ajoutés · 7 j'));
         self::assertStringContainsString('Prêt en retard', $crawler->filter('#priorites')->ancestors()->first()->text());
         self::assertStringContainsString('« Perceuse » · Alice → Bruno', $crawler->filter('#priorites')->ancestors()->first()->text());
     }

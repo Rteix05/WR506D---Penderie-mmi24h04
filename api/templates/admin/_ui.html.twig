@@ -14,12 +14,29 @@
     <span class="inline-flex rounded-full px-2 py-1 text-legend font-bold {{ tones[tone] ?? tones.grey }}">{{ label }}</span>
 {% endmacro %}
 
-{% macro kpi(label, value, detail, tone) %}
+{#
+ # Une carte d'indicateur : le chiffre, une pastille (le détail qui compte),
+ # et une ligne d'évolution facultative (« ↑ 3 vs la semaine précédente »).
+ #}
+{% macro kpi(label, value, detail, tone, trend = null) %}
     <section class="rounded-md bg-surface p-6 shadow-[0_1px_3px_rgba(26,30,36,0.08)]" aria-label="{{ label }}">
         <h2 class="text-legend font-bold text-muted">{{ label }}</h2>
         <p class="mt-1 font-typolio text-h3">{{ value }}</p>
         {% if detail %}<p class="mt-3">{{ _self.pill(detail, tone) }}</p>{% endif %}
+        {% if trend %}<p class="mt-2 text-legend text-muted">{{ trend }}</p>{% endif %}
     </section>
+{% endmacro %}
+
+{#
+ # L'évolution d'un chiffre par rapport à la période précédente :
+ # « ↑ 4 vs la semaine précédente (12) », « = … », « ↓ 3 pts … ».
+ #}
+{% macro delta(current, previous, period, unit = '') %}
+    {%- if previous is null or current is null -%}
+    {%- else -%}
+        {%- set d = current - previous -%}
+        {{- d > 0 ? '↑ ' ~ d : (d < 0 ? '↓ ' ~ (-d) : '=') }}{{ d != 0 ? unit }} vs {{ period }} ({{ previous }}{{ unit == ' pts' ? ' %' : '' }})
+    {%- endif -%}
 {% endmacro %}
 
 {% macro order_status(status) %}
