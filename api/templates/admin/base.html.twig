@@ -69,7 +69,7 @@
 
         <div class="flex flex-col gap-1">
             <p class="text-body font-bold">{{ admin_profile ? admin_profile.displayName : app.user.userIdentifier }}</p>
-            <p class="text-legend text-white/80">{{ 'layout.adminRole'|trans({}, 'admin') }}</p>
+            <p class="text-legend text-white/80">{{ is_granted('ROLE_SUPER_ADMIN') ? 'layout.superAdminRole'|trans({}, 'admin') : 'layout.adminRole'|trans({}, 'admin') }}</p>
             <a href="{{ path('admin_logout') }}" class="mt-2 text-legend font-bold hover:underline">{{ 'layout.logout'|trans({}, 'admin') }}</a>
         </div>
     </nav>

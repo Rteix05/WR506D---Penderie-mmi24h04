@@ -20,6 +20,12 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  *   php bin/console app:admin:grant camille@penderie.app
  *   php bin/console app:admin:grant camille@penderie.app --revoke
  *   php bin/console app:admin:grant camille@penderie.app --reset-2fa
+ *   php bin/console app:admin:grant camille@penderie.app --super
+ *   php bin/console app:admin:grant camille@penderie.app --super --revoke
+ *
+ * --super fait du compte un super administrateur : lui seul ajoute et
+ * modifie les catégories et les marques. Avec --revoke, il redevient un
+ * administrateur simple (sans --super, --revoke retire tout l'accès).
  *
  * --reset-2fa efface le secret de la double authentification (téléphone
  * perdu) : l'administrateur la réactive à sa prochaine connexion. Retirer
@@ -38,7 +44,8 @@ final class GrantAdminCommand extends Command
         $this
             ->addArgument('email', InputArgument::REQUIRED, 'L\'e-mail du compte')
             ->addOption('revoke', null, InputOption::VALUE_NONE, 'Retirer l\'accès au lieu de le donner')
-            ->addOption('reset-2fa', null, InputOption::VALUE_NONE, 'Effacer la double authentification (téléphone perdu)');
+            ->addOption('reset-2fa', null, InputOption::VALUE_NONE, 'Effacer la double authentification (téléphone perdu)')
+            ->addOption('super', null, InputOption::VALUE_NONE, 'Super administrateur : gère aussi les catégories et les marques');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -61,7 +68,15 @@ final class GrantAdminCommand extends Command
         }
 
         $revoke = (bool) $input->getOption('revoke');
-        $roles = array_diff($account->getRoles(), [Account::ROLE_ADMIN]);
+        if ((bool) $input->getOption('super')) {
+            $roles = array_diff($account->getRoles(), [Account::ROLE_SUPER_ADMIN]);
+            $account->setRoles(array_values($revoke ? $roles : array_unique([...$roles, Account::ROLE_ADMIN, Account::ROLE_SUPER_ADMIN])));
+            $this->em->flush();
+            $io->success($revoke ? \sprintf('%s redevient administrateur simple.', $email) : \sprintf('%s est maintenant super administrateur (catégories et marques).', $email));
+
+            return Command::SUCCESS;
+        }
+        $roles = array_diff($account->getRoles(), [Account::ROLE_ADMIN, Account::ROLE_SUPER_ADMIN]);
         $account->setRoles(array_values($revoke ? $roles : [...$roles, Account::ROLE_ADMIN]));
         if ($revoke) {
             $account->setTotpSecret(null);
