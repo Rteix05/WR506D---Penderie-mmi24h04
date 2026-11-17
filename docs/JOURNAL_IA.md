@@ -610,3 +610,21 @@ Règles suivies avec l'outil de développement :
   L'IA a vérifié le rendu réel des deux onglets avec les deux rôles, dans une transaction annulée ensuite.
 - **App (#79)** : le lien « Signaler » ouvre un panneau avec cinq raisons et une précision, obligatoire pour « Autre ». Il apparaît sur les publications, les commentaires, les vêtements mentionnés et les profils des autres. La route d'API existait depuis #68.
 - **Erreur de l'IA** : sur un premier rendu, le bandeau « Consultation seulement » semblait absent. La page s'affichait simplement dans une autre langue, faute d'en-tête de langue dans la requête de test.
+
+### 17/11 (soir) — Les notifications, et le résultat des signalements (PR #80, #81)
+
+- **Prompts** (mot pour mot) :
+  - « fais les notifications » ;
+  - « met aussi les resultats de signalement ».
+- **Constat avant d'agir** :
+  - l'entité existait, et les prêts, les commentaires et la modération créaient déjà des notifications, mais rien ne les affichait ;
+  - le push est impossible sans identifiant de projet Expo (EAS), lié à un compte Expo ;
+  - les amis et les abonnements n'ont pas encore de route d'API.
+
+  D'après la maquette (lot 11), l'IA a donc fait des notifications dans l'app.
+- **#81** :
+  - l'API : liste, non lues, marquer lue, tout marquer lu ;
+  - de nouveaux événements : partage reçu, proposition de modification à valider, puis acceptée ou refusée ;
+  - dans l'app, l'écran Notifications (Aujourd'hui, Cette semaine, Plus tôt ; toucher ouvre le contenu) et une pastille du nombre de non lues sur le « ! » de l'accueil.
+- **#80** : quand un signalement est traité, par un administrateur ou par la modération IA, la personne qui l'a fait reçoit le résultat (examiné, contenu retiré, auteur averti ou suspendu), sans la note interne.
+- **Incident** : le terminal a refusé plusieurs commandes de suite, faute de verdict du contrôle de sécurité. L'IA a rédigé le code dans un dossier temporaire et l'a appliqué une fois le terminal revenu.
