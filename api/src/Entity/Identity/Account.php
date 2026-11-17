@@ -37,6 +37,13 @@ class Account implements UserInterface, PasswordAuthenticatedUserInterface, TwoF
     public const ROLE_USER = 'ROLE_USER';
     public const ROLE_ADMIN = 'ROLE_ADMIN';
 
+    /**
+     * Le super administrateur : un administrateur qui, seul, ajoute et
+     * modifie les référentiels (catégories, marques) dans le back-office.
+     * Stocké avec ROLE_ADMIN (hiérarchie des rôles dans security.yaml).
+     */
+    public const ROLE_SUPER_ADMIN = 'ROLE_SUPER_ADMIN';
+
     /** Le compte qui porte le profil fantôme (Profile::GHOST_ID). */
     public const GHOST_ID = '00000000-0000-7000-8000-000000000000';
 
@@ -161,6 +168,11 @@ class Account implements UserInterface, PasswordAuthenticatedUserInterface, TwoF
     public function isAdmin(): bool
     {
         return \in_array(self::ROLE_ADMIN, $this->roles, true);
+    }
+
+    public function isSuperAdmin(): bool
+    {
+        return $this->isAdmin() && \in_array(self::ROLE_SUPER_ADMIN, $this->roles, true);
     }
 
     /** Aucune donnée sensible en clair à effacer : le mot de passe est déjà hashé. */

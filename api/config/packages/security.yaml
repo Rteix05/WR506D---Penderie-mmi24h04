@@ -1,4 +1,9 @@
 security:
+    # Un super administrateur est aussi administrateur ; lui seul ajoute et
+    # modifie les catégories et les marques du back-office.
+    role_hierarchy:
+        ROLE_SUPER_ADMIN: [ROLE_ADMIN]
+
     password_hashers:
         Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: 'auto'
 

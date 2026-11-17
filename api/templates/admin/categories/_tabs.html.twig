@@ -1,0 +1,10 @@
+{# Les deux onglets de la page : catégories, marques (avec le nombre à valider). #}
+<nav aria-label="{{ 'categories.tabsAria'|trans({}, 'admin') }}" class="mb-6 flex rounded-full bg-ink/[0.05] p-1">
+    {% for key, label in {categories: 'categories.tabCategories'|trans({}, 'admin'), brands: 'categories.tabBrands'|trans({count: pendingBrands}, 'admin')} %}
+        <a href="{{ path('admin_categories', key == 'brands' ? {tab: 'brands'} : {}) }}" {% if key == tab %}aria-current="page"{% endif %}
+           class="flex h-10 flex-1 items-center justify-center rounded-full text-legend font-bold {{ key == tab ? 'bg-surface text-ink shadow-[0_1px_3px_rgba(26,30,36,0.12)]' : 'text-muted hover:text-ink' }}">{{ label }}</a>
+    {% endfor %}
+</nav>
+{% if not is_granted('ROLE_SUPER_ADMIN') %}
+    <p class="mb-6 rounded-sm bg-ink/[0.04] px-4 py-3 text-legend text-muted">{{ 'categories.readOnly'|trans({}, 'admin') }}</p>
+{% endif %}
