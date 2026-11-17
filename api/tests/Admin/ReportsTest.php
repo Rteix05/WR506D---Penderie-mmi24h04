@@ -170,4 +170,18 @@ final class ReportsTest extends WebTestCase
         self::assertSelectorTextContains('[role=alert]', 'La note est obligatoire');
         self::assertSame(ReportStatus::Open, $this->fresh($report)->getStatus());
     }
+
+    public function testTheReporterLearnsTheOutcome(): void
+    {
+        $report = $this->reportedComment();
+        $this->decide($report, 'hide');
+
+        $this->em->clear();
+        $notes = $this->em->getRepository(Notification::class)->findBy(['recipient' => $this->reporter->getId()]);
+        self::assertCount(1, $notes);
+        self::assertSame('Signalement traité', $notes[0]->getTitle());
+        self::assertStringContainsString('retiré', (string) $notes[0]->getBody());
+        self::assertSame('hide', $notes[0]->getData()['decision']);
+        self::assertStringNotContainsString('Menace explicite', (string) $notes[0]->getBody(), 'la note de l’administrateur reste interne');
+    }
 }

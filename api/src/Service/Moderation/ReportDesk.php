@@ -19,6 +19,10 @@ use Doctrine\ORM\EntityManagerInterface;
  * l'auteur, ou suspendre son compte. Chaque décision écrit sa
  * ModerationAction (qui pointe vers le signalement) et clôt le
  * signalement, dans une transaction.
+ *
+ * Le signalant apprend le résultat (notification « Signalement traité »),
+ * sans rien sur l'auteur ni sur la note de l'administrateur : seulement ce
+ * qui a été fait. Vaut aussi quand la décision vient de la modération IA.
  */
 final class ReportDesk
 {
@@ -54,6 +58,7 @@ final class ReportDesk
             // AccountModerator a sa propre transaction ; le signalement se clôt ensuite.
             $this->moderator->suspend($author->getAccount(), $admin, $note, self::SUSPENSION_DAYS, $report);
             $report->markActioned($admin, 'Compte de l\'auteur suspendu 30 jours : '.$note);
+            $this->notifyReporter($report, $decision);
             $this->em->flush();
 
             return;
@@ -66,7 +71,27 @@ final class ReportDesk
                 'warn' => $this->warn($report, $admin, $note, $author),
                 default => throw new \DomainException('Décision inconnue.'),
             };
+            $this->notifyReporter($report, $decision);
         });
+    }
+
+    /** Le résultat, pour celui qui a signalé : ce qui a été fait, en une phrase. */
+    private function notifyReporter(Report $report, string $decision): void
+    {
+        $body = match ($decision) {
+            'dismiss' => 'Après examen, le contenu que tu as signalé reste en ligne : il ne va pas contre nos règles. Merci de ta vigilance.',
+            'hide' => 'Le contenu que tu as signalé a été retiré. Merci de ta vigilance.',
+            'warn' => 'L\'auteur du contenu que tu as signalé a reçu un avertissement. Merci de ta vigilance.',
+            default => 'Le compte de l\'auteur du contenu que tu as signalé a été suspendu. Merci de ta vigilance.',
+        };
+        $reporter = $report->getReporter();
+        if (!$reporter->isGhost()) {
+            $this->em->persist(new Notification($reporter, NotificationType::ModerationAction, 'dismiss' === $decision ? 'Signalement examiné' : 'Signalement traité', $body, [
+                'report' => (string) $report->getId(),
+                'decision' => $decision,
+                'targetType' => $report->getTargetType()->value,
+            ]));
+        }
     }
 
     private function hide(Report $report, Account $admin, string $note, ?object $target): void
