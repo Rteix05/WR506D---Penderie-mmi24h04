@@ -75,6 +75,10 @@
           "title": "Mon profil",
           "subtitle": "Informations et profils de la famille"
         },
+        "activity": {
+          "title": "Mon activité",
+          "subtitle": "Tes chiffres : objets, prêts, ventes"
+        },
         "friends": {
           "title": "Amis et abonnés",
           "subtitle": "Amis, abonnés, demandes"

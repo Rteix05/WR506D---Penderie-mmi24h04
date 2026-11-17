@@ -180,6 +180,51 @@
       }
     }
   },
+  "activity": {
+    "title": "アクティビティ",
+    "legend": "このプロフィールの数字",
+    "legendNamed": "{{name}}さんの数字",
+    "loading": "数字を読み込み中",
+    "error": "数字を読み込めませんでした",
+    "retry": "もう一度試す",
+    "empty": {
+      "title": "まだ何もありません",
+      "text": "アイテム・貸し借り・スキャンの数がここに表示されます。まずはアイテムをスキャンしてみましょう。",
+      "action": "アイテムをスキャン"
+    },
+    "inventory": {
+      "title": "持ち物",
+      "items_other": "アイテム",
+      "garments_other": "服",
+      "itemsA11y_other": "アイテム{{count}}点、アイテム一覧を開く",
+      "garmentsA11y_other": "服{{count}}点、ワードローブを開く",
+      "addedThisMonth_other": "今月 +{{count}}点"
+    },
+    "loans": {
+      "title": "貸し借り",
+      "seeAll": "貸し借りを見る",
+      "overdue_other": "期限切れ",
+      "lent": "貸し出し中",
+      "borrowed": "借りているもの",
+      "returned": "返却済み"
+    },
+    "sales": {
+      "title": "売買",
+      "none": "まだ売買はありません。",
+      "onSale": "出品中",
+      "sold": "売れたもの",
+      "bought": "買ったもの"
+    },
+    "scans": {
+      "title": "スキャン",
+      "scan": "スキャン",
+      "none": "まだスキャンがありません。バーコードや写真をスキャンすると、情報が自動で入力されます。",
+      "rate": "一度で認識",
+      "percent": "{{rate}}%",
+      "detail_other": "{{count}}回中{{recognised}}回",
+      "a11y": "スキャンの{{rate}}%を一度で認識、{{total}}回中{{recognised}}回"
+    }
+  },
   "settings": {
     "title": "設定",
     "legend": "アプリの設定",
