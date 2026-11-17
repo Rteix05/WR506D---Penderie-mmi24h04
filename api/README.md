@@ -245,6 +245,32 @@ Le fil de Penderie (maquette, section « 16 — Fil d'actualité »), commencé 
 
 L'audience est vérifiée à chaque lecture : retirer un ami lui cache aussitôt les publications et les vêtements. La photo d'un look publié se lit par l'audience de la publication (`GET /api/media/{id}`). Un look publié ne repasse plus en préparation ; un look qui a été publié ne se supprime plus (sa photo est celle de la publication).
 
+## Prêt d'objets
+
+Un prêt (`Loan`) suit un cycle de vie porté par l'entité : `REQUESTED` › `ACCEPTED` › `ACTIVE` › `RETURNED`, avec les sorties `DECLINED`, `CANCELLED` et `LOST`. Chaque geste écrit une ligne du journal (`LoanEvent`) avec son auteur. Le retard n'est pas un statut : c'est un prêt `ACTIVE` dont la date de retour est passée (`overdue`), et repousser la date l'annule aussitôt.
+
+| Route | Rôle |
+| --- | --- |
+| `GET /api/loans?role=&open=` | mes prêts, du plus récent au plus ancien. `role` : `lender` (ce que je prête) ou `borrower` (ce que j'emprunte) ; `open=1` : en cours (demandés, acceptés, chez l'emprunteur), `open=0` : l'historique |
+| `GET /api/loans/{id}` | un prêt et son journal (`events`) ; seules les parties et leur tuteur l'ouvrent (404 sinon) |
+| `GET /api/loans/candidates` | à qui je peux prêter : mes amis et les autres profils de mon compte (`household`) |
+| `GET /api/possessions/loans?possession=` | l'historique des prêts d'un objet (IRI), pour son propriétaire |
+| `POST /api/loans` | `{possession, borrower, dueDate?, note?}` : le propriétaire prête de lui-même, le prêt naît `ACCEPTED` |
+| `POST /api/loans/request` | `{possession, note?}` : quelqu'un qui voit l'objet (partagé avec lui) demande à l'emprunter |
+| `POST /api/loans/{id}/accept` · `/decline` | le prêteur répond à une demande : `{dueDate?}` ou `{reason?}` |
+| `POST /api/loans/{id}/received` | l'emprunteur a l'objet en main : le prêt devient `ACTIVE`, l'objet `LENT`, et son état du moment est noté |
+| `POST /api/loans/{id}/due-date` | `{dueDate: "AAAA-MM-JJ" \| null}` : le prêteur repousse ou retire la date de retour |
+| `POST /api/loans/{id}/declare-return` | `{note?}` : l'emprunteur dit l'avoir rendu ; le prêteur confirme ensuite |
+| `POST /api/loans/{id}/confirm-return` | `{condition?, note?, room?, storage?, box?}` : le prêteur constate l'état (pire qu'au départ : `DAMAGE_REPORTED`) ; avec une pièce, l'objet est rangé là (déplacement tracé, raison `LOAN_RETURN`) |
+| `POST /api/loans/{id}/lost` | le prêteur déclare l'objet perdu : il passe `LOST` |
+| `POST /api/loans/{id}/cancel` | l'un ou l'autre annule, tant que l'objet n'a pas été remis |
+
+**Les règles.** On ne prête qu'à un ami ou à un profil de son compte, jamais à soi-même. Seul un objet disponible se prête : un objet prêté, perdu ou vendu ne se re-prête pas, ce qui interdit aussi le sous-prêt (seul le propriétaire prête, et l'emprunteur ne l'est pas). Un objet en vente ne se prête pas (409), un objet déjà promis ou déjà chez quelqu'un ne se promet pas à un second (409), et on ne demande pas deux fois le même objet (409). Un geste fait par la mauvaise partie répond 422.
+
+**Sur la fiche.** Un objet prêté porte `lentTo` {`loan`, `borrower`, `dueDate`, `overdue`} : « Chez Bruno, retour le 12 », pour son propriétaire seulement. L'emplacement habituel ne change pas pendant le prêt : au retour, l'objet retrouve sa place, ou celle que le prêteur choisit.
+
+**Profil enfant.** `LOAN_LEND` et `LOAN_BORROW` demandent l'accord du tuteur : tant que ce parcours n'est pas exposé, un enfant ne prête ni n'emprunte (403). Un adulte peut prêter au profil de son enfant (foyer).
+
 ## Tests
 
 La suite PHPUnit tourne sur la base de test `penderie_test`, migrée et chargée de ses référentiels (voir « Base de données ») :
