@@ -11,14 +11,14 @@ use Symfony\Component\Security\Core\User\UserInterface;
 /**
  * La connexion au back-office (pare-feu admin) : un compte qui n'est pas
  * administrateur est refusé dès le formulaire, avec un message, plutôt que
- * connecté puis bloqué par une page 403. Le profil fantôme ne se connecte
- * jamais.
+ * connecté puis bloqué par une page 403. Les comptes techniques (profil
+ * fantôme, modération IA) ne se connectent jamais.
  */
 final class AdminUserChecker implements UserCheckerInterface
 {
     public function checkPreAuth(UserInterface $user, ?TokenInterface $token = null): void
     {
-        if (!$user instanceof Account || $user->isGhost() || !$user->isAdmin()) {
+        if (!$user instanceof Account || $user->isSystem() || !$user->isAdmin()) {
             // Une clé de traduction (domaine admin), affichée par la page de connexion.
             throw new CustomUserMessageAccountStatusException('login.error.notAdmin');
         }

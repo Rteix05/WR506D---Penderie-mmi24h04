@@ -118,7 +118,7 @@ final class UserDirectory
         // ligne qui porte une colonne json, les rôles). Des EXISTS à la place.
         $qb = $this->em->createQueryBuilder()
             ->from(Account::class, 'a')
-            ->where('a.id != :ghost')->setParameter('ghost', Account::GHOST_ID);
+            ->where('a.id NOT IN (:system)')->setParameter('system', Account::SYSTEM_IDS);
         if ('' !== trim($query)) {
             $qb->andWhere(\sprintf('LOWER(a.email) LIKE :q OR EXISTS (SELECT 1 FROM %s sp WHERE sp.account = a AND (LOWER(sp.username) LIKE :q OR LOWER(sp.displayName) LIKE :q))', Profile::class))
                 ->setParameter('q', '%'.mb_strtolower(trim($query)).'%');

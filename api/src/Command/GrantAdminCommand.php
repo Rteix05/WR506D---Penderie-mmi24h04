@@ -46,7 +46,7 @@ final class GrantAdminCommand extends Command
         $io = new SymfonyStyle($input, $output);
         $email = mb_strtolower(trim((string) $input->getArgument('email')));
         $account = $this->em->getRepository(Account::class)->findOneBy(['email' => $email]);
-        if (null === $account || $account->isGhost()) {
+        if (null === $account || $account->isSystem()) {
             $io->error(\sprintf('Aucun compte avec l\'e-mail « %s ».', $email));
 
             return Command::FAILURE;

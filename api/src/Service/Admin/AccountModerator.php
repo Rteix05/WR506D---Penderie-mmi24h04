@@ -161,8 +161,8 @@ final class AccountModerator
 
     private function assertTarget(Account $target, Account $admin): void
     {
-        if ($target->isGhost()) {
-            throw new \DomainException('Le compte fantôme ne se modère pas.');
+        if ($target->isSystem()) {
+            throw new \DomainException('Un compte technique (fantôme, modération IA) ne se modère pas.');
         }
         if ($target->getId()->equals($admin->getId())) {
             throw new \DomainException('On ne se suspend pas soi-même.');

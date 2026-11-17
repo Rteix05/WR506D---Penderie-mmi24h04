@@ -6,6 +6,8 @@ use App\Entity\Identity\Account;
 use App\Entity\Notification\ModerationAction;
 use App\Entity\Notification\Report;
 use App\Enum\Notification\ReportStatus;
+use App\Repository\Moderation\AiReviewRepository;
+use App\Service\Moderation\Ai\AiModerator;
 use App\Service\Moderation\ReportDesk;
 use App\Service\Moderation\ReportTargets;
 use Doctrine\ORM\EntityManagerInterface;
@@ -37,6 +39,8 @@ final class ReportController extends AbstractController
         private readonly ReportTargets $targets,
         private readonly ReportDesk $desk,
         private readonly TranslatorInterface $translator,
+        private readonly AiModerator $ai,
+        private readonly AiReviewRepository $aiReviews,
     ) {
     }
 
@@ -86,6 +90,10 @@ final class ReportController extends AbstractController
             'actions' => $this->em->getRepository(ModerationAction::class)->findBy(['report' => $report], ['createdAt' => 'ASC', 'id' => 'ASC']),
             // Les autres signalements sur ce même contenu.
             'others' => $this->em->getRepository(Report::class)->count(['targetType' => $report->getTargetType(), 'targetId' => $report->getTargetId()]) - 1,
+            // La pré-analyse de l'IA : la dernière, et le nombre de précédentes.
+            'aiReview' => $this->aiReviews->latestFor($report),
+            'aiCount' => \count($this->aiReviews->historyOf($report)),
+            'aiThreshold' => $this->ai->threshold(),
         ] + $this->describe($report));
     }
 
@@ -113,6 +121,8 @@ final class ReportController extends AbstractController
                     throw new \DomainException('Choisis une décision.');
                 }
                 $this->desk->decide($report, $this->admin(), $decision, (string) $request->request->get('note', ''));
+                // Si l'IA avait proposé quelque chose : l'admin l'a-t-il suivie ?
+                $this->ai->settle($report, $this->admin(), $decision);
                 $this->addFlash('success', 'Décision appliquée et inscrite au journal.');
             } catch (\DomainException $e) {
                 $this->addFlash('error', $e->getMessage());

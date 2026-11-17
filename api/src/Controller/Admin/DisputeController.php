@@ -6,6 +6,8 @@ use App\Entity\Identity\Account;
 use App\Entity\Sale\Dispute;
 use App\Entity\Sale\Refund;
 use App\Enum\Sale\DisputeStatus;
+use App\Repository\Moderation\AiReviewRepository;
+use App\Service\Moderation\Ai\AiModerator;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -29,8 +31,11 @@ final class DisputeController extends AbstractController
     private const PER_PAGE = 20;
     private const OPEN = [DisputeStatus::Open, DisputeStatus::UnderReview];
 
-    public function __construct(private readonly EntityManagerInterface $em)
-    {
+    public function __construct(
+        private readonly EntityManagerInterface $em,
+        private readonly AiModerator $ai,
+        private readonly AiReviewRepository $aiReviews,
+    ) {
     }
 
     #[Route('', name: 'admin_disputes', methods: ['GET'])]
@@ -82,6 +87,9 @@ final class DisputeController extends AbstractController
             'open' => \in_array($dispute->getStatus(), self::OPEN, true),
             'buyerDisputes' => $before($order->getBuyer()),
             'sellerDisputes' => $before($order->getSeller()),
+            'aiReview' => $this->aiReviews->latestFor($dispute),
+            'aiCount' => \count($this->aiReviews->historyOf($dispute)),
+            'aiThreshold' => $this->ai->threshold(),
         ]);
     }
 
@@ -125,6 +133,7 @@ final class DisputeController extends AbstractController
         }
         $dispute->resolve($this->admin(), $label.' : '.$note, closeOnly: 'none' === $outcome);
         $this->em->flush();
+        $this->ai->settle($dispute, $this->admin(), $outcome);
         $this->addFlash('success', 'Litige clos. '.('buyer' === $outcome ? 'Le remboursement se fait chez le prestataire de paiement.' : ''));
 
         return $this->redirectToRoute('admin_dispute', ['id' => $id]);

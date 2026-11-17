@@ -47,7 +47,10 @@
             {% endif %}
         </div>
 
-        <section class="{{ ui.card_class() }} flex flex-col gap-4 self-start" aria-labelledby="decision">
+        <div class="flex flex-col gap-6 self-start">
+        {{ include('admin/ai/_panel.html.twig', {review: aiReview, count: aiCount, threshold: aiThreshold, kind: 'report', subjectId: report.id, pending: report.status.pending}) }}
+
+        <section class="{{ ui.card_class() }} flex flex-col gap-4" aria-labelledby="decision">
             <h2 id="decision" class="text-legend font-bold text-muted">{{ 'reports.decisionHeading'|trans({}, 'admin') }}</h2>
             {% if not report.status.pending %}
                 <p class="rounded-sm {{ report.status.value == 'ACTIONED' ? 'bg-main-tint text-main' : 'bg-ink/[0.04] text-muted' }} px-4 py-3 text-legend">
@@ -75,7 +78,8 @@
                         ] %}
                         {% for c in choices %}
                             <label class="flex cursor-pointer items-start gap-3 rounded-sm bg-ink/[0.03] px-4 py-3 has-[:checked]:bg-primary/8 has-[:checked]:ring-2 has-[:checked]:ring-primary {{ c.enabled ? '' : 'cursor-not-allowed opacity-50' }}">
-                                <input type="radio" name="decision" value="{{ c.value }}" required {{ c.enabled ? '' : 'disabled' }} class="mt-1 accent-primary">
+                                {# La proposition de l'IA est présélectionnée ; l'administrateur garde la main. #}
+                                <input type="radio" name="decision" value="{{ c.value }}" required {{ c.enabled ? '' : 'disabled' }} {{ c.enabled and aiReview and aiReview.status.value == 'PROPOSED' and aiReview.decision == c.value ? 'checked' }} class="mt-1 accent-primary">
                                 <span><span class="block text-body font-bold">{{ c.title }}</span><span class="text-legend text-muted">{{ c.text }}</span></span>
                             </label>
                         {% endfor %}
@@ -90,5 +94,6 @@
                 </form>
             {% endif %}
         </section>
+        </div>
     </div>
 {% endblock %}
