@@ -40,6 +40,18 @@ class Account implements UserInterface, PasswordAuthenticatedUserInterface, TwoF
     /** Le compte qui porte le profil fantôme (Profile::GHOST_ID). */
     public const GHOST_ID = '00000000-0000-7000-8000-000000000000';
 
+    /**
+     * Le compte au nom duquel la pré-analyse IA applique une décision de
+     * modération (ModerationAction.admin, Report.handledBy). Administrateur
+     * pour que le journal reste le même, mais personne ne s'y connecte :
+     * mot de passe vide (aucun hash ne correspond) et refusé par
+     * AdminUserChecker.
+     */
+    public const AI_MODERATOR_ID = '00000000-0000-7000-8000-0000000000a1';
+
+    /** Les comptes techniques : ni listés, ni comptés, ni modérés. */
+    public const SYSTEM_IDS = [self::GHOST_ID, self::AI_MODERATOR_ID];
+
     #[ORM\Id]
     #[ORM\Column(type: UuidType::NAME, unique: true)]
     private Uuid $id;
@@ -226,6 +238,17 @@ class Account implements UserInterface, PasswordAuthenticatedUserInterface, TwoF
     public function isGhost(): bool
     {
         return self::GHOST_ID === $this->id->toRfc4122();
+    }
+
+    public function isAiModerator(): bool
+    {
+        return self::AI_MODERATOR_ID === $this->id->toRfc4122();
+    }
+
+    /** Le compte fantôme ou celui de la modération IA. */
+    public function isSystem(): bool
+    {
+        return \in_array($this->id->toRfc4122(), self::SYSTEM_IDS, true);
     }
 
     /** @return Collection<int, Profile> */

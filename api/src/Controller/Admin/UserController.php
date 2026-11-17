@@ -99,7 +99,7 @@ final class UserController extends AbstractController
     private function account(string $id): Account
     {
         $account = $this->em->find(Account::class, $id);
-        if (null === $account || $account->isGhost()) {
+        if (null === $account || $account->isSystem()) {
             throw $this->createNotFoundException('Compte introuvable.');
         }
 

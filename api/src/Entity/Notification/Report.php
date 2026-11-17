@@ -104,6 +104,28 @@ class Report
         return $this->close($admin, ReportStatus::Dismissed, $resolution);
     }
 
+    /**
+     * Rouvert par un administrateur qui annule la décision de la modération
+     * IA : le signalement repasse « en cours », à son nom, et attend sa
+     * propre décision. L'ancienne décision reste dans le journal
+     * (ModerationAction, AiReview).
+     */
+    public function reopen(Account $admin): static
+    {
+        if (!$admin->isAdmin() || $admin->isSystem()) {
+            throw new \LogicException('Seul un administrateur rouvre un signalement.');
+        }
+        if ($this->status->isPending()) {
+            throw new \LogicException('Ce signalement est déjà ouvert.');
+        }
+        $this->status = ReportStatus::UnderReview;
+        $this->handledBy = $admin;
+        $this->handledAt = null;
+        $this->resolution = null;
+
+        return $this;
+    }
+
     private function close(Account $admin, ReportStatus $status, string $resolution): static
     {
         $this->assertPending($admin);

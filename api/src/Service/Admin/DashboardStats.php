@@ -51,7 +51,7 @@ final class DashboardStats
         $count = function (?string $where = null, array $params = []): int {
             $qb = $this->em->createQueryBuilder()
                 ->select('COUNT(a.id)')->from(Account::class, 'a')
-                ->where('a.id != :ghost')->setParameter('ghost', Account::GHOST_ID);
+                ->where('a.id NOT IN (:system)')->setParameter('system', Account::SYSTEM_IDS);
             if (null !== $where) {
                 $qb->andWhere($where);
             }
@@ -184,8 +184,8 @@ final class DashboardStats
     {
         $created = $this->em->createQueryBuilder()
             ->select('a.createdAt AS createdAt')->from(Account::class, 'a')
-            ->where('a.id != :ghost')->andWhere('a.createdAt >= :since')
-            ->setParameter('ghost', Account::GHOST_ID)->setParameter('since', $this->daysAgo(6))
+            ->where('a.id NOT IN (:system)')->andWhere('a.createdAt >= :since')
+            ->setParameter('system', Account::SYSTEM_IDS)->setParameter('since', $this->daysAgo(6))
             ->getQuery()->getArrayResult();
         $perDay = [];
         foreach ($created as $row) {

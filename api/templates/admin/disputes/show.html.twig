@@ -48,7 +48,10 @@
             </section>
         </div>
 
-        <section class="{{ ui.card_class() }} flex flex-col gap-4 self-start" aria-labelledby="decision">
+        <div class="flex flex-col gap-6 self-start">
+        {{ include('admin/ai/_panel.html.twig', {review: aiReview, count: aiCount, threshold: aiThreshold, kind: 'dispute', subjectId: dispute.id, pending: open}) }}
+
+        <section class="{{ ui.card_class() }} flex flex-col gap-4" aria-labelledby="decision">
             <h2 id="decision" class="text-legend font-bold text-muted">{{ 'disputes.decisionHeading'|trans({}, 'admin') }}</h2>
             <dl class="flex flex-col gap-2 text-legend">
                 <div class="flex justify-between gap-4"><dt class="text-muted">{{ 'disputes.decisionAmountLabel'|trans({}, 'admin') }}</dt><dd class="text-body font-bold">{{ order.totalAmount|admin_euros }} €</dd></div>
@@ -78,5 +81,6 @@
             {% endif %}
             <p class="text-legend text-muted">{{ 'disputes.decisionNoteFooter'|trans({}, 'admin') }}</p>
         </section>
+        </div>
     </div>
 {% endblock %}
