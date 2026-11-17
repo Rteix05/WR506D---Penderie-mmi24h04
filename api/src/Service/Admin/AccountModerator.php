@@ -4,6 +4,7 @@ namespace App\Service\Admin;
 
 use App\Entity\Identity\Account;
 use App\Entity\Notification\ModerationAction;
+use App\Entity\Notification\Report;
 use App\Enum\Notification\ModerationActionType;
 use App\Enum\Notification\ModerationTargetType;
 use Doctrine\ORM\EntityManagerInterface;
@@ -46,7 +47,7 @@ final class AccountModerator
         return false;
     }
 
-    public function suspend(Account $target, Account $admin, string $reason, ?int $days = null): void
+    public function suspend(Account $target, Account $admin, string $reason, ?int $days = null, ?Report $report = null): void
     {
         $this->assertTarget($target, $admin);
         if ($this->isSuspended($target)) {
@@ -56,8 +57,8 @@ final class AccountModerator
             throw new \DomainException('Durée de suspension inconnue.');
         }
         $until = null === $days ? null : $this->clock->now()->modify(\sprintf('+%d days', $days));
-        $this->em->wrapInTransaction(function () use ($target, $admin, $reason, $until): void {
-            $this->em->persist(new ModerationAction($admin, ModerationActionType::BanAccount, ModerationTargetType::Account, $target->getId(), self::reason($reason), $until));
+        $this->em->wrapInTransaction(function () use ($target, $admin, $reason, $until, $report): void {
+            $this->em->persist(new ModerationAction($admin, ModerationActionType::BanAccount, ModerationTargetType::Account, $target->getId(), self::reason($reason), $until, $report));
             foreach ($target->getProfiles() as $profile) {
                 $profile->suspend();
             }

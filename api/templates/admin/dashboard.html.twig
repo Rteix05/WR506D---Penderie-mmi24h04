@@ -43,13 +43,23 @@
         <section class="rounded-md bg-surface p-6 shadow-[0_1px_3px_rgba(26,30,36,0.08)]" aria-labelledby="priorites">
             <h2 id="priorites" class="text-legend font-bold text-muted">À traiter en priorité</h2>
             {% if priorities is empty %}
-                <p class="mt-4 text-body text-muted">Rien à traiter : aucun litige ouvert, aucun prêt en retard.</p>
+                <p class="mt-4 text-body text-muted">Rien à traiter : aucun signalement, aucun litige ouvert, aucun prêt en retard.</p>
             {% else %}
                 <ul class="mt-4 flex flex-col gap-3">
                     {% for item in priorities %}
-                        <li class="rounded-sm bg-ink/[0.03] px-4 py-3">
-                            <p class="text-body font-bold">{{ item.title }}</p>
-                            <p class="text-legend text-muted">{{ item.detail }}</p>
+                        {% set link = {report: 'admin_report', dispute: 'admin_dispute'}[item.kind] ?? null %}
+                        <li>
+                            {% if link and item.id is defined %}
+                                <a href="{{ path(link, {id: item.id}) }}" class="block rounded-sm bg-ink/[0.03] px-4 py-3 hover:bg-ink/[0.06]">
+                                    <span class="block text-body font-bold">{{ item.title }}</span>
+                                    <span class="block text-legend text-muted">{{ item.detail }}</span>
+                                </a>
+                            {% else %}
+                                <div class="rounded-sm bg-ink/[0.03] px-4 py-3">
+                                    <p class="text-body font-bold">{{ item.title }}</p>
+                                    <p class="text-legend text-muted">{{ item.detail }}</p>
+                                </div>
+                            {% endif %}
                         </li>
                     {% endfor %}
                 </ul>
