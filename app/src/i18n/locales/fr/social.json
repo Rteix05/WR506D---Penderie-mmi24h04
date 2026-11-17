@@ -175,12 +175,34 @@
     "close": "Fermer",
     "viewInWardrobe": "Voir dans mon dressing",
     "viewOnProfile": "Voir sur le profil de {{name}}",
-    "privateGarment": "{{name}} ne te montre pas ce vêtement : il reste privé."
+    "privateGarment": "{{name}} ne te montre pas ce vêtement : il reste privé.",
+    "like": "J'aime",
+    "likes_one": "{{count}} j'aime",
+    "likes_other": "{{count}} j'aime",
+    "likeA11y": "Aimer la publication ({{count}} j'aime)",
+    "unlikeA11y": "Ne plus aimer la publication ({{count}} j'aime)",
+    "likeError": "Réessaie",
+    "comment": "Commenter ({{count}})"
   },
   "lookPhoto": {
     "placeHint": "Ta photo : touche un vêtement pour y poser un point",
     "photoTags_one": "Ta photo, {{count}} vêtement pointé",
     "photoTags_other": "Ta photo, {{count}} vêtements pointés",
     "tag": "Vêtement {{position}}"
+  },
+  "comments": {
+    "title": "Commentaires",
+    "empty": "Pas encore de commentaire : lance la conversation.",
+    "yours": "Ton commentaire",
+    "replyingTo": "Réponse à {{name}}",
+    "placeholder": "Commenter le look…",
+    "replyPlaceholder": "Répondre à {{name}}…",
+    "publish": "Publier",
+    "sendError": "Le commentaire n'a pas pu être publié.",
+    "deleteTitle": "Supprimer le commentaire ?",
+    "deleteBody": "Il disparaît pour tout le monde.",
+    "reply": "Répondre",
+    "replyA11y": "Répondre à {{name}}",
+    "delete": "Supprimer"
   }
 }

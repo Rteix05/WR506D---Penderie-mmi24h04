@@ -175,12 +175,34 @@
     "close": "Close",
     "viewInWardrobe": "View in my wardrobe",
     "viewOnProfile": "View on {{name}}'s profile",
-    "privateGarment": "{{name}} doesn't show you this garment: it stays private."
+    "privateGarment": "{{name}} doesn't show you this garment: it stays private.",
+    "like": "Like",
+    "likes_one": "{{count}} like",
+    "likes_other": "{{count}} likes",
+    "likeA11y": "Like this post ({{count}} likes)",
+    "unlikeA11y": "Unlike this post ({{count}} likes)",
+    "likeError": "Try again",
+    "comment": "Comment ({{count}})"
   },
   "lookPhoto": {
     "placeHint": "Your photo: tap a garment to place a tag",
     "photoTags_one": "Your photo, {{count}} garment tagged",
     "photoTags_other": "Your photo, {{count}} garments tagged",
     "tag": "Garment {{position}}"
+  },
+  "comments": {
+    "title": "Comments",
+    "empty": "No comments yet: start the conversation.",
+    "yours": "Your comment",
+    "replyingTo": "Replying to {{name}}",
+    "placeholder": "Comment on the look…",
+    "replyPlaceholder": "Reply to {{name}}…",
+    "publish": "Post",
+    "sendError": "Your comment couldn't be posted.",
+    "deleteTitle": "Delete this comment?",
+    "deleteBody": "It disappears for everyone.",
+    "reply": "Reply",
+    "replyA11y": "Reply to {{name}}",
+    "delete": "Delete"
   }
 }

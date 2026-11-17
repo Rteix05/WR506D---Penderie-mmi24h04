@@ -172,11 +172,32 @@
     "close": "閉じる",
     "viewInWardrobe": "ワードローブで見る",
     "viewOnProfile": "{{name}}さんのプロフィールで見る",
-    "privateGarment": "{{name}}さんはこの服を公開していません。"
+    "privateGarment": "{{name}}さんはこの服を公開していません。",
+    "like": "いいね",
+    "likes_other": "いいね {{count}}",
+    "likeA11y": "いいねする（{{count}}件）",
+    "unlikeA11y": "いいねを取り消す（{{count}}件）",
+    "likeError": "もう一度",
+    "comment": "コメント（{{count}}）"
   },
   "lookPhoto": {
     "placeHint": "あなたの写真：服をタップしてタグを付けます",
     "photoTags_other": "あなたの写真、タグ付けした服⁠{{count}}⁠点",
     "tag": "服 {{position}}"
+  },
+  "comments": {
+    "title": "コメント",
+    "empty": "まだコメントはありません。最初のひとことをどうぞ。",
+    "yours": "あなたのコメント",
+    "replyingTo": "{{name}}さんへの返信",
+    "placeholder": "このルックにコメント…",
+    "replyPlaceholder": "{{name}}さんに返信…",
+    "publish": "投稿",
+    "sendError": "コメントを投稿できませんでした。",
+    "deleteTitle": "コメントを削除しますか？",
+    "deleteBody": "全員の画面から消えます。",
+    "reply": "返信",
+    "replyA11y": "{{name}}さんに返信",
+    "delete": "削除"
   }
 }

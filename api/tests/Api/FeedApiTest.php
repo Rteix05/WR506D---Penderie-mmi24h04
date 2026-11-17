@@ -202,4 +202,65 @@ final class FeedApiTest extends ApiTestBase
         $this->call('POST', $look['@id'].'/publish', $this->bruno, ['audience' => 'FRIENDS']);
         self::assertResponseStatusCodeSame(404, 'le look d\'un autre');
     }
+
+    public function testLikesAreCountedOncePerProfile(): void
+    {
+        [$look] = $this->readyLook();
+        $post = $this->call('POST', $look['@id'].'/publish', $this->alice, ['audience' => 'FOLLOWERS'])->toArray();
+        self::assertSame(0, $post['likeCount']);
+
+        // Un abonné aime (aimer n'est pas commenter) ; deux fois, ça compte une.
+        $this->call('PUT', '/api/posts/'.$post['id'].'/like', $this->chloe);
+        $liked = $this->call('PUT', '/api/posts/'.$post['id'].'/like', $this->chloe)->toArray();
+        self::assertSame(['liked' => true, 'likeCount' => 1], $liked);
+        $this->call('PUT', '/api/posts/'.$post['id'].'/like', $this->bruno);
+
+        $seen = $this->call('GET', '/api/posts/'.$post['id'], $this->chloe)->toArray();
+        self::assertSame(2, $seen['likeCount']);
+        self::assertTrue($seen['likedByMe']);
+        self::assertFalse($this->call('GET', '/api/posts/'.$post['id'], $this->alice)->toArray()['likedByMe']);
+
+        self::assertSame(['liked' => false, 'likeCount' => 1], $this->call('DELETE', '/api/posts/'.$post['id'].'/like', $this->chloe)->toArray());
+
+        $this->call('PUT', '/api/posts/'.$post['id'].'/like', $this->damien);
+        self::assertResponseStatusCodeSame(404, 'qui ne voit pas la publication ne l’aime pas');
+    }
+
+    public function testFriendsCommentAndReply(): void
+    {
+        [$look] = $this->readyLook();
+        $post = $this->call('POST', $look['@id'].'/publish', $this->alice, ['audience' => 'FRIENDS'])->toArray();
+        self::assertTrue($post['canComment']);
+
+        $question = $this->call('POST', '/api/posts/'.$post['id'].'/comments', $this->bruno, ['body' => 'Tu me la prêtes samedi ?'])->toArray();
+        self::assertResponseStatusCodeSame(201);
+        $answer = $this->call('POST', '/api/posts/'.$post['id'].'/comments', $this->alice, ['body' => 'Oui !', 'parent' => $question['id']])->toArray();
+        self::assertSame($question['id'], $answer['parentId']);
+        // On répond au fil, jamais à une réponse : un seul niveau.
+        $again = $this->call('POST', '/api/posts/'.$post['id'].'/comments', $this->bruno, ['body' => 'Merci', 'parent' => $answer['id']])->toArray();
+        self::assertSame($question['id'], $again['parentId']);
+
+        $comments = $this->call('GET', '/api/posts/'.$post['id'].'/comments', $this->alice)->toArray()['comments'];
+        self::assertSame(['Tu me la prêtes samedi ?', 'Oui !', 'Merci'], array_column($comments, 'body'));
+        self::assertTrue($comments[0]['canDelete'], 'l’auteur de la publication supprime tout commentaire');
+        self::assertSame(3, $this->call('GET', '/api/posts/'.$post['id'], $this->bruno)->toArray()['commentCount']);
+
+        $this->call('DELETE', '/api/posts/'.$post['id'].'/comments/'.$answer['id'], $this->bruno);
+        self::assertResponseStatusCodeSame(403, 'pas le commentaire d’un autre');
+        $this->call('DELETE', '/api/posts/'.$post['id'].'/comments/'.$question['id'], $this->bruno);
+        self::assertResponseStatusCodeSame(204);
+        self::assertSame(2, $this->call('GET', '/api/posts/'.$post['id'], $this->alice)->toArray()['commentCount']);
+    }
+
+    public function testFollowersReadWithoutCommenting(): void
+    {
+        [$look] = $this->readyLook();
+        $post = $this->call('POST', $look['@id'].'/publish', $this->alice, ['audience' => 'FOLLOWERS'])->toArray();
+        self::assertFalse($post['canComment']);
+
+        $this->call('POST', '/api/posts/'.$post['id'].'/comments', $this->chloe, ['body' => 'Joli']);
+        self::assertResponseStatusCodeSame(403);
+        $this->call('POST', '/api/posts/'.$post['id'].'/comments', $this->damien, ['body' => 'Joli']);
+        self::assertResponseStatusCodeSame(404, 'un inconnu ne la voit même pas');
+    }
 }
