@@ -594,3 +594,19 @@ Règles suivies avec l'outil de développement :
   - une commande de démo `app:demo:social`. Pour accepter des commentaires, elle a fait passer la publication « en croco » des abonnés aux amis ;
   - au passage, l'adresse de l'API pour Expo est revenue à celle du Wi-Fi.
 - **Erreur de l'IA** : encore des apostrophes perdues dans un patch passé par le shell (tests). Elles ont été repérées avant le commit.
+
+### 17/11 (fin, suite) — Super administrateur, catégories et marques ; bouton « Signaler » (PR #78, #79)
+
+- **Prompts** (mot pour mot) :
+  - « c'est bon pour moi , on changera l'UI et l'UX quand on aura tout les fonctionnalités » ;
+  - « fais le bouton signaler avec les raisons etc... les catégories et marque aussi on doit pouvoir en ajouter depuis le back office , mais seulement le super admin pas les admins simple ».
+- **Décision notée** : on termine d'abord toutes les fonctionnalités ; l'UI et l'UX seront reprises en une seule passe à la fin.
+- **Back-office (#78)** :
+  - un rôle `ROLE_SUPER_ADMIN`, qui hérite de `ROLE_ADMIN` et se donne par `app:admin:grant --super` ;
+  - pour les catégories : ajout (principale, ou sous-catégorie avec chaleur et tailles), changement de nom, suppression d'une catégorie vide ;
+  - pour les marques : validation des marques proposées par les utilisateurs (ce qui manquait), ajout, changement de nom, fusion d'un doublon (les vêtements suivent), suppression d'une marque qu'aucun vêtement ne porte ;
+  - un administrateur simple consulte seulement (403 sur chaque action).
+
+  L'IA a vérifié le rendu réel des deux onglets avec les deux rôles, dans une transaction annulée ensuite.
+- **App (#79)** : le lien « Signaler » ouvre un panneau avec cinq raisons et une précision, obligatoire pour « Autre ». Il apparaît sur les publications, les commentaires, les vêtements mentionnés et les profils des autres. La route d'API existait depuis #68.
+- **Erreur de l'IA** : sur un premier rendu, le bandeau « Consultation seulement » semblait absent. La page s'affichait simplement dans une autre langue, faute d'en-tête de langue dans la requête de test.
