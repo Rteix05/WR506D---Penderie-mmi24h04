@@ -263,6 +263,68 @@
       "week": "Cette semaine",
       "earlier": "Plus tôt"
     },
-    "unreadA11y": "Non lue : "
+    "unreadA11y": "Non lue : ",
+    "settings": "Régler mes notifications"
+  },
+  "relation": {
+    "add": "Ajouter en ami",
+    "sent": "Demande envoyée",
+    "received": "Demande reçue",
+    "awaitingGuardian": "En attente de ton tuteur",
+    "cancel": "Retirer",
+    "cancelHint": "Touche « Demande envoyée » pour la retirer.",
+    "accept": "Accepter",
+    "decline": "Refuser",
+    "friends": "Amis",
+    "unfriend": "Retirer",
+    "unfriendTitle": "Ne plus être ami avec {{name}} ?",
+    "unfriendBody": "Vos partages ne changent pas : retire-les à part si besoin.",
+    "follow": "S'abonner",
+    "followBack": "S'abonner en retour",
+    "following": "Abonné · se désabonner"
+  },
+  "friends": {
+    "title": "Amis et abonnés",
+    "count_one": "{{count}} ami",
+    "count_other": "{{count}} amis",
+    "search": "Chercher un nom ou un identifiant",
+    "results": "Résultats",
+    "noResult": "Personne avec ce nom.",
+    "approvals": "À autoriser",
+    "approvalLine": "{{child}} voudrait devenir ami avec {{other}}.",
+    "allow": "Autoriser",
+    "refuse": "Refuser",
+    "received_one": "Demande reçue",
+    "received_other": "Demandes reçues ({{count}})",
+    "sent": "Demandes envoyées",
+    "mine": "Mes amis",
+    "none": "Pas encore d'amis : cherche quelqu'un ci-dessus."
+  },
+  "pushSettings": {
+    "title": "Notifications",
+    "legend": "Ce qui arrive aussi sur ton téléphone",
+    "note": "Tout reste visible dans l'app : seul l'envoi sur le téléphone se coupe. Il faut aussi avoir autorisé les notifications pour Penderie dans les réglages du téléphone.",
+    "group": {
+      "social": {
+        "title": "Amis et partages",
+        "detail": "Demandes d'ami, abonnés, commentaires, partages"
+      },
+      "loans": {
+        "title": "Prêts",
+        "detail": "Demandes, rappels de retour, retards, retours"
+      },
+      "sales": {
+        "title": "Ventes",
+        "detail": "Ventes, paiements, expéditions, remboursements"
+      },
+      "family": {
+        "title": "Famille",
+        "detail": "Autorisations des profils enfants, propositions"
+      },
+      "moderation": {
+        "title": "Modération",
+        "detail": "Avertissements, suites de tes signalements"
+      }
+    }
   }
 }

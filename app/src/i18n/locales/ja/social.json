@@ -257,6 +257,66 @@
       "week": "今週",
       "earlier": "それ以前"
     },
-    "unreadA11y": "未読："
+    "unreadA11y": "未読：",
+    "settings": "通知の設定"
+  },
+  "relation": {
+    "add": "友だち申請",
+    "sent": "申請済み",
+    "received": "申請が届いています",
+    "awaitingGuardian": "保護者の承認待ち",
+    "cancel": "取り消す",
+    "cancelHint": "「申請済み」をタップすると取り消せます。",
+    "accept": "承認",
+    "decline": "拒否",
+    "friends": "友だち",
+    "unfriend": "解除",
+    "unfriendTitle": "{{name}}さんとの友だちを解除しますか？",
+    "unfriendBody": "共有はそのままです。必要なら別に解除してください。",
+    "follow": "フォロー",
+    "followBack": "フォローバック",
+    "following": "フォロー中・解除"
+  },
+  "friends": {
+    "title": "友だちとフォロワー",
+    "count_other": "友だち {{count}}人",
+    "search": "名前またはユーザー名で検索",
+    "results": "検索結果",
+    "noResult": "該当する人がいません。",
+    "approvals": "承認待ち",
+    "approvalLine": "{{child}}さんが{{other}}さんと友だちになりたがっています。",
+    "allow": "許可",
+    "refuse": "拒否",
+    "received_other": "届いた申請（{{count}}件）",
+    "sent": "送った申請",
+    "mine": "友だち",
+    "none": "まだ友だちがいません。上で検索してみましょう。"
+  },
+  "pushSettings": {
+    "title": "お知らせ",
+    "legend": "スマートフォンにも届く通知",
+    "note": "アプリ内のお知らせはすべて残ります。止まるのはスマートフォンへの通知だけです。端末の設定でPenderieの通知も許可してください。",
+    "group": {
+      "social": {
+        "title": "友だちと共有",
+        "detail": "友だち申請、フォロワー、コメント、共有"
+      },
+      "loans": {
+        "title": "貸し借り",
+        "detail": "依頼、返却のリマインダー、延滞、返却"
+      },
+      "sales": {
+        "title": "販売",
+        "detail": "販売、支払い、発送、返金"
+      },
+      "family": {
+        "title": "家族",
+        "detail": "子どものプロフィールの承認、提案"
+      },
+      "moderation": {
+        "title": "モデレーション",
+        "detail": "警告、通報の結果"
+      }
+    }
   }
 }

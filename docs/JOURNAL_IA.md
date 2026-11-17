@@ -628,3 +628,32 @@ Règles suivies avec l'outil de développement :
   - dans l'app, l'écran Notifications (Aujourd'hui, Cette semaine, Plus tôt ; toucher ouvre le contenu) et une pastille du nombre de non lues sur le « ! » de l'accueil.
 - **#80** : quand un signalement est traité, par un administrateur ou par la modération IA, la personne qui l'a fait reçoit le résultat (examiné, contenu retiré, auteur averti ou suspendu), sans la note interne.
 - **Incident** : le terminal a refusé plusieurs commandes de suite, faute de verdict du contrôle de sécurité. L'IA a rédigé le code dans un dossier temporaire et l'a appliqué une fois le terminal revenu.
+
+### 17/11 (nuit) — Fusion de toutes les PR, CI remise au vert, amis et push (PR #82, #83)
+
+- **Prompts** (mot pour mot) :
+  - « on reprendras une autre fois j'ai plus de token , merge les pr dans le bon ordre » ;
+  - « reprends » ;
+  - « lance vasy » (pour lancer PHPUnit) ;
+  - « fais les route apis pour amis / abonnements , les rappels de pret + notifs push et les notif dans l'appli , d'ailleurs relie les deux ».
+- **Fusions** : les PR #58 à #81 sont fusionnées dans l'ordre des dépendances, avec des commits de fusion pour ne pas casser les PR empilées. En route :
+  - les conflits du README (section des prêts) ont été résolus en gardant les deux côtés, avec un garde-fou contre les sections en double ;
+  - la migration des signalements (#68) a été corrigée : son retour arrière supprimait la table `report` avant la clé qui pointe vers elle.
+- **CI remise au vert (#82)** : les tests, écrits sans être lancés, échouaient sur `develop` (29). L'étudiant a autorisé PHPUnit.
+  - Deux vrais défauts du moteur de tenues : le denim d'une veste comptait comme couleur vive, et une adresse finissant par « France » ne donnait pas de ville.
+  - Le cache de la météo passait d'un test à l'autre.
+  - Le client de test de Symfony annonce l'anglais, alors que les tests du back-office attendaient du français.
+  - Trois sélecteurs étaient faux.
+
+  Résultat : 302 tests OK, puis 44 tâches Asana cochées.
+- **Amis, rappels et push (#83)** :
+  - les routes d'amis et d'abonnements, avec l'accord du tuteur pour un profil enfant ;
+  - la commande `app:loans:remind` (la veille du retour, puis en retard à 1, 3, 7, 14 et 30 jours) ;
+  - le push par Expo, **relié** aux notifications de l'app : toute notification enregistrée part aussi en push, avec les mêmes données, et toucher le push ouvre le même écran ;
+  - dans l'app : l'écran « Amis et abonnés », les boutons de la page profil, « Régler mes notifications ».
+
+  307 tests OK.
+- **Limite annoncée** : pour recevoir les push, il faut un identifiant de projet Expo (`npx eas-cli init`, lié au compte Expo de l'étudiant).
+- **Erreurs de l'IA** :
+  - une route `/api/profiles/search` entrait en collision avec `/api/profiles/{id}` d'API Platform (renommée `/api/people/search`) ;
+  - les antislashs ont encore sauté dans les commandes passées par le shell ; repérés par PHPStan et PHPUnit, puis corrigés.

@@ -61,13 +61,18 @@ export default function NotificationsScreen() {
           <ScreenTitle title={t('notifications.title')} legend={list.data ? t('notifications.unread', { count: unread }) : ' '} />
         </View>
 
-        {unread > 0 && (
-          <View className="flex-row px-5">
+        <View className="flex-row items-center justify-between px-5">
+          {unread > 0 ? (
             <Pressable accessibilityRole="button" onPress={() => void markAllRead(queryClient)} hitSlop={8} className="active:opacity-70">
               <Text className="font-luciole-bold text-legend text-primary dark:text-primary-night">{t('notifications.readAll')}</Text>
             </Pressable>
-          </View>
-        )}
+          ) : (
+            <View />
+          )}
+          <Pressable accessibilityRole="link" onPress={() => router.push('/notifications-reglages')} hitSlop={8} className="active:opacity-70">
+            <Text className="font-luciole text-legend text-muted dark:text-muted-night">{t('notifications.settings')}</Text>
+          </Pressable>
+        </View>
 
         {list.isPending && <ActivityIndicator className="pt-8" />}
         {list.isError && <Text className="px-5 font-luciole text-body text-error dark:text-error-night">{list.error.message}</Text>}
