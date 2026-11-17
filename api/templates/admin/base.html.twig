@@ -4,7 +4,9 @@
  # Sur petit écran, la barre se cache et s'ouvre par « Menu » (Stimulus,
  # sidebar_controller).
  #
- # Blocs : title, active (entrée de menu allumée), heading, subtitle, body.
+ # Blocs : title, active (entrée de menu allumée), heading, subtitle,
+ # search (à droite du titre), body. Signalements attend son entité (Report,
+ # V2 du MDD) : visible, pas cliquable.
  #}
 <!DOCTYPE html>
 <html lang="fr">
@@ -18,14 +20,15 @@
 <body>
 {% set menu = [
     {label: 'Tableau de bord', route: 'admin_dashboard', key: 'dashboard'},
-    {label: 'Utilisateurs', key: 'users'},
+    {label: 'Utilisateurs', route: 'admin_users', key: 'users'},
     {label: 'Signalements', key: 'reports'},
-    {label: 'Ventes et transactions', key: 'sales'},
-    {label: 'Litiges', key: 'disputes', badge: openDisputes ?? 0},
-    {label: 'Catégories', key: 'categories'},
+    {label: 'Ventes et transactions', route: 'admin_sales', key: 'sales'},
+    {label: 'Litiges', route: 'admin_disputes', key: 'disputes', badge: admin_open_disputes()},
+    {label: 'Catégories', route: 'admin_categories', key: 'categories'},
 ] %}
 {% set active = block('active') is defined ? block('active') : '' %}
-{% set profile = (app.user.profiles|filter(p => p.default)|first) ?: (app.user.profiles|first) %}
+{# « admin_profile » et pas « profile » : une page fille (fiche utilisateur) a le sien. #}
+{% set admin_profile = (app.user.profiles|filter(p => p.default)|first) ?: (app.user.profiles|first) %}
 
 <div class="min-h-screen lg:flex" data-controller="sidebar" data-action="keydown@window->sidebar#closeOnEscape">
     <a href="#contenu" class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-sm focus:bg-surface focus:px-4 focus:py-2">Aller au contenu</a>
@@ -64,17 +67,26 @@
         </div>
 
         <div class="flex flex-col gap-1">
-            <p class="text-body font-bold">{{ profile ? profile.displayName : app.user.userIdentifier }}</p>
+            <p class="text-body font-bold">{{ admin_profile ? admin_profile.displayName : app.user.userIdentifier }}</p>
             <p class="text-legend text-white/80">Administrateur · actions journalisées</p>
             <a href="{{ path('admin_logout') }}" class="mt-2 text-legend font-bold hover:underline">Se déconnecter</a>
         </div>
     </nav>
 
     <main id="contenu" class="min-w-0 flex-1 px-5 py-8 lg:px-10">
-        <header class="mb-8">
-            <h1 class="font-typolio text-h3 uppercase">{% block heading %}{% endblock %}</h1>
-            <p class="mt-1 text-legend text-muted">{% block subtitle %}{% endblock %}</p>
+        <header class="mb-8 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+            <div>
+                <h1 class="font-typolio text-h3 uppercase">{% block heading %}{% endblock %}</h1>
+                <p class="mt-1 text-legend text-muted">{% block subtitle %}{% endblock %}</p>
+            </div>
+            {% block search %}{% endblock %}
         </header>
+        {% for message in app.flashes('success') %}
+            <p role="status" class="mb-6 rounded-sm bg-main-tint px-4 py-3 text-legend font-bold text-main">{{ message }}</p>
+        {% endfor %}
+        {% for message in app.flashes('error') %}
+            <p role="alert" class="mb-6 rounded-sm bg-error/10 px-4 py-3 text-legend font-bold text-error">{{ message }}</p>
+        {% endfor %}
         {% block body %}{% endblock %}
     </main>
 </div>

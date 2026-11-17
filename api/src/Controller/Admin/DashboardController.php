@@ -39,7 +39,6 @@ final class DashboardController extends AbstractController
             'signupsMax' => max(1, ...array_column($days, 'count')),
             'priorities' => $this->stats->priorities(),
             'orders' => $this->stats->latestOrders(),
-            'openDisputes' => $this->stats->openDisputes(),
         ]);
     }
 }
