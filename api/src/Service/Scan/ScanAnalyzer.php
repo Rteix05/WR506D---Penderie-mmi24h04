@@ -44,16 +44,29 @@ final class ScanAnalyzer
             throw new \LogicException('Seuls les scans PHOTO et LABEL_OCR passent par l\'analyse d\'image ; le code-barres et le QR code se décodent dans l\'app.');
         }
 
+        // Ce que le journal des scans affiche pour comprendre un échec : la taille et le format de l'image.
+        $image = ['bytes' => \strlen($imageBytes), 'mime' => $mimeType];
         try {
             $answer = $this->vision->ask($this->prompt($kind), $imageBytes, $mimeType);
         } catch (VisionUnavailable $e) {
-            return $this->record($profile, $kind, ScanStatus::Failed, ['error' => $e->getMessage(), 'attempts' => $e->attempts], null, $e->getMessage());
+            return $this->record($profile, $kind, ScanStatus::Failed, ['error' => $e->getMessage(), 'attempts' => $e->attempts, 'image' => $image], null, $e->getMessage(), $e->durationMs);
         }
 
         $suggestion = $this->suggestion($answer->data, $kind);
-        $raw = ['model' => $answer->model, 'attempts' => $answer->failedAttempts, 'answer' => $answer->data];
+        $status = $this->status($kind, $suggestion);
+        $raw = [
+            'model' => $answer->model,
+            'modelMs' => $answer->modelMs,
+            'attempts' => $answer->failedAttempts,
+            'answer' => $answer->data,
+            'image' => $image,
+        ];
+        if (ScanStatus::Failed === $status) {
+            // Le modèle a répondu, mais sans rien d'exploitable : l'échec vient de l'image, pas du réseau.
+            $raw['error'] = 'Réponse sans le minimum attendu (nom et catégorie, ou taille et composition).';
+        }
 
-        return $this->record($profile, $kind, $this->status($kind, $suggestion), $raw, $suggestion, null);
+        return $this->record($profile, $kind, $status, $raw, $suggestion, null, $answer->durationMs);
     }
 
     /**
@@ -62,9 +75,9 @@ final class ScanAnalyzer
      *
      * @return array{scan: Scan, suggestion: ?array<string, mixed>, error: ?string}
      */
-    private function record(Profile $profile, ScanKind $kind, ScanStatus $status, array $raw, ?array $suggestion, ?string $error): array
+    private function record(Profile $profile, ScanKind $kind, ScanStatus $status, array $raw, ?array $suggestion, ?string $error, int $durationMs): array
     {
-        $scan = new Scan($profile, $kind, $status, provider: self::PROVIDER, rawData: $raw);
+        $scan = new Scan($profile, $kind, $status, provider: self::PROVIDER, rawData: $raw, durationMs: $durationMs);
         $this->em->persist($scan);
         $this->em->flush();
 
