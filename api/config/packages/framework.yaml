@@ -29,6 +29,6 @@ when@test:
         test: true
         session:
             storage_factory_id: session.storage.factory.mock_file
-        # Aucun test n'appelle le vrai OpenRouter : réponses simulées.
+        # Aucun test n'appelle de vrai service (OpenRouter, Open-Meteo) : réponses simulées.
         http_client:
-            mock_response_factory: App\Tests\Support\OpenRouterMock
+            mock_response_factory: App\Tests\Support\HttpMock

@@ -1,0 +1,94 @@
+{
+  "title": "Your outfit",
+  "legend": "Based on the weather, the occasion and what you've worn",
+  "weatherLine": "{{temperature}} °C, {{weather}}",
+  "error": "We couldn't suggest an outfit",
+  "occasion": {
+    "EVERYDAY": "Everyday",
+    "WORK": "Work",
+    "SPORT": "Sport",
+    "EVENING": "Evening"
+  },
+  "weather": {
+    "SUNNY": "sunny",
+    "CLOUDY": "cloudy",
+    "RAIN": "rainy",
+    "SNOW": "snowy",
+    "WIND": "windy"
+  },
+  "picker": {
+    "question": "What's the occasion?",
+    "hint": {
+      "EVERYDAY": "A day like any other",
+      "WORK": "Office, class, meeting",
+      "SPORT": "Gym, run, walk",
+      "EVENING": "Dinner, night out, party"
+    },
+    "go": "Suggest an outfit",
+    "note": "Your location is only used for today's weather. Without it, we use your home's city."
+  },
+  "composing": {
+    "title": "Putting your outfit together…",
+    "text": "The weather, your available clothes, then the AI picks the best one: a few seconds."
+  },
+  "empty": {
+    "title": "Not enough to make an outfit yet",
+    "text": "Add at least a top and a bottom, or a dress, to your wardrobe.",
+    "action": "Add a garment"
+  },
+  "why": "Why this outfit",
+  "pieces_one": "{{count}} piece",
+  "pieces_other": "{{count}} pieces",
+  "swap": "Replace",
+  "swapA11y": "Replace {{name}}",
+  "dislike": "Not for me",
+  "dislikeA11y": "Not for me: leave {{name}} out of future suggestions",
+  "accept": "I like this outfit",
+  "next": "Another outfit",
+  "footer": "“Not for me” leaves the piece out of future suggestions until you bring it back.",
+  "worn": {
+    "never": "not in a look yet",
+    "today": "last worn today",
+    "days_one": "last worn {{count}} day ago",
+    "days_other": "last worn {{count}} days ago"
+  },
+  "saved": {
+    "title": "Outfit added to your wardrobe",
+    "text": "“{{name}}” is waiting in your outfits.",
+    "close": "Close"
+  },
+  "reason": {
+    "weather": {
+      "title": "It's {{temperature}} °C and {{weather}}",
+      "noLayer": "No jacket needed today.",
+      "layer": "{{outer}} is enough, no need for a coat.",
+      "coat": "It's cold: {{outer}} is a must.",
+      "wet": "Rain is forecast: {{outer}} keeps you dry."
+    },
+    "noWeather": {
+      "title": "Weather unknown",
+      "detail": "Allow your location, or add your home's address, so it counts."
+    },
+    "occasion": {
+      "EVERYDAY": "An ordinary day",
+      "WORK": "A working day",
+      "SPORT": "A workout",
+      "EVENING": "An evening out",
+      "styles": "Styles: {{styles}}"
+    },
+    "notWorn": {
+      "title": "A piece that was waiting its turn",
+      "never": "“{{garment}}” isn't in any look yet.",
+      "days_one": "“{{garment}}”: last worn {{count}} day ago.",
+      "days_other": "“{{garment}}”: last worn {{count}} days ago."
+    },
+    "harmony": {
+      "neutral": { "title": "These pieces go well together", "detail": "Neutral colours, easy to match." },
+      "oneAccent": { "title": "These pieces go well together", "detail": "One bright colour, the rest neutral." },
+      "contrast": { "title": "A bold contrast", "detail": "Two bright colours: replace a piece if it's too much." },
+      "busy": { "title": "Lots of colours", "detail": "Replace a piece to tone it down." }
+    },
+    "liked": { "title": "A style you like" },
+    "ai": { "title": "The AI stylist's take" }
+  }
+}

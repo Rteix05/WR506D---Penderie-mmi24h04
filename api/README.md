@@ -249,6 +249,36 @@ Le look est destiné à un post Instagram en deux images (la photo avec ses poin
 
 Un look n'est visible que par son propriétaire et son tuteur : les autres reçoivent 404, sa photo comprise, sauf s'il est publié dans le fil (ci-dessous). Un point ne se modifie que lorsque le look est en préparation (`TAGGING`).
 
+## Suggestions de tenues
+
+L'écran « Ta tenue » de l'app (maquette `docs/suggestion-v2.png`) propose une tenue pour une occasion (quotidien, travail, sport, soirée), d'après la météo du jour, les vêtements disponibles, les goûts et ce qui a été porté récemment. Le moteur a trois volets :
+
+1. **La météo** (`WeatherProvider`) : [Open-Meteo](https://open-meteo.com), gratuit, sans clé ni compte. On utilise la position du téléphone si l'utilisateur l'accepte (arrondie à 0,01°, soit environ 1 km), sinon la ville de son logement, retrouvée par le géocodage d'Open-Meteo à partir de l'adresse. Réponse en cache 30 minutes par lieu. En cas de panne, la suggestion se fait sans météo, jamais en erreur.
+2. **Les règles** (`OutfitEngine`, code pur, testé dans `tests/Unit/OutfitEngineTest.php`) :
+   - chaque vêtement trouve sa place selon sa catégorie : haut, bas, robe ou costume, couche du dessus, chaussures, accessoire chaud ;
+   - règles fermes : pas de sport au travail ni en soirée, pas de vêtement de soirée le jour, pas de costume ni de jean au sport, ni short ni sandales sous 18 °C ressentis ;
+   - chaque pièce est notée : chaleur face à la température, imperméable s'il pleut, usage adapté à l'occasion, couleurs et styles aimés ou non (`ColorPreference`, `StylePreference`), porté récemment (`WearLog`, rempli par le look du jour) ou déjà proposé ;
+   - le moteur assemble des tenues (haut + bas, ou robe ; chaussures ; couche du dessus s'il fait frais ou humide ; accessoire chaud s'il fait froid). L'accord des couleurs (neutres, ou un seul accent) et un style commun au haut et au bas rapportent des points ;
+   - il garde les quatre meilleures tenues, assez différentes entre elles.
+3. **L'IA** (`OutfitChooser`) : parmi ces candidates, un modèle de langage choisit celle qui va le mieux ensemble et dit pourquoi en une ou deux phrases, dans la langue de l'utilisateur. Il passe par OpenRouter, avec la même chaîne de modèles gratuits que le scan, en texte seul, et 12 s au plus. Les règles garantissent le « jamais absurde », l'IA apporte le goût. Si elle ne répond pas, la tenue la mieux notée par les règles est gardée (`source` : `RULES` au lieu de `AI`).
+
+Les vêtements écartés par « Je n'aime pas » (`GarmentExclusion`) ne sont plus proposés, tout comme ceux prêtés, vendus ou supprimés.
+
+| Route | Rôle |
+|---|---|
+| `GET /api/outfit-suggestions/current` | la suggestion du jour encore ouverte, ou `null` |
+| `POST /api/outfit-suggestions` | `{occasion, latitude?, longitude?, locale?}` → une tenue (201) ; 422 si le dressing n'a ni haut + bas, ni robe |
+| `POST /api/outfit-suggestions/{id}/next` | « Nouvelle tenue » : même occasion, autres pièces principales ; l'ancienne passe `REPLACED` |
+| `POST /api/outfit-suggestions/{id}/swap` | `{garment, dislike?}` : « Remplacer » une pièce par la meilleure autre de la même place ; avec `dislike`, elle est aussi écartée des prochaines suggestions |
+| `POST /api/outfit-suggestions/{id}/accept` | `{name?}` : « J'aime cette tenue », qui devient une `Outfit` du dressing, liée à la suggestion |
+
+Chaque suggestion garde son explication (`OutfitSuggestion.explanation`) :
+- la météo complète ;
+- les raisons, en codes et valeurs (`weather`, `noWeather`, `occasion`, `notWorn`, `harmony`, `liked`, `ai`) que l'app met en phrases en français, en anglais ou en japonais ;
+- la source, le modèle, le nombre de candidates et la note.
+
+Garder les suggestions à part des tenues (MDD) permet de mesurer le taux d'acceptation.
+
 ## Fil d'actualité
 
 Le fil de Penderie (maquette, section « 16 — Fil d'actualité »), commencé par le look du jour. Une publication (`Post`) s'adresse à des amis (`FRIENDS`) ou à des abonnés, amis compris (`FOLLOWERS`). Les abonnés ne commentent pas (MDD).

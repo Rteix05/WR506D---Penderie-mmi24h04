@@ -1,0 +1,94 @@
+{
+  "title": "Ta tenue",
+  "legend": "Selon la météo, l'occasion et ce que tu as porté",
+  "weatherLine": "{{temperature}} °C, {{weather}}",
+  "error": "La tenue n'a pas pu être proposée",
+  "occasion": {
+    "EVERYDAY": "Quotidien",
+    "WORK": "Travail",
+    "SPORT": "Sport",
+    "EVENING": "Soirée"
+  },
+  "weather": {
+    "SUNNY": "ensoleillé",
+    "CLOUDY": "nuageux",
+    "RAIN": "pluvieux",
+    "SNOW": "neigeux",
+    "WIND": "venteux"
+  },
+  "picker": {
+    "question": "Pour quelle occasion ?",
+    "hint": {
+      "EVERYDAY": "Une journée comme les autres",
+      "WORK": "Bureau, cours, rendez-vous",
+      "SPORT": "Salle, course, balade",
+      "EVENING": "Dîner, sortie, fête"
+    },
+    "go": "Me proposer une tenue",
+    "note": "Ta position sert seulement à la météo du jour. Sans elle, on prend la ville de ton logement."
+  },
+  "composing": {
+    "title": "Je compose ta tenue…",
+    "text": "La météo, tes vêtements disponibles, puis l'IA choisit la meilleure : quelques secondes."
+  },
+  "empty": {
+    "title": "Pas encore de quoi composer une tenue",
+    "text": "Ajoute au moins un haut et un bas, ou une robe, à ton dressing.",
+    "action": "Ajouter un vêtement"
+  },
+  "why": "Pourquoi cette tenue",
+  "pieces_one": "{{count}} pièce",
+  "pieces_other": "{{count}} pièces",
+  "swap": "Remplacer",
+  "swapA11y": "Remplacer {{name}}",
+  "dislike": "Je n'aime pas",
+  "dislikeA11y": "Je n'aime pas {{name}} : l'écarter des prochaines suggestions",
+  "accept": "J'aime cette tenue",
+  "next": "Nouvelle tenue",
+  "footer": "« Je n'aime pas » exclut la pièce des prochaines suggestions, jusqu'à ce que tu la réactives.",
+  "worn": {
+    "never": "pas encore dans un look",
+    "today": "dernier port aujourd'hui",
+    "days_one": "dernier port il y a {{count}} jour",
+    "days_other": "dernier port il y a {{count}} jours"
+  },
+  "saved": {
+    "title": "Tenue ajoutée à ton dressing",
+    "text": "« {{name}} » t'attend dans tes tenues.",
+    "close": "Fermer"
+  },
+  "reason": {
+    "weather": {
+      "title": "Il fait {{temperature}} °C, {{weather}}",
+      "noLayer": "Pas besoin de veste aujourd'hui.",
+      "layer": "{{outer}} suffit, pas besoin de manteau.",
+      "coat": "Il fait froid : {{outer}} s'impose.",
+      "wet": "Pluie annoncée : {{outer}} te protège."
+    },
+    "noWeather": {
+      "title": "Météo inconnue",
+      "detail": "Autorise ta position, ou ajoute l'adresse de ton logement, pour qu'elle compte."
+    },
+    "occasion": {
+      "EVERYDAY": "Une journée ordinaire",
+      "WORK": "Journée de travail",
+      "SPORT": "Séance de sport",
+      "EVENING": "Une soirée",
+      "styles": "Styles {{styles}}"
+    },
+    "notWorn": {
+      "title": "Une pièce qui attendait son tour",
+      "never": "« {{garment}} » n'est encore dans aucun look.",
+      "days_one": "« {{garment}} » : dernière fois il y a {{count}} jour.",
+      "days_other": "« {{garment}} » : dernière fois il y a {{count}} jours."
+    },
+    "harmony": {
+      "neutral": { "title": "Ces pièces vont bien ensemble", "detail": "Des couleurs neutres, faciles à associer." },
+      "oneAccent": { "title": "Ces pièces vont bien ensemble", "detail": "Une seule couleur vive, le reste en neutre." },
+      "contrast": { "title": "Un contraste assumé", "detail": "Deux couleurs vives : remplace une pièce si c'est trop." },
+      "busy": { "title": "Beaucoup de couleurs", "detail": "Remplace une pièce pour calmer l'ensemble." }
+    },
+    "liked": { "title": "Un style que tu aimes" },
+    "ai": { "title": "L'avis de la styliste IA" }
+  }
+}
