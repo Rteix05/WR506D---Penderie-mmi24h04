@@ -310,6 +310,8 @@ Une interface web pour les administrateurs, à part de l'app mobile : **Twig + S
 - Les actions (suspendre, réactiver, prendre en charge, clore) sont des POST protégés par un jeton CSRF.
 - **Front** : AssetMapper (pas de Node côté API), Stimulus pour les comportements (le menu sur petit écran : `assets/controllers/sidebar_controller.js`), Tailwind 4 dont le thème reprend la charte de l'app (`assets/styles/app.css`, mêmes noms de couleurs, de rayons et de tailles).
 
+**Données de démonstration** (base de développement seulement) : `php bin/console app:demo:back-office` ajoute de l'activité à modérer, pour voir le back-office vivant : 8 comptes inscrits ces dernières semaines (`@demo-bo.penderie.fr`, mot de passe aléatoire : on ne s'y connecte pas), une trentaine d'objets et vêtements ajoutés, des scans sur 60 jours (réussis, partiels, ratés), des prêts en cours dont deux en retard, cinq ventes à différents stades, trois litiges (ouvert, pris en charge, résolu) et six signalements (à traiter, en cours, traités). Tout passe par les méthodes métier des entités ; seules les dates sont reculées, pour que les évolutions du tableau de bord aient une période de comparaison. Il faut un compte administrateur et les référentiels ; la commande ne recharge rien si le jeu est déjà là, et refuse de tourner en production.
+
 La feuille de style se compile avant d'ouvrir le back-office (sinon la page plante sur le CSS manquant) :
 
 ```bash
