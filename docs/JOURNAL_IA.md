@@ -491,3 +491,93 @@ Règles suivies avec l'outil de développement :
   - un commit local a embarqué des dossiers générés (`dist-e2e`, `cypress`) ; retirés avant de pousser ;
   - le manque de mémoire a arrêté le suivi des sous-agents, qui ont fini leur travail quand même ;
   - le conteneur PHP ne démarrait plus (cache à moitié supprimé) ; il a été nettoyé.
+
+
+### 16/11 (suite) — Le back-office en trois langues, la langue dans Paramètres (PR #72, #71)
+
+- **Prompts** (mot pour mot) :
+  - « ok continue » ;
+  - « met le bouton langue dans les settings , que ca soit sur l'app ou back office et quand tout est bon on testera » ;
+  - « envoi une notif quand ta fini j'ai activé le rc ».
+- **Back-office (#72)** : le composant Translation de Symfony, au format ICU. Deux domaines :
+  - `admin` pour les textes des gabarits ;
+  - `admin_flash` pour les messages écrits en français dans le code, où la clé est le texte français.
+  - La langue se choisit dans une page **Paramètres** (`/admin/parametres`) et reste en session ; sans choix, on prend celle du navigateur (`AdminLocaleSubscriber`). Dates et montants suivent la langue. Ce qui est enregistré (motifs, décisions) reste dans la langue où il a été écrit.
+- **App (#71)** : le sélecteur de langue quitte « Mon profil » pour l'écran **Paramètres**, comme demandé.
+
+### 16/11 (après-midi) — Essai sur téléphone, données de démonstration, « Mon activité » (PR #73, #74)
+
+- **Prompts** (mot pour mot) :
+  - « lance tout je teste sur mon tel ,back-office aussi » ;
+  - « j'arrive pas a obtenir de code pour se connecter au backoffice » ;
+  - « met des fixtures d'action pour le back office , des scans reussis pret en cours objet ajoutés , des signalements des litiges etc » ;
+  - « j'ai mis le partage de connexion gère l'ip pour expo » ;
+  - « ferme le poer 8081 je l'ouvre manuellement pour avoir le qr code » ;
+  - « deux problème ; j'ai un fetch failed de connection sur mobile alors qu'il fait le partage de connexion , et j'ai pas le back office user sur l'app avec ses stats perso » ;
+  - « ouais un écran Mon activité dans le profil » ;
+  - « donne moi la version de expo et react native » ;
+  - « comment je justifie les kpi ducoup à l'oral ? » ;
+  - « améliore l'UX de mon activité » ;
+  - une capture de l'iPhone, avec « corrige » ;
+  - « on a bien utilisé nexti18n pour la trad ».
+- **Code du back-office** : la double authentification demande le code d'une application d'authentification (TOTP), pas un e-mail. L'IA a expliqué comment l'activer au premier accès et comment l'effacer en cas de perte du téléphone.
+- **Données de démonstration (#73)** : commande `app:demo:back-office`, réservée au développement, qui ne fait rien si elle a déjà tourné. Elle crée 8 comptes, 31 objets et vêtements, 56 scans, 7 prêts (dont 2 en retard), 5 ventes, 3 litiges et 6 signalements, étalés sur plusieurs semaines pour que les évolutions des indicateurs aient un sens. Les tirages sont reproductibles et tout se fait dans une transaction.
+- **« fetch failed »** : Expo lisait encore l'ancienne adresse du PC. Avec le partage de connexion de l'iPhone, le PC est en 172.20.10.2. L'adresse est lue au démarrage d'Expo, d'où le redémarrage nécessaire.
+- **« Mon activité » (#74)** : un écran à part, dans le menu Profil, parce que les principes UX (§ 7) excluent un tableau de bord sur l'accueil. `GET /api/me/activity` renvoie des comptages agrégés pour le profil actif seulement :
+  - inventaire : objets, vêtements, ajoutés ce mois ;
+  - prêts : prêtés, en retard, empruntés, rendus ;
+  - ventes ;
+  - scans, avec la part de scans réussis.
+- **Expérience utilisateur** :
+  - chaque chiffre ouvre la liste qu'il compte ;
+  - les couleurs sont celles des statuts de la charte ;
+  - un retard passe en tête, en rouge ;
+  - un état vide propose de scanner ;
+  - les chiffres se mettent à jour en tirant vers le bas.
+- **Correction d'après la capture** : les chiffres en Typolio étaient coupés en haut sur iOS ; ils passent par le composant `Heading`. Les cartes ont été alignées.
+- **Questions** :
+  - Expo 58.0.23, React Native 0.88.1 ;
+  - les indicateurs du back-office se justifient par des questions d'administrateur (« l'app est-elle utilisée ? le scan tient-il sa promesse ? ») ;
+  - next-i18next est fait pour Next.js. Le projet utilise i18next et react-i18next, la même base, adaptée à React Native, et Symfony Translation pour le back-office.
+- **Erreurs de l'IA** :
+  - elle a d'abord donné un mauvais nom de commande (`app:grant-admin` au lieu de `app:admin:grant`), corrigé ;
+  - dans les données de démo, un même objet servait à la fois à un prêt et à une vente, corrigé.
+
+### 17/11 — Journal des scans, pré-analyse IA des signalements et des litiges (PR #75)
+
+- **Prompts** (mot pour mot) :
+  - « dans les fonctions métier qui utilise l'IA il nous manque quoi ? » ;
+  - « dans le back office , un journal d'erreurs pour les scans qui fail , savoir le temps de chargement , le modele qui a fail , etc... , et aussi une suggestion de mon prof , on fait une pipeline avec un llm qui aura pour travail , review les signalements et litige ( regarde les causes les avenants , il doit tout check et donner un pré-verdict entre pour les signalement ; sans suite / avertissement / sanction / ne sais pas , avec une réponse et une justification structuré , ainsi qu'un score de confiance , au dessus de 95% , il peut appliquer directement une sanction/avertissement/sans suite , en dessous , il résume la situation pour un admin. toute les décisions doivent etre logués , et peuvent etre reprise par un admin s'il considère qu'il y a eu une erreur commise ».
+- **Ce qui manquait** : l'IA a comparé les fonctions prévues avec le code. Le scan par photo et par étiquette est fait. Le **moteur de suggestion de tenues**, entré dans le MVP le 21/09, n'avait que ses entités. La détection automatique des vêtements sur la photo du look avait été retirée volontairement.
+- **Journal des scans** : le temps de chaque appel de modèle est maintenant mesuré. Une page du back-office affiche :
+  - volume, part d'échecs, temps moyen et 95ᵉ centile ;
+  - le bilan par modèle (réponses, échecs, temps) ;
+  - les erreurs par famille (quota, modèle retiré, délai…) ;
+  - le détail d'un scan, modèle par modèle.
+- **Pré-analyse IA** :
+  - **Le dossier** : un modèle de langage lit ce qu'un administrateur regarderait (contenu, motif, autres signalements, passé de l'auteur, fiabilité du signalant ; pour un litige, la chronologie de la commande et des deux parties). Il ne reçoit ni e-mail ni adresse.
+  - **Le pré-verdict** : verdict, confiance de 0 à 100, résumé, justification, faits retenus, message proposé.
+  - **Application** : à partir de 95 %, il l'applique lui-même au nom d'un compte technique « Modération IA » ; en dessous, il résume pour un administrateur.
+  - **Journal** : tout est journalisé (`AiReview`, `ModerationAction`). Un administrateur peut valider, ou annuler : l'action est défaite et le signalement rouvert à son nom.
+- **Choix de l'IA, à justifier à l'oral** : la confiance annoncée par un modèle n'est pas une probabilité fiable. L'IA n'applique donc seule que ce qu'un humain peut défaire. Les litiges (de l'argent est en jeu), le retrait d'une publication et les dossiers qui contiennent des phrases adressées à l'IA restent des propositions. Le seuil (95 %) est réglable.
+- **Essai réel** : quatre dossiers analysés en 9 à 21 s. Tous sont restés des propositions (« ne sait pas » 40 % et 65 %, avertissement 85 %, acheteur 95 % sur un litige). Un essai a échoué : les deux Gemma étaient à court de quota et le modèle de raisonnement trop lent pour les 24 s d'une requête web. La commande planifiée a désormais 90 s par dossier.
+- **Erreurs de l'IA** : les patchs passés par le shell ont encore perdu des antislashs et des apostrophes, ce qui a cassé une ligne de test et une description de migration. PHPStan les a repérées, puis elles ont été corrigées.
+- **Vérifié** : PHPStan 0 erreur, linters OK, migration jouée. Tests écrits, à lancer par l'étudiant.
+
+### 17/11 (suite) — Le moteur de suggestion de tenues (PR #76)
+
+- **Prompt** (mot pour mot) : « bien sur apres ca tu fais aussi les 3 propositions poue le moteur de suggestion "look du jour" ».
+- **Les trois volets proposés par l'IA, réalisés** :
+  1. **la météo** : Open-Meteo, gratuit et sans clé. On prend la position du téléphone si l'utilisateur l'accepte, sinon la ville du logement ;
+  2. **les règles** : chaleur selon la température, imperméable s'il pleut, occasion, goûts, pièces portées récemment, accord des couleurs. Elles retiennent quatre tenues candidates ;
+  3. **l'IA**, qui choisit la meilleure des quatre et explique pourquoi dans la langue de l'utilisateur. Si elle ne répond pas, ce sont les règles qui décident.
+- **App** : l'écran « Ta tenue », d'après la maquette : Remplacer, Je n'aime pas, J'aime cette tenue, Nouvelle tenue. Une carte sur l'accueil et un bouton dans le dressing y mènent. Textes en trois langues.
+- **Essai réel** : environ 8 s par tenue (Troyes, 16 °C, pluie annoncée). Il a fait corriger cinq propositions absurdes :
+  - une robe de soirée pour le travail ;
+  - une tenue sans chaussures après « Nouvelle tenue » ;
+  - une veste de ski au sport à 16 °C ;
+  - un jean au sport ;
+  - un short à 15 °C.
+
+  Chacune est devenue une règle ferme ou un test.
+- **Vérifié** : PHPStan, tsc, ESLint, `i18n:check` OK. Tests écrits, à lancer par l'étudiant.
