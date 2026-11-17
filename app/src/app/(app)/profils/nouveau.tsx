@@ -1,6 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Text, View } from 'react-native';
 
 import { ActionBar, FlowScreen } from '@/components/add/FlowScreen';
@@ -14,9 +15,9 @@ import { TextField } from '@/components/ui/TextField';
 import { ApiError } from '@/lib/api';
 import { createProfile, parseFrenchDate, type NewProfile } from '@/lib/profiles';
 
-const TYPES: { value: NewProfile['type']; label: string }[] = [
-  { value: 'CHILD', label: 'Enfant' },
-  { value: 'RELATIVE', label: 'Famille' },
+const TYPES: { value: NewProfile['type']; labelKey: 'new.typeChild' | 'new.typeRelative' }[] = [
+  { value: 'CHILD', labelKey: 'new.typeChild' },
+  { value: 'RELATIVE', labelKey: 'new.typeRelative' },
 ];
 
 /**
@@ -33,6 +34,7 @@ const TYPES: { value: NewProfile['type']; label: string }[] = [
  *  - pas de choix d'avatar : l'API n'en expose pas encore.
  */
 export default function NewProfileScreen() {
+  const { t } = useTranslation('profiles');
   const queryClient = useQueryClient();
   const [type, setType] = useState<NewProfile['type']>('CHILD');
   const [firstName, setFirstName] = useState('');
@@ -43,7 +45,7 @@ export default function NewProfileScreen() {
 
   const save = async () => {
     if (!date) {
-      setErrors({ dateOfBirth: 'Date au format JJ/MM/AAAA.' });
+      setErrors({ dateOfBirth: t('new.dateError') });
 
       return;
     }
@@ -54,7 +56,7 @@ export default function NewProfileScreen() {
       router.replace({ pathname: '/profils/[id]/autorisations', params: { id: profile.id, created: '1' } });
     } catch (e) {
       setSaving(false);
-      setErrors(e instanceof ApiError && Object.keys(e.violations).length > 0 ? e.violations : { form: e instanceof Error ? e.message : 'Création impossible.' });
+      setErrors(e instanceof ApiError && Object.keys(e.violations).length > 0 ? e.violations : { form: e instanceof Error ? e.message : t('new.createError') });
     }
   };
 
@@ -64,7 +66,7 @@ export default function NewProfileScreen() {
         <BackButton />
       </View>
       <View className="px-5">
-        <ScreenTitle title={type === 'CHILD' ? 'Nouveau profil enfant' : 'Nouveau profil famille'} legend={type === 'CHILD' ? 'Une penderie à lui, sous ta surveillance' : 'Un proche majeur dont tu gères la penderie'} />
+        <ScreenTitle title={type === 'CHILD' ? t('new.titleChild') : t('new.titleRelative')} legend={type === 'CHILD' ? t('new.legendChild') : t('new.legendRelative')} />
       </View>
 
       <View style={E1} className="mx-5 items-center gap-2 rounded-lg bg-surface py-5 dark:bg-surface-night">
@@ -72,27 +74,27 @@ export default function NewProfileScreen() {
       </View>
 
       <View className="gap-5 px-5">
-        <TextField label="Prénom" value={firstName} onChangeText={setFirstName} placeholder="Noé" autoCapitalize="words" error={errors.firstName} />
+        <TextField label={t('new.firstName')} value={firstName} onChangeText={setFirstName} placeholder={t('new.firstNamePlaceholder')} autoCapitalize="words" error={errors.firstName} />
         <TextField
-          label="Date de naissance"
+          label={t('new.birthDate')}
           value={birth}
           onChangeText={setBirth}
-          placeholder="JJ/MM/AAAA"
+          placeholder={t('new.birthPlaceholder')}
           keyboardType="numbers-and-punctuation"
           error={errors.dateOfBirth}
-          hint={type === 'CHILD' ? 'Un profil enfant a moins de 18 ans.' : 'Un profil famille a 18 ans ou plus.'}
+          hint={type === 'CHILD' ? t('new.childHint') : t('new.relativeHint')}
         />
-        <Chips label="Type de profil" options={TYPES} selected={[type]} onToggle={setType} />
+        <Chips label={t('new.type')} options={TYPES.map((item) => ({ value: item.value, label: t(item.labelKey) }))} selected={[type]} onToggle={setType} />
         {errors.username && <Text className="font-luciole text-legend text-error dark:text-error-night">{errors.username}</Text>}
       </View>
 
-      <ActionBar note="Tu pourras régler les autorisations juste après.">
+      <ActionBar note={t('new.note')}>
         {errors.form && (
           <Text accessibilityRole="alert" className="text-center font-luciole text-legend text-error dark:text-error-night">
             {errors.form}
           </Text>
         )}
-        <Button label="Créer" onPress={save} loading={saving} disabled={firstName.trim() === '' || birth.trim() === ''} />
+        <Button label={t('new.create')} onPress={save} loading={saving} disabled={firstName.trim() === '' || birth.trim() === ''} />
       </ActionBar>
     </FlowScreen>
   );

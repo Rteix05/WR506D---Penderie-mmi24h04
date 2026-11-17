@@ -1,0 +1,189 @@
+{
+  "language": {
+    "label": "Langue"
+  },
+  "kind": {
+    "default": "Profil principal",
+    "child": "Profil enfant",
+    "relative": "Profil famille",
+    "adult": "Profil adulte"
+  },
+  "meta": {
+    "age": "{{age}} ans",
+    "items_one": "{{count}} objet",
+    "items_other": "{{count}} objets"
+  },
+  "card": {
+    "active": "Actif",
+    "activeA11y": "actif"
+  },
+  "tab": {
+    "title": "Mon profil",
+    "legend": "Informations et profils de la famille",
+    "active": "Profil actif",
+    "change": "Changer de profil",
+    "family": "Profils de la famille",
+    "addHint": "Ajoute un profil pour tes enfants ou un proche : chacun aura sa penderie.",
+    "add": "Ajouter un profil",
+    "account": "Compte : {{email}}",
+    "logout": "Se déconnecter"
+  },
+  "switch": {
+    "title": "Changer de profil",
+    "legend": "Chaque profil a sa propre penderie",
+    "family": "Profils de la famille",
+    "manageHint": "Ajouter, modifier, supprimer",
+    "viewHint": "Voir les profils du compte",
+    "manage": "Gérer",
+    "note": "Chaque profil garde son inventaire et son dressing.",
+    "continue": "Continuer",
+    "add": "Ajouter un profil"
+  },
+  "new": {
+    "typeChild": "Enfant",
+    "typeRelative": "Famille",
+    "titleChild": "Nouveau profil enfant",
+    "titleRelative": "Nouveau profil famille",
+    "legendChild": "Une penderie à lui, sous ta surveillance",
+    "legendRelative": "Un proche majeur dont tu gères la penderie",
+    "firstName": "Prénom",
+    "firstNamePlaceholder": "Noé",
+    "birthDate": "Date de naissance",
+    "birthPlaceholder": "JJ/MM/AAAA",
+    "childHint": "Un profil enfant a moins de 18 ans.",
+    "relativeHint": "Un profil famille a 18 ans ou plus.",
+    "type": "Type de profil",
+    "note": "Tu pourras régler les autorisations juste après.",
+    "dateError": "Date au format JJ/MM/AAAA.",
+    "createError": "Création impossible.",
+    "create": "Créer"
+  },
+  "detail": {
+    "gone": "Ce profil n'existe plus.",
+    "deleteTitle": "Supprimer le profil de {{name}} ?",
+    "deleteText": "Ses objets, vêtements et logements reviennent à {{name}}. Ses amis, préférences et notifications disparaissent.",
+    "guardianFallback": "son tuteur",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "deleteError": "Suppression impossible",
+    "createdOn": "Créé le {{date}}",
+    "canDo": "Ce que {{name}} peut faire",
+    "addItems": "Ajouter des objets",
+    "lend": "Prêter",
+    "borrow": "Emprunter",
+    "sell": "Vendre",
+    "wardrobe": "Sa penderie",
+    "items": "Objets",
+    "garments": "Vêtements",
+    "activeLoans": "Prêts en cours",
+    "guardianship": "Tutelle",
+    "managedBy": "Géré par",
+    "use": "Utiliser",
+    "edit": "Modifier",
+    "permissions": "Autorisations",
+    "myPermissions": "Mes autorisations",
+    "deleteProfile": "Supprimer ce profil"
+  },
+  "edit": {
+    "title": "Modifier le profil",
+    "identityBannerTitle": "Ton identité est gérée par ton tuteur",
+    "identityBannerText": "Tu peux changer ton nom affiché et ta bio.",
+    "firstName": "Prénom",
+    "lastName": "Nom",
+    "displayName": "Nom affiché",
+    "displayNameHint": "Celui que voient les amis.",
+    "birthDate": "Date de naissance",
+    "birthPlaceholder": "JJ/MM/AAAA",
+    "bio": "Bio",
+    "bioPlaceholder": "Facultatif",
+    "dateError": "Date au format JJ/MM/AAAA.",
+    "saveError": "Enregistrement impossible.",
+    "adultTitle": "{{name}} est majeur",
+    "adultText": "Tu peux en faire un profil famille : ses restrictions d'enfant sont levées, tu le gères toujours.",
+    "toFamily": "Passer en profil famille",
+    "note": "Chaque profil garde son propre inventaire et son propre dressing.",
+    "save": "Enregistrer"
+  },
+  "modes": {
+    "allowed": "Oui",
+    "approval": "Avec mon accord",
+    "denied": "Non",
+    "allowedShort": "Oui",
+    "approvalShort": "Avec accord",
+    "deniedShort": "Non"
+  },
+  "permissions": {
+    "title": "Autorisations",
+    "createdTitle": "Profil créé !",
+    "createdText": "Vérifie ce qu'il a le droit de faire : les réglages par défaut sont déjà appliqués.",
+    "managedBy": "Géré par {{name}}",
+    "supervised": "Surveillé",
+    "guardianBannerTitle": "Réglé par ton tuteur",
+    "guardianBannerText": "Demande-lui si tu veux en changer une.",
+    "custom": "{{text}} · Réglé par toi",
+    "note": "Avec ton accord : chaque demande arrive chez toi avant d'être faite. Tu peux revenir sur ces réglages à tout moment.",
+    "save": "Enregistrer",
+    "saveError": "Enregistrement impossible.",
+    "groups": {
+      "organize": "Ranger ses affaires",
+      "loans": "Prêts",
+      "relations": "Relations",
+      "trade": "Vendre et acheter"
+    },
+    "items": {
+      "itemCreate": {
+        "title": "Ajouter des objets",
+        "text": "Dans sa penderie"
+      },
+      "garmentManage": {
+        "title": "Gérer ses vêtements",
+        "text": "Ajouter, modifier, ranger"
+      },
+      "collectionCreate": {
+        "title": "Créer des collections",
+        "text": "Regrouper ses objets"
+      },
+      "mediaUpload": {
+        "title": "Ajouter des photos",
+        "text": "Sur ses objets et vêtements"
+      },
+      "loanLend": {
+        "title": "Prêter ses objets",
+        "text": "Uniquement à ses amis"
+      },
+      "loanBorrow": {
+        "title": "Emprunter",
+        "text": "Les objets de ses amis"
+      },
+      "friendAdd": {
+        "title": "Ajouter des amis",
+        "text": "Envoyer et accepter des demandes"
+      },
+      "shareCreate": {
+        "title": "Partager",
+        "text": "Ses objets, pièces, collections"
+      },
+      "commentWrite": {
+        "title": "Commenter",
+        "text": "Les objets partagés par ses amis"
+      },
+      "follow": {
+        "title": "S'abonner et être suivi",
+        "text": "Hors des amis"
+      },
+      "sell": {
+        "title": "Vendre",
+        "text": "Mettre ses objets en vente"
+      },
+      "purchase": {
+        "title": "Acheter",
+        "text": "Les objets en vente de ses amis"
+      }
+    }
+  },
+  "settings": {
+    "title": "Paramètres",
+    "legend": "Préférences de l’app",
+    "languageHint": "Par défaut, l’app suit la langue du téléphone. Ton choix est gardé sur ce téléphone."
+  }
+}

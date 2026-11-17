@@ -1,0 +1,31 @@
+{
+  "counts": {
+    "items_other": "アイテム⁠{{count}}⁠点",
+    "garments_other": "服⁠{{count}}⁠点",
+    "summary": "{{items}} · {{garments}}"
+  },
+  "dashboard": {
+    "greeting": "こんにちは、{{name}}さん",
+    "greetingAnon": "こんにちは",
+    "scan": "スキャン",
+    "add": "追加",
+    "inventory": "持ち物",
+    "dressing": "ワードローブ",
+    "recent": "最近追加したもの",
+    "emptyTitle": "まだ何もありません",
+    "emptyBody": "最初のアイテムをスキャンするか追加すると、ここに表示されます。"
+  },
+  "topBar": {
+    "notifications": "通知",
+    "notificationsBody": "通知機能はまもなく登場します。",
+    "profile": "マイプロフィール"
+  },
+  "look": {
+    "title": "今日のコーデ",
+    "empty": "自分の写真を撮って、着ている服をタグ付けしよう",
+    "tagging": "写真の服をタグ付けしてください",
+    "toCheck_other": "確認が必要な服：⁠{{count}}⁠点",
+    "allChecked": "確認完了。投稿を準備しましょう",
+    "accessibilityLabel": "今日のコーデ、{{text}}"
+  }
+}

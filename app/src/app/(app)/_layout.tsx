@@ -35,6 +35,8 @@ export default function AppLayout() {
       <Stack.Screen name="pret/[id]/retour" options={{ presentation: 'modal' }} />
       {/* Profils du compte : changer, créer, modifier, autorisations. */}
       <Stack.Screen name="profils" options={{ presentation: 'modal' }} />
+      {/* Paramètres : la langue de l'app. */}
+      <Stack.Screen name="parametres" />
     </Stack>
   );
 }

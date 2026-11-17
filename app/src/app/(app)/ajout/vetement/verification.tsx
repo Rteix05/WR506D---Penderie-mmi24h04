@@ -1,5 +1,6 @@
 import { useMutation } from '@tanstack/react-query';
 import { router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { Text, View } from 'react-native';
 
 import { ActionBar, FlowScreen } from '@/components/add/FlowScreen';
@@ -17,19 +18,20 @@ import { CONDITIONS, locationPath, USAGES, useDraft } from '@/lib/add-draft';
  * « Ajouter » crée le vêtement (POST /api/garments), privé par défaut.
  */
 export default function GarmentReviewScreen() {
+  const { t } = useTranslation('add');
   const { draft, submit } = useDraft();
   const save = useMutation({ mutationFn: submit, onSuccess: () => router.replace('/ajout/vetement/confirmation') });
   const tags = [
-    (draft.size || draft.sizeLabel) && `Taille ${draft.size?.name ?? draft.sizeLabel}`,
+    (draft.size || draft.sizeLabel) && t('garmentReview.sizeTag', { size: draft.size?.name ?? draft.sizeLabel }),
     draft.color?.name,
     USAGES.find((u) => u.value === draft.usage)?.label,
     ...draft.styles.map((s) => s.name),
     CONDITIONS.find((c) => c.value === draft.condition)?.label,
-  ].filter((t): t is string => Boolean(t));
+  ].filter((tag): tag is string => Boolean(tag));
 
   return (
     <FlowScreen>
-      <StepHeader step={4} title="Vérifie ton vêtement" />
+      <StepHeader step={4} title={t('garmentReview.title')} />
       <PhotoZone photo={draft.photo} art={draft.garmentType?.art ?? 'tshirt'} />
 
       <View className="flex-row flex-wrap gap-2 px-5">
@@ -41,20 +43,20 @@ export default function GarmentReviewScreen() {
       </View>
 
       <InfoCard
-        title="Le vêtement"
+        title={t('garmentReview.garment')}
         rows={[
-          ['Nom', draft.name.trim()],
-          ['Marque', draft.brand?.name],
-          ['Catégorie', draft.category?.name],
-          ['Description', draft.description.trim()],
+          [t('garmentReview.name'), draft.name.trim()],
+          [t('garmentReview.brand'), draft.brand?.name],
+          [t('garmentReview.category'), draft.category?.name],
+          [t('garmentReview.description'), draft.description.trim()],
         ]}
       />
-      <PathCard title="Localisation" path={locationPath(draft.location)} />
+      <PathCard title={t('garmentReview.location')} path={locationPath(draft.location)} />
       <InfoCard
-        title="À l'ajout"
+        title={t('garmentReview.onAdd')}
         rows={[
-          ['Statut', 'Dans ma penderie'],
-          ['Visible par', 'Toi seul'],
+          [t('garmentReview.status'), t('garmentReview.inCloset')],
+          [t('garmentReview.visibleBy'), t('garmentReview.onlyYou')],
         ]}
       />
 
@@ -64,8 +66,8 @@ export default function GarmentReviewScreen() {
             {save.error.message}
           </Text>
         )}
-        <Button label="Ajouter" onPress={() => save.mutate()} loading={save.isPending} />
-        <Button label="Modifier" variant="secondary" onPress={() => router.dismissTo('/ajout/vetement/infos')} disabled={save.isPending} />
+        <Button label={t('garmentReview.submit')} onPress={() => save.mutate()} loading={save.isPending} />
+        <Button label={t('garmentReview.edit')} variant="secondary" onPress={() => router.dismissTo('/ajout/vetement/infos')} disabled={save.isPending} />
       </ActionBar>
     </FlowScreen>
   );

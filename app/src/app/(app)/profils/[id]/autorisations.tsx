@@ -1,6 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 
 import { ActionBar, FlowScreen } from '@/components/add/FlowScreen';
@@ -10,7 +11,7 @@ import { Banner } from '@/components/ui/Banner';
 import { Button } from '@/components/ui/Button';
 import { E1 } from '@/components/ui/elevation';
 import { ScreenTitle } from '@/components/ui/ScreenTitle';
-import { MODES, PERMISSION_GROUPS, profileKind, savePermissions, useAccountProfile, usePermissions, type PermissionKey, type PermissionMode } from '@/lib/profiles';
+import { modes, permissionGroups, profileKind, savePermissions, useAccountProfile, usePermissions, type PermissionKey, type PermissionMode } from '@/lib/profiles';
 
 /**
  * « Autorisations » (Figma « Compte — Autorisations parentales »,
@@ -24,6 +25,7 @@ import { MODES, PERMISSION_GROUPS, profileKind, savePermissions, useAccountProfi
  * lui-même voit ses autorisations sans pouvoir les changer.
  */
 export default function PermissionsScreen() {
+  const { t } = useTranslation('profiles');
   const { id, created } = useLocalSearchParams<{ id: string; created?: string }>();
   const profile = useAccountProfile(id);
   const permissions = usePermissions(id);
@@ -53,7 +55,7 @@ export default function PermissionsScreen() {
       router.back();
     } catch (e) {
       setSaving(false);
-      setError(e instanceof Error ? e.message : 'Enregistrement impossible.');
+      setError(e instanceof Error ? e.message : t('permissions.saveError'));
     }
   };
   const changed = Object.keys(changes).length > 0;
@@ -64,10 +66,10 @@ export default function PermissionsScreen() {
         <BackButton onPress={created ? () => router.dismissTo('/profils') : undefined} />
       </View>
       <View className="px-5">
-        <ScreenTitle title="Autorisations" legend={profile.data ? [profile.data.displayName, profileKind(profile.data).toLowerCase(), profile.data.type === 'CHILD' ? `${profile.data.age} ans` : null].filter(Boolean).join(' · ') : undefined} />
+        <ScreenTitle title={t('permissions.title')} legend={profile.data ? [profile.data.displayName, profileKind(profile.data).toLowerCase(), profile.data.type === 'CHILD' ? t('meta.age', { age: profile.data.age }) : null].filter(Boolean).join(' · ') : undefined} />
       </View>
 
-      {created && <Banner tone="success" title="Profil créé !" text="Vérifie ce qu'il a le droit de faire : les réglages par défaut sont déjà appliqués." />}
+      {created && <Banner tone="success" title={t('permissions.createdTitle')} text={t('permissions.createdText')} />}
 
       {profile.data && (
         <View style={E1} className="mx-5 flex-row items-center gap-3 rounded-md bg-surface px-4 py-3 dark:bg-surface-night">
@@ -75,12 +77,12 @@ export default function PermissionsScreen() {
           <View className="flex-1">
             <Text className="font-luciole-bold text-[18px] text-ink dark:text-ink-night">{profile.data.displayName}</Text>
             <Text className="font-luciole text-legend text-muted dark:text-muted-night">
-              {profile.data.guardian ? `Géré par ${profile.data.guardian.displayName}` : profileKind(profile.data)}
+              {profile.data.guardian ? t('permissions.managedBy', { name: profile.data.guardian.displayName }) : profileKind(profile.data)}
             </Text>
           </View>
           {profile.data.type === 'CHILD' && (
             <View className="rounded-full bg-primary/[0.12] px-2 py-1">
-              <Text className="font-luciole-bold text-legend text-primary dark:text-primary-night">Surveillé</Text>
+              <Text className="font-luciole-bold text-legend text-primary dark:text-primary-night">{t('permissions.supervised')}</Text>
             </View>
           )}
         </View>
@@ -88,10 +90,10 @@ export default function PermissionsScreen() {
 
       {permissions.isPending && <ActivityIndicator className="py-6" />}
       {permissions.isError && <Text className="px-5 font-luciole text-body text-error dark:text-error-night">{permissions.error.message}</Text>}
-      {permissions.data && !editable && <Banner tone="info" title="Réglé par ton tuteur" text="Demande-lui si tu veux en changer une." />}
+      {permissions.data && !editable && <Banner tone="info" title={t('permissions.guardianBannerTitle')} text={t('permissions.guardianBannerText')} />}
 
       {permissions.data &&
-        PERMISSION_GROUPS.map((group) => (
+        permissionGroups().map((group) => (
           <View key={group.title} className="gap-3 px-5">
             <Text accessibilityRole="header" className="font-luciole-bold text-body text-ink dark:text-ink-night">
               {group.title}
@@ -103,10 +105,10 @@ export default function PermissionsScreen() {
                 <View key={item.key} style={E1} className="gap-3 rounded-md bg-surface px-4 py-3 dark:bg-surface-night">
                   <View className="gap-0.5">
                     <Text className="font-luciole-bold text-body text-ink dark:text-ink-night">{item.title}</Text>
-                    <Text className="font-luciole text-legend text-muted dark:text-muted-night">{custom ? `${item.text} · Réglé par toi` : item.text}</Text>
+                    <Text className="font-luciole text-legend text-muted dark:text-muted-night">{custom ? t('permissions.custom', { text: item.text }) : item.text}</Text>
                   </View>
                   <View accessibilityRole="radiogroup" accessibilityLabel={item.title} className="flex-row gap-2">
-                    {MODES.map((m) => {
+                    {modes().map((m) => {
                       const on = m.value === mode;
 
                       return (
@@ -130,13 +132,13 @@ export default function PermissionsScreen() {
         ))}
 
       {editable && (
-        <ActionBar note="Avec ton accord : chaque demande arrive chez toi avant d'être faite. Tu peux revenir sur ces réglages à tout moment.">
+        <ActionBar note={t('permissions.note')}>
           {error && (
             <Text accessibilityRole="alert" className="text-center font-luciole text-legend text-error dark:text-error-night">
               {error}
             </Text>
           )}
-          <Button label="Enregistrer" onPress={save} loading={saving} disabled={!changed} />
+          <Button label={t('permissions.save')} onPress={save} loading={saving} disabled={!changed} />
         </ActionBar>
       )}
     </FlowScreen>

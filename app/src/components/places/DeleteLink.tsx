@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Alert, Pressable, Text } from 'react-native';
 
 /**
@@ -7,13 +8,14 @@ import { Alert, Pressable, Text } from 'react-native';
  * s'affiche dans une alerte.
  */
 export function DeleteLink({ label, what, name, detail, onConfirm }: { label: string; what: string; name: string; detail?: string; onConfirm: () => Promise<void> }) {
+  const { t } = useTranslation('places');
   const [busy, setBusy] = useState(false);
 
   const ask = () =>
-    Alert.alert(`Supprimer ${what} ?`, [`« ${name} » disparaîtra de tes logements.`, detail].filter(Boolean).join(' '), [
-      { text: 'Annuler', style: 'cancel' },
+    Alert.alert(t('deleteLink.title', { what }), [t('deleteLink.body', { name }), detail].filter(Boolean).join(' '), [
+      { text: t('deleteLink.cancel'), style: 'cancel' },
       {
-        text: 'Supprimer',
+        text: t('deleteLink.confirm'),
         style: 'destructive',
         onPress: async () => {
           setBusy(true);
@@ -21,7 +23,7 @@ export function DeleteLink({ label, what, name, detail, onConfirm }: { label: st
             await onConfirm();
           } catch (e) {
             setBusy(false);
-            Alert.alert('Suppression impossible', e instanceof Error ? e.message : '');
+            Alert.alert(t('deleteLink.errorTitle'), e instanceof Error ? e.message : '');
           }
         },
       },
@@ -29,7 +31,7 @@ export function DeleteLink({ label, what, name, detail, onConfirm }: { label: st
 
   return (
     <Pressable accessibilityRole="button" onPress={ask} disabled={busy} hitSlop={8} className="self-center py-1">
-      <Text className={`font-luciole-bold text-legend text-error dark:text-error-night ${busy ? 'opacity-50' : ''}`}>{busy ? 'Suppression…' : label}</Text>
+      <Text className={`font-luciole-bold text-legend text-error dark:text-error-night ${busy ? 'opacity-50' : ''}`}>{busy ? t('deleteLink.busy') : label}</Text>
     </Pressable>
   );
 }

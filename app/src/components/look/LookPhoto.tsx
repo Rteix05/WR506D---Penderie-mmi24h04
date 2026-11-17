@@ -1,5 +1,6 @@
 import { Image } from 'expo-image';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Pressable, Text, View, type GestureResponderEvent, type LayoutChangeEvent } from 'react-native';
 
 import { mediaSource } from '@/lib/api';
@@ -46,6 +47,7 @@ type Props = {
  * fil, toucher un point ouvre sa mention.
  */
 export function LookPhoto({ look, onPlace, pending, rounded = true, onTagPress, tagLabel }: Props) {
+  const { t } = useTranslation('social');
   const [width, setWidth] = useState(0);
   const ratio = look.photo.width && look.photo.height ? look.photo.height / look.photo.width : 4 / 3;
   const height = width * ratio;
@@ -62,7 +64,7 @@ export function LookPhoto({ look, onPlace, pending, rounded = true, onTagPress, 
     <View onLayout={onLayout} className={`w-full overflow-hidden bg-ink/[0.04] dark:bg-ink-night/[0.06] ${rounded ? 'rounded-lg' : ''}`} style={{ height: height || undefined, aspectRatio: height ? undefined : 1 / ratio }}>
       <Pressable
         accessibilityRole={onPlace ? 'button' : 'image'}
-        accessibilityLabel={onPlace ? 'Ta photo : touche un vêtement pour y poser un point' : `Ta photo, ${look.tags.length} vêtements pointés`}
+        accessibilityLabel={onPlace ? t('lookPhoto.placeHint') : t('lookPhoto.photoTags', { count: look.tags.length })}
         disabled={!onPlace || Boolean(pending)}
         onPress={place}
         style={{ width: '100%', height: '100%' }}>
@@ -74,7 +76,7 @@ export function LookPhoto({ look, onPlace, pending, rounded = true, onTagPress, 
             <Pressable
               key={tag.id}
               accessibilityRole="button"
-              accessibilityLabel={tagLabel?.(tag) ?? `Vêtement ${tag.position + 1}`}
+              accessibilityLabel={tagLabel?.(tag) ?? t('lookPhoto.tag', { position: tag.position + 1 })}
               onPress={() => onTagPress(tag)}
               hitSlop={10}
               style={{ position: 'absolute', left: tag.x * width - 14, top: tag.y * height - 14 }}>

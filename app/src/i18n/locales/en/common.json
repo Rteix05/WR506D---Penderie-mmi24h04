@@ -1,0 +1,166 @@
+{
+  "logo": "Penderie logo",
+  "navigation": {
+    "tabMenu": "{{label}}, menu",
+    "add": "Add",
+    "sections": {
+      "accueil": {
+        "title": "Home",
+        "legend": "Everything that's happening",
+        "dashboard": {
+          "title": "Dashboard",
+          "subtitle": "Your wardrobe at a glance"
+        },
+        "feed": {
+          "title": "News feed",
+          "subtitle": "What your friends showed you"
+        },
+        "notifications": {
+          "title": "Notifications",
+          "subtitle": "Loans, sales, shares, requests"
+        },
+        "search": {
+          "title": "Search",
+          "subtitle": "An item, a room, a friend"
+        }
+      },
+      "inventaire": {
+        "title": "Inventory",
+        "legend": "Everything you own",
+        "objects": {
+          "title": "My items",
+          "subtitle": "Your items and their condition"
+        },
+        "wardrobe": {
+          "title": "My wardrobe",
+          "subtitle": "Your clothes"
+        },
+        "outfits": {
+          "title": "My outfits",
+          "subtitle": "Suggestions and saved outfits"
+        },
+        "collections": {
+          "title": "My collections",
+          "subtitle": "Boards, private by default"
+        },
+        "loans": {
+          "title": "My loans",
+          "subtitle": "Lent and borrowed"
+        }
+      },
+      "logements": {
+        "title": "Homes",
+        "legend": "Where your things are stored",
+        "places": {
+          "title": "My homes",
+          "subtitle": "Homes and rooms"
+        },
+        "main": {
+          "title": "Main home",
+          "subtitle": "Its rooms and items"
+        },
+        "boxes": {
+          "title": "My boxes",
+          "subtitle": "Active boxes"
+        },
+        "createBox": {
+          "title": "Create a box",
+          "subtitle": "Label, location"
+        }
+      },
+      "profil": {
+        "title": "Profile",
+        "legend": "You and your family",
+        "profile": {
+          "title": "My profile",
+          "subtitle": "Details and family profiles"
+        },
+        "friends": {
+          "title": "Friends and followers",
+          "subtitle": "Friends, followers, requests"
+        },
+        "shares": {
+          "title": "My shares",
+          "subtitle": "Active shares"
+        },
+        "selling": {
+          "title": "For sale from friends",
+          "subtitle": "Your friends' listings"
+        },
+        "purchases": {
+          "title": "Purchases and sales",
+          "subtitle": "Orders, deliveries, refunds"
+        },
+        "settings": {
+          "title": "Settings",
+          "subtitle": "App language"
+        }
+      }
+    }
+  },
+  "addMenu": {
+    "title": "What are you adding?",
+    "close": "Close",
+    "closeMenu": "Close the add menu",
+    "soon": "This flow is coming soon.",
+    "bubbleLabel": "{{title}}, {{description}}",
+    "bubbleLabelSoon": "{{title}}, {{description}}, coming soon",
+    "contextError": "useOpenAddMenu must be used inside AddMenuContext.",
+    "bubbles": {
+      "clothes": {
+        "title": "Clothes and Items",
+        "description": "A sweatshirt, a CD"
+      },
+      "boxes": {
+        "title": "Boxes",
+        "description": "Create a storage box"
+      },
+      "place": {
+        "title": "Home",
+        "description": "House, flat, office"
+      },
+      "scan": {
+        "title": "Scan",
+        "description": "Scan to fill in"
+      }
+    }
+  },
+  "menu": {
+    "close": "Close the menu",
+    "soon": "Soon",
+    "label": "{{title}}, {{subtitle}}",
+    "labelSoon": "{{title}}, coming soon"
+  },
+  "backButton": {
+    "close": "Close",
+    "back": "Back"
+  },
+  "select": {
+    "choose": "Choose",
+    "loading": "Loading…",
+    "fieldLabel": "{{label}}: {{value}}",
+    "close": "Close",
+    "search": "Search",
+    "searchIn": "Search in {{title}}",
+    "empty": "Nothing yet.",
+    "noResults": "No results.",
+    "none": "None",
+    "create": "Create",
+    "name": "Name",
+    "createError": "Couldn't create it."
+  },
+  "api": {
+    "loginFailed": "Incorrect email or password.",
+    "loginError": "Couldn't sign in",
+    "registerError": "Couldn't sign up",
+    "refreshError": "Couldn't refresh the session",
+    "sessionExpired": "Session expired, please sign in again.",
+    "unexpectedResponse": "The server responded unexpectedly. Try again in a moment.",
+    "invalidEmail": "This email address doesn't look valid.",
+    "leakedPassword": "This password appears in a known data breach: choose another one.",
+    "blankField": "This field is required."
+  },
+  "session": {
+    "providerError": "useSessionStatus must be used inside <SessionProvider>."
+  }
+}

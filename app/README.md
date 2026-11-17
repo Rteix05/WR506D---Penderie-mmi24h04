@@ -38,7 +38,20 @@ npx expo install <paquet>   # TOUJOURS à la place de npm install : choisit la v
 npx tsc --noEmit            # vérification TypeScript
 npx expo lint               # ESLint
 npx expo-doctor             # diagnostic des dépendances et de la configuration
+npm run i18n:check          # traductions : clés présentes dans les 3 langues, aucun texte en dur
 ```
+
+## Langues (français, anglais, japonais)
+
+L'app parle français (langue source), anglais et japonais, avec **i18next** et **react-i18next** ; **expo-localization** lit la langue du téléphone.
+
+- **Langue choisie** : au premier lancement, celle du téléphone si l'app la parle, sinon le français. **Paramètres** (panneau Profil › Paramètres, `/parametres`) permet d'en changer ; le choix est gardé sur le téléphone (`expo-secure-store`, `localStorage` sur le web) et relu avant le premier écran.
+- **Les textes** sont rangés par domaine, un fichier JSON par langue : `src/i18n/locales/<langue>/<domaine>.json` (`common`, `auth`, `home`, `inventory`, `add`, `places`, `loans`, `social`, `profiles`). Une clé absente d'une langue retombe sur le français.
+- **Dans un composant** : `const { t } = useTranslation('loans'); t('list.title')`. **Hors d'un composant** (fonction de `lib/`) : `i18n.t('loans:list.title')`, appelé au moment du rendu, jamais au chargement du module, sinon le texte resterait dans la langue du démarrage.
+- **Pluriels** : `t('list.loans', { count })` avec `loans_one` et `loans_other` (le japonais n'a que `_other`). Une phrase = une clé : on ne colle jamais des morceaux traduits.
+- **Dates et tris** : `dateLocale()` et `compareText()` (`src/i18n/index.ts`) suivent la langue courante.
+- **Japonais** : les polices du design system (Luciole, Typolio) n'ont pas de kanji ; le système prend le relais. Sur le web, l'attribut `lang` de la page suit la langue, sinon le navigateur dessine une partie des kanji avec des glyphes chinois. Dans les compteurs, le nombre est collé à son unité (`アイテム⁠4⁠点`, caractère de liaison U+2060) pour ne pas être coupé en fin de ligne.
+- **Non traduit** : ce qui vient de l'API (noms de catégories, de marques, de pièces créées) reste tel qu'il est enregistré.
 
 ## Version web et Lighthouse
 

@@ -1,0 +1,182 @@
+{
+  "audience": {
+    "friends": {
+      "title": "友だち",
+      "chip": "友だちに公開",
+      "detail": "コメントできます"
+    },
+    "followers": {
+      "title": "フォロワー",
+      "chip": "フォロワーに公開 · 閲覧のみ",
+      "detail": "友だちにも公開。コメントはできません"
+    }
+  },
+  "since": {
+    "now": "たった今",
+    "minutes": "⁠{{minutes}}⁠分前",
+    "hours": "⁠{{hours}}⁠時間前",
+    "yesterday": "昨日",
+    "days": "⁠{{days}}⁠日前"
+  },
+  "lookStatus": {
+    "preparing": "準備中",
+    "ready": "投稿の準備完了",
+    "posted": "投稿済み"
+  },
+  "look": {
+    "garmentName": "服 {{position}}"
+  },
+  "feed": {
+    "title": "フィード",
+    "legend": "友だちがあなたに見せたいもの",
+    "publish": "＋ コーデを投稿",
+    "noStrangers": "知らない人も広告もありません。あなたを選んだ人だけが表示されます。",
+    "tabs": {
+      "feed": "フィード",
+      "mine": "自分の投稿"
+    },
+    "emptyMineTitle": "まだ投稿がありません",
+    "emptyFeedTitle": "フィードは静かです",
+    "emptyMineBody": "今日のコーデを投稿すると、友だちがタグ付けした服を見られます。",
+    "emptyFeedBody": "友だちからの共有はまだありません。今日のコーデを好きな人に見せることができます。",
+    "emptyAction": "コーデを投稿"
+  },
+  "post": {
+    "deleteTitle": "投稿を削除しますか？",
+    "deleteBody": "フィードから消え、タグ付けした服は再び非公開になります。コーデ自体は残ります。",
+    "cancel": "キャンセル",
+    "delete": "削除",
+    "deleteError": "投稿を削除できませんでした。",
+    "noteFollowers": "フォロワーはこの投稿を見られますが、コメントはできません。",
+    "noteCommentsSoon": "コメント機能はまもなく登場します。",
+    "deleteAction": "投稿を削除"
+  },
+  "profile": {
+    "self": "あなたです",
+    "household": "あなたの世帯",
+    "friend": "友だちです",
+    "following": "フォロー中",
+    "showingSelf": "あなたが見せているもの",
+    "showingOther": "{{name}}さんが見せているもの",
+    "noGarments": "表示できる服はまだありません。",
+    "noteSelf": "これらの服は投稿の公開範囲の人に表示されます。",
+    "noteOther": "{{name}}さんが見せることにしたものだけが表示されます。",
+    "posts": "投稿",
+    "noPosts": "表示できる投稿はありません。",
+    "size": "サイズ {{size}}"
+  },
+  "today": {
+    "title": "今日のコーデ",
+    "legend": "今日の服装を Instagram 用に",
+    "error": "写真を送信できませんでした。",
+    "howTitle": "使い方",
+    "howPhotoTitle": "1. 写真",
+    "howPhotoBody": "全身の写真を撮ります",
+    "howTagsTitle": "2. タグ",
+    "howTagsBody": "着ている服をそれぞれタップ",
+    "howRecognitionTitle": "3. 認識",
+    "howRecognitionBody": "AI がワードローブから服を探し出し、なければ追加を提案します",
+    "howPostTitle": "4. 投稿",
+    "howPostBody": "画像2枚：あなたの写真と、服の一覧",
+    "note": "写真は非公開です。Penderie ではあなただけが見られます。",
+    "takePhoto": "写真を撮る",
+    "chooseGallery": "ギャラリーから選ぶ"
+  },
+  "lookDetail": {
+    "title": "今日のコーデ",
+    "saveError": "コーデを保存できませんでした。",
+    "deleteTitle": "このコーデを削除しますか？",
+    "deleteBody": "写真とタグは削除されます。服はワードローブに残ります。",
+    "cancel": "キャンセル",
+    "delete": "削除",
+    "deleteErrorTitle": "削除できませんでした",
+    "hintLocked": "タグはもう編集できません。変更するにはコーデを準備中に戻してください。",
+    "hintFull": "1つのコーデにつき服は最大 {{max}} 点です。",
+    "hintEmpty": "写真の服をタップしてタグを付けます。",
+    "hintAdd": "別の服をタップしてタグを追加します。",
+    "tags_other": "服⁠{{count}}⁠点",
+    "note": "投稿を準備するには、各タグがワードローブの服を指している必要があります。",
+    "prepare": "投稿を準備",
+    "seePost": "投稿を見る",
+    "editTags": "タグを編集",
+    "deleteLook": "このコーデを削除",
+    "actionErrorTitle": "操作できませんでした",
+    "incomplete": "要入力",
+    "chooseGarment": "服を選ぶ",
+    "complete": "入力する",
+    "change": "変更",
+    "chooseFromWardrobe": "ワードローブから選ぶ",
+    "remove": "外す"
+  },
+  "choose": {
+    "title": "どの服ですか？",
+    "legendPoint": "タグ {{position}} · {{name}}",
+    "legendNew": "写真でタップした服",
+    "notInWardrobe": "ワードローブにない場合",
+    "placeholder": "カーキのジャケット",
+    "hint": "名前だけで大丈夫です。「要入力」としてワードローブに追加され、あとで仕上げられます。",
+    "addQuoted": "「{{name}}」を追加",
+    "add": "この服を追加",
+    "searchPlaceholder": "ワードローブを検索",
+    "noMatch": "その名前の服はありません。",
+    "wardrobeEmpty": "ワードローブは空です。",
+    "chosen": "選択中",
+    "alreadyOnLook": "このコーデにタグ付け済み",
+    "incomplete": "要入力",
+    "chooseError": "この服を選べませんでした",
+    "addError": "この服を追加できませんでした"
+  },
+  "lookPost": {
+    "title": "投稿",
+    "legend": "Instagram 用の画像2枚",
+    "saveError": "コーデを保存できませんでした。",
+    "postedTitle": "コーデを投稿しました！",
+    "postedOn": "{{date}}に投稿。",
+    "readyTitle": "投稿の準備完了",
+    "readyBody": "この2枚を Instagram に投稿してから、コーデを投稿済みにしてください。Penderie で友だちに見せることもできます。",
+    "imageOne": "画像 1/2：あなたの写真",
+    "imageTwo": "画像 2/2：服の一覧",
+    "imageOf": "画像 {{page}}/2",
+    "myLook": "今日のコーデ",
+    "caption": "キャプション",
+    "captionPlaceholder": "今日の服装…",
+    "captionHint": "投稿に添えられます。最大2,200文字。",
+    "seeInFeed": "フィードで投稿を見る",
+    "publishInPenderie": "Penderie に投稿",
+    "markPosted": "投稿済みにする",
+    "saveCaption": "キャプションを保存",
+    "editTags": "タグを編集",
+    "backHome": "ホームに戻る"
+  },
+  "publish": {
+    "title": "投稿",
+    "legend": "コーデを見せる相手を選びましょう",
+    "error": "コーデを投稿できませんでした。",
+    "lookOf": "{{date}}のコーデ",
+    "mentions_other": "タグ付けした服⁠{{count}}⁠点",
+    "message": "メッセージ（任意）",
+    "placeholder": "今日の服装…",
+    "whoCanSee": "公開範囲",
+    "chosen": "選択中",
+    "note": "一般公開はされません。タグ付けした服はこの人たちに表示され、投稿を削除すると再び非公開になります。",
+    "submit": "投稿する"
+  },
+  "postCard": {
+    "profileOf": "{{name}}さんのプロフィール",
+    "specificAudience": "選んだ人",
+    "tag": "服 {{position}}：{{name}}",
+    "mentions_other": "タグ付けした服⁠{{count}}⁠点：タグをタップしてください。",
+    "seePost": "投稿を見る ›",
+    "garmentsOfLook": "このコーデの服",
+    "size": "サイズ {{size}}",
+    "close": "閉じる",
+    "viewInWardrobe": "ワードローブで見る",
+    "viewOnProfile": "{{name}}さんのプロフィールで見る",
+    "privateGarment": "{{name}}さんはこの服を公開していません。"
+  },
+  "lookPhoto": {
+    "placeHint": "あなたの写真：服をタップしてタグを付けます",
+    "photoTags_other": "あなたの写真、タグ付けした服⁠{{count}}⁠点",
+    "tag": "服 {{position}}"
+  }
+}

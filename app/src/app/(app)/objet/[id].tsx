@@ -1,6 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Alert, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -23,6 +24,7 @@ import { useItemCategories, useLocations } from '@/lib/reference';
  * supprimer : seulement pour le propriétaire (access ADMIN).
  */
 export default function ItemScreen() {
+  const { t } = useTranslation('inventory');
   const { id } = useLocalSearchParams<{ id: string }>();
   const item = usePossession('item', id);
   const categories = useItemCategories();
@@ -46,14 +48,14 @@ export default function ItemScreen() {
   const where = locationOf(locations.data, p);
   const edit = () => router.push({ pathname: '/modifier', params: { kind: 'item', id: p.id } });
   const remove = () =>
-    confirmDelete('cet objet', p.name, async () => {
+    confirmDelete('item', p.name, async () => {
       setDeleting(true);
       try {
         await deletePossession(queryClient, 'item', p.id);
         router.back();
       } catch (e) {
         setDeleting(false);
-        Alert.alert('Suppression impossible', e instanceof Error ? e.message : '');
+        Alert.alert(t('itemDetail.deleteError'), e instanceof Error ? e.message : '');
       }
     });
 
@@ -68,26 +70,26 @@ export default function ItemScreen() {
         <View className="gap-3 px-5">
           <PossessionLoans possession={p} owner={owner} />
           {p.room && (
-            <Section title="Localisation" link={owner ? { label: "Déplacer l'objet", onPress: () => openMove('item', p.id, p.name, where) } : undefined}>
+            <Section title={t('itemDetail.location')} link={owner ? { label: t('itemDetail.moveItem'), onPress: () => openMove('item', p.id, p.name, where) } : undefined}>
               <Text className="font-luciole-bold text-body text-ink dark:text-ink-night">{where ?? '…'}</Text>
             </Section>
           )}
           <MoveHistory iri={p['@id']} enabled={Boolean(p.room)} />
           {(category || p.condition) && (
-            <Section title="Détails" gap="gap-3">
-              {category && <InfoRow label="Catégorie" value={category} />}
-              {p.condition && <InfoRow label="État" value={CONDITION_LABEL[p.condition]} />}
+            <Section title={t('itemDetail.details')} gap="gap-3">
+              {category && <InfoRow label={t('itemDetail.category')} value={category} />}
+              {p.condition && <InfoRow label={t('itemDetail.condition')} value={CONDITION_LABEL[p.condition]} />}
             </Section>
           )}
           {p.description && (
-            <Section title="Description">
+            <Section title={t('itemDetail.description')}>
               <Text className="font-luciole text-body text-ink dark:text-ink-night">{p.description}</Text>
             </Section>
           )}
           {owner && (
-            <Section title="Notes et souvenir" link={{ label: p.notes ? 'Modifier la note' : 'Ajouter une note', onPress: edit }}>
+            <Section title={t('itemDetail.notesAndMemory')} link={{ label: p.notes ? t('itemDetail.editNote') : t('itemDetail.addNote'), onPress: edit }}>
               <Text className={`font-luciole text-body ${p.notes ? 'text-ink dark:text-ink-night' : 'text-muted dark:text-muted-night'}`}>
-                {p.notes || 'Rien pour l’instant. Les notes ne sont visibles que par toi.'}
+                {p.notes || t('itemDetail.noNotes')}
               </Text>
             </Section>
           )}
@@ -99,11 +101,11 @@ export default function ItemScreen() {
             primary={loanAction.primary}
             note={loanAction.note}
             secondary={[
-              { label: 'Modifier', onPress: edit },
-              { label: 'Partager', onPress: () => soon('Partager') },
-              { label: 'Vendre', onPress: () => soon('Vendre') },
+              { label: t('itemDetail.edit'), onPress: edit },
+              { label: t('itemDetail.share'), onPress: () => soon(t('itemDetail.share')) },
+              { label: t('itemDetail.sell'), onPress: () => soon(t('itemDetail.sell')) },
             ]}
-            deleteLabel="Supprimer cet objet"
+            deleteLabel={t('itemDetail.delete')}
             onDelete={remove}
             deleting={deleting}
           />

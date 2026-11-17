@@ -1,0 +1,299 @@
+{
+  "kinds": {
+    "house": {
+      "label": "戸建て",
+      "description": "複数の部屋、ガレージ、地下室"
+    },
+    "apartment": {
+      "label": "マンション",
+      "description": "いくつかの部屋と地下収納"
+    },
+    "studio": {
+      "label": "ワンルーム",
+      "description": "居室がひとつ"
+    },
+    "storage": {
+      "label": "トランクルーム",
+      "description": "収納スペースひとつ"
+    },
+    "office": {
+      "label": "オフィス",
+      "description": "あなたの職場"
+    },
+    "other": {
+      "label": "その他",
+      "description": "名前は自由に"
+    }
+  },
+  "placeType": {
+    "house": "戸建て",
+    "apartment": "マンション",
+    "storageUnit": "トランクルーム",
+    "other": "その他"
+  },
+  "roomGroups": {
+    "living": "生活スペース",
+    "bedrooms": "寝室",
+    "storage": "収納"
+  },
+  "roomNames": {
+    "salon": "リビング",
+    "cuisine": "キッチン",
+    "diningRoom": "ダイニング",
+    "office": "書斎",
+    "bathroom": "浴室",
+    "entrance": "玄関",
+    "bedroom": "寝室",
+    "bedroom2": "寝室 2",
+    "kidsRoom": "子ども部屋",
+    "garage": "ガレージ",
+    "cellar": "地下室",
+    "attic": "屋根裏",
+    "laundry": "洗濯室",
+    "dressing": "ウォークインクローゼット"
+  },
+  "roomTypes": {
+    "livingRoom": "居室",
+    "bedroom": "寝室",
+    "kitchen": "キッチン",
+    "bathroom": "浴室",
+    "office": "書斎",
+    "entrance": "玄関",
+    "dressing": "ウォークインクローゼット",
+    "laundry": "洗濯室",
+    "garage": "ガレージ",
+    "cellar": "地下室",
+    "attic": "屋根裏",
+    "other": "その他"
+  },
+  "storageTypes": {
+    "shelf": "棚",
+    "closet": "押し入れ",
+    "wardrobe": "ワードローブ",
+    "rack": "ハンガーラック",
+    "bookcase": "本棚",
+    "dresser": "チェスト",
+    "cabinet": "キャビネット",
+    "drawer": "引き出し",
+    "chest": "収納ボックス",
+    "other": "その他"
+  },
+  "boxTypes": {
+    "carton": "段ボール",
+    "bin": "収納ケース",
+    "drawer": "引き出し",
+    "shelf": "棚",
+    "suitcase": "スーツケース",
+    "bag": "バッグ",
+    "other": "その他"
+  },
+  "counts": {
+    "objects_other": "アイテム⁠{{count}}⁠点",
+    "storedObjects_other": "収納中⁠{{count}}⁠点",
+    "places_other": "住まい⁠{{count}}⁠件",
+    "rooms_other": "部屋⁠{{count}}⁠室",
+    "storages_other": "収納⁠{{count}}⁠か所",
+    "boxes_other": "収納箱⁠{{count}}⁠個"
+  },
+  "actions": {
+    "continue": "次へ",
+    "modify": "修正",
+    "saveError": "保存できませんでした。"
+  },
+  "deleteLink": {
+    "title": "{{what}}を削除しますか？",
+    "body": "「{{name}}」は住まいから削除されます。",
+    "cancel": "キャンセル",
+    "confirm": "削除",
+    "busy": "削除中…",
+    "errorTitle": "削除できませんでした"
+  },
+  "drafts": {
+    "place": "usePlaceDraft は「住まいを追加」フローの中で使ってください。",
+    "box": "useBoxDraft は「収納箱を作る」フローの中で使ってください。"
+  },
+  "breadcrumb": "場所：{{path}}",
+  "possessionKinds": {
+    "garment": "服",
+    "item": "アイテム"
+  },
+  "addPlaceCard": {
+    "title": "＋ 住まいを追加",
+    "hint": "戸建て、マンション、地下収納、オフィス"
+  },
+  "list": {
+    "title": "マイ住まい",
+    "emptyTitle": "住まいがありません",
+    "emptyText": "住まいと部屋を追加すれば、持ち物のしまい場所がいつでもわかります。",
+    "emptyAction": "住まいを追加"
+  },
+  "detail": {
+    "title": "住まい",
+    "noPlace": "まだ住まいがありません。",
+    "gone": "この住まいはもう存在しません。",
+    "addRoom": "＋ 部屋を追加",
+    "addRoomHint": "屋根裏、洗濯室、クローゼット...",
+    "delete": "この住まいを削除",
+    "deleteWhat": "この住まい",
+    "deleteDetail": "空の部屋とその収納もいっしょに削除されます。"
+  },
+  "room": {
+    "title": "部屋",
+    "gone": "この部屋はもう存在しません。",
+    "storages": "収納",
+    "boxes": "収納箱",
+    "seeAll": "すべて見る",
+    "onFloor": "部屋に直置き",
+    "inRoom": "部屋に直置き",
+    "noStorage": "収納なし",
+    "addStorage": "＋ 収納を追加",
+    "addStorageHint": "棚、押し入れ、ハンガーラック...",
+    "share": "この部屋を共有",
+    "shareHint": "友だちや家族と",
+    "delete": "この部屋を削除",
+    "deleteWhat": "この部屋",
+    "deleteDetail": "収納と空の収納箱もいっしょに削除されます。"
+  },
+  "storage": {
+    "title": "収納",
+    "gone": "この収納はもう存在しません。",
+    "inside_other": "中身⁠{{count}}⁠点",
+    "openBox": "収納箱を開く",
+    "inStorage": "この収納の中",
+    "inBox": "{{name}}の中",
+    "nextToBoxes": "収納箱の横",
+    "empty": "まだ何も入っていません。アイテムを追加するときにこの収納を選んでください。",
+    "delete": "この収納を削除",
+    "deleteWhat": "この収納",
+    "deleteDetail": "収納箱は部屋に残ります。"
+  },
+  "boxes": {
+    "title": "マイ収納箱",
+    "emptyTitle": "収納箱がありません",
+    "emptyText": "収納箱を作ってラベルを貼れば、中身がすぐにわかります。",
+    "emptyAction": "収納箱を作る",
+    "recent": "最近追加したもの",
+    "seeAll": "すべて見る",
+    "all": "すべての収納箱",
+    "allHint": "検索、部屋ごとに並べ替え",
+    "create": "＋ 収納箱を作る",
+    "createHint": "ラベル、置き場所"
+  },
+  "allBoxes": {
+    "title": "すべての収納箱",
+    "search": "収納箱を検索...",
+    "all": "すべて",
+    "emptyTitle": "収納箱が見つかりません",
+    "emptyText": "一致する収納箱はありません。中に入っているアイテムの名前で試してください。",
+    "emptyAction": "すべて表示"
+  },
+  "box": {
+    "gone": "この収納箱はもう存在しません。",
+    "lent_other": "うち貸出中⁠{{count}}⁠点",
+    "sealed": "封印済み",
+    "type": "種類",
+    "reference": "ラベル",
+    "contents": "中身",
+    "seeAll": "⁠{{count}}⁠点すべて見る ›",
+    "empty": "この収納箱は空です。アイテムを追加すると、そのまま中にしまわれます。",
+    "addObject": "アイテムを追加",
+    "move": "収納箱を移動",
+    "delete": "この収納箱を削除",
+    "deleteWhat": "この収納箱"
+  },
+  "boxContents": {
+    "title": "収納箱の中身",
+    "gone": "この収納箱はもう存在しません。",
+    "search": "この収納箱を検索...",
+    "all": "すべて",
+    "items": "アイテム",
+    "garments": "服",
+    "lent": "貸出中",
+    "emptyTitle": "アイテムが見つかりません",
+    "emptyText": "この収納箱に検索に一致するものはありません。",
+    "emptyAction": "すべて表示"
+  },
+  "newBox": {
+    "infos": {
+      "title": "新しい収納箱",
+      "label": "ラベル",
+      "labelPlaceholder": "例：DIY用品",
+      "kind": "種類",
+      "code": "コード（任意）",
+      "codePlaceholder": "例：C-12",
+      "codeHint": "箱に貼った番号や QR コード。",
+      "helpTitle": "ラベルの役割",
+      "helpText": "箱に書く言葉であり、半年後に検索する言葉です。番号より具体的な名前がおすすめです。"
+    },
+    "emplacement": {
+      "title": "どこに置きますか？",
+      "note": "収納を選ばない場合、収納箱は部屋に直置きになります。"
+    },
+    "verification": {
+      "title": "収納箱の確認",
+      "cardTitle": "収納箱",
+      "label": "ラベル",
+      "type": "種類",
+      "code": "コード",
+      "location": "置き場所",
+      "create": "この収納箱を作る"
+    }
+  },
+  "newPlace": {
+    "yes": "はい",
+    "no": "いいえ",
+    "type": {
+      "title": "どんな住まいですか？",
+      "note": "種類は、次に提案する部屋を決めるためだけに使います。"
+    },
+    "infos": {
+      "title": "住まいの情報",
+      "name": "名前",
+      "namePlaceholder": "例：自宅",
+      "type": "種類",
+      "address": "住所（任意）",
+      "addressPlaceholder": "例：東京都渋谷区1-2-3",
+      "primary": "メインの住まい",
+      "primaryWarning": "現在のメインの住まいと入れ替わります。",
+      "addressNote": "住所はあなた専用です。共有したアイテムでも、友だちに表示されることはありません。"
+    },
+    "pieces": {
+      "title": "どの部屋がありますか？",
+      "legend_other": "ステップ 3/4 ·⁠{{count}}⁠室を選択中",
+      "custom": "自分で追加した部屋",
+      "addRoom": "＋ 部屋を追加",
+      "addRoomHint": "一覧にない場合",
+      "roomName": "部屋の名前",
+      "roomNamePlaceholder": "例：さくらの部屋",
+      "add": "追加",
+      "note": "部屋や収納はあとから追加できます。"
+    },
+    "verification": {
+      "title": "住まいの確認",
+      "cardTitle": "住まい",
+      "name": "名前",
+      "type": "種類",
+      "address": "住所",
+      "primary": "メイン",
+      "noRooms": "まだありません。住まいの画面から追加できます。",
+      "failedTitle": "住まいを追加しました",
+      "failedRooms": "次の部屋を作成できませんでした：{{rooms}}。住まいの画面から追加してください。",
+      "add": "この住まいを追加"
+    }
+  },
+  "newLocation": {
+    "roomTitle": "新しい部屋",
+    "storageTitle": "新しい収納",
+    "gone": "この場所はもう存在しません。",
+    "in": "{{name}}の中",
+    "name": "名前",
+    "roomPlaceholder": "例：さくらの部屋",
+    "storagePlaceholder": "例：棚 2",
+    "commonRooms": "よく使う部屋",
+    "type": "種類",
+    "roomNote": "あとから収納を追加できます。",
+    "storageNote": "あとから収納箱を置けます。",
+    "addRoom": "この部屋を追加",
+    "addStorage": "この収納を追加"
+  }
+}

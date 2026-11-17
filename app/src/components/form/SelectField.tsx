@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FlatList, KeyboardAvoidingView, Modal, Platform, Pressable, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -31,22 +32,24 @@ type Props = {
  * dans une feuille qui monte du bas, avec une recherche dès 8 options et,
  * si prévu, la création d'une nouvelle valeur.
  */
-export function SelectField({ label, value, placeholder = 'Choisir', options, onSelect, clearable = false, onCreate, createLabel, disabled = false, loading = false, hint }: Props) {
+export function SelectField({ label, value, placeholder, options, onSelect, clearable = false, onCreate, createLabel, disabled = false, loading = false, hint }: Props) {
+  const { t } = useTranslation('common');
   const [open, setOpen] = useState(false);
+  const placeholderText = placeholder ?? t('select.choose');
 
   return (
     <View className="gap-1">
       <Text className="font-luciole-bold text-legend text-muted dark:text-muted-night">{label}</Text>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={`${label} : ${value ?? placeholder}`}
+        accessibilityLabel={t('select.fieldLabel', { label, value: value ?? placeholderText })}
         aria-disabled={disabled}
         disabled={disabled}
         onPress={() => setOpen(true)}
         style={E1}
         className={`h-12 flex-row items-center justify-between rounded-sm bg-surface px-4 dark:bg-surface-night ${disabled ? 'opacity-50' : 'active:opacity-80'}`}>
         <Text numberOfLines={1} className={`flex-1 font-luciole text-body ${value ? 'text-ink dark:text-ink-night' : 'text-muted dark:text-muted-night'}`}>
-          {loading ? 'Chargement…' : (value ?? placeholder)}
+          {loading ? t('select.loading') : (value ?? placeholderText)}
         </Text>
         <Text className="font-luciole-bold text-legend text-muted/[0.85] dark:text-muted-night">v</Text>
       </Pressable>
@@ -92,6 +95,7 @@ export function PickerSheet({
   onClose: () => void;
   onSelect: (key: string | null) => void;
 }) {
+  const { t } = useTranslation('common');
   const insets = useSafeAreaInsets();
   const [query, setQuery] = useState('');
   const [newName, setNewName] = useState('');
@@ -108,7 +112,7 @@ export function PickerSheet({
       await onCreate(newName.trim());
       onClose();
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Création impossible.');
+      setError(e instanceof Error ? e.message : t('select.createError'));
     } finally {
       setCreating(false);
     }
@@ -117,22 +121,22 @@ export function PickerSheet({
   return (
     <Modal transparent animationType="slide" onRequestClose={onClose}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} className="flex-1 justify-end">
-        <Pressable accessibilityRole="button" accessibilityLabel="Fermer" onPress={onClose} className="absolute inset-0 bg-ink/[0.55]" />
+        <Pressable accessibilityRole="button" accessibilityLabel={t('select.close')} onPress={onClose} className="absolute inset-0 bg-ink/[0.55]" />
         <View style={{ paddingBottom: insets.bottom + 16, maxHeight: '80%' }} className="gap-3 rounded-t-lg bg-bg px-5 pt-5 dark:bg-bg-night">
           <View className="flex-row items-center justify-between">
             <Heading level="h4" accessibilityRole="header" className="uppercase text-ink dark:text-ink-night">
               {title}
             </Heading>
             <Pressable accessibilityRole="button" onPress={onClose} hitSlop={12}>
-              <Text className="font-luciole-bold text-legend text-primary dark:text-primary-night">Fermer</Text>
+              <Text className="font-luciole-bold text-legend text-primary dark:text-primary-night">{t('select.close')}</Text>
             </Pressable>
           </View>
           {options.length >= 8 && (
             <TextInput
-              accessibilityLabel={`Rechercher dans ${title}`}
+              accessibilityLabel={t('select.searchIn', { title })}
               value={query}
               onChangeText={setQuery}
-              placeholder="Rechercher"
+              placeholder={t('select.search')}
               placeholderTextColor="#94A3B8"
               autoCorrect={false}
               style={E1}
@@ -144,11 +148,11 @@ export function PickerSheet({
             keyExtractor={(o) => o.key}
             keyboardShouldPersistTaps="handled"
             contentContainerClassName="gap-2 pb-2"
-            ListEmptyComponent={<Text className="py-3 font-luciole text-body text-muted dark:text-muted-night">{options.length === 0 ? 'Rien pour l’instant.' : 'Aucun résultat.'}</Text>}
+            ListEmptyComponent={<Text className="py-3 font-luciole text-body text-muted dark:text-muted-night">{options.length === 0 ? t('select.empty') : t('select.noResults')}</Text>}
             ListHeaderComponent={
               clearable ? (
                 <Pressable accessibilityRole="button" onPress={() => onSelect(null)} className="rounded-md bg-ink/[0.03] px-4 py-3 dark:bg-ink-night/[0.06]">
-                  <Text className="font-luciole text-body text-muted dark:text-muted-night">Aucun</Text>
+                  <Text className="font-luciole text-body text-muted dark:text-muted-night">{t('select.none')}</Text>
                 </Pressable>
               ) : undefined
             }
@@ -169,13 +173,13 @@ export function PickerSheet({
           />
           {onCreate && (
             <View className="gap-2">
-              <Text className="font-luciole-bold text-legend text-muted dark:text-muted-night">{createLabel ?? 'Créer'}</Text>
+              <Text className="font-luciole-bold text-legend text-muted dark:text-muted-night">{createLabel ?? t('select.create')}</Text>
               <View className="flex-row gap-2">
                 <TextInput
-                  accessibilityLabel={createLabel ?? 'Nom'}
+                  accessibilityLabel={createLabel ?? t('select.name')}
                   value={newName}
                   onChangeText={setNewName}
-                  placeholder="Nom"
+                  placeholder={t('select.name')}
                   placeholderTextColor="#94A3B8"
                   returnKeyType="done"
                   onSubmitEditing={create}
@@ -183,7 +187,7 @@ export function PickerSheet({
                   className="h-12 flex-1 rounded-sm bg-surface px-4 font-luciole text-body text-ink dark:bg-surface-night dark:text-ink-night"
                 />
                 <View className="w-28">
-                  <Button label="Créer" variant="secondary" onPress={create} disabled={!newName.trim()} loading={creating} />
+                  <Button label={t('select.create')} variant="secondary" onPress={create} disabled={!newName.trim()} loading={creating} />
                 </View>
               </View>
               {error && <Text className="font-luciole text-legend text-error dark:text-error-night">{error}</Text>}

@@ -1,5 +1,6 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, FlatList, Pressable, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -19,6 +20,7 @@ type Tab = 'feed' | 'mine';
  * publications ». Pas d'inconnus ni de publicité.
  */
 export default function FeedScreen() {
+  const { t } = useTranslation('social');
   const [tab, setTab] = useState<Tab>('feed');
   const me = useMe();
   const feed = useFeed();
@@ -42,10 +44,10 @@ export default function FeedScreen() {
             <View className="flex-row">
               <BackButton />
             </View>
-            <ScreenTitle title="Fil d'actualité" legend="Ce que tes amis ont choisi de te montrer" />
+            <ScreenTitle title={t('feed.title')} legend={t('feed.legend')} />
             <Segmented tab={tab} onChange={setTab} />
             <Pressable accessibilityRole="button" onPress={() => router.push('/look')} hitSlop={8} className="self-end active:opacity-80">
-              <Text className="font-luciole-bold text-legend text-primary dark:text-primary-night">+ Publier un look</Text>
+              <Text className="font-luciole-bold text-legend text-primary dark:text-primary-night">{t('feed.publish')}</Text>
             </Pressable>
             {query.isPending && <ActivityIndicator className="py-6" />}
             {query.isError && <Text className="font-luciole text-body text-error dark:text-error-night">{query.error.message}</Text>}
@@ -57,7 +59,7 @@ export default function FeedScreen() {
             {feed.isFetchingNextPage && <ActivityIndicator />}
             {posts.length > 0 && (
               <View className="flex-row items-center gap-3 rounded-md bg-ink/[0.05] p-4 dark:bg-ink-night/[0.08]">
-                <Text className="flex-1 font-luciole text-legend text-muted dark:text-muted-night">Pas d&apos;inconnus ni de publicité : seules les personnes qui t&apos;ont choisi apparaissent ici.</Text>
+                <Text className="flex-1 font-luciole text-legend text-muted dark:text-muted-night">{t('feed.noStrangers')}</Text>
               </View>
             )}
           </View>
@@ -69,12 +71,13 @@ export default function FeedScreen() {
 
 /** « Fil | Mes publications » : interrupteur à deux segments de la maquette. */
 function Segmented({ tab, onChange }: { tab: Tab; onChange: (tab: Tab) => void }) {
+  const { t } = useTranslation('social');
   return (
     <View accessibilityRole="tablist" className="flex-row rounded-full bg-ink/[0.06] p-1 dark:bg-ink-night/[0.1]">
       {(
         [
-          ['feed', 'Fil'],
-          ['mine', 'Mes publications'],
+          ['feed', t('feed.tabs.feed')],
+          ['mine', t('feed.tabs.mine')],
         ] as const
       ).map(([key, label]) => (
         <Pressable
@@ -92,16 +95,17 @@ function Segmented({ tab, onChange }: { tab: Tab; onChange: (tab: Tab) => void }
 
 /** Figma « Fil — État · Fil vide ». */
 function Empty({ mine }: { mine: boolean }) {
+  const { t } = useTranslation('social');
   return (
     <View className="items-center gap-4 py-8">
       <View className="h-28 w-28 items-center justify-center rounded-lg bg-cloth/[0.08]">
         <ClothVisual kind="veste" />
       </View>
-      <Text className="text-center font-luciole-bold text-body uppercase text-ink dark:text-ink-night">{mine ? 'Rien de publié' : 'Ton fil est calme'}</Text>
+      <Text className="text-center font-luciole-bold text-body uppercase text-ink dark:text-ink-night">{mine ? t('feed.emptyMineTitle') : t('feed.emptyFeedTitle')}</Text>
       <Text className="text-center font-luciole text-body text-muted dark:text-muted-night">
-        {mine ? 'Publie ton look du jour : tes amis verront tes vêtements pointés.' : "Tes amis n'ont rien partagé avec toi. Tu peux montrer ton look du jour à qui tu veux."}
+        {mine ? t('feed.emptyMineBody') : t('feed.emptyFeedBody')}
       </Text>
-      <Button label="Publier mon look" onPress={() => router.push('/look')} />
+      <Button label={t('feed.emptyAction')} onPress={() => router.push('/look')} />
     </View>
   );
 }

@@ -1,0 +1,308 @@
+{
+  "kinds": {
+    "house": {
+      "label": "House",
+      "description": "Several rooms, a garage, a cellar"
+    },
+    "apartment": {
+      "label": "Flat",
+      "description": "A few rooms, a cellar"
+    },
+    "studio": {
+      "label": "Studio",
+      "description": "One living space"
+    },
+    "storage": {
+      "label": "Cellar or storage unit",
+      "description": "A single storage space"
+    },
+    "office": {
+      "label": "Office",
+      "description": "Your workplace"
+    },
+    "other": {
+      "label": "Other",
+      "description": "You name it"
+    }
+  },
+  "placeType": {
+    "house": "House",
+    "apartment": "Flat",
+    "storageUnit": "Cellar or storage unit",
+    "other": "Other"
+  },
+  "roomGroups": {
+    "living": "Living spaces",
+    "bedrooms": "Bedrooms",
+    "storage": "Storage"
+  },
+  "roomNames": {
+    "salon": "Living room",
+    "cuisine": "Kitchen",
+    "diningRoom": "Dining room",
+    "office": "Office",
+    "bathroom": "Bathroom",
+    "entrance": "Entrance",
+    "bedroom": "Bedroom",
+    "bedroom2": "Bedroom 2",
+    "kidsRoom": "Kids' room",
+    "garage": "Garage",
+    "cellar": "Cellar",
+    "attic": "Attic",
+    "laundry": "Laundry room",
+    "dressing": "Walk-in closet"
+  },
+  "roomTypes": {
+    "livingRoom": "Living space",
+    "bedroom": "Bedroom",
+    "kitchen": "Kitchen",
+    "bathroom": "Bathroom",
+    "office": "Office",
+    "entrance": "Entrance",
+    "dressing": "Walk-in closet",
+    "laundry": "Laundry room",
+    "garage": "Garage",
+    "cellar": "Cellar",
+    "attic": "Attic",
+    "other": "Other"
+  },
+  "storageTypes": {
+    "shelf": "Shelf",
+    "closet": "Cupboard",
+    "wardrobe": "Wardrobe",
+    "rack": "Clothes rail",
+    "bookcase": "Bookcase",
+    "dresser": "Chest of drawers",
+    "cabinet": "Cabinet",
+    "drawer": "Drawer",
+    "chest": "Trunk",
+    "other": "Other"
+  },
+  "boxTypes": {
+    "carton": "Box",
+    "bin": "Bin",
+    "drawer": "Drawer",
+    "shelf": "Shelf",
+    "suitcase": "Suitcase",
+    "bag": "Bag",
+    "other": "Other"
+  },
+  "counts": {
+    "objects_one": "{{count}} item",
+    "objects_other": "{{count}} items",
+    "storedObjects_one": "{{count}} item stored",
+    "storedObjects_other": "{{count}} items stored",
+    "places_one": "{{count}} home",
+    "places_other": "{{count}} homes",
+    "rooms_one": "{{count}} room",
+    "rooms_other": "{{count}} rooms",
+    "storages_one": "{{count}} storage spot",
+    "storages_other": "{{count}} storage spots",
+    "boxes_one": "{{count}} box",
+    "boxes_other": "{{count}} boxes"
+  },
+  "actions": {
+    "continue": "Continue",
+    "modify": "Edit",
+    "saveError": "Couldn't save."
+  },
+  "deleteLink": {
+    "title": "Delete {{what}}?",
+    "body": "“{{name}}” will disappear from your homes.",
+    "cancel": "Cancel",
+    "confirm": "Delete",
+    "busy": "Deleting…",
+    "errorTitle": "Couldn't delete it"
+  },
+  "drafts": {
+    "place": "usePlaceDraft must be used inside the “Add a home” flow.",
+    "box": "useBoxDraft must be used inside the “Create a box” flow."
+  },
+  "breadcrumb": "Location: {{path}}",
+  "possessionKinds": {
+    "garment": "Garment",
+    "item": "Item"
+  },
+  "addPlaceCard": {
+    "title": "+ Add a home",
+    "hint": "House, flat, cellar, office"
+  },
+  "list": {
+    "title": "My homes",
+    "emptyTitle": "No homes",
+    "emptyText": "Add your home and its rooms: you'll always know where your things are stored.",
+    "emptyAction": "Add a home"
+  },
+  "detail": {
+    "title": "Home",
+    "noPlace": "You don't have a home yet.",
+    "gone": "This home no longer exists.",
+    "addRoom": "+ Add a room",
+    "addRoomHint": "Attic, laundry room, walk-in closet...",
+    "delete": "Delete this home",
+    "deleteWhat": "this home",
+    "deleteDetail": "Its empty rooms and their storage will be deleted with it."
+  },
+  "room": {
+    "title": "Room",
+    "gone": "This room no longer exists.",
+    "storages": "Storage",
+    "boxes": "Boxes",
+    "seeAll": "See all",
+    "onFloor": "Placed in the room",
+    "inRoom": "Placed in the room",
+    "noStorage": "No storage",
+    "addStorage": "+ Add storage",
+    "addStorageHint": "Shelf, cupboard, clothes rail...",
+    "share": "Share this room",
+    "shareHint": "With a friend or your family",
+    "delete": "Delete this room",
+    "deleteWhat": "this room",
+    "deleteDetail": "Its storage and empty boxes will be deleted with it."
+  },
+  "storage": {
+    "title": "Storage",
+    "gone": "This storage no longer exists.",
+    "inside_one": "{{count}} item inside",
+    "inside_other": "{{count}} items inside",
+    "openBox": "Open the box",
+    "inStorage": "In this storage",
+    "inBox": "In {{name}}",
+    "nextToBoxes": "Next to the boxes",
+    "empty": "Nothing is stored here yet. Choose this storage when you add an item.",
+    "delete": "Delete this storage",
+    "deleteWhat": "this storage",
+    "deleteDetail": "Its boxes will stay in the room."
+  },
+  "boxes": {
+    "title": "My boxes",
+    "emptyTitle": "No boxes",
+    "emptyText": "Create a box, stick on its label, and find what's inside in an instant.",
+    "emptyAction": "Create a box",
+    "recent": "Recently added",
+    "seeAll": "See all",
+    "all": "All my boxes",
+    "allHint": "Search, sort by room",
+    "create": "+ Create a box",
+    "createHint": "Label, location"
+  },
+  "allBoxes": {
+    "title": "All my boxes",
+    "search": "Search for a box...",
+    "all": "All",
+    "emptyTitle": "No box found",
+    "emptyText": "No box matches. Try the name of an item inside.",
+    "emptyAction": "Show all"
+  },
+  "box": {
+    "gone": "This box no longer exists.",
+    "lent_one": "including {{count}} lent",
+    "lent_other": "including {{count}} lent",
+    "sealed": "Sealed",
+    "type": "Type",
+    "reference": "Label",
+    "contents": "What's inside",
+    "seeAll": "See all {{count}} items ›",
+    "empty": "This box is empty. Add an item: it will be stored straight inside.",
+    "addObject": "Add an item",
+    "move": "Move the box",
+    "delete": "Delete this box",
+    "deleteWhat": "this box"
+  },
+  "boxContents": {
+    "title": "Box contents",
+    "gone": "This box no longer exists.",
+    "search": "Search this box...",
+    "all": "All",
+    "items": "Items",
+    "garments": "Clothes",
+    "lent": "Lent",
+    "emptyTitle": "No item found",
+    "emptyText": "Nothing in this box matches your search.",
+    "emptyAction": "Show all"
+  },
+  "newBox": {
+    "infos": {
+      "title": "A new box",
+      "label": "Label",
+      "labelPlaceholder": "E.g. DIY box",
+      "kind": "It's a…",
+      "code": "Code (optional)",
+      "codePlaceholder": "E.g. C-12",
+      "codeHint": "The number or QR code stuck on it.",
+      "helpTitle": "What the label is for",
+      "helpText": "It's the word you'll read on the box, and the one you'll search for in six months. A precise name beats a number."
+    },
+    "emplacement": {
+      "title": "Where are you putting it?",
+      "note": "Without storage, the box is placed in the room."
+    },
+    "verification": {
+      "title": "Check your box",
+      "cardTitle": "The box",
+      "label": "Label",
+      "type": "Type",
+      "code": "Code",
+      "location": "Location",
+      "create": "Create this box"
+    }
+  },
+  "newPlace": {
+    "yes": "Yes",
+    "no": "No",
+    "type": {
+      "title": "What is it?",
+      "note": "The type is just used to suggest the right rooms next."
+    },
+    "infos": {
+      "title": "Your home",
+      "name": "Name",
+      "namePlaceholder": "E.g. Main home",
+      "type": "Type",
+      "address": "Address (optional)",
+      "addressPlaceholder": "E.g. 12 Lilac Street, London",
+      "primary": "Main home",
+      "primaryWarning": "It will replace your current main home.",
+      "addressNote": "The address is only for you: it's never shown to your friends, even on a shared item."
+    },
+    "pieces": {
+      "title": "Which rooms?",
+      "legend_one": "Step 3 of 4 · {{count}} selected",
+      "legend_other": "Step 3 of 4 · {{count}} selected",
+      "custom": "Added by you",
+      "addRoom": "+ Add a room",
+      "addRoomHint": "If it's not in the list",
+      "roomName": "Room name",
+      "roomNamePlaceholder": "E.g. Lea's room",
+      "add": "Add",
+      "note": "You can add rooms and storage later."
+    },
+    "verification": {
+      "title": "Check your home",
+      "cardTitle": "The home",
+      "name": "Name",
+      "type": "Type",
+      "address": "Address",
+      "primary": "Main",
+      "noRooms": "None yet: you'll add them from the home.",
+      "failedTitle": "Home added",
+      "failedRooms": "These rooms couldn't be created: {{rooms}}. Add them from the home.",
+      "add": "Add this home"
+    }
+  },
+  "newLocation": {
+    "roomTitle": "New room",
+    "storageTitle": "New storage",
+    "gone": "This location no longer exists.",
+    "in": "In {{name}}",
+    "name": "Name",
+    "roomPlaceholder": "E.g. Lea's room",
+    "storagePlaceholder": "E.g. Shelf 2",
+    "commonRooms": "Common rooms",
+    "type": "Type",
+    "roomNote": "You can add storage to it afterwards.",
+    "storageNote": "You can put boxes in it afterwards.",
+    "addRoom": "Add this room",
+    "addStorage": "Add this storage"
+  }
+}

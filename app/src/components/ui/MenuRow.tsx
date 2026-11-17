@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Pressable, Text, View } from 'react-native';
 
 type Props = {
@@ -13,13 +14,14 @@ type Props = {
  * à la place du chevron, désactivée, et annoncée comme telle.
  */
 export function MenuRow({ title, subtitle, onPress }: Props) {
+  const { t } = useTranslation('common');
   const soon = onPress === undefined;
 
   return (
     <Pressable
       accessibilityRole="button"
       aria-disabled={soon}
-      accessibilityLabel={soon ? `${title}, bientôt disponible` : `${title}, ${subtitle}`}
+      accessibilityLabel={soon ? t('menu.labelSoon', { title }) : t('menu.label', { title, subtitle })}
       onPress={onPress}
       disabled={soon}
       className="flex-row items-center justify-between gap-3 rounded-md bg-ink/[0.03] px-4 py-3 active:bg-ink/[0.07] dark:bg-ink-night/[0.06]">
@@ -29,7 +31,7 @@ export function MenuRow({ title, subtitle, onPress }: Props) {
       </View>
       {soon ? (
         <View className="rounded-full bg-ink/[0.06] px-2 py-1 dark:bg-ink-night/10">
-          <Text className="font-luciole-bold text-legend text-muted dark:text-muted-night">Bientôt</Text>
+          <Text className="font-luciole-bold text-legend text-muted dark:text-muted-night">{t('menu.soon')}</Text>
         </View>
       ) : (
         <Text className="font-luciole-bold text-body text-muted/[0.85] dark:text-muted-night">›</Text>

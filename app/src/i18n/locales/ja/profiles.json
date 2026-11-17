@@ -1,0 +1,188 @@
+{
+  "language": {
+    "label": "言語"
+  },
+  "kind": {
+    "default": "メインプロフィール",
+    "child": "子どものプロフィール",
+    "relative": "家族のプロフィール",
+    "adult": "大人のプロフィール"
+  },
+  "meta": {
+    "age": "⁠{{age}}⁠歳",
+    "items_other": "アイテム⁠{{count}}⁠点"
+  },
+  "card": {
+    "active": "使用中",
+    "activeA11y": "使用中"
+  },
+  "tab": {
+    "title": "マイプロフィール",
+    "legend": "登録情報と家族のプロフィール",
+    "active": "使用中のプロフィール",
+    "change": "プロフィールを切り替える",
+    "family": "家族のプロフィール",
+    "addHint": "お子さんや家族のプロフィールを追加すると、それぞれ専用のワードローブを持てます。",
+    "add": "プロフィールを追加",
+    "account": "アカウント：{{email}}",
+    "logout": "ログアウト"
+  },
+  "switch": {
+    "title": "プロフィールの切り替え",
+    "legend": "プロフィールごとに専用のワードローブがあります",
+    "family": "家族のプロフィール",
+    "manageHint": "追加・編集・削除",
+    "viewHint": "アカウントのプロフィールを見る",
+    "manage": "管理",
+    "note": "持ち物とワードローブはプロフィールごとに分かれています。",
+    "continue": "次へ",
+    "add": "プロフィールを追加"
+  },
+  "new": {
+    "typeChild": "子ども",
+    "typeRelative": "家族",
+    "titleChild": "子どものプロフィールを作成",
+    "titleRelative": "家族のプロフィールを作成",
+    "legendChild": "あなたの見守りのもとで使う専用のワードローブ",
+    "legendRelative": "あなたがワードローブを管理する成人の家族",
+    "firstName": "名",
+    "firstNamePlaceholder": "陽向",
+    "birthDate": "生年月日",
+    "birthPlaceholder": "DD/MM/YYYY",
+    "childHint": "子どものプロフィールは18歳未満です。",
+    "relativeHint": "家族のプロフィールは18歳以上です。",
+    "type": "プロフィールの種類",
+    "note": "権限はこのあとすぐに設定できます。",
+    "dateError": "日付は DD/MM/YYYY の形式で入力してください。",
+    "createError": "作成できませんでした。",
+    "create": "作成"
+  },
+  "detail": {
+    "gone": "このプロフィールはもう存在しません。",
+    "deleteTitle": "{{name}}さんのプロフィールを削除しますか？",
+    "deleteText": "アイテム、服、住まいは{{name}}さんに戻ります。友だち、設定、通知は削除されます。",
+    "guardianFallback": "保護者",
+    "cancel": "キャンセル",
+    "delete": "削除",
+    "deleteError": "削除できませんでした",
+    "createdOn": "{{date}}に作成",
+    "canDo": "{{name}}さんができること",
+    "addItems": "アイテムの追加",
+    "lend": "貸す",
+    "borrow": "借りる",
+    "sell": "売る",
+    "wardrobe": "ワードローブ",
+    "items": "アイテム",
+    "garments": "服",
+    "activeLoans": "進行中の貸し借り",
+    "guardianship": "保護者",
+    "managedBy": "管理者",
+    "use": "このプロフィールを使う",
+    "edit": "編集",
+    "permissions": "権限",
+    "myPermissions": "自分の権限",
+    "deleteProfile": "このプロフィールを削除"
+  },
+  "edit": {
+    "title": "プロフィールの編集",
+    "identityBannerTitle": "あなたの本人情報は保護者が管理しています",
+    "identityBannerText": "表示名と自己紹介は変更できます。",
+    "firstName": "名",
+    "lastName": "姓",
+    "displayName": "表示名",
+    "displayNameHint": "友だちに表示される名前です。",
+    "birthDate": "生年月日",
+    "birthPlaceholder": "DD/MM/YYYY",
+    "bio": "自己紹介",
+    "bioPlaceholder": "任意",
+    "dateError": "日付は DD/MM/YYYY の形式で入力してください。",
+    "saveError": "保存できませんでした。",
+    "adultTitle": "{{name}}さんは成人です",
+    "adultText": "家族のプロフィールに変更できます。子ども向けの制限は解除され、引き続きあなたが管理します。",
+    "toFamily": "家族のプロフィールに変更",
+    "note": "持ち物とワードローブはプロフィールごとに分かれています。",
+    "save": "保存"
+  },
+  "modes": {
+    "allowed": "許可",
+    "approval": "私の承認が必要",
+    "denied": "不可",
+    "allowedShort": "許可",
+    "approvalShort": "承認制",
+    "deniedShort": "不可"
+  },
+  "permissions": {
+    "title": "権限",
+    "createdTitle": "プロフィールを作成しました！",
+    "createdText": "できることを確認してください。初期設定はすでに適用されています。",
+    "managedBy": "管理者：{{name}}",
+    "supervised": "見守り中",
+    "guardianBannerTitle": "保護者が設定しています",
+    "guardianBannerText": "変更したいときは保護者に相談してください。",
+    "custom": "{{text}} · あなたが設定",
+    "note": "承認制にすると、すべてのリクエストは実行前にあなたに届きます。設定はいつでも変更できます。",
+    "save": "保存",
+    "saveError": "保存できませんでした。",
+    "groups": {
+      "organize": "持ち物の整理",
+      "loans": "貸し借り",
+      "relations": "つながり",
+      "trade": "売買"
+    },
+    "items": {
+      "itemCreate": {
+        "title": "アイテムの追加",
+        "text": "自分のワードローブに"
+      },
+      "garmentManage": {
+        "title": "服の管理",
+        "text": "追加・編集・収納"
+      },
+      "collectionCreate": {
+        "title": "コレクションの作成",
+        "text": "アイテムをまとめる"
+      },
+      "mediaUpload": {
+        "title": "写真の追加",
+        "text": "アイテムや服に"
+      },
+      "loanLend": {
+        "title": "アイテムを貸す",
+        "text": "友だちにだけ"
+      },
+      "loanBorrow": {
+        "title": "借りる",
+        "text": "友だちのアイテムを"
+      },
+      "friendAdd": {
+        "title": "友だちの追加",
+        "text": "リクエストの送信と承認"
+      },
+      "shareCreate": {
+        "title": "共有",
+        "text": "アイテム、部屋、コレクション"
+      },
+      "commentWrite": {
+        "title": "コメント",
+        "text": "友だちが共有したアイテムに"
+      },
+      "follow": {
+        "title": "フォローする・される",
+        "text": "友だち以外とも"
+      },
+      "sell": {
+        "title": "売る",
+        "text": "アイテムを出品する"
+      },
+      "purchase": {
+        "title": "買う",
+        "text": "友だちが出品しているアイテム"
+      }
+    }
+  },
+  "settings": {
+    "title": "設定",
+    "legend": "アプリの設定",
+    "languageHint": "初期設定ではスマートフォンの言語に合わせます。選んだ言語はこの端末に保存されます。"
+  }
+}

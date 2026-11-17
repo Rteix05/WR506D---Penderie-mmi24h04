@@ -2,6 +2,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Image } from 'expo-image';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, ScrollView, Text, useWindowDimensions, View } from 'react-native';
 
 import { ActionBar, FlowScreen } from '@/components/add/FlowScreen';
@@ -13,6 +14,7 @@ import { Button } from '@/components/ui/Button';
 import { E1 } from '@/components/ui/elevation';
 import { ScreenTitle } from '@/components/ui/ScreenTitle';
 import { TextField } from '@/components/ui/TextField';
+import { dateLocale } from '@/i18n';
 import { mediaSource } from '@/lib/api';
 import { updateLook, useLook, type Look } from '@/lib/look';
 
@@ -26,6 +28,7 @@ const GUTTER = 20;
  * comme posté (état POSTED côté API).
  */
 export default function LookPostScreen() {
+  const { t } = useTranslation('social');
   const { id } = useLocalSearchParams<{ id: string }>();
   const look = useLook(id);
 
@@ -35,7 +38,7 @@ export default function LookPostScreen() {
         <BackButton />
       </View>
       <View className="px-5">
-        <ScreenTitle title="Ton post" legend="2 images pour Instagram" />
+        <ScreenTitle title={t('lookPost.title')} legend={t('lookPost.legend')} />
       </View>
       {look.isPending && <ActivityIndicator className="py-10" />}
       {look.isError && <Text className="px-5 font-luciole text-body text-error dark:text-error-night">{look.error.message}</Text>}
@@ -45,6 +48,7 @@ export default function LookPostScreen() {
 }
 
 function PostBody({ look }: { look: Look }) {
+  const { t } = useTranslation('social');
   const queryClient = useQueryClient();
   const { width } = useWindowDimensions();
   const slide = width - GUTTER * 2;
@@ -60,7 +64,7 @@ function PostBody({ look }: { look: Look }) {
     try {
       await updateLook(queryClient, look.id, patch);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Le look n'a pas pu être enregistré.");
+      setError(e instanceof Error ? e.message : t('lookPost.saveError'));
     } finally {
       setSaving(false);
     }
@@ -70,9 +74,9 @@ function PostBody({ look }: { look: Look }) {
   return (
     <>
       {posted ? (
-        <Banner tone="success" title="Look posté !" text={look.postedAt ? `Le ${new Date(look.postedAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}.` : undefined} />
+        <Banner tone="success" title={t('lookPost.postedTitle')} text={look.postedAt ? t('lookPost.postedOn', { date: new Date(look.postedAt).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'long' }) }) : undefined} />
       ) : (
-        <Banner tone="info" title="Prêt à poster" text="Publie ces 2 images sur Instagram, puis marque le look comme posté. Tu peux aussi le montrer à tes amis dans Penderie." />
+        <Banner tone="info" title={t('lookPost.readyTitle')} text={t('lookPost.readyBody')} />
       )}
 
       <View className="gap-3">
@@ -84,11 +88,11 @@ function PostBody({ look }: { look: Look }) {
           decelerationRate="fast"
           contentContainerStyle={{ paddingHorizontal: GUTTER, gap: 12 }}
           onMomentumScrollEnd={(e) => setPage(Math.round(e.nativeEvent.contentOffset.x / (slide + 12)))}>
-          <View style={{ width: slide }} accessibilityLabel="Image 1 sur 2 : ta photo">
+          <View style={{ width: slide }} accessibilityLabel={t('lookPost.imageOne')}>
             <LookPhoto look={look} />
           </View>
-          <View style={[{ width: slide }, E1]} accessibilityLabel="Image 2 sur 2 : tes vêtements" className="gap-3 rounded-lg bg-surface p-4 dark:bg-surface-night">
-            <Text className="font-luciole-bold text-body text-ink dark:text-ink-night">Mon look du jour</Text>
+          <View style={[{ width: slide }, E1]} accessibilityLabel={t('lookPost.imageTwo')} className="gap-3 rounded-lg bg-surface p-4 dark:bg-surface-night">
+            <Text className="font-luciole-bold text-body text-ink dark:text-ink-night">{t('lookPost.myLook')}</Text>
             {look.tags.map((tag) => (
               <View key={tag.id} className="flex-row items-center gap-3">
                 <Dot tag={tag} />
@@ -111,7 +115,7 @@ function PostBody({ look }: { look: Look }) {
             ))}
           </View>
         </ScrollView>
-        <View className="flex-row justify-center gap-2" accessibilityLabel={`Image ${page + 1} sur 2`}>
+        <View className="flex-row justify-center gap-2" accessibilityLabel={t('lookPost.imageOf', { page: page + 1 })}>
           {[0, 1].map((i) => (
             <View key={i} className={`h-2 w-2 rounded-full ${i === page ? 'bg-ink dark:bg-ink-night' : 'bg-ink/20 dark:bg-ink-night/30'}`} />
           ))}
@@ -120,14 +124,14 @@ function PostBody({ look }: { look: Look }) {
 
       <View className="px-5">
         <TextField
-          label="Légende"
+          label={t('lookPost.caption')}
           value={caption}
           onChangeText={setCaption}
-          placeholder="Ma tenue du jour…"
+          placeholder={t('lookPost.captionPlaceholder')}
           multiline
           maxLength={2200}
           editable={!posted}
-          hint={posted ? undefined : 'Elle accompagne le post ; 2 200 caractères au plus.'}
+          hint={posted ? undefined : t('lookPost.captionHint')}
         />
       </View>
 
@@ -139,19 +143,19 @@ function PostBody({ look }: { look: Look }) {
         )}
         {/* Le fil de Penderie, en plus d'Instagram : les points y deviennent des mentions. */}
         {look.post ? (
-          <Button label="Voir la publication dans le fil" variant="secondary" onPress={() => router.push({ pathname: '/fil/[id]', params: { id: look.post!.id } })} />
+          <Button label={t('lookPost.seeInFeed')} variant="secondary" onPress={() => router.push({ pathname: '/fil/[id]', params: { id: look.post!.id } })} />
         ) : (
-          <Button label="Publier dans Penderie" variant="secondary" onPress={() => router.push({ pathname: '/look/[id]/publier', params: { id: look.id } })} disabled={saving} />
+          <Button label={t('lookPost.publishInPenderie')} variant="secondary" onPress={() => router.push({ pathname: '/look/[id]/publier', params: { id: look.id } })} disabled={saving} />
         )}
         {!posted && (
           <>
             {/* La légende part avec l'état : un seul envoi. */}
-            <Button label="Marquer comme posté" onPress={() => save({ status: 'POSTED', ...(captionChanged ? { caption: caption.trim() || null } : {}) })} loading={saving} />
-            {captionChanged && <Button label="Enregistrer la légende" variant="secondary" onPress={() => save({ caption: caption.trim() || null })} disabled={saving} />}
+            <Button label={t('lookPost.markPosted')} onPress={() => save({ status: 'POSTED', ...(captionChanged ? { caption: caption.trim() || null } : {}) })} loading={saving} />
+            {captionChanged && <Button label={t('lookPost.saveCaption')} variant="secondary" onPress={() => save({ caption: caption.trim() || null })} disabled={saving} />}
             {/* Un look publié dans le fil ne repasse plus en préparation (règle de l'API). */}
             {!look.post && (
               <Button
-                label="Modifier les points"
+                label={t('lookPost.editTags')}
                 variant="ghost"
                 onPress={async () => {
                   await save({ status: 'TAGGING' });
@@ -162,7 +166,7 @@ function PostBody({ look }: { look: Look }) {
             )}
           </>
         )}
-        {posted && <Button label="Retour à l'accueil" variant="secondary" onPress={() => router.dismissTo('/')} />}
+        {posted && <Button label={t('lookPost.backHome')} variant="secondary" onPress={() => router.dismissTo('/')} />}
       </ActionBar>
     </>
   );

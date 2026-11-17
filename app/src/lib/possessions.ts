@@ -1,6 +1,7 @@
 import { useQuery, type QueryClient } from '@tanstack/react-query';
 
 import type { ClothKind } from '@/components/home/ClothVisual';
+import i18n, { compareText } from '@/i18n';
 import { apiGet, apiRequest } from '@/lib/api';
 import type { Usage } from '@/lib/add-draft';
 import { apiGetAll, type Category, type Locations } from '@/lib/reference';
@@ -99,50 +100,110 @@ export async function deletePossession(queryClient: QueryClient, kind: Kind, id:
  * fiche, teintée (tint, text).
  */
 export const AVAILABILITY: Record<Availability, { label: string; solid: string; tint: string; text: string }> = {
-  AVAILABLE: { label: 'Disponible', solid: 'bg-[#10786B]', tint: 'bg-main/10 dark:bg-main-night/15', text: 'text-[#10786B] dark:text-main-night' },
-  LENT: { label: 'Prêté', solid: 'bg-[#C21B5E]', tint: 'bg-primary/[0.12]', text: 'text-[#C21B5E] dark:text-primary-night' },
-  BORROWED: { label: 'Emprunté', solid: 'bg-cloth', tint: 'bg-cloth/[0.12]', text: 'text-cloth dark:text-cloth-night' },
-  LOST: { label: 'Perdu', solid: 'bg-error', tint: 'bg-error/10', text: 'text-error dark:text-error-night' },
-  SOLD: { label: 'Vendu', solid: 'bg-muted', tint: 'bg-muted/[0.12]', text: 'text-muted dark:text-muted-night' },
+  AVAILABLE: {
+    get label() {
+      return i18n.t('inventory:availability.available');
+    },
+    solid: 'bg-[#10786B]',
+    tint: 'bg-main/10 dark:bg-main-night/15',
+    text: 'text-[#10786B] dark:text-main-night',
+  },
+  LENT: {
+    get label() {
+      return i18n.t('inventory:availability.lent');
+    },
+    solid: 'bg-[#C21B5E]',
+    tint: 'bg-primary/[0.12]',
+    text: 'text-[#C21B5E] dark:text-primary-night',
+  },
+  BORROWED: {
+    get label() {
+      return i18n.t('inventory:availability.borrowed');
+    },
+    solid: 'bg-cloth',
+    tint: 'bg-cloth/[0.12]',
+    text: 'text-cloth dark:text-cloth-night',
+  },
+  LOST: {
+    get label() {
+      return i18n.t('inventory:availability.lost');
+    },
+    solid: 'bg-error',
+    tint: 'bg-error/10',
+    text: 'text-error dark:text-error-night',
+  },
+  SOLD: {
+    get label() {
+      return i18n.t('inventory:availability.sold');
+    },
+    solid: 'bg-muted',
+    tint: 'bg-muted/[0.12]',
+    text: 'text-muted dark:text-muted-night',
+  },
 };
 
 /** La ligne « Chez Thomas » sous la carte d'un bien prêté (maquette, « Card/Object »). */
 export function lentLine(p: Possession): { text: string; className: string } | undefined {
   if (!p.lentTo) return undefined;
 
-  return { text: `Chez ${p.lentTo.borrower}${p.lentTo.overdue ? ' · en retard' : ''}`, className: p.lentTo.overdue ? 'text-error dark:text-error-night' : 'text-[#C21B5E] dark:text-primary-night' };
+  const text = p.lentTo.overdue ? i18n.t('inventory:lentLine.overdue', { name: p.lentTo.borrower }) : i18n.t('inventory:lentLine.at', { name: p.lentTo.borrower });
+
+  return { text, className: p.lentTo.overdue ? 'text-error dark:text-error-night' : 'text-[#C21B5E] dark:text-primary-night' };
 }
 
-export const STATUS_FILTERS: { value: Availability | null; label: string }[] = [
-  { value: null, label: 'tous' },
-  { value: 'AVAILABLE', label: 'disponibles' },
-  { value: 'LENT', label: 'prêtés' },
-  { value: 'BORROWED', label: 'empruntés' },
-  { value: 'LOST', label: 'perdus' },
-  { value: 'SOLD', label: 'vendus' },
+export const statusFilters = (): { value: Availability | null; label: string }[] => [
+  { value: null, label: i18n.t('inventory:statusFilter.all') },
+  { value: 'AVAILABLE', label: i18n.t('inventory:statusFilter.available') },
+  { value: 'LENT', label: i18n.t('inventory:statusFilter.lent') },
+  { value: 'BORROWED', label: i18n.t('inventory:statusFilter.borrowed') },
+  { value: 'LOST', label: i18n.t('inventory:statusFilter.lost') },
+  { value: 'SOLD', label: i18n.t('inventory:statusFilter.sold') },
 ];
 
 export const CONDITION_LABEL: Record<ConditionValue, string> = {
-  NEW: 'Neuf',
-  EXCELLENT: 'Très bon état',
-  GOOD: 'Bon état',
-  WORN: 'Usé',
-  DAMAGED: 'Abîmé',
+  get NEW() {
+    return i18n.t('inventory:condition.new');
+  },
+  get EXCELLENT() {
+    return i18n.t('inventory:condition.excellent');
+  },
+  get GOOD() {
+    return i18n.t('inventory:condition.good');
+  },
+  get WORN() {
+    return i18n.t('inventory:condition.worn');
+  },
+  get DAMAGED() {
+    return i18n.t('inventory:condition.damaged');
+  },
 };
 
-export const USAGE_LABEL: Record<Usage, string> = { EVERYDAY: 'Quotidien', WORK: 'Travail', SPORT: 'Sport', EVENING: 'Soirée' };
+export const USAGE_LABEL: Record<Usage, string> = {
+  get EVERYDAY() {
+    return i18n.t('inventory:usage.everyday');
+  },
+  get WORK() {
+    return i18n.t('inventory:usage.work');
+  },
+  get SPORT() {
+    return i18n.t('inventory:usage.sport');
+  },
+  get EVENING() {
+    return i18n.t('inventory:usage.evening');
+  },
+};
 
 export type Sort = 'recent' | 'old' | 'name';
-export const SORTS: { value: Sort; label: string }[] = [
-  { value: 'recent', label: 'récents' },
-  { value: 'old', label: 'anciens' },
-  { value: 'name', label: 'A → Z' },
+export const sorts = (): { value: Sort; label: string }[] => [
+  { value: 'recent', label: i18n.t('inventory:sort.recent') },
+  { value: 'old', label: i18n.t('inventory:sort.old') },
+  { value: 'name', label: i18n.t('inventory:sort.name') },
 ];
 
 /** Tri local. Les UUID v7 commencent par la date de création : l'ordre des id est l'ordre d'ajout. */
 export function sortPossessions<T extends Possession>(list: T[], sort: Sort): T[] {
   const copy = [...list];
-  if (sort === 'name') return copy.sort((a, b) => a.name.localeCompare(b.name, 'fr', { sensitivity: 'base' }));
+  if (sort === 'name') return copy.sort((a, b) => compareText(a.name, b.name));
 
   return copy.sort((a, b) => (a.id < b.id ? 1 : -1) * (sort === 'recent' ? 1 : -1));
 }

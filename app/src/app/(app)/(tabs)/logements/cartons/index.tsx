@@ -1,10 +1,11 @@
 import { router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
 import { EmptyState } from '@/components/inventory/EmptyState';
 import { BoxGlyph, Grid, Loading, RowCard, SectionHeader, TileCard } from '@/components/places/Blocks';
 import { PlaceScreen } from '@/components/places/PlaceScreen';
-import { boxPath, inBox, objects, plural, usePlacesData } from '@/lib/places';
+import { boxPath, inBox, usePlacesData } from '@/lib/places';
 
 /** Cartons montrés en grille avant « Voir tout ». */
 const RECENT = 4;
@@ -18,12 +19,13 @@ const RECENT = 4;
  * donnent l'ordre de création.
  */
 export default function BoxesScreen() {
+  const { t } = useTranslation('places');
   const { data, error } = usePlacesData();
   const create = () => router.push('/nouveau-carton/infos');
 
   if (!data) {
     return (
-      <PlaceScreen title="Mes cartons">
+      <PlaceScreen title={t('boxes.title')}>
         <Loading error={error} />
       </PlaceScreen>
     );
@@ -33,20 +35,20 @@ export default function BoxesScreen() {
   const recent = [...data.boxes].sort((a, b) => (a.id < b.id ? 1 : -1)).slice(0, RECENT);
 
   return (
-    <PlaceScreen title="Mes cartons" legend={`${plural(data.boxes.length, 'carton', 'cartons')} · ${objects(inside)}`}>
+    <PlaceScreen title={t('boxes.title')} legend={[t('counts.boxes', { count: data.boxes.length }), t('counts.objects', { count: inside })].join(' · ')}>
       {data.boxes.length === 0 ? (
         <EmptyState
           icon="search"
-          title="Aucun carton"
-          text="Crée un carton, colle son étiquette, et retrouve en un instant ce qu'il contient."
-          action={{ label: 'Créer un carton', glyph: '+', onPress: create }}
+          title={t('boxes.emptyTitle')}
+          text={t('boxes.emptyText')}
+          action={{ label: t('boxes.emptyAction'), glyph: '+', onPress: create }}
         />
       ) : (
         <>
           <View className="gap-3">
             <SectionHeader
-              title="Récemment ajoutés"
-              aside={data.boxes.length > RECENT ? 'Voir tout' : undefined}
+              title={t('boxes.recent')}
+              aside={data.boxes.length > RECENT ? t('boxes.seeAll') : undefined}
               onAside={() => router.push('/logements/cartons/tous')}
             />
             <Grid
@@ -56,7 +58,7 @@ export default function BoxesScreen() {
                 <TileCard
                   title={box.name}
                   meta={boxPath(data, box)}
-                  aside={objects(inBox(data, box).length)}
+                  aside={t('counts.objects', { count: inBox(data, box).length })}
                   accent
                   glyph={<BoxGlyph />}
                   onPress={() => router.push({ pathname: '/carton/[id]', params: { id: box.id } })}
@@ -65,8 +67,8 @@ export default function BoxesScreen() {
             />
           </View>
           <View className="gap-3">
-            {data.boxes.length <= RECENT && data.boxes.length > 1 && <RowCard title="Tous mes cartons" subtitle="Rechercher, trier par pièce" onPress={() => router.push('/logements/cartons/tous')} />}
-            <RowCard title="+ Créer un carton" subtitle="Étiquette, emplacement" onPress={create} />
+            {data.boxes.length <= RECENT && data.boxes.length > 1 && <RowCard title={t('boxes.all')} subtitle={t('boxes.allHint')} onPress={() => router.push('/logements/cartons/tous')} />}
+            <RowCard title={t('boxes.create')} subtitle={t('boxes.createHint')} onPress={create} />
           </View>
         </>
       )}

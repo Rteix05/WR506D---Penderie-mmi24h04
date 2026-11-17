@@ -2,6 +2,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Image } from 'expo-image';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Alert, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -27,6 +28,7 @@ import { useGarmentCategories } from '@/lib/reference';
  * (catégorie et pièce plus tard), et le point le désigne tout de suite.
  */
 export default function ChooseGarmentScreen() {
+  const { t } = useTranslation('social');
   const { id, tag: tagId, x, y } = useLocalSearchParams<{ id: string; tag?: string; x?: string; y?: string }>();
   const look = useLook(id);
   const garments = usePossessions('garment');
@@ -62,7 +64,7 @@ export default function ChooseGarmentScreen() {
       router.back();
     } catch (e) {
       setSaving(null);
-      Alert.alert('Impossible de désigner ce vêtement', e instanceof Error ? e.message : '');
+      Alert.alert(t('choose.chooseError'), e instanceof Error ? e.message : '');
     }
   };
 
@@ -75,7 +77,7 @@ export default function ChooseGarmentScreen() {
       router.back();
     } catch (e) {
       setSaving(null);
-      Alert.alert("Impossible d'ajouter ce vêtement", e instanceof Error ? e.message : '');
+      Alert.alert(t('choose.addError'), e instanceof Error ? e.message : '');
     }
   };
 
@@ -85,31 +87,31 @@ export default function ChooseGarmentScreen() {
         <View className="flex-row">
           <BackButton close />
         </View>
-        <ScreenTitle title="Quel vêtement ?" legend={tag ? `Point ${tag.position + 1} · ${tagName(tag)}` : 'Celui que tu viens de toucher sur la photo'} />
+        <ScreenTitle title={t('choose.title')} legend={tag ? t('choose.legendPoint', { position: tag.position + 1, name: tagName(tag) }) : t('choose.legendNew')} />
 
         {isNew && (
           <View style={E1} className="gap-3 rounded-md bg-surface p-4 dark:bg-surface-night">
             <TextField
-              label="Pas dans ton dressing ?"
+              label={t('choose.notInWardrobe')}
               value={title}
               onChangeText={setTitle}
-              placeholder="Veste kaki"
+              placeholder={t('choose.placeholder')}
               autoCapitalize="sentences"
               maxLength={120}
-              hint="Un titre suffit : il est ajouté à ton dressing « à compléter », tu le termineras plus tard."
+              hint={t('choose.hint')}
               onSubmitEditing={addByTitle}
               returnKeyType="done"
             />
-            <Button label={title.trim() ? `Ajouter « ${title.trim()} »` : 'Ajouter ce vêtement'} variant="secondary" onPress={addByTitle} disabled={!title.trim() || saving !== null} loading={saving === 'title'} />
+            <Button label={title.trim() ? t('choose.addQuoted', { name: title.trim() }) : t('choose.add')} variant="secondary" onPress={addByTitle} disabled={!title.trim() || saving !== null} loading={saving === 'title'} />
           </View>
         )}
 
-        <SearchField value={query} onChange={setQuery} placeholder="Chercher dans ton dressing" />
+        <SearchField value={query} onChange={setQuery} placeholder={t('choose.searchPlaceholder')} />
 
         {garments.isPending && <ActivityIndicator className="py-6" />}
         {garments.isError && <Text className="font-luciole text-body text-error dark:text-error-night">{garments.error.message}</Text>}
         {garments.data && shown.length === 0 && (
-          <Text className="font-luciole text-body text-muted dark:text-muted-night">{query ? 'Aucun vêtement de ce nom.' : 'Ton dressing est vide.'}</Text>
+          <Text className="font-luciole text-body text-muted dark:text-muted-night">{query ? t('choose.noMatch') : t('choose.wardrobeEmpty')}</Text>
         )}
 
         <View className="gap-3">
@@ -132,11 +134,11 @@ export default function ChooseGarmentScreen() {
               <View className="flex-1 gap-0.5">
                 <Text className="font-luciole-bold text-body text-ink dark:text-ink-night">{g.name}</Text>
                 {g.id === tag?.garment?.id ? (
-                  <Text className="font-luciole text-legend text-cloth dark:text-cloth-night">Choisi</Text>
+                  <Text className="font-luciole text-legend text-cloth dark:text-cloth-night">{t('choose.chosen')}</Text>
                 ) : used.has(g.id) ? (
-                  <Text className="font-luciole text-legend text-muted dark:text-muted-night">Déjà sur ce look</Text>
+                  <Text className="font-luciole text-legend text-muted dark:text-muted-night">{t('choose.alreadyOnLook')}</Text>
                 ) : g.incomplete ? (
-                  <Text className="font-luciole text-legend text-primary dark:text-primary-night">À compléter</Text>
+                  <Text className="font-luciole text-legend text-primary dark:text-primary-night">{t('choose.incomplete')}</Text>
                 ) : null}
               </View>
               {saving === g.id && <ActivityIndicator />}

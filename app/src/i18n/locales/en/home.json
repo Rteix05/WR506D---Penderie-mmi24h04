@@ -1,0 +1,34 @@
+{
+  "counts": {
+    "items_one": "{{count}} item",
+    "items_other": "{{count}} items",
+    "garments_one": "{{count}} garment",
+    "garments_other": "{{count}} garments",
+    "summary": "{{items}} · {{garments}}"
+  },
+  "dashboard": {
+    "greeting": "Hello {{name}}",
+    "greetingAnon": "Hello",
+    "scan": "Scan",
+    "add": "Add",
+    "inventory": "Inventory",
+    "dressing": "Wardrobe",
+    "recent": "Recently added",
+    "emptyTitle": "Nothing yet",
+    "emptyBody": "Scan or add your first item: it will show up here."
+  },
+  "topBar": {
+    "notifications": "Notifications",
+    "notificationsBody": "Notifications are coming soon.",
+    "profile": "My profile"
+  },
+  "look": {
+    "title": "Outfit of the day",
+    "empty": "Take a photo of yourself and tag your clothes",
+    "tagging": "Tag the clothes on your photo",
+    "toCheck_one": "{{count}} garment to check",
+    "toCheck_other": "{{count}} garments to check",
+    "allChecked": "Everything is checked: prepare the post",
+    "accessibilityLabel": "Outfit of the day, {{text}}"
+  }
+}

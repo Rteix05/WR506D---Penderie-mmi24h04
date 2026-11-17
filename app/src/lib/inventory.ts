@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 
+import i18n from '@/i18n';
 import { apiGet } from '@/lib/api';
 
 /** Une collection API Platform en JSON-LD (préfixe hydra désactivé : totalItems, member). */
@@ -46,10 +47,10 @@ export function uuidV7Date(id: string): Date {
 export function relativeDay(date: Date, now = new Date()): string {
   const day = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
   const days = Math.round((day(now) - day(date)) / 86_400_000);
-  if (days <= 0) return "Aujourd'hui";
-  if (days === 1) return 'Hier';
+  if (days <= 0) return i18n.t('inventory:relativeDay.today');
+  if (days === 1) return i18n.t('inventory:relativeDay.yesterday');
 
-  return `Il y a ${days} j`;
+  return i18n.t('inventory:relativeDay.days', { days });
 }
 
 const RECENT = 10;

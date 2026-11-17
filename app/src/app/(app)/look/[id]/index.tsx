@@ -1,6 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Alert, Pressable, Text, View } from 'react-native';
 
 import { ActionBar, FlowScreen } from '@/components/add/FlowScreen';
@@ -10,10 +11,11 @@ import { BackButton } from '@/components/ui/BackButton';
 import { Button } from '@/components/ui/Button';
 import { E1 } from '@/components/ui/elevation';
 import { ScreenTitle } from '@/components/ui/ScreenTitle';
+import { dateLocale } from '@/i18n';
 import { deleteLook, isReady, LOOK_STATUS, MAX_TAGS, removeTag, tagName, updateLook, useLook, type Look, type LookTag } from '@/lib/look';
 
 /** « lundi 12 octobre » */
-const dayLabel = (iso: string) => new Date(`${iso}T12:00:00`).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+const dayLabel = (iso: string) => new Date(`${iso}T12:00:00`).toLocaleDateString(dateLocale(), { weekday: 'long', day: 'numeric', month: 'long' });
 
 /**
  * Le look : la photo, et un point par vêtement porté.
@@ -24,6 +26,7 @@ const dayLabel = (iso: string) => new Date(`${iso}T12:00:00`).toLocaleDateString
  * d'IA, donc pas d'attente. Le post se prépare dès qu'il y a un point.
  */
 export default function LookScreen() {
+  const { t } = useTranslation('social');
   const { id } = useLocalSearchParams<{ id: string }>();
   const look = useLook(id);
 
@@ -34,7 +37,7 @@ export default function LookScreen() {
         {look.data && <Pill label={LOOK_STATUS[look.data.status]} tone={look.data.status === 'TAGGING' ? 'primary' : 'main'} />}
       </View>
       <View className="px-5">
-        <ScreenTitle title="Look du jour" legend={look.data ? dayLabel(look.data.wornOn) : undefined} />
+        <ScreenTitle title={t('lookDetail.title')} legend={look.data ? dayLabel(look.data.wornOn) : undefined} />
       </View>
       {look.isPending && <ActivityIndicator className="py-10" />}
       {look.isError && <Text className="px-5 font-luciole text-body text-error dark:text-error-night">{look.error.message}</Text>}
@@ -44,6 +47,7 @@ export default function LookScreen() {
 }
 
 function LookBody({ look }: { look: Look }) {
+  const { t } = useTranslation('social');
   const queryClient = useQueryClient();
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -64,36 +68,36 @@ function LookBody({ look }: { look: Look }) {
       await updateLook(queryClient, look.id, { status });
       if (status === 'READY') router.push({ pathname: '/look/[id]/post', params: { id: look.id } });
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Le look n'a pas pu être enregistré.");
+      setError(e instanceof Error ? e.message : t('lookDetail.saveError'));
     } finally {
       setSaving(false);
     }
   };
 
   const remove = () =>
-    Alert.alert('Supprimer ce look ?', 'La photo et ses points disparaissent. Les vêtements restent dans ton dressing.', [
-      { text: 'Annuler', style: 'cancel' },
+    Alert.alert(t('lookDetail.deleteTitle'), t('lookDetail.deleteBody'), [
+      { text: t('lookDetail.cancel'), style: 'cancel' },
       {
-        text: 'Supprimer',
+        text: t('lookDetail.delete'),
         style: 'destructive',
         onPress: async () => {
           try {
             await deleteLook(queryClient, look.id);
             router.back();
           } catch (e) {
-            Alert.alert('Suppression impossible', e instanceof Error ? e.message : '');
+            Alert.alert(t('lookDetail.deleteErrorTitle'), e instanceof Error ? e.message : '');
           }
         },
       },
     ]);
 
   const hint = !tagging
-    ? 'Les points ne se modifient plus : repasse le look en préparation pour les changer.'
+    ? t('lookDetail.hintLocked')
     : full
-      ? `${MAX_TAGS} vêtements au plus par look.`
+      ? t('lookDetail.hintFull', { max: MAX_TAGS })
       : look.tags.length === 0
-          ? 'Touche un vêtement sur la photo pour y poser un point.'
-          : 'Touche un autre vêtement pour ajouter un point.';
+          ? t('lookDetail.hintEmpty')
+          : t('lookDetail.hintAdd');
 
   return (
     <>
@@ -105,7 +109,7 @@ function LookBody({ look }: { look: Look }) {
       {look.tags.length > 0 && (
         <View className="gap-3 px-5">
           <Text accessibilityRole="header" className="font-luciole-bold text-body text-ink dark:text-ink-night">
-            {look.tags.length > 1 ? `${look.tags.length} vêtements` : '1 vêtement'}
+            {t('lookDetail.tags', { count: look.tags.length })}
           </Text>
           {look.tags.map((tag) => (
             <TagRow key={tag.id} look={look} tag={tag} editable={tagging} />
@@ -113,19 +117,19 @@ function LookBody({ look }: { look: Look }) {
         </View>
       )}
 
-      <ActionBar note={tagging && look.tags.length > 0 && !ready ? 'Chaque point doit désigner un vêtement de ton dressing pour préparer le post.' : undefined}>
+      <ActionBar note={tagging && look.tags.length > 0 && !ready ? t('lookDetail.note') : undefined}>
         {error && (
           <Text accessibilityRole="alert" className="text-center font-luciole text-legend text-error dark:text-error-night">
             {error}
           </Text>
         )}
         {tagging ? (
-          <Button label="Préparer le post" onPress={() => move('READY')} disabled={!ready} loading={saving} />
+          <Button label={t('lookDetail.prepare')} onPress={() => move('READY')} disabled={!ready} loading={saving} />
         ) : (
-          <Button label="Voir le post" onPress={() => router.push({ pathname: '/look/[id]/post', params: { id: look.id } })} />
+          <Button label={t('lookDetail.seePost')} onPress={() => router.push({ pathname: '/look/[id]/post', params: { id: look.id } })} />
         )}
-        {look.status === 'READY' && <Button label="Modifier les points" variant="secondary" onPress={() => move('TAGGING')} loading={saving} />}
-        {look.status !== 'POSTED' && <Button label="Supprimer ce look" variant="ghost" onPress={remove} disabled={saving} />}
+        {look.status === 'READY' && <Button label={t('lookDetail.editTags')} variant="secondary" onPress={() => move('TAGGING')} loading={saving} />}
+        {look.status !== 'POSTED' && <Button label={t('lookDetail.deleteLook')} variant="ghost" onPress={remove} disabled={saving} />}
       </ActionBar>
     </>
   );
@@ -133,6 +137,7 @@ function LookBody({ look }: { look: Look }) {
 
 /** Un point : son numéro, son vêtement (« à compléter » s'il vient d'être ajouté d'un titre), et quoi faire. */
 function TagRow({ look, tag, editable }: { look: Look; tag: LookTag; editable: boolean }) {
+  const { t } = useTranslation('social');
   const queryClient = useQueryClient();
   const [busy, setBusy] = useState(false);
 
@@ -141,14 +146,14 @@ function TagRow({ look, tag, editable }: { look: Look; tag: LookTag; editable: b
     try {
       await action();
     } catch (e) {
-      Alert.alert('Action impossible', e instanceof Error ? e.message : '');
+      Alert.alert(t('lookDetail.actionErrorTitle'), e instanceof Error ? e.message : '');
     } finally {
       setBusy(false);
     }
   };
   const garment = tag.garment;
   const choose = () => router.push({ pathname: '/look/[id]/choisir', params: { id: look.id, tag: tag.id } });
-  const meta = garment ? (garment.incomplete ? 'À compléter' : [garment.brand, garment.category].filter(Boolean).join(' · ')) : 'Choisis le vêtement';
+  const meta = garment ? (garment.incomplete ? t('lookDetail.incomplete') : [garment.brand, garment.category].filter(Boolean).join(' · ')) : t('lookDetail.chooseGarment');
 
   return (
     <View style={E1} className="gap-3 rounded-md bg-surface p-4 dark:bg-surface-night">
@@ -161,9 +166,9 @@ function TagRow({ look, tag, editable }: { look: Look; tag: LookTag; editable: b
         {busy && <ActivityIndicator />}
       </View>
       <View className="flex-row flex-wrap gap-2">
-        {garment?.incomplete && <Chip label="Compléter" strong onPress={() => router.push({ pathname: '/completer', params: { id: garment.id } })} disabled={busy} />}
-        {editable && <Chip label={garment ? 'Changer' : 'Choisir dans le dressing'} onPress={choose} disabled={busy} />}
-        {editable && <Chip label="Retirer" onPress={() => run(() => removeTag(queryClient, look.id, tag))} disabled={busy} />}
+        {garment?.incomplete && <Chip label={t('lookDetail.complete')} strong onPress={() => router.push({ pathname: '/completer', params: { id: garment.id } })} disabled={busy} />}
+        {editable && <Chip label={garment ? t('lookDetail.change') : t('lookDetail.chooseFromWardrobe')} onPress={choose} disabled={busy} />}
+        {editable && <Chip label={t('lookDetail.remove')} onPress={() => run(() => removeTag(queryClient, look.id, tag))} disabled={busy} />}
       </View>
     </View>
   );

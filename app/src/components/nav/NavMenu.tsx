@@ -1,9 +1,10 @@
 import { router } from 'expo-router';
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { BackHandler, Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeIn, FadeOut, SlideInDown, SlideOutDown } from 'react-native-reanimated';
 
-import { SECTIONS, type Section } from '@/components/nav/sections';
+import { sections, type Section } from '@/components/nav/sections';
 import { Heading } from '@/components/ui/Heading';
 import { E2 } from '@/components/ui/elevation';
 import { MenuRow } from '@/components/ui/MenuRow';
@@ -23,7 +24,8 @@ type Props = {
  * un autre onglet bascule sur son panneau (géré par le layout).
  */
 export function NavMenu({ section, onClose }: Props) {
-  const menu = SECTIONS[section];
+  const { t } = useTranslation('common');
+  const menu = sections()[section];
 
   useEffect(() => {
     const sub = BackHandler.addEventListener('hardwareBackPress', () => {
@@ -39,12 +41,12 @@ export function NavMenu({ section, onClose }: Props) {
   // placement est en style, les classes vont sur les View intérieures.
   return (
     <Animated.View entering={FadeIn.duration(150)} exiting={FadeOut.duration(150)} style={StyleSheet.absoluteFill}>
-      <Pressable accessibilityRole="button" accessibilityLabel="Fermer le menu" onPress={onClose} className="absolute inset-0 bg-ink/[0.55]" />
+      <Pressable accessibilityRole="button" accessibilityLabel={t('menu.close')} onPress={onClose} className="absolute inset-0 bg-ink/[0.55]" />
       <Animated.View key={section} entering={SlideInDown.duration(200)} exiting={SlideOutDown.duration(150)} style={{ position: 'absolute', left: 12, right: 12, bottom: 36 }}>
         <View accessibilityViewIsModal style={E2} className="gap-2 rounded-lg bg-surface px-4 pb-4 pt-5 dark:bg-surface-night">
           <View className="gap-0.5 pb-2">
             <Heading level="h4" accessibilityRole="header" className="uppercase text-ink dark:text-ink-night">
-              {section}
+              {menu.title}
             </Heading>
             <Text className="font-luciole text-legend text-muted dark:text-muted-night">{menu.legend}</Text>
           </View>

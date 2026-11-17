@@ -1,3 +1,4 @@
+import i18n from '@/i18n';
 import { loadStoredSession, storeSession, type StoredSession } from '@/lib/session';
 
 /**
@@ -82,10 +83,10 @@ export async function login(email: string, password: string): Promise<void> {
     body: JSON.stringify({ email, password }),
   });
   if (response.status === 401) {
-    throw new ApiError(401, 'E-mail ou mot de passe incorrect.');
+    throw new ApiError(401, i18n.t('common:api.loginFailed'));
   }
   if (!response.ok) {
-    throw await toApiError(response, 'Connexion impossible');
+    throw await toApiError(response, i18n.t('common:api.loginError'));
   }
   const tokens = (await response.json()) as Tokens;
   await setSession({ token: tokens.token, refreshToken: tokens.refreshToken, profileId: null });
@@ -109,7 +110,7 @@ export async function register(payload: RegisterPayload): Promise<void> {
     body: JSON.stringify(payload),
   });
   if (!response.ok) {
-    throw await toApiError(response, 'Inscription impossible');
+    throw await toApiError(response, i18n.t('common:api.registerError'));
   }
   await login(payload.email, payload.password);
 }
@@ -161,7 +162,7 @@ async function doRefresh(): Promise<boolean> {
   }
   if (!response.ok) {
     // Panne de l'API : on garde la session, la requête échouera normalement.
-    throw await toApiError(response, 'Rafraîchissement de la session impossible');
+    throw await toApiError(response, i18n.t('common:api.refreshError'));
   }
   const tokens = (await response.json()) as Tokens;
   await setSession({ ...current, ...tokens });
@@ -192,7 +193,7 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
     response = await send(path, options);
   }
   if (response.status === 401) {
-    throw new ApiError(401, 'Session expirée, reconnecte-toi.');
+    throw new ApiError(401, i18n.t('common:api.sessionExpired'));
   }
   if (!response.ok) {
     throw await toApiError(response, `${options.method ?? 'GET'} ${path}`);
@@ -214,7 +215,7 @@ async function readJson<T>(response: Response): Promise<T> {
   try {
     return JSON.parse(text) as T;
   } catch {
-    throw new ApiError(response.status, 'Le serveur a répondu de façon inattendue. Réessaie dans un instant.');
+    throw new ApiError(response.status, i18n.t('common:api.unexpectedResponse'));
   }
 }
 
@@ -277,12 +278,13 @@ type Problem = {
  * traductions françaises (symfony/translation) : on traduit ici les
  * messages qu'un utilisateur peut réellement rencontrer à l'inscription.
  */
-const FRENCH: Record<string, string> = {
-  'This value is not a valid email address.': 'Cette adresse e-mail ne semble pas valide.',
-  'This password has been leaked in a data breach, it must not be used. Please use another password.':
-    'Ce mot de passe figure dans une fuite de données connue : choisis-en un autre.',
-  'This value should not be blank.': 'Ce champ est obligatoire.',
-};
+function frenchMessages(): Record<string, string> {
+  return {
+    'This value is not a valid email address.': i18n.t('common:api.invalidEmail'),
+    'This password has been leaked in a data breach, it must not be used. Please use another password.': i18n.t('common:api.leakedPassword'),
+    'This value should not be blank.': i18n.t('common:api.blankField'),
+  };
+}
 
 /**
  * Traduit une réponse d'erreur en message lisible. L'API répond selon les
@@ -294,9 +296,10 @@ async function toApiError(response: Response, fallback: string): Promise<ApiErro
   const violations: Record<string, string> = {};
   // Deux formats selon la route : { message } (nos contrôleurs) ou { title }
   // (validation du corps par #[MapRequestPayload]).
+  const french = frenchMessages();
   for (const violation of problem?.violations ?? []) {
     const text = violation.message ?? violation.title ?? '';
-    violations[violation.propertyPath] ??= FRENCH[text] ?? text;
+    violations[violation.propertyPath] ??= french[text] ?? text;
   }
   const first = Object.values(violations)[0];
   const message = first ?? problem?.detail ?? problem?.description ?? problem?.message ?? problem?.title ?? `${fallback} (${response.status})`;

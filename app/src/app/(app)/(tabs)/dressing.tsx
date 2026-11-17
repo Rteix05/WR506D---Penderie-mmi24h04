@@ -1,5 +1,6 @@
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -8,15 +9,16 @@ import { FilterChips, SearchField, SortChip } from '@/components/inventory/ListC
 import { PossessionCard } from '@/components/inventory/PossessionCard';
 import { BackButton } from '@/components/ui/BackButton';
 import { ScreenTitle } from '@/components/ui/ScreenTitle';
+import { compareText } from '@/i18n';
 import {
   artOf,
   lentLine,
   AVAILABILITY,
   normalize,
   rootCategory,
-  SORTS,
+  sorts,
   sortPossessions,
-  STATUS_FILTERS,
+  statusFilters,
   usePossessions,
   type Availability,
   type Possession,
@@ -25,7 +27,6 @@ import {
 import { useBrands, useColors, useGarmentCategories, useSizes } from '@/lib/reference';
 
 const ALL = '*';
-const plural = (n: number, one: string, many: string) => `${n} ${n > 1 ? many : one}`;
 
 /**
  * « Mon dressing » (Figma « Vêtement — Dressing », 135:3217) : recherche
@@ -37,6 +38,7 @@ const plural = (n: number, one: string, many: string) => `${n} ${n > 1 ? many : 
  * route d'API) ; « Filtres » ouvre pour l'instant le filtre de statut.
  */
 export default function DressingScreen() {
+  const { t } = useTranslation('inventory');
   const garments = usePossessions('garment');
   const categories = useGarmentCategories();
   const brands = useBrands();
@@ -63,8 +65,8 @@ export default function DressingScreen() {
       if (root) used.set(root.iri, root.name);
     }
 
-    return [{ value: ALL, label: 'Tous' }, ...[...used].sort((a, b) => a[1].localeCompare(b[1], 'fr')).map(([value, label]) => ({ value, label }))];
-  }, [all, categories.data]);
+    return [{ value: ALL, label: t('wardrobe.all') }, ...[...used].sort((a, b) => compareText(a[1], b[1])).map(([value, label]) => ({ value, label }))];
+  }, [all, categories.data, t]);
 
   const shown = useMemo(() => {
     const q = normalize(query);
@@ -80,8 +82,8 @@ export default function DressingScreen() {
   }, [all, categories.data, name, query, category, status, sort]);
 
   const lent = all.filter((p) => p.availability === 'LENT').length;
-  const legend = garments.data ? [plural(all.length, 'vêtement', 'vêtements'), lent > 0 && plural(lent, 'prêté', 'prêtés')].filter(Boolean).join(' · ') : ' ';
-  const statusOptions = STATUS_FILTERS.map((s) => ({ value: (s.value ?? ALL) as Availability | typeof ALL, label: s.label }));
+  const legend = garments.data ? [t('wardrobe.count', { count: all.length }), lent > 0 && t('wardrobe.lent', { count: lent })].filter(Boolean).join(' · ') : ' ';
+  const statusOptions = statusFilters().map((s) => ({ value: (s.value ?? ALL) as Availability | typeof ALL, label: s.label }));
 
   // Quinconce de la maquette : colonne A 230, 170, 230… ; colonne B 170, 230, 170…
   const columns: [Possession, number][][] = [[], []];
@@ -104,7 +106,7 @@ export default function DressingScreen() {
         art={artOf('garment', p, categories.data)}
         photoHeight={height}
         // Comme dans la maquette, un vêtement disponible n'a pas de pastille ; un vêtement ajouté depuis le look est « À compléter ».
-        badge={p.incomplete ? { label: 'À compléter', className: 'bg-primary' } : p.availability === 'AVAILABLE' ? undefined : { label: state.label, className: state.solid }}
+        badge={p.incomplete ? { label: t('wardrobe.incomplete'), className: 'bg-primary' } : p.availability === 'AVAILABLE' ? undefined : { label: state.label, className: state.solid }}
         onPress={() => router.push({ pathname: '/vetement/[id]', params: { id: p.id } })}
       />
     );
@@ -117,7 +119,7 @@ export default function DressingScreen() {
           <BackButton />
         </View>
         <View className="px-5">
-          <ScreenTitle title="Mon dressing" legend={shown.length === 0 && all.length > 0 ? 'Aucun résultat' : legend} />
+          <ScreenTitle title={t('wardrobe.title')} legend={shown.length === 0 && all.length > 0 ? t('wardrobe.noResult') : legend} />
         </View>
 
         {garments.isPending && <ActivityIndicator className="pt-8" />}
@@ -126,30 +128,30 @@ export default function DressingScreen() {
         {garments.data && all.length === 0 && (
           <EmptyState
             icon="hanger"
-            title="Ton dressing est vide"
-            text="Ajoute ton premier vêtement : il entrera dans tes tenues et tu sauras où il est rangé."
-            action={{ label: 'Ajouter un vêtement', glyph: '+', onPress: () => router.push('/ajout/vetement/type') }}
+            title={t('wardrobe.emptyTitle')}
+            text={t('wardrobe.emptyText')}
+            action={{ label: t('wardrobe.emptyAction'), glyph: '+', onPress: () => router.push('/ajout/vetement/type') }}
           />
         )}
 
         {all.length > 0 && (
           <>
-            <SearchField value={query} onChange={setQuery} placeholder="Rechercher un vêtement, une marque..." />
+            <SearchField value={query} onChange={setQuery} placeholder={t('wardrobe.search')} />
             <View className="gap-3">
               <FilterChips options={chips} value={category} onChange={setCategory} />
               <View className="flex-row items-center justify-between px-5">
-                <SortChip prefix="Filtres :" title="Statut" options={statusOptions} value={status} onChange={setStatus} />
-                <SortChip prefix="Trier :" title="Trier" options={SORTS} value={sort} onChange={setSort} />
+                <SortChip prefix={t('wardrobe.filterPrefix')} title={t('wardrobe.filterTitle')} options={statusOptions} value={status} onChange={setStatus} />
+                <SortChip prefix={t('wardrobe.sortPrefix')} title={t('wardrobe.sortTitle')} options={sorts()} value={sort} onChange={setSort} />
               </View>
             </View>
 
             {shown.length === 0 ? (
               <EmptyState
                 icon="hanger"
-                title="Aucun vêtement trouvé"
-                text="Aucun vêtement ne correspond à ta recherche. Vérifie l'orthographe ou essaie un autre mot."
+                title={t('wardrobe.notFoundTitle')}
+                text={t('wardrobe.notFoundText')}
                 action={{
-                  label: 'Effacer la recherche',
+                  label: t('wardrobe.clearSearch'),
                   onPress: () => {
                     setQuery('');
                     setCategory(ALL);

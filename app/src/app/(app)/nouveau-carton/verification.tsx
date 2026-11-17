@@ -1,6 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Text } from 'react-native';
 
 import { ActionBar, FlowScreen } from '@/components/add/FlowScreen';
@@ -9,7 +10,7 @@ import { Button } from '@/components/ui/Button';
 import { InfoCard } from '@/components/ui/InfoCard';
 import { locationPath } from '@/lib/add-draft';
 import { useBoxDraft } from '@/lib/box-draft';
-import { BOX_TYPES, createBox, labelOf } from '@/lib/places';
+import { boxTypes, createBox, labelOf } from '@/lib/places';
 
 /**
  * Étape 3 « Vérifie ton carton » (Figma « Rangement — Création ·
@@ -18,6 +19,7 @@ import { BOX_TYPES, createBox, labelOf } from '@/lib/places';
  * arrive directement sur la fiche du carton créé.
  */
 export default function BoxReviewStep() {
+  const { t } = useTranslation('places');
   const { draft } = useBoxDraft();
   const queryClient = useQueryClient();
   const [saving, setSaving] = useState(false);
@@ -39,21 +41,21 @@ export default function BoxReviewStep() {
       router.push({ pathname: '/carton/[id]', params: { id: box.id } });
     } catch (e) {
       setSaving(false);
-      setError(e instanceof Error ? e.message : 'Enregistrement impossible.');
+      setError(e instanceof Error ? e.message : t('actions.saveError'));
     }
   };
 
   return (
     <FlowScreen>
-      <StepHeader title="Vérifie ton carton" step={3} total={3} />
+      <StepHeader title={t('newBox.verification.title')} step={3} total={3} />
 
       <InfoCard
-        title="Le carton"
+        title={t('newBox.verification.cardTitle')}
         rows={[
-          ['Étiquette', draft.name.trim()],
-          ['Type', labelOf(BOX_TYPES, draft.type)],
-          ['Code', draft.reference.trim()],
-          ['Emplacement', locationPath({ ...draft.location, place: null })],
+          [t('newBox.verification.label'), draft.name.trim()],
+          [t('newBox.verification.type'), labelOf(boxTypes(), draft.type)],
+          [t('newBox.verification.code'), draft.reference.trim()],
+          [t('newBox.verification.location'), locationPath({ ...draft.location, place: null })],
         ]}
       />
 
@@ -63,8 +65,8 @@ export default function BoxReviewStep() {
             {error}
           </Text>
         )}
-        <Button label="Créer ce carton" onPress={save} loading={saving} />
-        <Button label="Modifier" variant="secondary" onPress={() => router.back()} disabled={saving} />
+        <Button label={t('newBox.verification.create')} onPress={save} loading={saving} />
+        <Button label={t('actions.modify')} variant="secondary" onPress={() => router.back()} disabled={saving} />
       </ActionBar>
     </FlowScreen>
   );

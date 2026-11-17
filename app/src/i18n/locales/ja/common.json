@@ -1,0 +1,166 @@
+{
+  "logo": "Penderie のロゴ",
+  "navigation": {
+    "tabMenu": "{{label}}、メニュー",
+    "add": "追加",
+    "sections": {
+      "accueil": {
+        "title": "ホーム",
+        "legend": "最新のできごと",
+        "dashboard": {
+          "title": "ダッシュボード",
+          "subtitle": "ワードローブをひと目で"
+        },
+        "feed": {
+          "title": "フィード",
+          "subtitle": "友だちが見せてくれたもの"
+        },
+        "notifications": {
+          "title": "通知",
+          "subtitle": "貸し借り、売買、共有、リクエスト"
+        },
+        "search": {
+          "title": "検索",
+          "subtitle": "持ち物、部屋、友だち"
+        }
+      },
+      "inventaire": {
+        "title": "持ち物",
+        "legend": "あなたの持ち物すべて",
+        "objects": {
+          "title": "マイアイテム",
+          "subtitle": "アイテムとその状態"
+        },
+        "wardrobe": {
+          "title": "マイワードローブ",
+          "subtitle": "あなたの服"
+        },
+        "outfits": {
+          "title": "マイコーデ",
+          "subtitle": "おすすめと保存したコーデ"
+        },
+        "collections": {
+          "title": "マイコレクション",
+          "subtitle": "ボード（初期設定は非公開）"
+        },
+        "loans": {
+          "title": "貸し借り",
+          "subtitle": "貸したもの・借りたもの"
+        }
+      },
+      "logements": {
+        "title": "住まい",
+        "legend": "持ち物のしまい場所",
+        "places": {
+          "title": "マイ住まい",
+          "subtitle": "住まいと部屋"
+        },
+        "main": {
+          "title": "メインの住まい",
+          "subtitle": "部屋と持ち物"
+        },
+        "boxes": {
+          "title": "マイ収納箱",
+          "subtitle": "使用中の収納箱"
+        },
+        "createBox": {
+          "title": "収納箱を作る",
+          "subtitle": "ラベル、置き場所"
+        }
+      },
+      "profil": {
+        "title": "マイページ",
+        "legend": "あなたと家族",
+        "profile": {
+          "title": "マイプロフィール",
+          "subtitle": "登録情報と家族のプロフィール"
+        },
+        "friends": {
+          "title": "友だちとフォロワー",
+          "subtitle": "友だち、フォロワー、リクエスト"
+        },
+        "shares": {
+          "title": "共有",
+          "subtitle": "共有中のもの"
+        },
+        "selling": {
+          "title": "友だちの出品",
+          "subtitle": "友だちが出品しているもの"
+        },
+        "purchases": {
+          "title": "購入と販売",
+          "subtitle": "注文、配送、返金"
+        },
+        "settings": {
+          "title": "設定",
+          "subtitle": "アプリの言語"
+        }
+      }
+    }
+  },
+  "addMenu": {
+    "title": "何を追加しますか？",
+    "close": "閉じる",
+    "closeMenu": "追加メニューを閉じる",
+    "soon": "この機能はまもなく登場します。",
+    "bubbleLabel": "{{title}}、{{description}}",
+    "bubbleLabelSoon": "{{title}}、{{description}}、近日公開",
+    "contextError": "useOpenAddMenu は AddMenuContext の中で使ってください。",
+    "bubbles": {
+      "clothes": {
+        "title": "服とアイテム",
+        "description": "スウェット、CD など"
+      },
+      "boxes": {
+        "title": "収納箱",
+        "description": "収納箱を作る"
+      },
+      "place": {
+        "title": "住まい",
+        "description": "一戸建て、マンション、オフィス"
+      },
+      "scan": {
+        "title": "スキャン",
+        "description": "スキャンして自動入力"
+      }
+    }
+  },
+  "menu": {
+    "close": "メニューを閉じる",
+    "soon": "近日公開",
+    "label": "{{title}}、{{subtitle}}",
+    "labelSoon": "{{title}}、近日公開"
+  },
+  "backButton": {
+    "close": "閉じる",
+    "back": "戻る"
+  },
+  "select": {
+    "choose": "選択",
+    "loading": "読み込み中…",
+    "fieldLabel": "{{label}}：{{value}}",
+    "close": "閉じる",
+    "search": "検索",
+    "searchIn": "{{title}}を検索",
+    "empty": "まだありません。",
+    "noResults": "見つかりませんでした。",
+    "none": "なし",
+    "create": "作成",
+    "name": "名前",
+    "createError": "作成できませんでした。"
+  },
+  "api": {
+    "loginFailed": "メールアドレスまたはパスワードが正しくありません。",
+    "loginError": "ログインできませんでした",
+    "registerError": "登録できませんでした",
+    "refreshError": "セッションを更新できませんでした",
+    "sessionExpired": "セッションの有効期限が切れました。もう一度ログインしてください。",
+    "unexpectedResponse": "サーバーから予期しない応答がありました。しばらくしてからもう一度お試しください。",
+    "invalidEmail": "有効なメールアドレスではないようです。",
+    "leakedPassword": "このパスワードは既知のデータ漏洩に含まれています。別のパスワードを選んでください。",
+    "blankField": "この項目は必須です。"
+  },
+  "session": {
+    "providerError": "useSessionStatus は <SessionProvider> の中で使ってください。"
+  }
+}

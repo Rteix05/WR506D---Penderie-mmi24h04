@@ -4,6 +4,7 @@ import { useGlobalSearchParams } from 'expo-router';
 import { createContext, use, useCallback, useMemo, useState, type PropsWithChildren } from 'react';
 
 import type { ClothKind } from '@/components/home/ClothVisual';
+import i18n from '@/i18n';
 import { ApiError, apiGet, apiRequest, apiUpload } from '@/lib/api';
 import { createBrand, type Ref } from '@/lib/reference';
 import { imageFormData, type ScanResult } from '@/lib/scan';
@@ -11,19 +12,19 @@ import { imageFormData, type ScanResult } from '@/lib/scan';
 /** État à l'ajout (enum Condition de l'API, sans « Abîmé », absent de la maquette). */
 export type Condition = 'NEW' | 'EXCELLENT' | 'GOOD' | 'WORN';
 export const CONDITIONS: { value: Condition; label: string }[] = [
-  { value: 'NEW', label: 'Neuf' },
-  { value: 'EXCELLENT', label: 'Très bon état' },
-  { value: 'GOOD', label: 'Bon état' },
-  { value: 'WORN', label: 'Usé' },
+  { value: 'NEW', get label() { return i18n.t('add:conditions.NEW'); } },
+  { value: 'EXCELLENT', get label() { return i18n.t('add:conditions.EXCELLENT'); } },
+  { value: 'GOOD', get label() { return i18n.t('add:conditions.GOOD'); } },
+  { value: 'WORN', get label() { return i18n.t('add:conditions.WORN'); } },
 ];
 
 /** Usage d'un vêtement (enum GarmentUsage de l'API : UN seul usage par vêtement). */
 export type Usage = 'EVERYDAY' | 'WORK' | 'SPORT' | 'EVENING';
 export const USAGES: { value: Usage; label: string }[] = [
-  { value: 'EVERYDAY', label: 'Quotidien' },
-  { value: 'WORK', label: 'Travail' },
-  { value: 'SPORT', label: 'Sport' },
-  { value: 'EVENING', label: 'Soirée' },
+  { value: 'EVERYDAY', get label() { return i18n.t('add:usages.EVERYDAY'); } },
+  { value: 'WORK', get label() { return i18n.t('add:usages.WORK'); } },
+  { value: 'SPORT', get label() { return i18n.t('add:usages.SPORT'); } },
+  { value: 'EVENING', get label() { return i18n.t('add:usages.EVENING'); } },
 ];
 
 /**
@@ -33,18 +34,18 @@ export const USAGES: { value: Usage; label: string }[] = [
  */
 export type GarmentType = { label: string; slug: string | null; art: ClothKind; sizes: 'ALPHA' | 'EU_SHOE' | 'ONE_SIZE' };
 export const GARMENT_TYPES: GarmentType[] = [
-  { label: 'T-shirt', slug: 't-shirts', art: 'tshirt', sizes: 'ALPHA' },
-  { label: 'Chemise', slug: 'chemises', art: 'tshirt', sizes: 'ALPHA' },
-  { label: 'Pull', slug: 'pulls', art: 'pull', sizes: 'ALPHA' },
-  { label: 'Veste', slug: 'vestes', art: 'veste', sizes: 'ALPHA' },
-  { label: 'Manteau', slug: 'manteaux', art: 'pull', sizes: 'ALPHA' },
-  { label: 'Pantalon', slug: 'pantalons', art: 'pantalon', sizes: 'ALPHA' },
-  { label: 'Short', slug: 'shorts', art: 'short', sizes: 'ALPHA' },
-  { label: 'Robe', slug: 'robes', art: 'robe', sizes: 'ALPHA' },
-  { label: 'Chaussures', slug: 'chaussures', art: 'baskets', sizes: 'EU_SHOE' },
-  { label: 'Casquette', slug: 'bonnets-chapeaux', art: 'casquette', sizes: 'ONE_SIZE' },
-  { label: 'Écharpe', slug: 'echarpes', art: 'echarpe', sizes: 'ONE_SIZE' },
-  { label: 'Autre', slug: null, art: 'cintre', sizes: 'ALPHA' },
+  { get label() { return i18n.t('add:garmentTypes.tshirt'); }, slug: 't-shirts', art: 'tshirt', sizes: 'ALPHA' },
+  { get label() { return i18n.t('add:garmentTypes.chemise'); }, slug: 'chemises', art: 'tshirt', sizes: 'ALPHA' },
+  { get label() { return i18n.t('add:garmentTypes.pull'); }, slug: 'pulls', art: 'pull', sizes: 'ALPHA' },
+  { get label() { return i18n.t('add:garmentTypes.veste'); }, slug: 'vestes', art: 'veste', sizes: 'ALPHA' },
+  { get label() { return i18n.t('add:garmentTypes.manteau'); }, slug: 'manteaux', art: 'pull', sizes: 'ALPHA' },
+  { get label() { return i18n.t('add:garmentTypes.pantalon'); }, slug: 'pantalons', art: 'pantalon', sizes: 'ALPHA' },
+  { get label() { return i18n.t('add:garmentTypes.short'); }, slug: 'shorts', art: 'short', sizes: 'ALPHA' },
+  { get label() { return i18n.t('add:garmentTypes.robe'); }, slug: 'robes', art: 'robe', sizes: 'ALPHA' },
+  { get label() { return i18n.t('add:garmentTypes.chaussures'); }, slug: 'chaussures', art: 'baskets', sizes: 'EU_SHOE' },
+  { get label() { return i18n.t('add:garmentTypes.casquette'); }, slug: 'bonnets-chapeaux', art: 'casquette', sizes: 'ONE_SIZE' },
+  { get label() { return i18n.t('add:garmentTypes.echarpe'); }, slug: 'echarpes', art: 'echarpe', sizes: 'ONE_SIZE' },
+  { get label() { return i18n.t('add:garmentTypes.autre'); }, slug: null, art: 'cintre', sizes: 'ALPHA' },
 ];
 
 /**
@@ -130,7 +131,7 @@ const DraftContext = createContext<DraftApi | null>(null);
 export function useDraft(): DraftApi {
   const value = use(DraftContext);
   if (value === null) {
-    throw new Error('useDraft doit être utilisé dans le parcours d’ajout.');
+    throw new Error(i18n.t('add:draft.providerError'));
   }
 
   return value;
@@ -166,9 +167,9 @@ export function DraftProvider({ children }: PropsWithChildren) {
     // Ce que l'étiquette dit et que le modèle de données n'a pas en champ
     // (composition, entretien, pays) part dans la description, modifiable.
     const label = [
-      s.composition.length > 0 && `Composition : ${s.composition.map((p) => (p.percent === null ? p.material : `${p.percent} % ${p.material}`)).join(', ')}`,
-      s.care.length > 0 && `Entretien : ${s.care.join(', ')}`,
-      s.madeIn && `Fabriqué en ${s.madeIn}`,
+      s.composition.length > 0 && i18n.t('add:draft.composition', { list: s.composition.map((p) => (p.percent === null ? p.material : `${p.percent} % ${p.material}`)).join(', ') }),
+      s.care.length > 0 && i18n.t('add:draft.care', { list: s.care.join(', ') }),
+      s.madeIn && i18n.t('add:draft.madeIn', { country: s.madeIn }),
     ].filter(Boolean);
     const description = [s.description, ...label].filter(Boolean).join('\n');
     const patch: Partial<Draft> = {
@@ -194,7 +195,7 @@ export function DraftProvider({ children }: PropsWithChildren) {
   const submit = useCallback(async (): Promise<Created> => {
     const d = draft;
     const loc = d.location;
-    if (!loc.room) throw new Error('Choisis au moins une pièce.');
+    if (!loc.room) throw new Error(i18n.t('add:draft.missingRoom'));
     const where = { room: loc.room.iri, ...(loc.storage ? { storage: loc.storage.iri } : {}), ...(loc.box ? { box: loc.box.iri } : {}) };
     const common = {
       name: d.name.trim(),

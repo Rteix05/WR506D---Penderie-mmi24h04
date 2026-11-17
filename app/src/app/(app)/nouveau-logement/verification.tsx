@@ -1,6 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Alert, Text, View } from 'react-native';
 
 import { ActionBar, FlowScreen } from '@/components/add/FlowScreen';
@@ -9,7 +10,7 @@ import { Button } from '@/components/ui/Button';
 import { E1 } from '@/components/ui/elevation';
 import { InfoCard } from '@/components/ui/InfoCard';
 import { usePlaceDraft } from '@/lib/place-draft';
-import { createPlace, plural } from '@/lib/places';
+import { createPlace } from '@/lib/places';
 import { useLocations } from '@/lib/reference';
 
 /**
@@ -18,6 +19,7 @@ import { useLocations } from '@/lib/reference';
  * logement » et « Modifier ». Une fois créé, on arrive sur sa vue.
  */
 export default function PlaceReviewStep() {
+  const { t } = useTranslation('places');
   const { draft, roomsToCreate } = usePlaceDraft();
   const locations = useLocations();
   const queryClient = useQueryClient();
@@ -37,32 +39,32 @@ export default function PlaceReviewStep() {
       router.dismissTo('/logements');
       router.push({ pathname: '/logements/[id]', params: { id: place.id } });
       if (failedRooms.length > 0) {
-        Alert.alert('Logement ajouté', `Ces pièces n'ont pas pu être créées : ${failedRooms.join(', ')}. Ajoute-les depuis le logement.`);
+        Alert.alert(t('newPlace.verification.failedTitle'), t('newPlace.verification.failedRooms', { rooms: failedRooms.join(', ') }));
       }
     } catch (e) {
       setSaving(false);
-      setError(e instanceof Error ? e.message : 'Enregistrement impossible.');
+      setError(e instanceof Error ? e.message : t('actions.saveError'));
     }
   };
 
   return (
     <FlowScreen>
-      <StepHeader title="Vérifie ton logement" step={4} />
+      <StepHeader title={t('newPlace.verification.title')} step={4} />
 
       <InfoCard
-        title="Le logement"
+        title={t('newPlace.verification.cardTitle')}
         rows={[
-          ['Nom', draft.name.trim()],
-          ['Type', draft.kind.label],
-          ['Adresse', draft.address.trim()],
-          ['Principal', draft.primary ? 'Oui' : 'Non'],
+          [t('newPlace.verification.name'), draft.name.trim()],
+          [t('newPlace.verification.type'), draft.kind.label],
+          [t('newPlace.verification.address'), draft.address.trim()],
+          [t('newPlace.verification.primary'), draft.primary ? t('newPlace.yes') : t('newPlace.no')],
         ]}
       />
 
       <View style={E1} className="mx-5 gap-2 rounded-md bg-surface p-4 dark:bg-surface-night">
-        <Text className="font-luciole-bold text-legend text-muted dark:text-muted-night">{plural(roomsToCreate.length, 'pièce', 'pièces')}</Text>
+        <Text className="font-luciole-bold text-legend text-muted dark:text-muted-night">{t('counts.rooms', { count: roomsToCreate.length })}</Text>
         <Text className="font-luciole text-body text-ink dark:text-ink-night">
-          {roomsToCreate.length > 0 ? roomsToCreate.map((r) => r.name).join(' · ') : 'Aucune pour l’instant : tu les ajouteras depuis le logement.'}
+          {roomsToCreate.length > 0 ? roomsToCreate.map((r) => r.name).join(' · ') : t('newPlace.verification.noRooms')}
         </Text>
       </View>
 
@@ -72,8 +74,8 @@ export default function PlaceReviewStep() {
             {error}
           </Text>
         )}
-        <Button label="Ajouter ce logement" onPress={save} loading={saving} />
-        <Button label="Modifier" variant="secondary" onPress={() => router.back()} disabled={saving} />
+        <Button label={t('newPlace.verification.add')} onPress={save} loading={saving} />
+        <Button label={t('actions.modify')} variant="secondary" onPress={() => router.back()} disabled={saving} />
       </ActionBar>
     </FlowScreen>
   );

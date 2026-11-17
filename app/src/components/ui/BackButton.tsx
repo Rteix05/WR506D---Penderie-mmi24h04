@@ -1,4 +1,5 @@
 import { router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { Pressable, Text } from 'react-native';
 
 import { E1 } from '@/components/ui/elevation';
@@ -9,10 +10,12 @@ import { E1 } from '@/components/ui/elevation';
  * tactile est élargie à 44 px (hitSlop) pour la cible minimale RAAM.
  */
 export function BackButton({ close = false, onPress }: { close?: boolean; onPress?: () => void }) {
+  const { t } = useTranslation('common');
+
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={close ? 'Fermer' : 'Retour'}
+      accessibilityLabel={close ? t('backButton.close') : t('backButton.back')}
       onPress={onPress ?? (() => router.back())}
       hitSlop={4}
       style={E1}

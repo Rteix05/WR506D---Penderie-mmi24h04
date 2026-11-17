@@ -1,6 +1,7 @@
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Text, View } from 'react-native';
 
 import { ActionBar, closeFlow, FlowScreen } from '@/components/add/FlowScreen';
@@ -22,6 +23,7 @@ import { analyzeImage } from '@/lib/scan';
  * arriverait ensuite est ignorée.
  */
 export default function AnalyseScreen() {
+  const { t } = useTranslation('add');
   const { draft, applyScan, reset } = useDraft();
   const [elapsed, setElapsed] = useState(0);
   const abandoned = useRef(false);
@@ -57,39 +59,39 @@ export default function AnalyseScreen() {
 
   return (
     <FlowScreen>
-      <StepHeader close onClose={closeFlow} title="On analyse ta photo" legend="Quelques secondes" />
+      <StepHeader close onClose={closeFlow} title={t('analyse.title')} legend={t('analyse.legend')} />
 
       <View className="px-5">
         <View className="h-[360px] items-center justify-center gap-6 overflow-hidden rounded-lg bg-ink/[0.06] dark:bg-ink-night/10">
           {draft.photo ? (
-            <Image source={{ uri: draft.photo.uri }} style={{ width: 180, height: 130, borderRadius: 24 }} contentFit="cover" accessibilityLabel="Ta photo" />
+            <Image source={{ uri: draft.photo.uri }} style={{ width: 180, height: 130, borderRadius: 24 }} contentFit="cover" accessibilityLabel={t('photoZone.alt')} />
           ) : (
             <ClothVisual kind="pantalon" scale={4.06} />
           )}
           <Text accessibilityLiveRegion="polite" className="font-luciole text-legend text-muted dark:text-muted-night">
-            Analyse en cours…
+            {t('analyse.running')}
           </Text>
         </View>
       </View>
 
-      <View className="flex-row gap-1 px-5" accessible accessibilityLabel="Analyse en cours">
+      <View className="flex-row gap-1 px-5" accessible accessibilityLabel={t('analyse.runningA11y')}>
         {[1, 2, 3, 4].map((n) => (
           <View key={n} className={`h-1 flex-1 rounded-full ${n <= filled ? 'bg-primary' : 'bg-ink/10 dark:bg-ink-night/15'}`} />
         ))}
       </View>
 
       <InfoCard
-        title="On cherche"
+        title={t('analyse.search')}
         rows={[
-          ["Le type d'objet", 'En cours'],
-          ['La marque', 'En cours'],
-          ['La catégorie', 'En cours'],
+          [t('analyse.type'), t('analyse.inProgress')],
+          [t('analyse.brand'), t('analyse.inProgress')],
+          [t('analyse.category'), t('analyse.inProgress')],
         ]}
       />
 
-      <ActionBar note="Tu peux passer à la saisie manuelle à tout moment.">
+      <ActionBar note={t('analyse.note')}>
         <Button
-          label="Ajouter manuellement"
+          label={t('analyse.manual')}
           variant="secondary"
           onPress={() => {
             abandoned.current = true;

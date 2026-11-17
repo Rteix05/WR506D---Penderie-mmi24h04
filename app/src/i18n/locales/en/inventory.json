@@ -1,0 +1,187 @@
+{
+  "wardrobe": {
+    "title": "My wardrobe",
+    "noResult": "No results",
+    "count_one": "{{count}} garment",
+    "count_other": "{{count}} garments",
+    "lent_one": "{{count}} lent",
+    "lent_other": "{{count}} lent",
+    "all": "All",
+    "incomplete": "To complete",
+    "emptyTitle": "Your wardrobe is empty",
+    "emptyText": "Add your first garment: it will join your outfits and you'll know where it's stored.",
+    "emptyAction": "Add a garment",
+    "search": "Search for a garment, a brand...",
+    "filterPrefix": "Filters:",
+    "filterTitle": "Status",
+    "sortPrefix": "Sort:",
+    "sortTitle": "Sort",
+    "notFoundTitle": "No garment found",
+    "notFoundText": "No garment matches your search. Check the spelling or try another word.",
+    "clearSearch": "Clear the search"
+  },
+  "items": {
+    "title": "My items",
+    "count_one": "{{count}} item",
+    "count_other": "{{count}} items",
+    "lent_one": "{{count}} lent",
+    "lent_other": "{{count}} lent",
+    "borrowed_one": "{{count}} borrowed",
+    "borrowed_other": "{{count}} borrowed",
+    "all": "All",
+    "emptyTitle": "Your wardrobe is empty",
+    "emptyText": "Add your first item: you'll always know where it's stored and who you lent it to.",
+    "emptyAction": "Add an item",
+    "search": "Search for an item...",
+    "filterPrefix": "Status:",
+    "filterTitle": "Status",
+    "sortPrefix": "Sort:",
+    "sortTitle": "Sort",
+    "notFoundTitle": "No item found",
+    "notFoundText": "No item matches your search. Check the spelling or try another word.",
+    "showAll": "Show all",
+    "noLocation": "no location"
+  },
+  "itemDetail": {
+    "deleteError": "Couldn't delete it",
+    "location": "Location",
+    "moveItem": "Move the item",
+    "details": "Details",
+    "category": "Category",
+    "condition": "Condition",
+    "description": "Description",
+    "notesAndMemory": "Notes and memories",
+    "editNote": "Edit the note",
+    "addNote": "Add a note",
+    "noNotes": "Nothing yet. Notes are only visible to you.",
+    "edit": "Edit",
+    "share": "Share",
+    "sell": "Sell",
+    "delete": "Delete this item"
+  },
+  "garmentDetail": {
+    "deleteError": "Couldn't delete it",
+    "inWardrobe": "In my wardrobe",
+    "size": "Size {{size}}",
+    "incompleteTitle": "To complete",
+    "incompleteText": "Added with just a title from your outfit of the day: give it a category and put it away.",
+    "complete": "Complete this garment",
+    "location": "Location",
+    "moveGarment": "Move the garment",
+    "description": "Description",
+    "notes": "Notes",
+    "editNote": "Edit the note",
+    "edit": "Edit",
+    "move": "Move",
+    "sell": "Sell",
+    "delete": "Delete this garment"
+  },
+  "edit": {
+    "title": "Edit",
+    "name": "Name",
+    "category": "Category",
+    "optional": "Optional",
+    "brand": "Brand",
+    "brandCreate": "Not in the list? Add your brand",
+    "size": "Size",
+    "notedSize": "Size noted: “{{size}}”. Kept if you don't pick one.",
+    "color": "Colour",
+    "usage": "Use",
+    "styles": "Style (several choices)",
+    "condition": "Condition",
+    "description": "Description (optional)",
+    "notes": "Notes (only visible to you)",
+    "location": "Location",
+    "save": "Save",
+    "saveError": "Couldn't save.",
+    "deleteError": "Couldn't delete it",
+    "deleteItem": "Delete this item",
+    "deleteGarment": "Delete this garment"
+  },
+  "complete": {
+    "title": "Complete",
+    "alreadyTitle": "Already complete",
+    "alreadyText": "This garment has its category and location.",
+    "fromLookTitle": "Added from your outfit",
+    "fromLookText": "Give it a category and put it away: it will join your homes and the outfit suggestions.",
+    "error": "The garment couldn't be completed.",
+    "category": "Category",
+    "note": "Choose a category and at least a room.",
+    "finish": "Finish",
+    "finishAndEdit": "Finish and add details"
+  },
+  "move": {
+    "itemTitle": "Move the item",
+    "itemNote": "The old location stays in the item's history.",
+    "garmentTitle": "Move the garment",
+    "garmentNote": "The old location stays in the garment's history.",
+    "boxTitle": "Move the box",
+    "boxNote": "Everything inside goes with it, and each item keeps a record of its old location.",
+    "error": "Couldn't move it.",
+    "current": "Currently",
+    "store": "Store in: {{path}}",
+    "moveHere": "Move here",
+    "noRoom": "Choose at least a room."
+  },
+  "detail": {
+    "soon": "This action is coming soon.",
+    "deleting": "Deleting…",
+    "deleteItemTitle": "Delete this item?",
+    "deleteGarmentTitle": "Delete this garment?",
+    "deleteBody": "“{{name}}” will disappear from your inventory.",
+    "cancel": "Cancel",
+    "confirm": "Delete"
+  },
+  "history": {
+    "previous": "Previous locations",
+    "line": "{{reason}} on {{date}} · {{by}}"
+  },
+  "availability": {
+    "available": "Available",
+    "lent": "Lent",
+    "borrowed": "Borrowed",
+    "lost": "Lost",
+    "sold": "Sold"
+  },
+  "statusFilter": {
+    "all": "all",
+    "available": "available",
+    "lent": "lent",
+    "borrowed": "borrowed",
+    "lost": "lost",
+    "sold": "sold"
+  },
+  "condition": {
+    "new": "New",
+    "excellent": "Very good condition",
+    "good": "Good condition",
+    "worn": "Worn",
+    "damaged": "Damaged"
+  },
+  "usage": {
+    "everyday": "Everyday",
+    "work": "Work",
+    "sport": "Sport",
+    "evening": "Evening"
+  },
+  "sort": {
+    "recent": "newest",
+    "old": "oldest",
+    "name": "A → Z"
+  },
+  "lentLine": {
+    "at": "With {{name}}",
+    "overdue": "With {{name}} · overdue"
+  },
+  "moveReason": {
+    "manual": "Moved",
+    "box": "Its box was moved",
+    "loanReturn": "Put away after a loan",
+    "initial": "First storage"
+  },
+  "relativeDay": {
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "days": "{{days}} d ago"
+  }
+}

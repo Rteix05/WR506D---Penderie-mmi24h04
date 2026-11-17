@@ -1,5 +1,6 @@
 import { router } from 'expo-router';
 import { Fragment, type ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 
 import { PhotoArea } from '@/components/inventory/PossessionCard';
@@ -138,8 +139,10 @@ export type Crumb = { label: string; onPress?: () => void };
  * autres blanches et cliquables.
  */
 export function Breadcrumb({ crumbs }: { crumbs: Crumb[] }) {
+  const { t } = useTranslation('places');
+
   return (
-    <View accessibilityRole="summary" accessibilityLabel={`Emplacement : ${crumbs.map((c) => c.label).join(', ')}`} className="flex-row flex-wrap items-center gap-x-2 gap-y-1 px-5">
+    <View accessibilityRole="summary" accessibilityLabel={t('breadcrumb', { path: crumbs.map((c) => c.label).join(', ') })} className="flex-row flex-wrap items-center gap-x-2 gap-y-1 px-5">
       {crumbs.map((crumb, i) => {
         const last = i === crumbs.length - 1;
 
@@ -185,13 +188,14 @@ export function openPossession(p: Stored) {
  * statut teintée, chevron.
  */
 export function PossessionRow({ possession, meta: given }: { possession: Stored; meta?: string }) {
+  const { t } = useTranslation('places');
   const itemCategories = useItemCategories();
   const garmentCategories = useGarmentCategories();
   const categories = possession.kind === 'item' ? itemCategories.data : garmentCategories.data;
   const state = AVAILABILITY[possession.availability];
   const art = artOf(possession.kind, possession, categories);
   // Par défaut, sa catégorie (« Outils », « T-shirts »), comme dans la maquette.
-  const meta = given ?? categories?.find((c) => c.iri === possession.category)?.name ?? (possession.kind === 'garment' ? 'Vêtement' : 'Objet');
+  const meta = given ?? categories?.find((c) => c.iri === possession.category)?.name ?? (possession.kind === 'garment' ? t('possessionKinds.garment') : t('possessionKinds.item'));
 
   return (
     <Pressable

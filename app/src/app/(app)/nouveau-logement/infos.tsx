@@ -1,4 +1,5 @@
 import { router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { Text, View } from 'react-native';
 
 import { ActionBar, FlowScreen } from '@/components/add/FlowScreen';
@@ -9,7 +10,7 @@ import { Button } from '@/components/ui/Button';
 import { E1 } from '@/components/ui/elevation';
 import { TextField } from '@/components/ui/TextField';
 import { usePlaceDraft } from '@/lib/place-draft';
-import { PLACE_KINDS } from '@/lib/places';
+import { placeKinds } from '@/lib/places';
 import { useLocations } from '@/lib/reference';
 
 /**
@@ -23,6 +24,7 @@ import { useLocations } from '@/lib/reference';
  * principal, lui, est choisi d'office quand on range un nouvel objet.
  */
 export default function PlaceInfoStep() {
+  const { t } = useTranslation('places');
   const { draft, update, chooseKind } = usePlaceDraft();
   const locations = useLocations();
   const hasPrimary = locations.data?.places.some((p) => p.primary) ?? false;
@@ -31,47 +33,49 @@ export default function PlaceInfoStep() {
 
   return (
     <FlowScreen>
-      <StepHeader title="Ton logement" step={2} />
+      <StepHeader title={t('newPlace.infos.title')} step={2} />
 
       <View className="gap-5 px-5">
-        <TextField label="Nom" value={draft.name} onChangeText={(name) => update({ name })} autoCapitalize="sentences" placeholder="Ex. Maison principale" />
+        <TextField
+          label={t('newPlace.infos.name')}
+          value={draft.name}
+          onChangeText={(name) => update({ name })}
+          autoCapitalize="sentences"
+          placeholder={t('newPlace.infos.namePlaceholder')}
+        />
         <SelectField
-          label="Type"
+          label={t('newPlace.infos.type')}
           value={draft.kind.label}
-          options={PLACE_KINDS.map((k) => ({ key: k.key, label: k.label, hint: k.description }))}
-          onSelect={(key) => chooseKind(PLACE_KINDS.find((k) => k.key === key) ?? draft.kind)}
+          options={placeKinds().map((k) => ({ key: k.key, label: k.label, hint: k.description }))}
+          onSelect={(key) => chooseKind(placeKinds().find((k) => k.key === key) ?? draft.kind)}
         />
         <TextField
-          label="Adresse (facultatif)"
+          label={t('newPlace.infos.address')}
           value={draft.address}
           onChangeText={(address) => update({ address })}
           autoCapitalize="words"
-          placeholder="Ex. 12 rue des Lilas, Paris"
+          placeholder={t('newPlace.infos.addressPlaceholder')}
           textContentType="fullStreetAddress"
         />
         <Chips
-          label="Logement principal"
+          label={t('newPlace.infos.primary')}
           options={[
-            { value: 'yes', label: 'Oui' },
-            { value: 'no', label: 'Non' },
+            { value: 'yes', label: t('newPlace.yes') },
+            { value: 'no', label: t('newPlace.no') },
           ]}
           selected={[primary ? 'yes' : 'no']}
           onToggle={(value) => update({ primary: value === 'yes' })}
         />
-        {primary && hasPrimary && (
-          <Text className="font-luciole text-legend text-muted dark:text-muted-night">Il remplacera ton logement principal actuel.</Text>
-        )}
+        {primary && hasPrimary && <Text className="font-luciole text-legend text-muted dark:text-muted-night">{t('newPlace.infos.primaryWarning')}</Text>}
       </View>
 
       <View style={E1} className="mx-5 rounded-md bg-surface p-4 dark:bg-surface-night">
-        <Text className="font-luciole text-body text-muted dark:text-muted-night">
-          L&apos;adresse ne sert qu&apos;à toi : elle n&apos;est jamais montrée à tes amis, même sur un objet partagé.
-        </Text>
+        <Text className="font-luciole text-body text-muted dark:text-muted-night">{t('newPlace.infos.addressNote')}</Text>
       </View>
 
       <ActionBar>
         <Button
-          label="Continuer"
+          label={t('actions.continue')}
           disabled={draft.name.trim() === ''}
           onPress={() => {
             update({ primary });

@@ -1,6 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { createContext, use, useEffect, useState, type PropsWithChildren } from 'react';
 
+import i18n from '@/i18n';
 import { activeProfileId, ApiError, apiRequest, onSessionChange, restoreSession, setActiveProfileId } from '@/lib/api';
 
 type Status = 'loading' | 'signedIn' | 'signedOut';
@@ -37,7 +38,7 @@ export function SessionProvider({ children }: PropsWithChildren) {
 export function useSessionStatus(): Status {
   const status = use(SessionContext);
   if (status === null) {
-    throw new Error('useSessionStatus doit être utilisé sous <SessionProvider>.');
+    throw new Error(i18n.t('common:session.providerError'));
   }
 
   return status;

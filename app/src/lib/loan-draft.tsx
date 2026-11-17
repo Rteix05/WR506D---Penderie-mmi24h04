@@ -1,5 +1,6 @@
 import { createContext, use, useCallback, useMemo, useState, type PropsWithChildren } from 'react';
 
+import i18n from '@/i18n';
 import type { Candidate, DueChoice } from '@/lib/loans';
 import type { Kind } from '@/lib/possessions';
 
@@ -22,7 +23,7 @@ const Context = createContext<Api | null>(null);
 
 export function useLoanDraft(): Api {
   const value = use(Context);
-  if (value === null) throw new Error('useLoanDraft doit être utilisé dans le parcours « Prêter ».');
+  if (value === null) throw new Error(i18n.t('loans:error.provider'));
 
   return value;
 }

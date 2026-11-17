@@ -1,5 +1,6 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -13,12 +14,10 @@ import { isOpen, loanBadge, loanLine, useLoans, type Loan } from '@/lib/loans';
 import { artOf, type Possession } from '@/lib/possessions';
 
 type Tab = 'lender' | 'borrower';
-const TABS: { value: Tab; label: string }[] = [
-  { value: 'lender', label: "J'ai prêté" },
-  { value: 'borrower', label: "J'ai emprunté" },
+const TABS: { value: Tab; labelKey: 'list.tabLent' | 'list.tabBorrowed' }[] = [
+  { value: 'lender', labelKey: 'list.tabLent' },
+  { value: 'borrower', labelKey: 'list.tabBorrowed' },
 ];
-
-const plural = (n: number, one: string, many: string) => `${n} ${n > 1 ? many : one}`;
 
 /**
  * « Mes prêts » (maquette, lot 05, « Prêt — Mes prêts · J'ai prêté » et
@@ -27,6 +26,7 @@ const plural = (n: number, one: string, many: string) => `${n} ${n > 1 ? many : 
  * du prêt, où se font les gestes.
  */
 export default function LoansScreen() {
+  const { t } = useTranslation('loans');
   const [tab, setTab] = useState<Tab>('lender');
   const loans = useLoans(tab);
   const all = loans.data ?? [];
@@ -35,8 +35,8 @@ export default function LoansScreen() {
   const late = open.filter((l) => l.overdue).length;
   const legend = loans.data
     ? open.length === 0
-      ? 'Aucun prêt en cours'
-      : [plural(open.length, 'en cours', 'en cours'), late > 0 && plural(late, 'en retard', 'en retard')].filter(Boolean).join(' · ')
+      ? t('list.noneOpen')
+      : [t('list.open', { count: open.length }), late > 0 && t('list.late', { count: late })].filter(Boolean).join(' · ')
     : ' ';
 
   return (
@@ -46,23 +46,23 @@ export default function LoansScreen() {
           <BackButton />
         </View>
         <View className="px-5">
-          <ScreenTitle title="Mes prêts" legend={legend} />
+          <ScreenTitle title={t('list.title')} legend={legend} />
         </View>
 
         {/* Deux onglets, un seul actif : une bascule de contenu (rail gris, onglet plein). */}
         <View accessibilityRole="tablist" className="mx-5 flex-row rounded-full bg-ink/[0.05] p-1 dark:bg-ink-night/[0.08]">
-          {TABS.map((t) => {
-            const on = t.value === tab;
+          {TABS.map((item) => {
+            const on = item.value === tab;
 
             return (
               <Pressable
-                key={t.value}
+                key={item.value}
                 accessibilityRole="tab"
                 aria-selected={on}
-                onPress={() => setTab(t.value)}
+                onPress={() => setTab(item.value)}
                 style={on ? E1 : undefined}
                 className={`h-9 flex-1 items-center justify-center rounded-full ${on ? 'bg-surface dark:bg-surface-night' : ''}`}>
-                <Text className={`font-luciole-bold text-legend ${on ? 'text-ink dark:text-ink-night' : 'text-muted dark:text-muted-night'}`}>{t.label}</Text>
+                <Text className={`font-luciole-bold text-legend ${on ? 'text-ink dark:text-ink-night' : 'text-muted dark:text-muted-night'}`}>{t(item.labelKey)}</Text>
               </Pressable>
             );
           })}
@@ -74,12 +74,8 @@ export default function LoansScreen() {
         {loans.data && all.length === 0 && (
           <EmptyState
             icon="search"
-            title={tab === 'lender' ? 'Rien de prêté' : 'Rien d’emprunté'}
-            text={
-              tab === 'lender'
-                ? 'Ouvre un objet ou un vêtement disponible et touche « Prêter » : tu sauras toujours chez qui il est.'
-                : 'Quand un ami te prête quelque chose, ça apparaît ici, avec la date de retour.'
-            }
+            title={tab === 'lender' ? t('list.emptyLentTitle') : t('list.emptyBorrowedTitle')}
+            text={tab === 'lender' ? t('list.emptyLentText') : t('list.emptyBorrowedText')}
           />
         )}
 
@@ -87,7 +83,7 @@ export default function LoansScreen() {
 
         {closed.length > 0 && (
           <View className="gap-3">
-            <SectionHeader title="Terminés" aside={plural(closed.length, 'prêt', 'prêts')} />
+            <SectionHeader title={t('list.closed')} aside={t('list.loans', { count: closed.length })} />
             {closed.map((l) => (
               <LoanCard key={l.id} loan={l} />
             ))}

@@ -1,6 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Alert, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -23,6 +24,7 @@ import { useBrands, useColors, useGarmentCategories, useLocations, useSizes, use
  * « Déplacer », « Prêter », « Vendre » (une alerte le dit).
  */
 export default function GarmentScreen() {
+  const { t } = useTranslation('inventory');
   const { id } = useLocalSearchParams<{ id: string }>();
   const garment = usePossession('garment', id);
   const categories = useGarmentCategories();
@@ -52,9 +54,9 @@ export default function GarmentScreen() {
   const root = rootCategory(categories.data, p.category);
   const where = locationOf(locations.data, p);
   // Pour un vêtement disponible, la maquette dit « Dans ma penderie ».
-  const status = p.availability === 'AVAILABLE' ? { ...AVAILABILITY.AVAILABLE, label: 'Dans ma penderie' } : AVAILABILITY[p.availability];
+  const status = p.availability === 'AVAILABLE' ? { ...AVAILABILITY.AVAILABLE, label: t('garmentDetail.inWardrobe') } : AVAILABILITY[p.availability];
   const attributes = [
-    size && `Taille ${size}`,
+    size && t('garmentDetail.size', { size }),
     ...(p.colors ?? []).map((c) => find(colors.data, c)),
     p.usage && USAGE_LABEL[p.usage],
     p.condition && CONDITION_LABEL[p.condition],
@@ -63,14 +65,14 @@ export default function GarmentScreen() {
 
   const edit = () => router.push({ pathname: '/modifier', params: { kind: 'garment', id: p.id } });
   const remove = () =>
-    confirmDelete('ce vêtement', p.name, async () => {
+    confirmDelete('garment', p.name, async () => {
       setDeleting(true);
       try {
         await deletePossession(queryClient, 'garment', p.id);
         router.back();
       } catch (e) {
         setDeleting(false);
-        Alert.alert('Suppression impossible', e instanceof Error ? e.message : '');
+        Alert.alert(t('garmentDetail.deleteError'), e instanceof Error ? e.message : '');
       }
     });
 
@@ -82,28 +84,28 @@ export default function GarmentScreen() {
         </SafeAreaView>
         <DetailTitle name={p.name} meta={[find(brands.data, p.brand), root?.name ?? category, size].filter(Boolean).join(' · ')} status={status} />
         <Attributes values={attributes} />
-        {p.incomplete && <Banner tone="info" title="À compléter" text="Ajouté d'un simple titre depuis ton look du jour : donne-lui une catégorie et range-le." />}
+        {p.incomplete && <Banner tone="info" title={t('garmentDetail.incompleteTitle')} text={t('garmentDetail.incompleteText')} />}
         {p.incomplete && owner && (
           <View className="px-5">
-            <Button label="Compléter ce vêtement" onPress={() => router.push({ pathname: '/completer', params: { id: p.id } })} />
+            <Button label={t('garmentDetail.complete')} onPress={() => router.push({ pathname: '/completer', params: { id: p.id } })} />
           </View>
         )}
 
         <View className="gap-3 px-5">
           <PossessionLoans possession={p} owner={owner} />
           {p.room && (
-            <Section title="Localisation" link={owner ? { label: 'Déplacer le vêtement', onPress: () => openMove('garment', p.id, p.name, where) } : undefined}>
+            <Section title={t('garmentDetail.location')} link={owner ? { label: t('garmentDetail.moveGarment'), onPress: () => openMove('garment', p.id, p.name, where) } : undefined}>
               <Text className="font-luciole-bold text-body text-ink dark:text-ink-night">{where ?? '…'}</Text>
             </Section>
           )}
           <MoveHistory iri={p['@id']} enabled={Boolean(p.room)} />
           {p.description && (
-            <Section title="Description">
+            <Section title={t('garmentDetail.description')}>
               <Text className="font-luciole text-body text-ink dark:text-ink-night">{p.description}</Text>
             </Section>
           )}
           {owner && p.notes && (
-            <Section title="Notes" link={{ label: 'Modifier la note', onPress: edit }}>
+            <Section title={t('garmentDetail.notes')} link={{ label: t('garmentDetail.editNote'), onPress: edit }}>
               <Text className="font-luciole text-body text-ink dark:text-ink-night">{p.notes}</Text>
             </Section>
           )}
@@ -115,11 +117,11 @@ export default function GarmentScreen() {
             primary={loanAction.primary}
             note={loanAction.note}
             secondary={[
-              { label: 'Modifier', onPress: edit },
-              ...(p.room ? [{ label: 'Déplacer', onPress: () => openMove('garment', p.id, p.name, where) }] : []),
-              { label: 'Vendre', onPress: () => soon('Vendre') },
+              { label: t('garmentDetail.edit'), onPress: edit },
+              ...(p.room ? [{ label: t('garmentDetail.move'), onPress: () => openMove('garment', p.id, p.name, where) }] : []),
+              { label: t('garmentDetail.sell'), onPress: () => soon(t('garmentDetail.sell')) },
             ]}
-            deleteLabel="Supprimer ce vêtement"
+            deleteLabel={t('garmentDetail.delete')}
             onDelete={remove}
             deleting={deleting}
           />

@@ -1,6 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Text, View } from 'react-native';
 
 import { ActionBar, FlowScreen } from '@/components/add/FlowScreen';
@@ -18,6 +19,7 @@ import { dueDateOf, lend, shortDate } from '@/lib/loans';
  * (maquette, « Prêt — Confirmation »).
  */
 export default function LendReviewStep() {
+  const { t } = useTranslation('loans');
   const { draft } = useLoanDraft();
   const queryClient = useQueryClient();
   const [saving, setSaving] = useState(false);
@@ -37,38 +39,38 @@ export default function LendReviewStep() {
       router.push({ pathname: '/pret/[id]', params: { id: loan.id, done: 'lent' } });
     } catch (e) {
       setSaving(false);
-      setError(e instanceof Error ? e.message : 'Enregistrement impossible.');
+      setError(e instanceof Error ? e.message : t('review.saveError'));
     }
   };
 
   return (
     <FlowScreen>
-      <StepHeader title="Vérifie le prêt" step={3} total={3} />
+      <StepHeader title={t('review.title')} step={3} total={3} />
 
       <InfoCard
-        title="Le prêt"
+        title={t('review.loan')}
         rows={[
-          ['Objet', draft.possession?.name],
-          ['Prêté à', draft.borrower?.displayName],
-          ['Retour prévu', due ? shortDate(due) : 'Non défini'],
+          [t('review.object'), draft.possession?.name],
+          [t('review.lentTo'), draft.borrower?.displayName],
+          [t('review.expectedReturn'), due ? shortDate(due) : t('review.notDefined')],
         ]}
       />
       {note !== '' && (
         <View className="px-5">
-          <Section title="Note">
+          <Section title={t('review.note')}>
             <Text className="font-luciole text-body text-ink dark:text-ink-night">{note}</Text>
           </Section>
         </View>
       )}
 
-      <ActionBar note={`Quand ${draft.borrower?.displayName ?? 'ton ami'} aura l’objet en main, il passera en « Prêté ». Il reçoit une notification.`}>
+      <ActionBar note={t('review.noteText', { name: draft.borrower?.displayName ?? t('review.friendFallback') })}>
         {error && (
           <Text accessibilityRole="alert" className="text-center font-luciole text-legend text-error dark:text-error-night">
             {error}
           </Text>
         )}
-        <Button label="Confirmer le prêt" onPress={save} loading={saving} />
-        <Button label="Modifier" variant="secondary" onPress={() => router.back()} disabled={saving} />
+        <Button label={t('review.confirm')} onPress={save} loading={saving} />
+        <Button label={t('review.edit')} variant="secondary" onPress={() => router.back()} disabled={saving} />
       </ActionBar>
     </FlowScreen>
   );

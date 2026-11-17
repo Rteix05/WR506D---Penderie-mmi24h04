@@ -1,5 +1,6 @@
 import { router } from 'expo-router';
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Pressable, Text, useWindowDimensions, View } from 'react-native';
 
 import { ActionBar, closeFlow, FlowScreen } from '@/components/add/FlowScreen';
@@ -17,6 +18,7 @@ import { useGarmentCategories } from '@/lib/reference';
  * choisir la catégorie à l'étape suivante.
  */
 export default function GarmentTypeScreen() {
+  const { t } = useTranslation('add');
   const { draft, update, reset } = useDraft();
   const categories = useGarmentCategories();
   const { width } = useWindowDimensions();
@@ -32,7 +34,7 @@ export default function GarmentTypeScreen() {
 
   return (
     <FlowScreen>
-      <StepHeader close onClose={closeFlow} step={1} title="C'est quoi ?" />
+      <StepHeader close onClose={closeFlow} step={1} title={t('garmentType.title')} />
 
       <View accessibilityRole="radiogroup" className="flex-row flex-wrap gap-3 px-5">
         {GARMENT_TYPES.map((type) => {
@@ -56,8 +58,8 @@ export default function GarmentTypeScreen() {
         })}
       </View>
 
-      <ActionBar note="Le type sert à ranger le vêtement dans la bonne catégorie du dressing.">
-        <Button label="Continuer" disabled={!draft.garmentType} onPress={() => router.push('/ajout/vetement/infos')} />
+      <ActionBar note={t('garmentType.note')}>
+        <Button label={t('garmentType.continue')} disabled={!draft.garmentType} onPress={() => router.push('/ajout/vetement/infos')} />
       </ActionBar>
     </FlowScreen>
   );

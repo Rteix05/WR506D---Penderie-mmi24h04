@@ -1,6 +1,7 @@
 import * as ImagePicker from 'expo-image-picker';
 import { Alert } from 'react-native';
 
+import i18n from '@/i18n';
 import { PICKER_OPTIONS } from '@/lib/scan';
 
 /**
@@ -12,7 +13,7 @@ export async function pickPhoto(source: 'camera' | 'library'): Promise<ImagePick
   if (source === 'camera') {
     const permission = await ImagePicker.requestCameraPermissionsAsync();
     if (!permission.granted) {
-      Alert.alert('Appareil photo', "L'accès à l'appareil photo est refusé : autorise-le dans les réglages du téléphone.");
+      Alert.alert(i18n.t('add:photo.cameraTitle'), i18n.t('add:photo.cameraDenied'));
 
       return null;
     }

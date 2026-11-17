@@ -1,0 +1,187 @@
+{
+  "wardrobe": {
+    "title": "Mon dressing",
+    "noResult": "Aucun résultat",
+    "count_one": "{{count}} vêtement",
+    "count_other": "{{count}} vêtements",
+    "lent_one": "{{count}} prêté",
+    "lent_other": "{{count}} prêtés",
+    "all": "Tous",
+    "incomplete": "À compléter",
+    "emptyTitle": "Ton dressing est vide",
+    "emptyText": "Ajoute ton premier vêtement : il entrera dans tes tenues et tu sauras où il est rangé.",
+    "emptyAction": "Ajouter un vêtement",
+    "search": "Rechercher un vêtement, une marque...",
+    "filterPrefix": "Filtres :",
+    "filterTitle": "Statut",
+    "sortPrefix": "Trier :",
+    "sortTitle": "Trier",
+    "notFoundTitle": "Aucun vêtement trouvé",
+    "notFoundText": "Aucun vêtement ne correspond à ta recherche. Vérifie l'orthographe ou essaie un autre mot.",
+    "clearSearch": "Effacer la recherche"
+  },
+  "items": {
+    "title": "Mes objets",
+    "count_one": "{{count}} objet",
+    "count_other": "{{count}} objets",
+    "lent_one": "{{count}} prêté",
+    "lent_other": "{{count}} prêtés",
+    "borrowed_one": "{{count}} emprunté",
+    "borrowed_other": "{{count}} empruntés",
+    "all": "Tous",
+    "emptyTitle": "Ta penderie est vide",
+    "emptyText": "Ajoute ton premier objet : tu sauras toujours où il est rangé et à qui tu l'as prêté.",
+    "emptyAction": "Ajouter un objet",
+    "search": "Rechercher un objet...",
+    "filterPrefix": "Statut :",
+    "filterTitle": "Statut",
+    "sortPrefix": "Trier :",
+    "sortTitle": "Trier",
+    "notFoundTitle": "Aucun objet trouvé",
+    "notFoundText": "Aucun objet ne correspond à ta recherche. Vérifie l'orthographe ou essaie un autre mot.",
+    "showAll": "Tout afficher",
+    "noLocation": "sans emplacement"
+  },
+  "itemDetail": {
+    "deleteError": "Suppression impossible",
+    "location": "Localisation",
+    "moveItem": "Déplacer l'objet",
+    "details": "Détails",
+    "category": "Catégorie",
+    "condition": "État",
+    "description": "Description",
+    "notesAndMemory": "Notes et souvenir",
+    "editNote": "Modifier la note",
+    "addNote": "Ajouter une note",
+    "noNotes": "Rien pour l’instant. Les notes ne sont visibles que par toi.",
+    "edit": "Modifier",
+    "share": "Partager",
+    "sell": "Vendre",
+    "delete": "Supprimer cet objet"
+  },
+  "garmentDetail": {
+    "deleteError": "Suppression impossible",
+    "inWardrobe": "Dans ma penderie",
+    "size": "Taille {{size}}",
+    "incompleteTitle": "À compléter",
+    "incompleteText": "Ajouté d'un simple titre depuis ton look du jour : donne-lui une catégorie et range-le.",
+    "complete": "Compléter ce vêtement",
+    "location": "Localisation",
+    "moveGarment": "Déplacer le vêtement",
+    "description": "Description",
+    "notes": "Notes",
+    "editNote": "Modifier la note",
+    "edit": "Modifier",
+    "move": "Déplacer",
+    "sell": "Vendre",
+    "delete": "Supprimer ce vêtement"
+  },
+  "edit": {
+    "title": "Modifier",
+    "name": "Nom",
+    "category": "Catégorie",
+    "optional": "Facultatif",
+    "brand": "Marque",
+    "brandCreate": "Pas dans la liste ? Ajoute ta marque",
+    "size": "Taille",
+    "notedSize": "Taille notée : « {{size}} ». Gardée si tu n'en choisis pas une.",
+    "color": "Couleur",
+    "usage": "Usage",
+    "styles": "Style (plusieurs choix)",
+    "condition": "État",
+    "description": "Description (facultatif)",
+    "notes": "Notes (visibles par toi seul)",
+    "location": "Localisation",
+    "save": "Enregistrer",
+    "saveError": "Enregistrement impossible.",
+    "deleteError": "Suppression impossible",
+    "deleteItem": "Supprimer cet objet",
+    "deleteGarment": "Supprimer ce vêtement"
+  },
+  "complete": {
+    "title": "Compléter",
+    "alreadyTitle": "Déjà complet",
+    "alreadyText": "Ce vêtement a sa catégorie et son emplacement.",
+    "fromLookTitle": "Ajouté depuis ton look",
+    "fromLookText": "Donne-lui une catégorie et range-le : il rejoindra tes logements et les suggestions de tenues.",
+    "error": "Le vêtement n'a pas pu être complété.",
+    "category": "Catégorie",
+    "note": "Choisis une catégorie et au moins une pièce.",
+    "finish": "Terminer",
+    "finishAndEdit": "Terminer et ajouter les détails"
+  },
+  "move": {
+    "itemTitle": "Déplacer l’objet",
+    "itemNote": "L’ancien emplacement reste dans l’historique de l’objet.",
+    "garmentTitle": "Déplacer le vêtement",
+    "garmentNote": "L’ancien emplacement reste dans l’historique du vêtement.",
+    "boxTitle": "Déplacer le carton",
+    "boxNote": "Tout ce qu’il contient le suit, et chaque objet garde la trace de son ancien emplacement.",
+    "error": "Déplacement impossible.",
+    "current": "Actuellement",
+    "store": "Ranger : {{path}}",
+    "moveHere": "Déplacer ici",
+    "noRoom": "Choisis au moins une pièce."
+  },
+  "detail": {
+    "soon": "Cette action arrive bientôt.",
+    "deleting": "Suppression…",
+    "deleteItemTitle": "Supprimer cet objet ?",
+    "deleteGarmentTitle": "Supprimer ce vêtement ?",
+    "deleteBody": "« {{name}} » disparaîtra de ton inventaire.",
+    "cancel": "Annuler",
+    "confirm": "Supprimer"
+  },
+  "history": {
+    "previous": "Emplacements précédents",
+    "line": "{{reason}} le {{date}} · {{by}}"
+  },
+  "availability": {
+    "available": "Disponible",
+    "lent": "Prêté",
+    "borrowed": "Emprunté",
+    "lost": "Perdu",
+    "sold": "Vendu"
+  },
+  "statusFilter": {
+    "all": "tous",
+    "available": "disponibles",
+    "lent": "prêtés",
+    "borrowed": "empruntés",
+    "lost": "perdus",
+    "sold": "vendus"
+  },
+  "condition": {
+    "new": "Neuf",
+    "excellent": "Très bon état",
+    "good": "Bon état",
+    "worn": "Usé",
+    "damaged": "Abîmé"
+  },
+  "usage": {
+    "everyday": "Quotidien",
+    "work": "Travail",
+    "sport": "Sport",
+    "evening": "Soirée"
+  },
+  "sort": {
+    "recent": "récents",
+    "old": "anciens",
+    "name": "A → Z"
+  },
+  "lentLine": {
+    "at": "Chez {{name}}",
+    "overdue": "Chez {{name}} · en retard"
+  },
+  "moveReason": {
+    "manual": "Déplacé",
+    "box": "Son carton a bougé",
+    "loanReturn": "Rangé au retour d’un prêt",
+    "initial": "Premier rangement"
+  },
+  "relativeDay": {
+    "today": "Aujourd'hui",
+    "yesterday": "Hier",
+    "days": "Il y a {{days}} j"
+  }
+}

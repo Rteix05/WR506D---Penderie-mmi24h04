@@ -1,12 +1,13 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { router, useLocalSearchParams } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
 import { soon } from '@/components/inventory/Detail';
 import { Breadcrumb, Loading, Missing, PossessionRow, RowCard, SectionHeader } from '@/components/places/Blocks';
 import { DeleteLink } from '@/components/places/DeleteLink';
 import { PlaceScreen } from '@/components/places/PlaceScreen';
-import { deleteLocation, inBox, inRoom, inStorage, objects, plural, usePlacesData } from '@/lib/places';
+import { deleteLocation, inBox, inRoom, inStorage, usePlacesData } from '@/lib/places';
 
 /** Nombre de cartons montrés avant « Voir tout ». */
 const BOXES_SHOWN = 3;
@@ -23,6 +24,7 @@ const BOXES_SHOWN = 3;
  * Le partage attend sa route d'API : « Bientôt ».
  */
 export default function RoomScreen() {
+  const { t } = useTranslation('places');
   const { id } = useLocalSearchParams<{ id: string }>();
   const { data, error } = usePlacesData();
   const queryClient = useQueryClient();
@@ -30,15 +32,15 @@ export default function RoomScreen() {
 
   if (!data) {
     return (
-      <PlaceScreen title="Pièce">
+      <PlaceScreen title={t('room.title')}>
         <Loading error={error} />
       </PlaceScreen>
     );
   }
   if (!room) {
     return (
-      <PlaceScreen title="Pièce">
-        <Missing text="Cette pièce n'existe plus." />
+      <PlaceScreen title={t('room.title')}>
+        <Missing text={t('room.gone')} />
       </PlaceScreen>
     );
   }
@@ -50,7 +52,7 @@ export default function RoomScreen() {
   const loose = contents.filter((p) => !p.storage && !p.box);
 
   return (
-    <PlaceScreen title={room.name} legend={`${plural(storages.length, 'rangement', 'rangements')} · ${objects(contents.length)}`}>
+    <PlaceScreen title={room.name} legend={[t('counts.storages', { count: storages.length }), t('counts.objects', { count: contents.length })].join(' · ')}>
       <Breadcrumb
         crumbs={[
           ...(place ? [{ label: place.name, onPress: () => router.navigate({ pathname: '/logements/[id]', params: { id: place.id } }) }] : []),
@@ -60,7 +62,7 @@ export default function RoomScreen() {
 
       {storages.length > 0 && (
         <View className="gap-3">
-          <SectionHeader title="Rangements" />
+          <SectionHeader title={t('room.storages')} />
           {storages.map((storage) => {
             const n = data.boxes.filter((b) => b.storage === storage.iri).length;
 
@@ -68,7 +70,7 @@ export default function RoomScreen() {
               <RowCard
                 key={storage.iri}
                 title={storage.name}
-                subtitle={[objects(inStorage(data, storage).length), n > 0 && plural(n, 'carton', 'cartons')].filter(Boolean).join(' · ')}
+                subtitle={[t('counts.objects', { count: inStorage(data, storage).length }), n > 0 && t('counts.boxes', { count: n })].filter(Boolean).join(' · ')}
                 onPress={() => router.push({ pathname: '/logements/rangement/[id]', params: { id: storage.id } })}
               />
             );
@@ -79,8 +81,8 @@ export default function RoomScreen() {
       {boxes.length > 0 && (
         <View className="gap-3">
           <SectionHeader
-            title="Cartons"
-            aside={boxes.length > BOXES_SHOWN ? 'Voir tout' : undefined}
+            title={t('room.boxes')}
+            aside={boxes.length > BOXES_SHOWN ? t('room.seeAll') : undefined}
             onAside={() => router.push({ pathname: '/logements/cartons/tous', params: { room: room.id } })}
           />
           {boxes.slice(0, BOXES_SHOWN).map((box) => {
@@ -90,7 +92,7 @@ export default function RoomScreen() {
               <RowCard
                 key={box.iri}
                 title={box.name}
-                subtitle={[storage?.name ?? 'Posé dans la pièce', objects(inBox(data, box).length)].join(' · ')}
+                subtitle={[storage?.name ?? t('room.onFloor'), t('counts.objects', { count: inBox(data, box).length })].join(' · ')}
                 onPress={() => router.push({ pathname: '/carton/[id]', params: { id: box.id } })}
               />
             );
@@ -100,28 +102,28 @@ export default function RoomScreen() {
 
       {loose.length > 0 && (
         <View className="gap-3">
-          <SectionHeader title="Posés dans la pièce" aside={objects(loose.length)} />
+          <SectionHeader title={t('room.inRoom')} aside={t('counts.objects', { count: loose.length })} />
           {loose.map((p) => (
-            <PossessionRow key={p['@id']} possession={p} meta="Sans rangement" />
+            <PossessionRow key={p['@id']} possession={p} meta={t('room.noStorage')} />
           ))}
         </View>
       )}
 
       <View className="gap-3">
         <RowCard
-          title="+ Ajouter un rangement"
-          subtitle="Étagère, placard, penderie..."
+          title={t('room.addStorage')}
+          subtitle={t('room.addStorageHint')}
           onPress={() => router.push({ pathname: '/nouvel-emplacement', params: { level: 'storage', parent: room.id } })}
         />
-        <RowCard title="Partager cette pièce" subtitle="Avec un ami ou ta famille" onPress={() => soon('Partager cette pièce')} />
+        <RowCard title={t('room.share')} subtitle={t('room.shareHint')} onPress={() => soon(t('room.share'))} />
       </View>
 
       {contents.length === 0 && (
         <DeleteLink
-          label="Supprimer cette pièce"
-          what="cette pièce"
+          label={t('room.delete')}
+          what={t('room.deleteWhat')}
           name={room.name}
-          detail="Ses rangements et ses cartons vides seront supprimés avec elle."
+          detail={t('room.deleteDetail')}
           onConfirm={async () => {
             await deleteLocation(queryClient, 'room', room.id);
             router.back();

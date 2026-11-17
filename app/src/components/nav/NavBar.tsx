@@ -1,8 +1,9 @@
+import { useTranslation } from 'react-i18next';
 import { Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { TabIcon, type TabIconName } from '@/components/nav/TabIcon';
-import { ORDER, type Section } from '@/components/nav/sections';
+import { ORDER, sectionLabel, type Section } from '@/components/nav/sections';
 import { E2 } from '@/components/ui/elevation';
 
 const ICON: Record<Section, TabIconName> = {
@@ -52,18 +53,20 @@ export function NavBar({ active, open, onTabPress, onAddPress }: Props) {
 }
 
 function Tab({ section, active, expanded, onPress }: { section: Section; active: boolean; expanded: boolean; onPress: () => void }) {
+  const { t } = useTranslation('common');
+  const label = sectionLabel(section);
   const color = active ? 'text-primary dark:text-primary-night' : 'text-muted/[0.85] dark:text-muted-night';
   const iconColor = active ? '#D31D66' : 'rgba(71, 85, 105, 0.85)';
 
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`${section}, menu`}
+      accessibilityLabel={t('navigation.tabMenu', { label })}
       aria-selected={active} aria-expanded={expanded}
       onPress={onPress}
       className="h-12 w-[68px] items-center justify-center gap-1">
       <TabIcon name={ICON[section]} color={iconColor} />
-      <Text className={`font-luciole-bold text-legend ${color}`}>{section}</Text>
+      <Text className={`font-luciole-bold text-legend ${color}`}>{label}</Text>
       {/* Chevron « s'ouvre vers le haut » : « › » tourné de -90°. */}
       <Text className={`absolute left-[54px] top-[2px] font-luciole-bold text-legend ${color}`} style={{ transform: [{ rotate: '-90deg' }] }} accessible={false}>
         ›
@@ -78,10 +81,12 @@ function Tab({ section, active, expanded, onPress }: { section: Section; active:
  * le menu d'ajout.
  */
 function AddButton({ onPress }: { onPress: () => void }) {
+  const { t } = useTranslation('common');
+
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel="Ajouter"
+      accessibilityLabel={t('navigation.add')}
       onPress={onPress}
       style={E2}
       className="absolute -top-6 left-1/2 -ml-[30px] h-[60px] w-[60px] items-center justify-center rounded-full border-[2.667px] border-bg bg-primary active:opacity-80 dark:border-bg-night">
