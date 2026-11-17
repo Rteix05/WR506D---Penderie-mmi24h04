@@ -38,6 +38,7 @@ export default function AppLayout() {
       {/* Paramètres : la langue de l'app. */}
       <Stack.Screen name="parametres" />
       <Stack.Screen name="activite" />
+      <Stack.Screen name="tenue" options={{ presentation: 'modal' }} />
     </Stack>
   );
 }
