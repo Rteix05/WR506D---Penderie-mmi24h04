@@ -18,12 +18,16 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 /**
  * Inscription : crée le compte et son premier profil, adulte et par
  * défaut. La connexion se fait ensuite par /api/auth/login.
+ *
+ * Le corps arrive en JSON ou en JSON-LD (le format d'entrée d'API
+ * Platform). Depuis Symfony 7.4.23, MapRequestPayload refuse (415) tout
+ * format qui n'est pas listé dans acceptFormat : les deux le sont.
  */
 final class RegisterController extends AbstractController
 {
     #[Route('/api/auth/register', name: 'api_register', methods: ['POST'])]
     public function __invoke(
-        #[MapRequestPayload] RegisterRequest $request,
+        #[MapRequestPayload(acceptFormat: ['json', 'jsonld'])] RegisterRequest $request,
         UserPasswordHasherInterface $hasher,
         ValidatorInterface $validator,
         EntityManagerInterface $em,

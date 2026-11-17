@@ -3,7 +3,11 @@ framework:
     secret: '%env(APP_SECRET)%'
 
     # Note that the session will be started ONLY if you read or write from it.
+    # L'API n'en ouvre jamais (pare-feux sans état) ; le back-office, si.
     session: true
+
+    # Jetons CSRF du formulaire de connexion du back-office.
+    csrf_protection: true
 
     # Le scan par IA passe par OpenRouter (voir App\Service\Scan\OpenRouterVision).
     # Client dédié : la clé ne part que vers openrouter.ai.

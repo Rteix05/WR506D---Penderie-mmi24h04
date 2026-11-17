@@ -14,9 +14,8 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * Ce que l'administrateur a fait, et pourquoi. Existe sans signalement
- * préalable : MVP depuis le 29/09, alors que Report reste en V2. La clé
- * report du MDD arrivera avec Report (une colonne sans sa table ne pourrait
- * pas avoir de vraie clé étrangère).
+ * préalable (action spontanée) ; quand elle répond à un signalement, elle
+ * pointe vers lui (report, entré le 10/11 avec Report).
  *
  * La cible est une référence souple (targetType + targetId, sans clé
  * étrangère, comme Report) : le contenu supprimé par la modération ne doit
@@ -54,6 +53,11 @@ class ModerationAction
     #[Assert\NotBlank]
     private string $reason;
 
+    /** Le signalement qui a motivé l'action, s'il y en a un. SET NULL : le journal survit. */
+    #[ORM\ManyToOne(targetEntity: Report::class)]
+    #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
+    private ?Report $report;
+
     /** Fin d'une suspension ou d'un bannissement temporaire. */
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
     private ?\DateTimeImmutable $expiresAt;
@@ -61,7 +65,7 @@ class ModerationAction
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
     private \DateTimeImmutable $createdAt;
 
-    public function __construct(Account $admin, A $actionType, T $targetType, Uuid $targetId, string $reason, ?\DateTimeImmutable $expiresAt = null)
+    public function __construct(Account $admin, A $actionType, T $targetType, Uuid $targetId, string $reason, ?\DateTimeImmutable $expiresAt = null, ?Report $report = null)
     {
         if (!$admin->isAdmin()) {
             throw new \LogicException('Seul un administrateur modère.');
@@ -77,6 +81,7 @@ class ModerationAction
         $this->targetId = $targetId;
         $this->reason = $reason;
         $this->expiresAt = $expiresAt;
+        $this->report = $report;
         $this->createdAt = new \DateTimeImmutable();
     }
 
@@ -136,6 +141,11 @@ class ModerationAction
     public function getExpiresAt(): ?\DateTimeImmutable
     {
         return $this->expiresAt;
+    }
+
+    public function getReport(): ?Report
+    {
+        return $this->report;
     }
 
     public function getCreatedAt(): \DateTimeImmutable

@@ -1,0 +1,31 @@
+{#
+ # Paramètres du back-office : la langue. Chaque langue est écrite dans sa
+ # propre langue ; un clic recharge la page dans la langue choisie (?lang=,
+ # gardée en session par AdminLocaleSubscriber).
+ #}
+{% extends 'admin/base.html.twig' %}
+{% import 'admin/_ui.html.twig' as ui %}
+
+{% block title %}{{ 'settings.title'|trans({}, 'admin') }}{% endblock %}
+{% block active %}settings{% endblock %}
+{% block heading %}{{ 'settings.title'|trans({}, 'admin') }}{% endblock %}
+{% block subtitle %}{{ 'settings.subtitle'|trans({}, 'admin') }}{% endblock %}
+
+{% block body %}
+    <section class="{{ ui.card_class() }} max-w-xl" aria-labelledby="langue">
+        <h2 id="langue" class="text-body font-bold">{{ 'settings.language.title'|trans({}, 'admin') }}</h2>
+        <p class="mt-1 text-legend text-muted">{{ 'settings.language.help'|trans({}, 'admin') }}</p>
+        <ul class="mt-5 flex flex-col gap-2">
+            {% for code, name in languages %}
+                {% set on = app.request.locale == code %}
+                <li>
+                    <a href="{{ path('admin_settings', {lang: code}) }}" lang="{{ code }}" hreflang="{{ code }}" {% if on %}aria-current="true"{% endif %}
+                       class="flex items-center justify-between rounded-sm px-4 py-3 text-body ring-1 {{ on ? 'bg-primary/10 font-bold text-primary ring-primary' : 'ring-ink/10 hover:bg-ink/5' }}">
+                        {{ name }}
+                        {% if on %}<span class="text-legend">{{ 'settings.language.current'|trans({}, 'admin') }}</span>{% endif %}
+                    </a>
+                </li>
+            {% endfor %}
+        </ul>
+    </section>
+{% endblock %}
