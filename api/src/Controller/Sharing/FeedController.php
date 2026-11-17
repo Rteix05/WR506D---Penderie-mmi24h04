@@ -200,15 +200,7 @@ final class FeedController extends AbstractController
     /** @return list<Profile> */
     private function friendsOf(Profile $me): array
     {
-        $friendships = $this->em->createQueryBuilder()
-            ->select('f')->from(Friendship::class, 'f')
-            ->where('f.requester = :me OR f.addressee = :me')
-            ->andWhere('f.status = :accepted')
-            ->setParameter('me', $me->getId(), 'uuid')
-            ->setParameter('accepted', FriendshipStatus::Accepted)
-            ->getQuery()->getResult();
-
-        return array_map(static fn (Friendship $f) => $f->getRequester() === $me ? $f->getAddressee() : $f->getRequester(), $friendships);
+        return $this->em->getRepository(Friendship::class)->friendsOf($me);
     }
 
     /** @return list<Profile> */
