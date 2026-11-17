@@ -581,3 +581,16 @@ Règles suivies avec l'outil de développement :
 
   Chacune est devenue une règle ferme ou un test.
 - **Vérifié** : PHPStan, tsc, ESLint, `i18n:check` OK. Tests écrits, à lancer par l'étudiant.
+
+### 17/11 (fin) — « J'aime » et commentaires du fil (PR #77)
+
+- **Prompts** (mot pour mot) :
+  - « lance tout je teste sur mon tel » ;
+  - « j'ai vu les analyse , la j'ai posté un look , vérifie si tu l'as en db , et si oui met des fixtures de like / commentaire ».
+- **Constat avant d'agir** : le look et sa publication étaient bien en base. Mais les « j'aime » n'existaient pas (ni table, ni route, ni bouton), l'app n'affichait pas les commentaires, et une publication pour les abonnés refuse les commentaires (règle du MDD). Des données de démo seules n'auraient rien montré. L'IA a posé la question ; l'étudiant a choisi de construire les deux.
+- **Fait** :
+  - les « j'aime » : l'entité `PostLike`, les routes, et dans l'app un cœur avec son compteur ;
+  - les commentaires dans l'app, d'après la maquette (Répondre, Ton commentaire, Publier) ;
+  - une commande de démo `app:demo:social`. Pour accepter des commentaires, elle a fait passer la publication « en croco » des abonnés aux amis ;
+  - au passage, l'adresse de l'API pour Expo est revenue à celle du Wi-Fi.
+- **Erreur de l'IA** : encore des apostrophes perdues dans un patch passé par le shell (tests). Elles ont été repérées avant le commit.
