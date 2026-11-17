@@ -1,0 +1,115 @@
+{#
+ # Pré-analyse IA d'un signalement ou d'un litige (AiModerator).
+ #   review     la dernière analyse (AiReview) ou null
+ #   count      le nombre d'analyses du dossier
+ #   threshold  le seuil d'application automatique (0-100)
+ #   kind       'report' | 'dispute'
+ #   subjectId  l'identifiant du signalement ou du litige
+ #   pending    le dossier attend encore une décision
+ #}
+{% import 'admin/_ui.html.twig' as ui %}
+{% set statusPills = {
+    FAILED: ['ai.status.failed'|trans({}, 'admin'), 'red'],
+    APPLIED: ['ai.status.applied'|trans({}, 'admin'), 'pink'],
+    PROPOSED: ['ai.status.proposed'|trans({}, 'admin'), 'pink'],
+    CONFIRMED: ['ai.status.confirmed'|trans({}, 'admin'), 'green'],
+    OVERRIDDEN: ['ai.status.overridden'|trans({}, 'admin'), 'grey'],
+    REVERTED: ['ai.status.reverted'|trans({}, 'admin'), 'red'],
+} %}
+{% set verdicts = {
+    DISMISS: 'ai.verdict.dismiss'|trans({}, 'admin'), WARN: 'ai.verdict.warn'|trans({}, 'admin'), SANCTION: 'ai.verdict.sanction'|trans({}, 'admin'), UNSURE: 'ai.verdict.unsure'|trans({}, 'admin'),
+    BUYER: 'ai.verdict.buyer'|trans({}, 'admin'), SELLER: 'ai.verdict.seller'|trans({}, 'admin'), NONE: 'ai.verdict.none'|trans({}, 'admin'),
+} %}
+{% set sanctions = {HIDE: 'ai.sanction.hide'|trans({}, 'admin'), SUSPEND: 'ai.sanction.suspend'|trans({}, 'admin')} %}
+{% set analyzeRoute = kind == 'report' ? 'admin_ai_review_report' : 'admin_ai_review_dispute' %}
+{% set analyzeToken = csrf_token('ai-' ~ kind ~ '-' ~ subjectId) %}
+
+<section class="{{ ui.card_class() }} flex flex-col gap-4" aria-labelledby="pre-analyse-ia">
+    <div class="flex items-center justify-between gap-3">
+        <h2 id="pre-analyse-ia" class="text-legend font-bold text-muted">{{ 'ai.panel.heading'|trans({}, 'admin') }}</h2>
+        {% if review %}{% set st = statusPills[review.status.value] %}{{ ui.pill(st[0], st[1]) }}{% endif %}
+    </div>
+
+    {% if review is null %}
+        <p class="text-legend text-muted">{{ 'ai.panel.none'|trans({}, 'admin') }}</p>
+    {% elseif review.status.value == 'FAILED' %}
+        <p class="rounded-sm bg-error/10 px-4 py-3 text-legend text-error">{{ 'ai.panel.failed'|trans({}, 'admin') }}<br>{{ review.error }}</p>
+    {% else %}
+        <div>
+            <p class="text-body font-bold">
+                {{ verdicts[review.verdict] ?? review.verdict }}{% if review.sanction %} · {{ sanctions[review.sanction] ?? review.sanction }}{% endif %}
+            </p>
+            {# La confiance annoncée par le modèle, sur la même échelle que le seuil. #}
+            <div class="mt-2 flex items-center gap-3">
+                <div class="relative h-2 flex-1 overflow-hidden rounded-full bg-ink/[0.06]" role="meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ review.confidence }}" aria-label="{{ 'ai.panel.confidenceAria'|trans({value: review.confidence}, 'admin') }}">
+                    <div class="h-2 rounded-full {{ review.confidence >= threshold ? 'bg-main' : 'bg-primary' }}" style="width: {{ review.confidence }}%"></div>
+                    <div class="absolute inset-y-0 w-0.5 bg-ink/40" style="left: {{ threshold }}%" aria-hidden="true"></div>
+                </div>
+                <p class="text-legend font-bold">{{ 'ai.panel.confidence'|trans({value: review.confidence, threshold: threshold}, 'admin') }}</p>
+            </div>
+        </div>
+
+        <p class="whitespace-pre-line text-legend">{{ review.summary }}</p>
+
+        {% if review.heldBecause %}
+            <p class="rounded-sm bg-ink/[0.04] px-4 py-3 text-legend text-muted"><span class="font-bold">{{ 'ai.panel.held'|trans({}, 'admin') }}</span> {{ review.heldBecause }}</p>
+        {% endif %}
+        {% if review.appliedAction and review.status.value in ['APPLIED', 'CONFIRMED', 'REVERTED'] %}
+            <p class="rounded-sm bg-primary/8 px-4 py-3 text-legend"><span class="font-bold">{{ 'ai.panel.applied'|trans({}, 'admin') }}</span> {{ ('ai.action.' ~ review.appliedAction)|trans({}, 'admin') }}</p>
+        {% endif %}
+
+        {% if review.justification is not empty %}
+            <div>
+                <h3 class="text-legend font-bold text-muted">{{ 'ai.panel.justification'|trans({}, 'admin') }}</h3>
+                <ul class="mt-1 list-disc pl-5 text-legend">{% for line in review.justification %}<li>{{ line }}</li>{% endfor %}</ul>
+            </div>
+        {% endif %}
+        {% if review.evidence is not empty %}
+            <details class="text-legend">
+                <summary class="cursor-pointer font-bold text-muted">{{ 'ai.panel.evidence'|trans({count: review.evidence|length}, 'admin') }}</summary>
+                <ul class="mt-1 list-disc pl-5">{% for line in review.evidence %}<li>{{ line }}</li>{% endfor %}</ul>
+            </details>
+        {% endif %}
+        {% if review.message %}
+            <details class="text-legend">
+                <summary class="cursor-pointer font-bold text-muted">{{ 'ai.panel.message'|trans({}, 'admin') }}</summary>
+                <p class="mt-1 whitespace-pre-line rounded-sm bg-ink/[0.03] px-4 py-3">{{ review.message }}</p>
+            </details>
+        {% endif %}
+
+        {% if review.reviewedBy %}
+            <p class="text-legend text-muted">{{ 'ai.panel.reviewedBy'|trans({email: review.reviewedBy.email, date: review.reviewedAt|admin_date(true)}, 'admin') }}{% if review.reviewNote %} : « {{ review.reviewNote }} »{% endif %}</p>
+        {% endif %}
+
+        {# Une décision appliquée par l'IA : la valider, ou l'annuler (elle est défaite, le signalement rouvert à mon nom). #}
+        {% if review.status.value == 'APPLIED' %}
+            <form method="post" action="{{ path('admin_ai_review_confirm', {id: review.id}) }}">
+                <input type="hidden" name="_token" value="{{ csrf_token('ai-review-' ~ review.id) }}">
+                <button type="submit" class="{{ ui.button_class('secondary') }}">{{ 'ai.panel.confirm'|trans({}, 'admin') }}</button>
+            </form>
+            <form method="post" action="{{ path('admin_ai_review_revert', {id: review.id}) }}" class="flex flex-col gap-2">
+                <label class="flex flex-col gap-1">
+                    <span class="text-legend font-bold text-muted">{{ 'ai.panel.revertLabel'|trans({}, 'admin') }}</span>
+                    <textarea name="note" required maxlength="1000" rows="2" class="rounded-sm bg-bg px-4 py-3 text-body outline-none focus:ring-2 focus:ring-primary"></textarea>
+                </label>
+                <input type="hidden" name="_token" value="{{ csrf_token('ai-review-' ~ review.id) }}">
+                <button type="submit" class="{{ ui.button_class('danger') }}">{{ 'ai.panel.revert'|trans({}, 'admin') }}</button>
+            </form>
+        {% endif %}
+    {% endif %}
+
+    {% if pending and (review is null or review.status.value != 'APPLIED') %}
+        <form method="post" action="{{ path(analyzeRoute, {id: subjectId}) }}">
+            <input type="hidden" name="_token" value="{{ analyzeToken }}">
+            <button type="submit" class="{{ ui.button_class('secondary') }}">{{ review is null ? 'ai.panel.analyze'|trans({}, 'admin') : 'ai.panel.reanalyze'|trans({}, 'admin') }}</button>
+        </form>
+    {% endif %}
+
+    {% if review %}
+        <p class="text-legend text-muted">
+            {{ 'ai.panel.meta'|trans({model: review.model ?? '—', ms: review.durationMs, version: review.promptVersion}, 'admin') }}
+            · <a class="font-bold text-primary hover:underline" href="{{ path('admin_ai_review', {id: review.id}) }}">{{ 'ai.panel.details'|trans({}, 'admin') }}</a>
+            {% if count > 1 %} · {{ 'ai.panel.count'|trans({count: count}, 'admin') }}{% endif %}
+        </p>
+    {% endif %}
+</section>

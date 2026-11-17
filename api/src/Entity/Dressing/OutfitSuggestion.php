@@ -63,6 +63,18 @@ class OutfitSuggestion
     #[ORM\OrderBy(['position' => 'ASC'])]
     private Collection $pieces;
 
+    /**
+     * Ce que l'utilisateur lit sous « Pourquoi cette tenue », et comment la
+     * tenue a été choisie : la météo complète (min, max, lieu), les raisons
+     * (codes et valeurs, traduits par l'app), la source (AI : l'IA a choisi
+     * parmi les candidates ; RULES : la mieux notée par les règles), le
+     * modèle et sa phrase. Figé à la génération, comme la température.
+     *
+     * @var array<string, mixed>
+     */
+    #[ORM\Column(type: Types::JSON, options: ['jsonb' => true, 'default' => '{}'])]
+    private array $explanation = [];
+
     /** @param list<Garment> $garments */
     public function __construct(Profile $profile, GarmentUsage $occasion, array $garments, ?int $temperature = null, ?Weather $weather = null)
     {
@@ -193,5 +205,19 @@ class OutfitSuggestion
     public function getPieces(): Collection
     {
         return $this->pieces;
+    }
+
+    /** @return array<string, mixed> */
+    public function getExplanation(): array
+    {
+        return $this->explanation;
+    }
+
+    /** @param array<string, mixed> $explanation */
+    public function explain(array $explanation): static
+    {
+        $this->explanation = $explanation;
+
+        return $this;
     }
 }

@@ -27,5 +27,11 @@
     "toCheck_other": "確認が必要な服：⁠{{count}}⁠点",
     "allChecked": "確認完了。投稿を準備しましょう",
     "accessibilityLabel": "今日のコーデ、{{text}}"
+  },
+  "outfit": {
+    "title": "今日のコーデ",
+    "empty": "天気とシーンに合わせたコーデ",
+    "ready": "{{count}}点のコーデができています",
+    "accessibilityLabel": "今日のコーデ, {{text}}"
   }
 }

@@ -1,0 +1,61 @@
+{% extends 'admin/base.html.twig' %}
+{% import 'admin/_ui.html.twig' as ui %}
+
+{% block title %}{{ 'journal.scan.title'|trans({}, 'admin') }}{% endblock %}
+{% block active %}journal{% endblock %}
+{% block heading %}{{ 'journal.scan.title'|trans({}, 'admin') }}{% endblock %}
+{% block subtitle %}<a class="hover:underline" href="{{ path('admin_scan_log') }}">{{ 'journal.tabScans'|trans({}, 'admin') }}</a> › {{ scan.createdAt|admin_date(true) }}{% endblock %}
+
+{% block body %}
+    {% set ms = 'journal.ms' %}
+    {% set statusPills = {SUCCESS: ['journal.scans.statusSuccess'|trans({}, 'admin'), 'green'], PARTIAL: ['journal.scans.statusPartial'|trans({}, 'admin'), 'pink'], FAILED: ['journal.scans.statusFailed'|trans({}, 'admin'), 'red']} %}
+    {% set st = statusPills[scan.status.value] %}
+
+    <div class="grid gap-6 xl:grid-cols-[1fr_minmax(0,360px)]">
+        <div class="flex flex-col gap-6">
+            {# La chaîne de modèles, dans l'ordre où ils ont été appelés. #}
+            <section class="{{ ui.card_class() }}" aria-labelledby="chaine">
+                <h2 id="chaine" class="text-legend font-bold text-muted">{{ 'journal.scan.chainHeading'|trans({}, 'admin') }}</h2>
+                <ol class="mt-3 flex flex-col gap-2 text-legend">
+                    {% for a in attempts %}
+                        <li class="flex flex-wrap items-start justify-between gap-3 rounded-sm bg-error/[0.06] px-4 py-3">
+                            <span><span class="font-bold">{{ loop.index }}. {{ a.model }}</span><br>{{ a.error }}</span>
+                            <span class="text-right">{{ ui.pill(('journal.error.' ~ a.category)|trans({}, 'admin'), 'red') }}<br><span class="text-muted">{% if a.status ?? null %}HTTP {{ a.status }} · {% endif %}{{ (a.ms ?? null) is not null ? ms|trans({ms: a.ms}, 'admin') : '—' }}</span></span>
+                        </li>
+                    {% endfor %}
+                    {% if raw.model ?? null %}
+                        <li class="flex flex-wrap items-start justify-between gap-3 rounded-sm bg-main-tint px-4 py-3">
+                            <span class="font-bold">{{ attempts|length + 1 }}. {{ raw.model }}</span>
+                            <span class="text-right">{{ ui.pill('journal.scan.answered'|trans({}, 'admin'), 'green') }}<br><span class="text-muted">{{ (raw.modelMs ?? null) is not null ? ms|trans({ms: raw.modelMs}, 'admin') : '—' }}</span></span>
+                        </li>
+                    {% endif %}
+                    {% if attempts is empty and not (raw.model ?? null) %}
+                        <li class="text-muted">{{ 'journal.scan.noChain'|trans({}, 'admin') }}</li>
+                    {% endif %}
+                </ol>
+            </section>
+
+            {% if answerJson %}
+                <section class="{{ ui.card_class() }}" aria-labelledby="reponse">
+                    <h2 id="reponse" class="text-legend font-bold text-muted">{{ 'journal.scan.answerHeading'|trans({}, 'admin') }}</h2>
+                    <pre class="mt-3 max-h-[480px] overflow-auto rounded-sm bg-ink/[0.04] p-4 text-[13px] leading-snug">{{ answerJson }}</pre>
+                </section>
+            {% endif %}
+        </div>
+
+        <section class="{{ ui.card_class() }} self-start" aria-labelledby="resume">
+            <h2 id="resume" class="text-legend font-bold text-muted">{{ 'journal.scan.summaryHeading'|trans({}, 'admin') }}</h2>
+            <dl class="mt-3 flex flex-col gap-2 text-legend">
+                <div class="flex justify-between gap-4"><dt class="text-muted">{{ 'journal.scans.thStatus'|trans({}, 'admin') }}</dt><dd>{{ ui.pill(st[0], st[1]) }}</dd></div>
+                <div class="flex justify-between gap-4"><dt class="text-muted">{{ 'journal.scans.thKind'|trans({}, 'admin') }}</dt><dd class="font-bold">{{ scan.kind.value }}</dd></div>
+                <div class="flex justify-between gap-4"><dt class="text-muted">{{ 'journal.scan.totalDuration'|trans({}, 'admin') }}</dt><dd class="font-bold">{{ scan.durationMs is not null ? ms|trans({ms: scan.durationMs}, 'admin') : '—' }}</dd></div>
+                <div class="flex justify-between gap-4"><dt class="text-muted">{{ 'journal.scan.profile'|trans({}, 'admin') }}</dt><dd class="font-bold"><a class="hover:underline" href="{{ path('admin_user', {id: scan.profile.account.id}) }}">@{{ scan.profile.username }}</a></dd></div>
+                {% if raw.image ?? null %}
+                    <div class="flex justify-between gap-4"><dt class="text-muted">{{ 'journal.scan.image'|trans({}, 'admin') }}</dt><dd class="font-bold">{{ raw.image.mime }} · {{ 'journal.kb'|trans({kb: (raw.image.bytes / 1024)|round}, 'admin') }}</dd></div>
+                {% endif %}
+                <div class="flex justify-between gap-4"><dt class="text-muted">{{ 'journal.scan.result'|trans({}, 'admin') }}</dt><dd class="font-bold">{{ scan.resultingItem ? scan.resultingItem.name : (scan.resultingGarment ? scan.resultingGarment.name : '—') }}</dd></div>
+            </dl>
+            {% if raw.error ?? null %}<p class="mt-4 rounded-sm bg-error/10 px-4 py-3 text-legend text-error">{{ raw.error }}</p>{% endif %}
+        </section>
+    </div>
+{% endblock %}

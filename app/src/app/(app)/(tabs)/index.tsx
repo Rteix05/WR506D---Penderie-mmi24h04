@@ -13,6 +13,7 @@ import { mediaSource } from '@/lib/api';
 import { useActiveProfile } from '@/lib/auth';
 import { relativeDay, useInventoryOverview, type RecentEntry } from '@/lib/inventory';
 import { LOOK_STATUS, useTodayLook } from '@/lib/look';
+import { pieceArt, useCurrentOutfit } from '@/lib/outfit';
 
 /**
  * Accueil — Tableau de bord, d'après Figma (page « Maquette v2 », node
@@ -21,9 +22,10 @@ import { LOOK_STATUS, useTodayLook } from '@/lib/look';
  * ajouts.
  *
  * Données réelles : compteurs et derniers ajouts viennent de l'API. Les
- * sections « Prêts en cours », « Tenues suggérées » et le lien vers la
- * penderie des amis attendent leurs routes d'API ; elles apparaîtront avec
- * elles, plutôt que d'afficher des données d'exemple.
+ * sections « Prêts en cours » et le lien vers la penderie des amis
+ * attendent leurs routes d'API ; elles apparaîtront avec elles, plutôt que
+ * d'afficher des données d'exemple. « Tenues suggérées » est la carte « Ta
+ * tenue du jour » (OutfitCard), qui ouvre l'écran Ta tenue.
  */
 export default function HomeScreen() {
   const { t } = useTranslation('home');
@@ -59,6 +61,7 @@ export default function HomeScreen() {
         </View>
 
         <LookCard />
+        <OutfitCard />
 
         <View className="flex-row gap-3 px-5">
           <Preview title={t('dashboard.inventory')} meta={overview.data ? t('counts.items', { count: overview.data.items }) : ' '} tint="bg-primary/[0.08]" art={['baskets', 'casquette', 'pantalon', 'veste']} onPress={() => router.navigate('/objets')} />
@@ -153,6 +156,34 @@ function LookCard() {
       </View>
       <View className="flex-1 gap-0.5">
         <Text className="font-luciole-bold text-body text-ink dark:text-ink-night">{t('look.title')}</Text>
+        <Text className="font-luciole text-legend text-muted dark:text-muted-night">{text}</Text>
+      </View>
+      <Text className="font-luciole-bold text-body text-muted dark:text-muted-night">{'>'}</Text>
+    </Pressable>
+  );
+}
+
+/**
+ * « Ta tenue du jour » : la suggestion du jour si elle existe (ses pièces
+ * en vignettes), sinon l'invitation. Ouvre l'écran Ta tenue.
+ */
+function OutfitCard() {
+  const { t } = useTranslation('home');
+  const outfit = useCurrentOutfit().data;
+  const text = outfit ? t('outfit.ready', { count: outfit.pieces.length }) : t('outfit.empty');
+
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={t('outfit.accessibilityLabel', { text })}
+      onPress={() => router.push('/tenue')}
+      style={E1}
+      className="mx-5 flex-row items-center gap-3 rounded-md bg-surface p-3 active:opacity-80 dark:bg-surface-night">
+      <View className="h-14 w-14 items-center justify-center overflow-hidden rounded-xs bg-primary/[0.08]">
+        <ClothVisual kind={outfit?.pieces[0] ? pieceArt(outfit.pieces[0]) : 'tshirt'} />
+      </View>
+      <View className="flex-1 gap-0.5">
+        <Text className="font-luciole-bold text-body text-ink dark:text-ink-night">{t('outfit.title')}</Text>
         <Text className="font-luciole text-legend text-muted dark:text-muted-night">{text}</Text>
       </View>
       <Text className="font-luciole-bold text-body text-muted dark:text-muted-night">{'>'}</Text>

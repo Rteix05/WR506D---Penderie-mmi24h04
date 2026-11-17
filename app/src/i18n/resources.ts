@@ -12,6 +12,7 @@ import enCommon from './locales/en/common.json';
 import enHome from './locales/en/home.json';
 import enInventory from './locales/en/inventory.json';
 import enLoans from './locales/en/loans.json';
+import enOutfit from './locales/en/outfit.json';
 import enPlaces from './locales/en/places.json';
 import enProfiles from './locales/en/profiles.json';
 import enSocial from './locales/en/social.json';
@@ -21,6 +22,7 @@ import frCommon from './locales/fr/common.json';
 import frHome from './locales/fr/home.json';
 import frInventory from './locales/fr/inventory.json';
 import frLoans from './locales/fr/loans.json';
+import frOutfit from './locales/fr/outfit.json';
 import frPlaces from './locales/fr/places.json';
 import frProfiles from './locales/fr/profiles.json';
 import frSocial from './locales/fr/social.json';
@@ -30,14 +32,15 @@ import jaCommon from './locales/ja/common.json';
 import jaHome from './locales/ja/home.json';
 import jaInventory from './locales/ja/inventory.json';
 import jaLoans from './locales/ja/loans.json';
+import jaOutfit from './locales/ja/outfit.json';
 import jaPlaces from './locales/ja/places.json';
 import jaProfiles from './locales/ja/profiles.json';
 import jaSocial from './locales/ja/social.json';
 
-export const NAMESPACES = ['common', 'auth', 'home', 'inventory', 'add', 'places', 'loans', 'social', 'profiles'] as const;
+export const NAMESPACES = ['common', 'auth', 'home', 'inventory', 'add', 'places', 'loans', 'social', 'profiles', 'outfit'] as const;
 
 export const resources = {
-  fr: { common: frCommon, auth: frAuth, home: frHome, inventory: frInventory, add: frAdd, places: frPlaces, loans: frLoans, social: frSocial, profiles: frProfiles },
-  en: { common: enCommon, auth: enAuth, home: enHome, inventory: enInventory, add: enAdd, places: enPlaces, loans: enLoans, social: enSocial, profiles: enProfiles },
-  ja: { common: jaCommon, auth: jaAuth, home: jaHome, inventory: jaInventory, add: jaAdd, places: jaPlaces, loans: jaLoans, social: jaSocial, profiles: jaProfiles },
+  fr: { common: frCommon, auth: frAuth, home: frHome, inventory: frInventory, add: frAdd, places: frPlaces, loans: frLoans, social: frSocial, profiles: frProfiles, outfit: frOutfit },
+  en: { common: enCommon, auth: enAuth, home: enHome, inventory: enInventory, add: enAdd, places: enPlaces, loans: enLoans, social: enSocial, profiles: enProfiles, outfit: enOutfit },
+  ja: { common: jaCommon, auth: jaAuth, home: jaHome, inventory: jaInventory, add: jaAdd, places: jaPlaces, loans: jaLoans, social: jaSocial, profiles: jaProfiles, outfit: jaOutfit },
 } as const;

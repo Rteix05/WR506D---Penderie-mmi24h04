@@ -27,6 +27,14 @@ services:
         arguments:
             $models: '%env(csv:OPENROUTER_SCAN_MODELS)%'
 
+    # La pré-analyse des signalements et des litiges : même client et même
+    # chaîne de secours que le scan, en texte seul, avec sa propre liste.
+    app.moderation_llm:
+        class: App\Service\Scan\OpenRouterVision
+        arguments:
+            $openrouterClient: '@openrouter.client'
+            $models: '%env(csv:OPENROUTER_MODERATION_MODELS)%'
+
 when@test:
     services:
         # Les réponses simulées d'OpenRouter (framework.http_client.mock_response_factory).

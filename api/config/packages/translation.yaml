@@ -1,0 +1,11 @@
+# Traductions : seul le back-office (/admin) est traduit, en français
+# (langue source), anglais et japonais ; AdminLocaleSubscriber choisit la
+# langue. L'API reste en anglais par défaut : ses messages de validation ne
+# changent pas (l'app les traduit elle-même).
+framework:
+    default_locale: en
+    enabled_locales: ['en', 'fr', 'ja']
+    translator:
+        default_path: '%kernel.project_dir%/translations'
+        fallbacks: ['fr']
+        providers:

@@ -1,0 +1,7 @@
+{# Les deux journaux : scans et modération IA. current : 'scans' | 'ai' #}
+<nav aria-label="{{ 'journal.tabsAria'|trans({}, 'admin') }}" class="mb-6 flex rounded-full bg-ink/[0.05] p-1">
+    {% for key, entry in {scans: ['admin_scan_log', 'journal.tabScans'|trans({}, 'admin')], ai: ['admin_ai_log', 'journal.tabAi'|trans({}, 'admin')]} %}
+        <a href="{{ path(entry[0]) }}" {% if key == current %}aria-current="page"{% endif %}
+           class="flex h-10 flex-1 items-center justify-center rounded-full text-legend font-bold {{ key == current ? 'bg-surface text-ink shadow-[0_1px_3px_rgba(26,30,36,0.12)]' : 'text-muted hover:text-ink' }}">{{ entry[1] }}</a>
+    {% endfor %}
+</nav>

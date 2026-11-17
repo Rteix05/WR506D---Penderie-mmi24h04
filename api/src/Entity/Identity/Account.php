@@ -8,6 +8,9 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Scheb\TwoFactorBundle\Model\Totp\TotpConfiguration;
+use Scheb\TwoFactorBundle\Model\Totp\TotpConfigurationInterface;
+use Scheb\TwoFactorBundle\Model\Totp\TwoFactorInterface;
 use Symfony\Bridge\Doctrine\Types\UuidType;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
@@ -27,15 +30,34 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[ORM\Entity(repositoryClass: AccountRepository::class)]
 #[ORM\HasLifecycleCallbacks]
 #[UniqueEntity(fields: ['email'], message: 'Un compte existe déjà avec cette adresse.')]
-class Account implements UserInterface, PasswordAuthenticatedUserInterface
+class Account implements UserInterface, PasswordAuthenticatedUserInterface, TwoFactorInterface
 {
     use TimestampableTrait;
 
     public const ROLE_USER = 'ROLE_USER';
     public const ROLE_ADMIN = 'ROLE_ADMIN';
 
+    /**
+     * Le super administrateur : un administrateur qui, seul, ajoute et
+     * modifie les référentiels (catégories, marques) dans le back-office.
+     * Stocké avec ROLE_ADMIN (hiérarchie des rôles dans security.yaml).
+     */
+    public const ROLE_SUPER_ADMIN = 'ROLE_SUPER_ADMIN';
+
     /** Le compte qui porte le profil fantôme (Profile::GHOST_ID). */
     public const GHOST_ID = '00000000-0000-7000-8000-000000000000';
+
+    /**
+     * Le compte au nom duquel la pré-analyse IA applique une décision de
+     * modération (ModerationAction.admin, Report.handledBy). Administrateur
+     * pour que le journal reste le même, mais personne ne s'y connecte :
+     * mot de passe vide (aucun hash ne correspond) et refusé par
+     * AdminUserChecker.
+     */
+    public const AI_MODERATOR_ID = '00000000-0000-7000-8000-0000000000a1';
+
+    /** Les comptes techniques : ni listés, ni comptés, ni modérés. */
+    public const SYSTEM_IDS = [self::GHOST_ID, self::AI_MODERATOR_ID];
 
     #[ORM\Id]
     #[ORM\Column(type: UuidType::NAME, unique: true)]
@@ -67,6 +89,22 @@ class Account implements UserInterface, PasswordAuthenticatedUserInterface
     /** @var Collection<int, Profile> */
     #[ORM\OneToMany(targetEntity: Profile::class, mappedBy: 'account')]
     private Collection $profiles;
+
+    /**
+     * Le secret TOTP de la double authentification du back-office
+     * (scheb/2fa-totp). Nul tant qu'elle n'est pas activée ; seul un
+     * administrateur en a un. Jamais sérialisé ni exposé par l'API.
+     */
+    #[ORM\Column(length: 64, nullable: true)]
+    private ?string $totpSecret = null;
+
+    /**
+     * Le dernier jour où le compte a utilisé l'app (une requête authentifiée
+     * à l'API). Écrit une fois par jour au plus (AccountActivitySubscriber) :
+     * c'est ce que compte « Utilisateurs actifs » dans le back-office.
+     */
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
+    private ?\DateTimeImmutable $lastSeenAt = null;
 
     public function __construct(string $email)
     {
@@ -132,6 +170,11 @@ class Account implements UserInterface, PasswordAuthenticatedUserInterface
         return \in_array(self::ROLE_ADMIN, $this->roles, true);
     }
 
+    public function isSuperAdmin(): bool
+    {
+        return $this->isAdmin() && \in_array(self::ROLE_SUPER_ADMIN, $this->roles, true);
+    }
+
     /** Aucune donnée sensible en clair à effacer : le mot de passe est déjà hashé. */
     #[\Deprecated]
     public function eraseCredentials(): void
@@ -162,9 +205,62 @@ class Account implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
+    // --- Double authentification (back-office) -----------------------------------
+
+    public function isTotpAuthenticationEnabled(): bool
+    {
+        return null !== $this->totpSecret;
+    }
+
+    public function getTotpAuthenticationUsername(): string
+    {
+        return $this->email;
+    }
+
+    /** Codes à 6 chiffres renouvelés toutes les 30 s (SHA-1) : ce que lisent toutes les applications. */
+    public function getTotpAuthenticationConfiguration(): ?TotpConfigurationInterface
+    {
+        return null === $this->totpSecret ? null : new TotpConfiguration($this->totpSecret, TotpConfiguration::ALGORITHM_SHA1, 30, 6);
+    }
+
+    /** Active (secret confirmé par un premier code) ou réinitialise (null) la double authentification. */
+    public function setTotpSecret(?string $secret): static
+    {
+        $this->totpSecret = $secret;
+
+        return $this;
+    }
+
+    public function getLastSeenAt(): ?\DateTimeImmutable
+    {
+        return $this->lastSeenAt;
+    }
+
+    /** Note la venue du jour ; renvoie vrai si la date a changé (une écriture par jour au plus). */
+    public function markSeen(\DateTimeImmutable $now): bool
+    {
+        if (null !== $this->lastSeenAt && $this->lastSeenAt->format('Y-m-d') === $now->format('Y-m-d')) {
+            return false;
+        }
+        $this->lastSeenAt = $now;
+
+        return true;
+    }
+
     public function isGhost(): bool
     {
         return self::GHOST_ID === $this->id->toRfc4122();
+    }
+
+    public function isAiModerator(): bool
+    {
+        return self::AI_MODERATOR_ID === $this->id->toRfc4122();
+    }
+
+    /** Le compte fantôme ou celui de la modération IA. */
+    public function isSystem(): bool
+    {
+        return \in_array($this->id->toRfc4122(), self::SYSTEM_IDS, true);
     }
 
     /** @return Collection<int, Profile> */

@@ -30,5 +30,11 @@
     "toCheck_other": "{{count}} garments to check",
     "allChecked": "Everything is checked: prepare the post",
     "accessibilityLabel": "Outfit of the day, {{text}}"
+  },
+  "outfit": {
+    "title": "Today's outfit",
+    "empty": "An outfit for the weather and the occasion",
+    "ready": "Ready: {{count}} pieces",
+    "accessibilityLabel": "Today's outfit, {{text}}"
   }
 }

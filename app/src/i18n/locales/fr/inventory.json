@@ -1,5 +1,6 @@
 {
   "wardrobe": {
+    "suggest": "Me proposer une tenue",
     "title": "Mon dressing",
     "noResult": "Aucun résultat",
     "count_one": "{{count}} vêtement",

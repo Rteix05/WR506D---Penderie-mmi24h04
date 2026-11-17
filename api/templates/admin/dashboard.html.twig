@@ -1,0 +1,125 @@
+{% extends 'admin/base.html.twig' %}
+{% import 'admin/_ui.html.twig' as ui %}
+
+{% block title %}{{ 'dashboard.title'|trans({}, 'admin') }}{% endblock %}
+{% block active %}dashboard{% endblock %}
+{% block heading %}{{ 'dashboard.title'|trans({}, 'admin') }}{% endblock %}
+{% block subtitle %}{{ today }}{% endblock %}
+
+{% block body %}
+    {#
+     # Quatre indicateurs de santé de la plateforme (les urgences sont dans
+     # « À traiter en priorité » et les pastilles du menu). Ceux du milieu à
+     # la demande du client (09/11) ; « Objets ajoutés » remplace les ventes
+     # tant que la vente n'est pas lancée (15/11), les ventes ont leur écran.
+     #}
+    <div class="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+        {{ ui.kpi(
+            'dashboard.kpi.activeUsers'|trans({}, 'admin'),
+            accounts.active|number_format(0, ',', ' '),
+            'dashboard.kpi.activeUsersDetail'|trans({count: accounts.total|number_format(0, ',', ' ')}, 'admin'),
+            'grey',
+            'dashboard.kpi.newAccountsTrend'|trans({count: accounts.thisWeek, delta: ui.delta(accounts.thisWeek, accounts.lastWeek, 'dashboard.kpi.previousPeriod'|trans({}, 'admin'))}, 'admin')
+        ) }}
+        {{ ui.kpi(
+            'dashboard.kpi.scans'|trans({}, 'admin'),
+            scans.rate is null ? '—' : scans.rate ~ ' %',
+            scans.scans == 0 ? 'dashboard.kpi.scansDetailEmpty'|trans({}, 'admin') : 'dashboard.kpi.failedScansThisWeek'|trans({count: scans.failedThisWeek}, 'admin'),
+            scans.failedThisWeek > 0 ? 'red' : 'grey',
+            ui.delta(scans.rate, scans.previousRate, 'dashboard.kpi.scansPeriod'|trans({}, 'admin'), ' pts')
+        ) }}
+        {{ ui.kpi(
+            'dashboard.kpi.activeLoans'|trans({}, 'admin'),
+            loans.active|number_format(0, ',', ' '),
+            'dashboard.kpi.overdueLoans'|trans({count: loans.overdue}, 'admin'),
+            loans.overdue > 0 ? 'pink' : 'grey',
+            'dashboard.kpi.returnedThisMonth'|trans({count: loans.thisMonth, delta: ui.delta(loans.thisMonth, loans.lastMonth, 'dashboard.kpi.lastMonthPeriod'|trans({}, 'admin'))}, 'admin')
+        ) }}
+        {{ ui.kpi(
+            'dashboard.kpi.addedItems'|trans({}, 'admin'),
+            possessions.thisWeek|number_format(0, ',', ' '),
+            'dashboard.kpi.itemsInInventories'|trans({count: possessions.total|number_format(0, ',', ' ')}, 'admin'),
+            'green',
+            ui.delta(possessions.thisWeek, possessions.lastWeek, 'dashboard.kpi.lastWeekPeriod'|trans({}, 'admin'))
+        ) }}
+    </div>
+
+    <div class="mt-6 grid gap-6 xl:grid-cols-[minmax(0,640px)_1fr]">
+        {# Nouveaux inscrits : barres à l'échelle du meilleur jour, le meilleur en rose plein. #}
+        <section class="rounded-md bg-surface p-6 shadow-[0_1px_3px_rgba(26,30,36,0.08)]" aria-labelledby="inscrits">
+            <h2 id="inscrits" class="text-legend font-bold text-muted">{{ 'dashboard.signups.title'|trans({}, 'admin') }}</h2>
+            <p class="mt-1 font-typolio text-h3">{{ signups|reduce((sum, d) => sum + d.count, 0) }}</p>
+            <ol class="mt-6 grid h-52 grid-cols-7 items-end gap-3 sm:gap-6">
+                {% for day in signups %}
+                    {% set best = day.count == signupsMax and day.count > 0 %}
+                    <li class="flex h-full flex-col items-center justify-end gap-1">
+                        <span class="text-legend font-bold">{{ day.count }}</span>
+                        <span class="w-full rounded-xs {{ best ? 'bg-primary' : 'bg-primary/35' }}"
+                              style="height: {{ max(4, (day.count / signupsMax * 160)|round) }}px"
+                              aria-hidden="true"></span>
+                        <span class="text-legend text-muted" title="{{ day.date|date('d/m') }}">{{ day.letter }}</span>
+                        <span class="sr-only">{{ 'dashboard.signups.dayAria'|trans({count: day.count, date: day.date|date('d/m')}, 'admin') }}</span>
+                    </li>
+                {% endfor %}
+            </ol>
+        </section>
+
+        <section class="rounded-md bg-surface p-6 shadow-[0_1px_3px_rgba(26,30,36,0.08)]" aria-labelledby="priorites">
+            <h2 id="priorites" class="text-legend font-bold text-muted">{{ 'dashboard.priorities.title'|trans({}, 'admin') }}</h2>
+            {% if priorities is empty %}
+                <p class="mt-4 text-body text-muted">{{ 'dashboard.priorities.empty'|trans({}, 'admin') }}</p>
+            {% else %}
+                <ul class="mt-4 flex flex-col gap-3">
+                    {% for item in priorities %}
+                        {% set link = {report: 'admin_report', dispute: 'admin_dispute'}[item.kind] ?? null %}
+                        <li>
+                            {% if link and item.id is defined %}
+                                <a href="{{ path(link, {id: item.id}) }}" class="block rounded-sm bg-ink/[0.03] px-4 py-3 hover:bg-ink/[0.06]">
+                                    <span class="block text-body font-bold">{{ item.title }}</span>
+                                    <span class="block text-legend text-muted">{{ item.detail }}</span>
+                                </a>
+                            {% else %}
+                                <div class="rounded-sm bg-ink/[0.03] px-4 py-3">
+                                    <p class="text-body font-bold">{{ item.title }}</p>
+                                    <p class="text-legend text-muted">{{ item.detail }}</p>
+                                </div>
+                            {% endif %}
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </section>
+    </div>
+
+    <section class="mt-6 rounded-md bg-surface p-6 shadow-[0_1px_3px_rgba(26,30,36,0.08)]" aria-labelledby="transactions">
+        <h2 id="transactions" class="sr-only">{{ 'dashboard.transactions.title'|trans({}, 'admin') }}</h2>
+        {% if orders is empty %}
+            <p class="text-body text-muted">{{ 'dashboard.transactions.empty'|trans({}, 'admin') }}</p>
+        {% else %}
+            <div class="overflow-x-auto">
+                <table class="w-full min-w-[640px] text-left">
+                    <thead>
+                    <tr class="text-legend font-bold text-muted">
+                        <th scope="col" class="pb-3">{{ 'dashboard.table.order'|trans({}, 'admin') }}</th>
+                        <th scope="col" class="pb-3">{{ 'dashboard.table.listing'|trans({}, 'admin') }}</th>
+                        <th scope="col" class="pb-3">{{ 'dashboard.table.parties'|trans({}, 'admin') }}</th>
+                        <th scope="col" class="pb-3">{{ 'dashboard.table.amount'|trans({}, 'admin') }}</th>
+                        <th scope="col" class="pb-3">{{ 'dashboard.table.payment'|trans({}, 'admin') }}</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for order in orders %}
+                        <tr class="border-t border-ink/8 text-legend">
+                            <td class="py-4 text-body font-bold">#{{ order.reference }}</td>
+                            <td class="py-4">{{ order.listing.possession.name }}</td>
+                            <td class="py-4">{{ order.seller.displayName }} → {{ order.buyer.displayName }}</td>
+                            <td class="py-4">{{ order.totalAmount|admin_euros }} €</td>
+                            <td class="py-4">{{ ui.order_status(order.status) }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+    </section>
+{% endblock %}

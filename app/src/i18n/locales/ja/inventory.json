@@ -1,5 +1,6 @@
 {
   "wardrobe": {
+    "suggest": "コーデを提案して",
     "title": "マイワードローブ",
     "noResult": "該当なし",
     "count_other": "服⁠{{count}}⁠点",

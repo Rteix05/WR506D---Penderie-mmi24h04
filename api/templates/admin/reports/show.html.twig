@@ -1,0 +1,99 @@
+{% extends 'admin/base.html.twig' %}
+{% import 'admin/_ui.html.twig' as ui %}
+
+{% block title %}{{ 'reports.showTitle'|trans({}, 'admin') }}{% endblock %}
+{% block active %}reports{% endblock %}
+{% block heading %}{{ {COMMENT: 'reports.showHeadingComment'|trans({}, 'admin'), POST: 'reports.showHeadingPost'|trans({}, 'admin'), LISTING: 'reports.showHeadingListing'|trans({}, 'admin'), PROFILE: 'reports.showHeadingProfile'|trans({}, 'admin'), ITEM: 'reports.showHeadingItem'|trans({}, 'admin'), GARMENT: 'reports.showHeadingGarment'|trans({}, 'admin'), COLLECTION: 'reports.showHeadingCollection'|trans({}, 'admin')}[report.targetType.value] }}{% endblock %}
+{% block subtitle %}<a class="hover:underline" href="{{ path('admin_reports') }}">{{ 'reports.showBreadcrumb'|trans({}, 'admin') }}</a> › {{ 'reports.showSubtitle'|trans({id: report.id|slice(-6)}, 'admin') }}{% endblock %}
+
+{% block body %}
+    {% set report_reasons = admin_labels('report_reasons') %}
+    {% set report_types = admin_labels('report_types') %}
+    {% set report_status = admin_labels('report_status') %}
+    {% set st = report_status[report.status.value] %}
+    {% set actionLabels = {HIDE_CONTENT: 'reports.actionHideContent'|trans({}, 'admin'), DELETE_CONTENT: 'reports.actionDeleteContent'|trans({}, 'admin'), WARN: 'reports.actionWarn'|trans({}, 'admin'), BAN_ACCOUNT: 'reports.actionBanAccount'|trans({}, 'admin'), SUSPEND_PROFILE: 'reports.actionSuspendProfile'|trans({}, 'admin'), RESTORE: 'reports.actionRestore'|trans({}, 'admin')} %}
+
+    <div class="grid gap-6 xl:grid-cols-[1fr_minmax(0,400px)]">
+        <div class="flex flex-col gap-6">
+            <section class="{{ ui.card_class() }}" aria-labelledby="contenu">
+                <h2 id="contenu" class="text-legend font-bold text-muted">{{ 'reports.contentHeading'|trans({}, 'admin') }}</h2>
+                <div class="mt-3 rounded-sm bg-ink/[0.03] px-4 py-3">
+                    <p class="text-legend text-muted">{{ author ? '@' ~ author.username : 'reports.contentAuthorUnknown'|trans({}, 'admin') }} · {{ report_types[report.targetType.value] }}</p>
+                    <p class="mt-1 whitespace-pre-line text-body">{{ label }}</p>
+                    {% if target is null %}<p class="mt-2">{{ ui.pill('reports.contentDeletedSince'|trans({}, 'admin'), 'grey') }}</p>
+                    {% elseif target.hiddenAt is defined and target.hiddenAt %}<p class="mt-2">{{ ui.pill('reports.contentHidden'|trans({}, 'admin'), 'grey') }}</p>{% endif %}
+                </div>
+            </section>
+
+            <section class="{{ ui.card_class() }}" aria-labelledby="contexte">
+                <h2 id="contexte" class="text-legend font-bold text-muted">{{ 'reports.contextHeading'|trans({}, 'admin') }}</h2>
+                <dl class="mt-3 flex flex-col gap-2 text-legend">
+                    <div class="flex justify-between gap-4"><dt class="text-muted">{{ 'reports.contextReportedBy'|trans({}, 'admin') }}</dt><dd class="text-right text-body font-bold">{{ 'reports.contextReportedByLine'|trans({name: report.reporter.displayName, reason: report_reasons[report.reason.value]|lower}, 'admin') }}</dd></div>
+                    <div class="flex justify-between gap-4"><dt class="text-muted">{{ 'reports.contextOn'|trans({}, 'admin') }}</dt><dd class="text-body font-bold">{{ report.createdAt|admin_date(true) }}</dd></div>
+                    <div class="flex justify-between gap-4"><dt class="text-muted">{{ 'reports.contextOtherReports'|trans({}, 'admin') }}</dt><dd class="text-body font-bold">{{ others }}</dd></div>
+                    <div class="flex justify-between gap-4"><dt class="text-muted">{{ 'reports.contextStatus'|trans({}, 'admin') }}</dt><dd>{{ ui.pill(st[0], st[1]) }}</dd></div>
+                </dl>
+                {% if report.description %}<p class="mt-3 rounded-sm bg-ink/[0.03] px-4 py-3 text-legend">« {{ report.description }} »</p>{% endif %}
+            </section>
+
+            {% if author %}
+                <section class="{{ ui.card_class() }}" aria-labelledby="auteur">
+                    <h2 id="auteur" class="text-legend font-bold text-muted">{{ 'reports.authorHeading'|trans({}, 'admin') }}</h2>
+                    <p class="mt-3 text-legend">
+                        <a class="text-body font-bold hover:underline" href="{{ path('admin_user', {id: author.account.id}) }}">{{ author.displayName }} (@{{ author.username }})</a><br>
+                        <span class="text-muted">{% if author.suspendedAt %}{{ 'reports.authorMetaSuspended'|trans({date: author.account.createdAt|admin_date}, 'admin') }}{% else %}{{ 'reports.authorMeta'|trans({date: author.account.createdAt|admin_date}, 'admin') }}{% endif %}</span>
+                    </p>
+                </section>
+            {% endif %}
+        </div>
+
+        <div class="flex flex-col gap-6 self-start">
+        {{ include('admin/ai/_panel.html.twig', {review: aiReview, count: aiCount, threshold: aiThreshold, kind: 'report', subjectId: report.id, pending: report.status.pending}) }}
+
+        <section class="{{ ui.card_class() }} flex flex-col gap-4" aria-labelledby="decision">
+            <h2 id="decision" class="text-legend font-bold text-muted">{{ 'reports.decisionHeading'|trans({}, 'admin') }}</h2>
+            {% if not report.status.pending %}
+                <p class="rounded-sm {{ report.status.value == 'ACTIONED' ? 'bg-main-tint text-main' : 'bg-ink/[0.04] text-muted' }} px-4 py-3 text-legend">
+                    <span class="font-bold">{{ st[0] }}</span>{% if report.handledBy and report.handledAt %}{{ 'reports.decisionHandledWithByAndAt'|trans({email: report.handledBy.email, date: report.handledAt|admin_date}, 'admin') }}{% elseif report.handledBy %}{{ 'reports.decisionHandledWithBy'|trans({email: report.handledBy.email}, 'admin') }}{% elseif report.handledAt %}{{ 'reports.decisionHandledWithAt'|trans({date: report.handledAt|admin_date}, 'admin') }}{% else %}{{ 'reports.decisionHandledAlone'|trans({}, 'admin') }}{% endif %}<br>{{ report.resolution }}
+                </p>
+                {% for action in actions %}
+                    {% set actionLabel = actionLabels[action.actionType.value] ?? action.actionType.value %}
+                    <p class="text-legend text-muted">{% if action.expiresAt %}{{ 'reports.decisionLogActionWithExpiry'|trans({action: actionLabel, date: action.expiresAt|admin_date}, 'admin') }}{% else %}{{ 'reports.decisionLogAction'|trans({action: actionLabel}, 'admin') }}{% endif %}</p>
+                {% endfor %}
+            {% else %}
+                {% if report.status.value == 'OPEN' %}
+                    <form method="post" action="{{ path('admin_report_take', {id: report.id}) }}">
+                        <input type="hidden" name="_token" value="{{ csrf_token('report-' ~ report.id) }}">
+                        <button type="submit" class="{{ ui.button_class('secondary') }}">{{ 'reports.decisionTakeCharge'|trans({}, 'admin') }}</button>
+                    </form>
+                {% endif %}
+                <form method="post" action="{{ path('admin_report_decide', {id: report.id}) }}" class="flex flex-col gap-3">
+                    <fieldset class="flex flex-col gap-2">
+                        <legend class="sr-only">{{ 'reports.decisionFieldsetSrOnly'|trans({}, 'admin') }}</legend>
+                        {% set choices = [
+                            {value: 'dismiss', title: 'reports.decisionDismissTitle'|trans({}, 'admin'), text: 'reports.decisionDismissText'|trans({}, 'admin'), enabled: true},
+                            {value: 'hide', title: hideLabel, text: canHide ? 'reports.decisionHideTextEnabled'|trans({}, 'admin') : 'reports.decisionHideTextDisabled'|trans({}, 'admin'), enabled: canHide},
+                            {value: 'warn', title: 'reports.decisionWarnTitle'|trans({}, 'admin'), text: 'reports.decisionWarnText'|trans({}, 'admin'), enabled: author is not null},
+                            {value: 'suspend', title: 'reports.decisionSuspendTitle'|trans({}, 'admin'), text: 'reports.decisionSuspendText'|trans({}, 'admin'), enabled: author is not null},
+                        ] %}
+                        {% for c in choices %}
+                            <label class="flex cursor-pointer items-start gap-3 rounded-sm bg-ink/[0.03] px-4 py-3 has-[:checked]:bg-primary/8 has-[:checked]:ring-2 has-[:checked]:ring-primary {{ c.enabled ? '' : 'cursor-not-allowed opacity-50' }}">
+                                {# La proposition de l'IA est présélectionnée ; l'administrateur garde la main. #}
+                                <input type="radio" name="decision" value="{{ c.value }}" required {{ c.enabled ? '' : 'disabled' }} {{ c.enabled and aiReview and aiReview.status.value == 'PROPOSED' and aiReview.decision == c.value ? 'checked' }} class="mt-1 accent-primary">
+                                <span><span class="block text-body font-bold">{{ c.title }}</span><span class="text-legend text-muted">{{ c.text }}</span></span>
+                            </label>
+                        {% endfor %}
+                    </fieldset>
+                    <label class="flex flex-col gap-1">
+                        <span class="text-legend font-bold text-muted">{{ 'reports.decisionNoteLabel'|trans({}, 'admin') }}</span>
+                        <textarea name="note" required maxlength="1000" rows="3" class="rounded-sm bg-bg px-4 py-3 text-body outline-none focus:ring-2 focus:ring-primary"></textarea>
+                    </label>
+                    <input type="hidden" name="_token" value="{{ csrf_token('report-' ~ report.id) }}">
+                    <button type="submit" class="{{ ui.button_class('primary') }}">{{ 'reports.decisionApply'|trans({}, 'admin') }}</button>
+                    <p class="text-legend text-muted">{{ 'reports.decisionFooter'|trans({}, 'admin') }}</p>
+                </form>
+            {% endif %}
+        </section>
+        </div>
+    </div>
+{% endblock %}
