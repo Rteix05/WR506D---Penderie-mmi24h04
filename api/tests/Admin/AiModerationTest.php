@@ -44,6 +44,8 @@ final class AiModerationTest extends WebTestCase
     protected function setUp(): void
     {
         $this->client = self::createClient();
+        // Le back-office suit la langue du navigateur ; le client de test annonce l'anglais par défaut.
+        $this->client->setServerParameter('HTTP_ACCEPT_LANGUAGE', 'fr');
         $this->em = self::getContainer()->get(EntityManagerInterface::class);
         $this->admin = $this->profile('camille', admin: true)->getAccount();
         $this->author = $this->profile('mathis');
@@ -107,7 +109,7 @@ final class AiModerationTest extends WebTestCase
         self::assertSame('google/gemma-4-26b-a4b-it:free', $review->getModel(), 'le premier modèle est à court de quota : le suivant répond');
         self::assertCount(1, $review->getAttempts());
         self::assertSame('Belle veste !', $review->getInput()['contenu']['texte'], 'le dossier envoyé est gardé');
-        self::assertStringContainsString('<<<DOSSIER', OpenRouterMock::$prompts[1]);
+        self::assertStringContainsString('<<<DOSSIER', OpenRouterMock::$prompts[0]);
 
         $report = $this->fresh($report);
         self::assertSame(ReportStatus::Dismissed, $report->getStatus());
@@ -115,7 +117,7 @@ final class AiModerationTest extends WebTestCase
 
         // L'administrateur n'est pas d'accord : il annule, avec sa raison.
         $crawler = $this->client->request('GET', '/admin/signalements/'.$report->getId());
-        self::assertSelectorTextContains('#pre-analyse-ia', 'Appliquée par l’IA');
+        self::assertSelectorTextContains('section[aria-labelledby=pre-analyse-ia]', 'Appliquée par l’IA');
         $this->client->submit($crawler->selectButton('Annuler la décision de l’IA')->form(), ['note' => 'Le commentaire vise la personne.']);
         $this->client->followRedirect();
 
@@ -197,10 +199,10 @@ final class AiModerationTest extends WebTestCase
 
         $crawler = $this->client->request('GET', '/admin/journal/scans');
         self::assertResponseIsSuccessful();
-        self::assertSelectorTextContains('tbody', 'Aucun modèle n\'a répondu.');
+        self::assertSelectorTextContains('section[aria-label=Scans] tbody', 'Aucun modèle n\'a répondu.');
         self::assertSelectorTextContains('#erreurs + dl', 'Quota atteint (429)');
 
-        $this->client->click($crawler->filter('tbody a')->link());
+        $this->client->click($crawler->filter('section[aria-label=Scans] tbody a')->link());
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('#chaine + ol', 'google/gemma-4-31b-it:free');
     }
