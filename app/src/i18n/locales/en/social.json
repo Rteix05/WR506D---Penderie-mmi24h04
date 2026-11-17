@@ -250,5 +250,19 @@
     "sent": "Thank you. Moderators will review this report. The person concerned won't know it was you.",
     "error": "The report couldn't be sent.",
     "note": "Abusive reports may be sanctioned. In immediate danger, contact emergency services."
+  },
+  "notifications": {
+    "title": "Notifications",
+    "unread_one": "{{count}} unread",
+    "unread_other": "{{count}} unread",
+    "readAll": "Mark all as read",
+    "emptyTitle": "No notifications",
+    "emptyText": "Loan returns, comments, your friends' shares and the outcome of your reports show up here.",
+    "section": {
+      "today": "Today",
+      "week": "This week",
+      "earlier": "Earlier"
+    },
+    "unreadA11y": "Unread: "
   }
 }

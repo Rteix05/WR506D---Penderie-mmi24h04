@@ -18,7 +18,8 @@
   "topBar": {
     "notifications": "通知",
     "notificationsBody": "通知機能はまもなく登場します。",
-    "profile": "マイプロフィール"
+    "profile": "マイプロフィール",
+    "notificationsUnread_other": "お知らせ（未読 {{count}}件）"
   },
   "look": {
     "title": "今日のコーデ",

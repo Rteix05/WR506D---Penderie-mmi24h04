@@ -20,7 +20,9 @@
   "topBar": {
     "notifications": "Notifications",
     "notificationsBody": "Notifications are coming soon.",
-    "profile": "My profile"
+    "profile": "My profile",
+    "notificationsUnread_one": "Notifications, {{count}} unread",
+    "notificationsUnread_other": "Notifications, {{count}} unread"
   },
   "look": {
     "title": "Outfit of the day",

@@ -1,7 +1,7 @@
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ClothVisual, type ClothKind } from '@/components/home/ClothVisual';
@@ -14,6 +14,7 @@ import { useActiveProfile } from '@/lib/auth';
 import { relativeDay, useInventoryOverview, type RecentEntry } from '@/lib/inventory';
 import { LOOK_STATUS, useTodayLook } from '@/lib/look';
 import { pieceArt, useCurrentOutfit } from '@/lib/outfit';
+import { useUnreadCount } from '@/lib/notifications';
 
 /**
  * Accueil — Tableau de bord, d'après Figma (page « Maquette v2 », node
@@ -103,15 +104,7 @@ function TopBar({ initial }: { initial: string }) {
         <Text className="font-luciole-bold text-body text-ink dark:text-ink-night">PENDERIE</Text>
       </View>
       <View className="flex-row items-center gap-3">
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={t('topBar.notifications')}
-          onPress={() => Alert.alert(t('topBar.notifications'), t('topBar.notificationsBody'))}
-          hitSlop={4}
-          style={E1}
-          className="h-9 w-9 items-center justify-center rounded-full bg-surface active:opacity-80 dark:bg-surface-night">
-          <Text className="font-luciole-bold text-[14px] text-ink dark:text-ink-night">!</Text>
-        </Pressable>
+        <NotificationButton />
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={t('topBar.profile')}
@@ -122,6 +115,29 @@ function TopBar({ initial }: { initial: string }) {
         </Pressable>
       </View>
     </View>
+  );
+}
+
+/** « ! » de la barre haute : ouvre les notifications ; pastille rose du nombre de non lues (DS : Badge / Count). */
+function NotificationButton() {
+  const { t } = useTranslation('home');
+  const unread = useUnreadCount().data ?? 0;
+
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={unread > 0 ? t('topBar.notificationsUnread', { count: unread }) : t('topBar.notifications')}
+      onPress={() => router.push('/notifications')}
+      hitSlop={4}
+      style={E1}
+      className="h-9 w-9 items-center justify-center rounded-full bg-surface active:opacity-80 dark:bg-surface-night">
+      <Text className="font-luciole-bold text-[14px] text-ink dark:text-ink-night">!</Text>
+      {unread > 0 && (
+        <View className="absolute -right-1 -top-1 h-5 min-w-[20px] items-center justify-center rounded-full bg-primary px-1">
+          <Text className="font-luciole-bold text-[11px] text-white">{unread > 99 ? '99+' : unread}</Text>
+        </View>
+      )}
+    </Pressable>
   );
 }
 

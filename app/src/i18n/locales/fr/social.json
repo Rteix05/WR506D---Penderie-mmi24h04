@@ -250,5 +250,19 @@
     "sent": "Merci. La modération va examiner ce signalement. La personne concernée ne saura pas que c'est toi.",
     "error": "Le signalement n'a pas pu être envoyé.",
     "note": "Un signalement abusif peut être sanctionné. En cas de danger immédiat, contacte les secours."
+  },
+  "notifications": {
+    "title": "Notifications",
+    "unread_one": "{{count}} non lue",
+    "unread_other": "{{count}} non lues",
+    "readAll": "Tout marquer comme lu",
+    "emptyTitle": "Aucune notification",
+    "emptyText": "Les retours de prêt, les commentaires, les partages de tes amis et les suites de tes signalements arrivent ici.",
+    "section": {
+      "today": "Aujourd'hui",
+      "week": "Cette semaine",
+      "earlier": "Plus tôt"
+    },
+    "unreadA11y": "Non lue : "
   }
 }

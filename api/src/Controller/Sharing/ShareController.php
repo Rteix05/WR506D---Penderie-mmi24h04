@@ -5,13 +5,17 @@ namespace App\Controller\Sharing;
 use App\Entity\Identity\Profile;
 use App\Entity\Inventory\AbstractPossession;
 use App\Entity\Relation\Follow;
+use App\Entity\Relation\Friendship;
 use App\Entity\Sharing\Share;
 use App\Entity\Sharing\ShareRecipient;
 use App\Enum\Sharing\AccessLevel;
+use App\Enum\Notification\NotificationType;
+use App\Enum\Relation\FriendshipStatus;
 use App\Enum\Sharing\ShareAudience;
 use App\Repository\Relation\FriendshipRepository;
 use App\Security\CurrentProfile;
 use App\Security\ResourceAccess;
+use App\Service\Notification\Notifier;
 use App\Service\Sharing\ShareTargets;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -36,6 +40,7 @@ final class ShareController extends AbstractController
         private readonly ResourceAccess $access,
         private readonly ShareTargets $targets,
         private readonly FriendshipRepository $friendships,
+        private readonly Notifier $notifier,
     ) {
     }
 
@@ -81,9 +86,43 @@ final class ShareController extends AbstractController
         foreach ($recipients as $recipient) {
             $this->em->persist($recipient);
         }
+        $this->notifyShare($share, $me, $target, $type, $audience, array_map(static fn ($r) => $r->getProfile(), $recipients));
         $this->em->flush();
 
         return $this->json($this->describe($share, true), Response::HTTP_CREATED);
+    }
+
+    /**
+     * « Partage reçu » : les personnes choisies, ou tous mes amis pour un
+     * partage aux amis (maquette : « Thomas partage son dressing avec toi »).
+     * Rien pour un lien ou les abonnés : ce n'est pas adressé à quelqu'un.
+     *
+     * @param list<Profile> $recipients
+     */
+    private function notifyShare(Share $share, Profile $me, object $target, string $type, ShareAudience $audience, array $recipients): void
+    {
+        $to = match ($audience) {
+            ShareAudience::Specific => $recipients,
+            ShareAudience::Friends => array_map(
+                static fn (Friendship $f) => $f->getOther($me),
+                $this->em->getRepository(Friendship::class)->createQueryBuilder('f')
+                    ->where('f.requester = :me OR f.addressee = :me')->andWhere('f.status = :accepted')
+                    ->setParameter('me', $me->getId(), 'uuid')->setParameter('accepted', FriendshipStatus::Accepted)
+                    ->getQuery()->getResult(),
+            ),
+            default => [],
+        };
+        $name = method_exists($target, 'getName') ? (string) $target->getName() : null;
+        foreach ($to as $profile) {
+            $this->notifier->notify(
+                $profile,
+                NotificationType::ShareReceived,
+                'Partage reçu',
+                null === $name ? $me->getDisplayName().' partage quelque chose avec toi.' : \sprintf('%s partage « %s » avec toi.', $me->getDisplayName(), $name),
+                ['share' => (string) $share->getId(), 'targetType' => $type, 'targetId' => method_exists($target, 'getId') ? (string) $target->getId() : null],
+                $me,
+            );
+        }
     }
 
     /** Mes partages : ceux de mes affaires, et ceux que j'ai faits. */

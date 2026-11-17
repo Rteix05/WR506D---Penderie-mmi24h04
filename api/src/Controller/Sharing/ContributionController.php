@@ -11,10 +11,12 @@ use App\Entity\Place\Storage;
 use App\Entity\Sharing\CollectionShare;
 use App\Entity\Sharing\Contribution;
 use App\Entity\Sharing\Share;
+use App\Enum\Notification\NotificationType;
 use App\Enum\Sharing\ContributionKind;
 use App\Enum\Sharing\ContributionStatus;
 use App\Security\CurrentProfile;
 use App\Security\ResourceAccess;
+use App\Service\Notification\Notifier;
 use App\Service\Sharing\ContributionReviewer;
 use App\Service\Sharing\ShareTargets;
 use Doctrine\ORM\EntityManagerInterface;
@@ -40,6 +42,7 @@ final class ContributionController extends AbstractController
         private readonly ResourceAccess $access,
         private readonly ShareTargets $targets,
         private readonly ContributionReviewer $reviewer,
+        private readonly Notifier $notifier,
     ) {
     }
 
@@ -63,6 +66,10 @@ final class ContributionController extends AbstractController
             ContributionKind::EditFields => $this->editFields($b),
         };
         $this->em->persist($contribution);
+        // Le propriétaire (et son tuteur, pour un profil enfant) a une proposition à valider.
+        foreach (array_filter([$contribution->getOwner(), $contribution->getOwner()->getGuardian()]) as $reviewer) {
+            $this->notifier->notify($reviewer, NotificationType::ApprovalRequested, 'Proposition à valider', $me->getDisplayName().' te propose une modification : accepte-la ou refuse-la.', ['contribution' => (string) $contribution->getId()], $me);
+        }
         $this->em->flush();
 
         return $this->json($this->describe($contribution), Response::HTTP_CREATED);
@@ -91,6 +98,7 @@ final class ContributionController extends AbstractController
     {
         $contribution = $this->loadForReview($id);
         $this->reviewer->accept($contribution, $this->current->get());
+        $this->notifyDecision($contribution, true);
 
         return $this->json($this->describe($contribution));
     }
@@ -101,6 +109,7 @@ final class ContributionController extends AbstractController
         $contribution = $this->loadForReview($id);
         $note = '' !== $request->getContent() ? ($request->toArray()['note'] ?? null) : null;
         $contribution->reject($this->current->get(), $note);
+        $this->notifyDecision($contribution, false);
         $this->em->flush();
 
         return $this->json($this->describe($contribution));
@@ -173,6 +182,21 @@ final class ContributionController extends AbstractController
     {
         return $this->access->editGrant($this->current->get(), $target)
             ?? throw new AccessDeniedException('Aucun droit de modifier sur cette ressource.');
+    }
+
+    /** Celui qui a proposé apprend la décision. */
+    private function notifyDecision(Contribution $contribution, bool $accepted): void
+    {
+        $note = $contribution->getNote();
+        $this->notifier->notify(
+            $contribution->getContributor(),
+            NotificationType::ApprovalDecided,
+            $accepted ? 'Proposition acceptée' : 'Proposition refusée',
+            $this->current->get()->getDisplayName().($accepted ? ' a accepté ta proposition.' : ' a refusé ta proposition.').(null === $note || '' === $note ? '' : ' « '.$note.' »'),
+            ['contribution' => (string) $contribution->getId()],
+            $this->current->get(),
+        );
+        $this->em->flush();
     }
 
     private function load(string $id): Contribution
