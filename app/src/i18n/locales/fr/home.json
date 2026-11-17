@@ -20,7 +20,9 @@
   "topBar": {
     "notifications": "Notifications",
     "notificationsBody": "Les notifications arrivent bientôt.",
-    "profile": "Mon profil"
+    "profile": "Mon profil",
+    "notificationsUnread_one": "Notifications, {{count}} non lue",
+    "notificationsUnread_other": "Notifications, {{count}} non lues"
   },
   "look": {
     "title": "Look du jour",
