@@ -31,9 +31,11 @@ final class OutfitSuggestionApiTest extends ApiTestBase
     /** Un petit dressing : deux hauts, deux bas, des baskets, une veste et un manteau. */
     private function dress(): void
     {
+        // La pièce d'abord : roomOf() passe par l'API, qui redémarre le noyau et son gestionnaire d'entités.
+        $roomIri = $this->roomOf($this->alice);
         $em = static::getContainer()->get(EntityManagerInterface::class);
         $me = $em->find(Profile::class, $this->alice['profileId']);
-        $room = $em->find(Room::class, basename($this->roomOf($this->alice)));
+        $room = $em->find(Room::class, basename($roomIri));
         $category = static fn (string $slug) => $em->getRepository(GarmentCategory::class)->findOneBy(['slug' => $slug, 'owner' => null]);
         foreach (['T-shirt blanc' => 't-shirts', 'Chemise' => 'chemises', 'Jean' => 'jeans', 'Pantalon noir' => 'pantalons', 'Baskets' => 'baskets', 'Veste en jean' => 'vestes', 'Manteau' => 'manteaux'] as $name => $slug) {
             $em->persist(new Garment($me, $name, $room, $category($slug)));
@@ -87,8 +89,10 @@ final class OutfitSuggestionApiTest extends ApiTestBase
     public function testWithoutPositionTheHomeCityGivesTheWeather(): void
     {
         $this->dress();
+        $roomIri = $this->roomOf($this->alice);
         $em = static::getContainer()->get(EntityManagerInterface::class);
-        $room = $em->find(Room::class, basename($this->roomOf($this->alice)));
+        $room = $em->find(Room::class, basename($roomIri));
+        \assert(null !== $room);
         $room->getPlace()->setAddress('12 rue Émile Zola, 10000 Troyes');
         $em->flush();
 

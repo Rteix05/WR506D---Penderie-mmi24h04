@@ -26,7 +26,7 @@ final class OutfitEngine
 {
     public const OCCASIONS = ['EVERYDAY', 'WORK', 'SPORT', 'EVENING'];
 
-    /** Familles de couleur qui s'accordent avec tout. Le bleu l'est pour un bas (le jean). */
+    /** Familles de couleur qui s'accordent avec tout. Le bleu l'est pour un bas ou une veste (le denim). */
     private const NEUTRAL = ['BLACK', 'WHITE', 'GREY', 'BEIGE', 'BROWN'];
 
     /** Combien de pièces par place entrent dans les combinaisons (au-delà, la combinatoire explose pour rien). */
@@ -200,6 +200,9 @@ final class OutfitEngine
             }
             if ($forecast->isWet() && 'outer' === $piece->slot) {
                 $score += $piece->waterResistant ? 3 : -1;
+            } elseif ('impermeables' === $piece->categorySlug) {
+                // Par temps sec, un imperméable n'est pas la veste qu'on choisit.
+                $score -= 1;
             }
             if ('shoes' === $piece->slot) {
                 $cold = $forecast->feltTemperature() < 10;
@@ -271,7 +274,7 @@ final class OutfitEngine
         $accents = [];
         foreach ($pieces as $piece) {
             foreach ($piece->colorFamilies as $family) {
-                $neutral = \in_array($family, self::NEUTRAL, true) || ('BLUE' === $family && 'bottom' === $piece->slot);
+                $neutral = \in_array($family, self::NEUTRAL, true) || ('BLUE' === $family && \in_array($piece->slot, ['bottom', 'outer'], true));
                 if (!$neutral) {
                     $accents[$family] = true;
                 }

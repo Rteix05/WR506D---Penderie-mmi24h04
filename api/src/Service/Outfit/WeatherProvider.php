@@ -116,6 +116,8 @@ final class WeatherProvider
     public static function cityOf(string $address): ?string
     {
         $parts = array_values(array_filter(array_map('trim', preg_split('/[,\n]/', $address) ?: [])));
+        // Le pays en dernier (« …, 75011 Paris, France ») n'est pas la ville.
+        $parts = array_values(array_filter($parts, static fn (string $p) => 1 !== preg_match('/^(france|belgique|suisse|luxembourg)$/iu', $p)));
         if ([] === $parts) {
             return null;
         }

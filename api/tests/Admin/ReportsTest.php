@@ -38,6 +38,8 @@ final class ReportsTest extends WebTestCase
     protected function setUp(): void
     {
         $this->client = self::createClient();
+        // Le back-office suit la langue du navigateur ; le client de test annonce l'anglais par défaut.
+        $this->client->setServerParameter('HTTP_ACCEPT_LANGUAGE', 'fr');
         $this->em = self::getContainer()->get(EntityManagerInterface::class);
         $this->admin = $this->profile('camille', admin: true)->getAccount();
         $this->author = $this->profile('mathis');

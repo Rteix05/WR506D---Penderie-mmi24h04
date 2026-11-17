@@ -17,3 +17,10 @@ framework:
         # Namespaced pools use the above "app" backend by default
         #pools:
             #my.dedicated.cache: null
+
+# En test, un cache en mémoire : rien ne passe d'un test à l'autre (la météo
+# d'Open-Meteo, mise en cache 30 minutes, fausserait le test « météo en panne »).
+when@test:
+    framework:
+        cache:
+            app: cache.adapter.array
