@@ -1,4 +1,4 @@
-import { useInfiniteQuery, useQuery, type QueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useQuery, type InfiniteData, type QueryClient } from '@tanstack/react-query';
 
 import i18n, { dateLocale } from '@/i18n';
 import { apiGet, apiRequest } from '@/lib/api';
@@ -42,7 +42,12 @@ export type Post = {
   audience: Audience | 'SPECIFIC';
   body: string | null;
   commentsEnabled: boolean;
+  /** Je peux commenter : publication pour les amis (ou personnes choisies) que je vois. */
+  canComment: boolean;
   canDelete: boolean;
+  likeCount: number;
+  likedByMe: boolean;
+  commentCount: number;
   photo: { url: string; width: number | null; height: number | null } | null;
   look: { id: string; wornOn: string; tags: Mention[] } | null;
 };
@@ -109,4 +114,59 @@ export function since(iso: string, now = new Date()): string {
   if (days < 7) return i18n.t('social:since.days', { days });
 
   return date.toLocaleDateString(dateLocale(), { day: 'numeric', month: 'long' });
+}
+
+export type PostComment = {
+  id: string;
+  parentId: string | null;
+  author: PostAuthor;
+  body: string;
+  createdAt: string;
+  mine: boolean;
+  canDelete: boolean;
+};
+
+export function useComments(postId: string, enabled = true) {
+  return useQuery({
+    queryKey: ['post-comments', postId],
+    queryFn: async ({ signal }) => (await apiGet<{ comments: PostComment[] }>(`/api/posts/${postId}/comments`, signal)).comments,
+    enabled,
+  });
+}
+
+/** Applique un changement à une publication partout où elle est en cache (fil, page, profil). */
+function patchPost(queryClient: QueryClient, id: string, patch: (post: Post) => Post): void {
+  queryClient.setQueryData<Post>(['post', id], (post) => (post ? patch(post) : post));
+  queryClient.setQueryData<InfiniteData<{ posts: Post[]; next: string | null }>>(['feed'], (feed) =>
+    feed ? { ...feed, pages: feed.pages.map((page) => ({ ...page, posts: page.posts.map((p) => (p.id === id ? patch(p) : p)) })) } : feed,
+  );
+  queryClient.setQueriesData<ProfilePage>({ queryKey: ['profile-page'] }, (page) => (page ? { ...page, posts: page.posts.map((p) => (p.id === id ? patch(p) : p)) } : page));
+}
+
+/** « J'aime » / ne plus aimer : le cœur change tout de suite, l'API confirme le compte. */
+export async function toggleLike(queryClient: QueryClient, post: Post): Promise<void> {
+  const liked = !post.likedByMe;
+  patchPost(queryClient, post.id, (p) => ({ ...p, likedByMe: liked, likeCount: Math.max(0, p.likeCount + (liked ? 1 : -1)) }));
+  try {
+    const result = await apiRequest<{ liked: boolean; likeCount: number }>(`/api/posts/${post.id}/like`, { method: liked ? 'PUT' : 'DELETE', accept: 'application/json' });
+    patchPost(queryClient, post.id, (p) => ({ ...p, likedByMe: result.liked, likeCount: result.likeCount }));
+  } catch (e) {
+    patchPost(queryClient, post.id, (p) => ({ ...p, likedByMe: post.likedByMe, likeCount: post.likeCount }));
+    throw e;
+  }
+}
+
+/** Commenter, ou répondre à un commentaire (parent). */
+export async function addComment(queryClient: QueryClient, postId: string, body: string, parent: string | null): Promise<PostComment> {
+  const comment = await apiRequest<PostComment>(`/api/posts/${postId}/comments`, { method: 'POST', body: { body: body.trim(), parent }, accept: 'application/json' });
+  queryClient.setQueryData<PostComment[]>(['post-comments', postId], (list) => [...(list ?? []), comment]);
+  patchPost(queryClient, postId, (p) => ({ ...p, commentCount: p.commentCount + 1 }));
+
+  return comment;
+}
+
+export async function deleteComment(queryClient: QueryClient, postId: string, commentId: string): Promise<void> {
+  await apiRequest(`/api/posts/${postId}/comments/${commentId}`, { method: 'DELETE' });
+  queryClient.setQueryData<PostComment[]>(['post-comments', postId], (list) => (list ?? []).filter((c) => c.id !== commentId));
+  patchPost(queryClient, postId, (p) => ({ ...p, commentCount: Math.max(0, p.commentCount - 1) }));
 }

@@ -10,6 +10,7 @@ use App\Entity\Inventory\Garment;
 use App\Entity\Relation\Follow;
 use App\Entity\Relation\Friendship;
 use App\Entity\Sharing\Post;
+use App\Entity\Sharing\PostLike;
 use App\Entity\Sharing\PostMedia;
 use App\Enum\Relation\FriendshipStatus;
 use App\Enum\Sharing\ShareAudience;
@@ -122,7 +123,7 @@ final class FeedController extends AbstractController
         $visible = array_values(array_filter($page, fn (Post $p) => $this->access->canRead($me, $p)));
 
         return $this->json([
-            'posts' => array_map($this->describe(...), $visible),
+            'posts' => $this->describeAll($visible),
             'next' => \count($page) === self::PAGE ? end($page)->getPublishedAt()->format(\DATE_ATOM) : null,
         ]);
     }
@@ -177,7 +178,7 @@ final class FeedController extends AbstractController
                 'friend' => !$self && \in_array($profile, $this->friendsOf($me), true),
                 'following' => !$self && \in_array($profile, $this->followedBy($me), true),
             ],
-            'posts' => array_map($this->describe(...), $posts),
+            'posts' => $this->describeAll($posts),
             'garments' => array_values($garments),
         ]);
     }
@@ -209,12 +210,32 @@ final class FeedController extends AbstractController
         return array_map(static fn (Follow $f) => $f->getFollowing(), $this->em->getRepository(Follow::class)->findBy(['follower' => $me]));
     }
 
-    /** @return array<string, mixed> */
-    private function describe(Post $post): array
+    /**
+     * Une page de publications, avec leurs « j'aime » et leurs commentaires
+     * comptés en trois requêtes pour toute la page.
+     *
+     * @param list<Post> $posts
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function describeAll(array $posts): array
+    {
+        $counts = $this->em->getRepository(PostLike::class)->countsFor($posts, $this->current->get());
+
+        return array_map(fn (Post $p) => $this->describe($p, $counts[(string) $p->getId()]), $posts);
+    }
+
+    /**
+     * @param array{likes: int, comments: int, liked: bool}|null $counts
+     *
+     * @return array<string, mixed>
+     */
+    private function describe(Post $post, ?array $counts = null): array
     {
         $me = $this->current->get();
         $look = $this->lookOf($post);
         $media = $post->getMedia()->first() ?: null;
+        $counts ??= $this->em->getRepository(PostLike::class)->countsFor([$post], $me)[(string) $post->getId()];
 
         return [
             'id' => (string) $post->getId(),
@@ -223,6 +244,11 @@ final class FeedController extends AbstractController
             'audience' => $post->getAudience()->value,
             'body' => $post->getBody(),
             'commentsEnabled' => $post->isCommentsEnabled(),
+            // Commenter : publication qui l'autorise (amis, personnes choisies), et que je peux lire.
+            'canComment' => $post->isCommentsEnabled() && ($this->access->isOwner($me, $post) || $this->access->canRead($me, $post)),
+            'likeCount' => $counts['likes'],
+            'likedByMe' => $counts['liked'],
+            'commentCount' => $counts['comments'],
             'canDelete' => $this->access->isOwner($me, $post),
             'photo' => null === $media ? null : [
                 'url' => '/api/media/'.$media->getMedia()->getId(),

@@ -1,3 +1,4 @@
+import { useQueryClient } from '@tanstack/react-query';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { useState } from 'react';
@@ -11,7 +12,7 @@ import { Pill } from '@/components/ui/Banner';
 import { Button } from '@/components/ui/Button';
 import { E1 } from '@/components/ui/elevation';
 import { mediaSource } from '@/lib/api';
-import { audienceLabels, since, type Mention, type Post } from '@/lib/feed';
+import { audienceLabels, since, toggleLike, type Mention, type Post } from '@/lib/feed';
 
 /** Les mentions d'une publication, au format des points de la photo. */
 const asTags = (mentions: Mention[]): PhotoTag[] => mentions.map((m) => ({ id: String(m.position), x: m.x, y: m.y, position: m.position, status: 'CONFIRMED' }));
@@ -59,18 +60,48 @@ export function PostCard({ post, linked = false }: { post: Post; linked?: boolea
         </Text>
       )}
 
-      {linked && (
-        <Pressable
-          accessibilityRole="link"
-          onPress={() => router.push({ pathname: '/fil/[id]', params: { id: post.id } })}
-          hitSlop={8}
-          className="self-end active:opacity-80">
-          <Text className="font-luciole-bold text-legend text-ink dark:text-ink-night">{t('postCard.seePost')}</Text>
-        </Pressable>
-      )}
+      {/* « J'aime » pour qui voit la publication ; « Commenter (n) » si elle l'accepte (maquette du fil). */}
+      <View className="flex-row items-center justify-between">
+        <LikeButton post={post} />
+        {linked && post.commentsEnabled ? (
+          <Pressable accessibilityRole="link" onPress={() => router.push({ pathname: '/fil/[id]', params: { id: post.id } })} hitSlop={8} className="active:opacity-80">
+            <Text className="font-luciole-bold text-legend text-primary dark:text-primary-night">{t('postCard.comment', { count: post.commentCount })}</Text>
+          </Pressable>
+        ) : linked ? (
+          <Pressable accessibilityRole="link" onPress={() => router.push({ pathname: '/fil/[id]', params: { id: post.id } })} hitSlop={8} className="active:opacity-80">
+            <Text className="font-luciole-bold text-legend text-ink dark:text-ink-night">{t('postCard.seePost')}</Text>
+          </Pressable>
+        ) : null}
+      </View>
 
       <MentionSheet mention={open} post={post} onClose={() => setOpen(null)} />
     </View>
+  );
+}
+
+/** Le cœur et le nombre de « j'aime » : le cœur se remplit tout de suite, l'API confirme. */
+export function LikeButton({ post }: { post: Post }) {
+  const { t } = useTranslation('social');
+  const queryClient = useQueryClient();
+  const [failed, setFailed] = useState(false);
+
+  const press = () => {
+    setFailed(false);
+    toggleLike(queryClient, post).catch(() => setFailed(true));
+  };
+
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityState={{ selected: post.likedByMe }}
+      accessibilityLabel={post.likedByMe ? t('postCard.unlikeA11y', { count: post.likeCount }) : t('postCard.likeA11y', { count: post.likeCount })}
+      onPress={press}
+      hitSlop={8}
+      className="min-h-[36px] flex-row items-center gap-1.5 active:opacity-70">
+      <Text className={`text-[22px] leading-[26px] ${post.likedByMe ? 'text-primary dark:text-primary-night' : 'text-muted dark:text-muted-night'}`}>{post.likedByMe ? '♥' : '♡'}</Text>
+      <Text className="font-luciole-bold text-legend text-ink/70 dark:text-ink-night/70">{post.likeCount > 0 ? t('postCard.likes', { count: post.likeCount }) : t('postCard.like')}</Text>
+      {failed && <Text className="font-luciole text-legend text-error dark:text-error-night">{t('postCard.likeError')}</Text>}
+    </Pressable>
   );
 }
 
