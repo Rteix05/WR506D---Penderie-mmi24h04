@@ -8,6 +8,7 @@ import { EmptyState } from '@/components/inventory/EmptyState';
 import { FilterChips, SearchField, SortChip } from '@/components/inventory/ListControls';
 import { PossessionCard } from '@/components/inventory/PossessionCard';
 import { BackButton } from '@/components/ui/BackButton';
+import { Button } from '@/components/ui/Button';
 import { ScreenTitle } from '@/components/ui/ScreenTitle';
 import { compareText } from '@/i18n';
 import {
@@ -136,6 +137,10 @@ export default function DressingScreen() {
 
         {all.length > 0 && (
           <>
+            {/* Le moteur de suggestion de tenues : météo, occasion, ce qui a été porté (écran Ta tenue). */}
+            <View className="px-5">
+              <Button label={t('wardrobe.suggest')} variant="secondary" onPress={() => router.push('/tenue')} />
+            </View>
             <SearchField value={query} onChange={setQuery} placeholder={t('wardrobe.search')} />
             <View className="gap-3">
               <FilterChips options={chips} value={category} onChange={setCategory} />

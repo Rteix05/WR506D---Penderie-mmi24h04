@@ -1,0 +1,100 @@
+{% extends 'admin/base.html.twig' %}
+{% import 'admin/_ui.html.twig' as ui %}
+
+{% block title %}{{ 'categories.brands.title'|trans({}, 'admin') }}{% endblock %}
+{% block active %}categories{% endblock %}
+{% block heading %}{{ 'categories.title'|trans({}, 'admin') }}{% endblock %}
+{% block subtitle %}{{ 'categories.brands.subtitle'|trans({}, 'admin') }}{% endblock %}
+{% block search %}{{ ui.search('categories.brands.search'|trans({}, 'admin'), query, {tab: 'brands', filter: filter}) }}{% endblock %}
+
+{% block body %}
+    {% set super = is_granted('ROLE_SUPER_ADMIN') %}
+    {% set field = 'h-9 rounded-sm bg-bg px-3 text-legend outline-none focus:ring-2 focus:ring-primary' %}
+
+    {{ include('admin/categories/_tabs.html.twig') }}
+
+    {% if super %}
+        <section class="{{ ui.card_class() }} mb-6" aria-labelledby="ajouter-marque">
+            <h2 id="ajouter-marque" class="text-legend font-bold text-muted">{{ 'categories.brands.addTitle'|trans({}, 'admin') }}</h2>
+            <form method="post" action="{{ path('admin_brand_add') }}" class="mt-3 flex flex-wrap gap-3">
+                <input type="hidden" name="_token" value="{{ csrf_token('brand-add') }}">
+                <label class="sr-only" for="nouvelle-marque">{{ 'categories.brands.addName'|trans({}, 'admin') }}</label>
+                <input id="nouvelle-marque" name="name" required maxlength="80" placeholder="{{ 'categories.brands.addName'|trans({}, 'admin') }}" class="h-10 w-64 rounded-sm bg-bg px-3 text-body outline-none focus:ring-2 focus:ring-primary">
+                <button class="h-10 rounded-md bg-primary px-4 text-legend font-bold text-white hover:brightness-110">{{ 'categories.brands.addSubmit'|trans({}, 'admin') }}</button>
+            </form>
+            <p class="mt-2 text-legend text-muted">{{ 'categories.brands.addHelp'|trans({}, 'admin') }}</p>
+        </section>
+    {% endif %}
+
+    {{ ui.tabs([
+        {key: 'pending', label: 'categories.brands.filterPending'|trans({count: pendingBrands}, 'admin')},
+        {key: 'all', label: 'categories.brands.filterAll'|trans({}, 'admin')},
+    ], filter, 'admin_categories', {tab: 'brands', q: query}) }}
+
+    <section class="{{ ui.card_class() }}" aria-label="{{ 'categories.brands.listAria'|trans({}, 'admin') }}">
+        {% if rows is empty %}
+            <p class="text-body text-muted">{{ filter == 'pending' ? 'categories.brands.emptyPending'|trans({}, 'admin') : 'categories.brands.empty'|trans({}, 'admin') }}</p>
+        {% else %}
+            <div class="overflow-x-auto">
+                <table class="w-full min-w-[760px] text-left">
+                    <thead><tr class="text-legend font-bold text-muted">
+                        <th scope="col" class="pb-3">{{ 'categories.brands.thName'|trans({}, 'admin') }}</th>
+                        <th scope="col" class="pb-3">{{ 'categories.brands.thStatus'|trans({}, 'admin') }}</th>
+                        <th scope="col" class="pb-3">{{ 'categories.brands.thCreatedBy'|trans({}, 'admin') }}</th>
+                        <th scope="col" class="pb-3 text-right">{{ 'categories.brands.thGarments'|trans({}, 'admin') }}</th>
+                        {% if super %}<th scope="col" class="pb-3"><span class="sr-only">{{ 'categories.brands.thActions'|trans({}, 'admin') }}</span></th>{% endif %}
+                    </tr></thead>
+                    <tbody>
+                    {% for row in rows %}
+                        {% set brand = row.brand %}
+                        {% set token = csrf_token('brand-' ~ brand.id) %}
+                        <tr class="border-t border-ink/8 align-top text-legend">
+                            <td class="py-3 text-body font-bold">{{ brand.name }}</td>
+                            <td class="py-3">{{ brand.verified ? ui.pill('categories.brands.verified'|trans({}, 'admin'), 'green') : ui.pill('categories.brands.pending'|trans({}, 'admin'), 'pink') }}</td>
+                            <td class="py-3">{{ brand.createdBy ? '@' ~ brand.createdBy.username : 'categories.brands.reference'|trans({}, 'admin') }}<br><span class="text-muted">{{ brand.createdAt ? brand.createdAt|admin_date : '' }}</span></td>
+                            <td class="py-3 text-right">{{ row.garments }}</td>
+                            {% if super %}
+                                <td class="py-3">
+                                    <div class="flex flex-col items-end gap-2">
+                                        {% if not brand.verified %}
+                                            <form method="post" action="{{ path('admin_brand_action', {id: brand.id, action: 'valider'}) }}">
+                                                <input type="hidden" name="_token" value="{{ token }}"><input type="hidden" name="filter" value="{{ filter }}">
+                                                <button class="rounded-sm bg-primary px-3 py-1.5 font-bold text-white hover:brightness-110">{{ 'categories.brands.verify'|trans({}, 'admin') }}</button>
+                                            </form>
+                                        {% endif %}
+                                        <details class="w-full max-w-[320px]">
+                                            <summary class="cursor-pointer text-right font-bold text-primary">{{ 'categories.edit'|trans({}, 'admin') }}</summary>
+                                            <div class="mt-2 flex flex-col gap-2">
+                                                <form method="post" action="{{ path('admin_brand_action', {id: brand.id, action: 'renommer'}) }}" class="flex gap-2">
+                                                    <input type="hidden" name="_token" value="{{ token }}"><input type="hidden" name="filter" value="{{ filter }}">
+                                                    <label class="sr-only" for="renommer-{{ brand.id }}">{{ 'categories.newName'|trans({}, 'admin') }}</label>
+                                                    <input id="renommer-{{ brand.id }}" name="name" value="{{ brand.name }}" required maxlength="80" class="{{ field }} flex-1">
+                                                    <button class="rounded-sm bg-surface px-3 font-bold shadow-[0_1px_3px_rgba(26,30,36,0.12)]">{{ 'categories.rename'|trans({}, 'admin') }}</button>
+                                                </form>
+                                                <form method="post" action="{{ path('admin_brand_action', {id: brand.id, action: 'fusionner'}) }}" class="flex gap-2">
+                                                    <input type="hidden" name="_token" value="{{ token }}"><input type="hidden" name="filter" value="{{ filter }}">
+                                                    <label class="sr-only" for="fusion-{{ brand.id }}">{{ 'categories.brands.mergeInto'|trans({}, 'admin') }}</label>
+                                                    <select id="fusion-{{ brand.id }}" name="into" required class="{{ field }} flex-1">
+                                                        <option value="">{{ 'categories.brands.mergeInto'|trans({}, 'admin') }}</option>
+                                                        {% for other in verified %}{% if other.id != brand.id %}<option value="{{ other.id }}">{{ other.name }}</option>{% endif %}{% endfor %}
+                                                    </select>
+                                                    <button class="rounded-sm bg-surface px-3 font-bold shadow-[0_1px_3px_rgba(26,30,36,0.12)]">{{ 'categories.brands.merge'|trans({}, 'admin') }}</button>
+                                                </form>
+                                                <form method="post" action="{{ path('admin_brand_action', {id: brand.id, action: 'supprimer'}) }}" class="text-right">
+                                                    <input type="hidden" name="_token" value="{{ token }}"><input type="hidden" name="filter" value="{{ filter }}">
+                                                    <button class="font-bold text-error hover:underline">{{ 'categories.delete'|trans({}, 'admin') }}</button>
+                                                </form>
+                                            </div>
+                                        </details>
+                                    </div>
+                                </td>
+                            {% endif %}
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {{ ui.pager(page, perPage, total, 'admin_categories', {tab: 'brands', filter: filter, q: query}) }}
+        {% endif %}
+    </section>
+{% endblock %}

@@ -1,0 +1,9 @@
+# Services propres aux tests, chargés en plus de services.yaml (environnement test).
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+
+    # Toutes les requêtes HTTP sortantes (framework.http_client.mock_response_factory) :
+    # Open-Meteo, la styliste des suggestions de tenues, OpenRouter.
+    App\Tests\Support\HttpMock: ~

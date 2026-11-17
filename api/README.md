@@ -51,6 +51,18 @@ En revanche, `vendor/` et `var/` vivent dans des volumes Docker. Sous Windows, l
 
 Les services ajoutés par les prochaines fonctionnalités (stockage des photos, e-mails) viendront compléter `compose.yaml` avec leur feature.
 
+### Lenteur sous Windows : couper le mode debug
+
+Même avec `vendor/` et `var/` en volumes, le code (`src/`, `config/`, `templates/`) reste monté depuis Windows, où chaque fichier met 35 à 150 ms à être relu. En mode debug, Symfony vérifie à chaque requête qu'aucun de ces fichiers n'a changé : mesuré le 10/11, 11 s rien que pour parcourir `src/`, et environ **30 s par requête** pour l'API comme pour le back-office. Sans debug, une requête prend moins d'une seconde.
+
+Sur un poste Windows, ajouter dans `api/.env.local` (non versionné) :
+
+```dotenv
+APP_DEBUG=0
+```
+
+Contrepartie : le cache n'est plus reconstruit tout seul. Après une modification du code PHP ou des gabarits : `docker compose exec php bin/console cache:clear`. Le back-office reste servi en dev (`asset_mapper.server` activé en `when@dev`). Les tests ne sont pas concernés : ils tournent dans l'environnement `test`. La vraie solution serait de cloner le projet dans le système de fichiers de WSL 2 plutôt que sur `C:`.
+
 ## Base de données
 
 Les entités suivent le modèle de données V2 (`docs/PENDERIE_MODELE_DONNEES_V2.html`). Chaque domaine arrive avec sa migration :
@@ -95,6 +107,15 @@ Un objet ou un vêtement est rangé dans une cascade **pièce › rangement › 
 
 - À la **création** (`POST /api/items`, `POST /api/garments`), on peut donner `room`, `storage` et `box`. Le conteneur impose sa pièce et son rangement ; un rangement d'une autre pièce est refusé (422, `ValidLocation`) ; ranger dans la pièce de quelqu'un d'autre est refusé (403).
 - **Ensuite**, l'emplacement ne change que par un déplacement (`LocationMover`, qui écrit l'historique) : un `PATCH` ne le modifie pas.
+
+| Route | Rôle |
+| --- | --- |
+| `POST /api/items/{id}/move`, `POST /api/garments/{id}/move` | `{room, storage?, box?}` : range l'objet ailleurs. Un conteneur impose sa pièce et son rangement (`room` devient facultative) |
+| `POST /api/boxes/{id}/move` | `{room, storage?}` : déplace le conteneur et tout ce qu'il contient |
+| `POST /api/storages/{id}/move` | `{room}` : déplace le meuble, ses conteneurs et tout ce qui est rangé dessus ou dedans |
+| `GET /api/possessions/moves?possession=` | l'historique d'un objet (IRI) : les emplacements **quittés**, du plus récent au plus ancien, avec qui l'a déplacé et pourquoi (`MANUAL_MOVE`, `BOX_MOVED`, `LOAN_RETURN`) |
+
+Déplacer un objet demande de pouvoir le modifier (son propriétaire, son tuteur) et de pouvoir ranger dans la pièce d'arrivée (403 sinon). Un rangement d'une autre pièce est refusé (422). Un conteneur ou un meuble ne se déplace que par celui qui l'a créé : en colocation, on ne déménage pas les affaires des autres avec. Un objet prêté se déplace aussi : c'est sa place habituelle, il y revient au retour. Un vêtement « à compléter » se range en le complétant (422).
 
 ## Photos
 
@@ -228,6 +249,36 @@ Le look est destiné à un post Instagram en deux images (la photo avec ses poin
 
 Un look n'est visible que par son propriétaire et son tuteur : les autres reçoivent 404, sa photo comprise, sauf s'il est publié dans le fil (ci-dessous). Un point ne se modifie que lorsque le look est en préparation (`TAGGING`).
 
+## Suggestions de tenues
+
+L'écran « Ta tenue » de l'app (maquette `docs/suggestion-v2.png`) propose une tenue pour une occasion (quotidien, travail, sport, soirée), d'après la météo du jour, les vêtements disponibles, les goûts et ce qui a été porté récemment. Le moteur a trois volets :
+
+1. **La météo** (`WeatherProvider`) : [Open-Meteo](https://open-meteo.com), gratuit, sans clé ni compte. On utilise la position du téléphone si l'utilisateur l'accepte (arrondie à 0,01°, soit environ 1 km), sinon la ville de son logement, retrouvée par le géocodage d'Open-Meteo à partir de l'adresse. Réponse en cache 30 minutes par lieu. En cas de panne, la suggestion se fait sans météo, jamais en erreur.
+2. **Les règles** (`OutfitEngine`, code pur, testé dans `tests/Unit/OutfitEngineTest.php`) :
+   - chaque vêtement trouve sa place selon sa catégorie : haut, bas, robe ou costume, couche du dessus, chaussures, accessoire chaud ;
+   - règles fermes : pas de sport au travail ni en soirée, pas de vêtement de soirée le jour, pas de costume ni de jean au sport, ni short ni sandales sous 18 °C ressentis ;
+   - chaque pièce est notée : chaleur face à la température, imperméable s'il pleut, usage adapté à l'occasion, couleurs et styles aimés ou non (`ColorPreference`, `StylePreference`), porté récemment (`WearLog`, rempli par le look du jour) ou déjà proposé ;
+   - le moteur assemble des tenues (haut + bas, ou robe ; chaussures ; couche du dessus s'il fait frais ou humide ; accessoire chaud s'il fait froid). L'accord des couleurs (neutres, ou un seul accent) et un style commun au haut et au bas rapportent des points ;
+   - il garde les quatre meilleures tenues, assez différentes entre elles.
+3. **L'IA** (`OutfitChooser`) : parmi ces candidates, un modèle de langage choisit celle qui va le mieux ensemble et dit pourquoi en une ou deux phrases, dans la langue de l'utilisateur. Il passe par OpenRouter, avec la même chaîne de modèles gratuits que le scan, en texte seul, et 12 s au plus. Les règles garantissent le « jamais absurde », l'IA apporte le goût. Si elle ne répond pas, la tenue la mieux notée par les règles est gardée (`source` : `RULES` au lieu de `AI`).
+
+Les vêtements écartés par « Je n'aime pas » (`GarmentExclusion`) ne sont plus proposés, tout comme ceux prêtés, vendus ou supprimés.
+
+| Route | Rôle |
+|---|---|
+| `GET /api/outfit-suggestions/current` | la suggestion du jour encore ouverte, ou `null` |
+| `POST /api/outfit-suggestions` | `{occasion, latitude?, longitude?, locale?}` → une tenue (201) ; 422 si le dressing n'a ni haut + bas, ni robe |
+| `POST /api/outfit-suggestions/{id}/next` | « Nouvelle tenue » : même occasion, autres pièces principales ; l'ancienne passe `REPLACED` |
+| `POST /api/outfit-suggestions/{id}/swap` | `{garment, dislike?}` : « Remplacer » une pièce par la meilleure autre de la même place ; avec `dislike`, elle est aussi écartée des prochaines suggestions |
+| `POST /api/outfit-suggestions/{id}/accept` | `{name?}` : « J'aime cette tenue », qui devient une `Outfit` du dressing, liée à la suggestion |
+
+Chaque suggestion garde son explication (`OutfitSuggestion.explanation`) :
+- la météo complète ;
+- les raisons, en codes et valeurs (`weather`, `noWeather`, `occasion`, `notWorn`, `harmony`, `liked`, `ai`) que l'app met en phrases en français, en anglais ou en japonais ;
+- la source, le modèle, le nombre de candidates et la note.
+
+Garder les suggestions à part des tenues (MDD) permet de mesurer le taux d'acceptation.
+
 ## Fil d'actualité
 
 Le fil de Penderie (maquette, section « 16 — Fil d'actualité »), commencé par le look du jour. Une publication (`Post`) s'adresse à des amis (`FRIENDS`) ou à des abonnés, amis compris (`FOLLOWERS`). Les abonnés ne commentent pas (MDD).
@@ -244,6 +295,73 @@ Le fil de Penderie (maquette, section « 16 — Fil d'actualité »), commencé 
 | `GET /api/profiles/{id}/page` | la page d'un profil vue par moi : `relation` (moi, foyer, ami, abonné), ses publications visibles, et les vêtements qu'elles me montrent |
 
 L'audience est vérifiée à chaque lecture : retirer un ami lui cache aussitôt les publications et les vêtements. La photo d'un look publié se lit par l'audience de la publication (`GET /api/media/{id}`). Un look publié ne repasse plus en préparation ; un look qui a été publié ne se supprime plus (sa photo est celle de la publication).
+
+## Prêt d'objets
+
+Un prêt (`Loan`) suit un cycle de vie porté par l'entité : `REQUESTED` › `ACCEPTED` › `ACTIVE` › `RETURNED`, avec les sorties `DECLINED`, `CANCELLED` et `LOST`. Chaque geste écrit une ligne du journal (`LoanEvent`) avec son auteur. Le retard n'est pas un statut : c'est un prêt `ACTIVE` dont la date de retour est passée (`overdue`), et repousser la date l'annule aussitôt.
+
+| Route | Rôle |
+| --- | --- |
+| `GET /api/loans?role=&open=` | mes prêts, du plus récent au plus ancien. `role` : `lender` (ce que je prête) ou `borrower` (ce que j'emprunte) ; `open=1` : en cours (demandés, acceptés, chez l'emprunteur), `open=0` : l'historique |
+| `GET /api/loans/{id}` | un prêt et son journal (`events`) ; seules les parties et leur tuteur l'ouvrent (404 sinon) |
+| `GET /api/loans/candidates` | à qui je peux prêter : mes amis et les autres profils de mon compte (`household`) |
+| `GET /api/possessions/loans?possession=` | l'historique des prêts d'un objet (IRI), pour son propriétaire |
+| `POST /api/loans` | `{possession, borrower, dueDate?, note?}` : le propriétaire prête de lui-même, le prêt naît `ACCEPTED` |
+| `POST /api/loans/request` | `{possession, note?}` : quelqu'un qui voit l'objet (partagé avec lui) demande à l'emprunter |
+| `POST /api/loans/{id}/accept` · `/decline` | le prêteur répond à une demande : `{dueDate?}` ou `{reason?}` |
+| `POST /api/loans/{id}/received` | l'emprunteur a l'objet en main : le prêt devient `ACTIVE`, l'objet `LENT`, et son état du moment est noté |
+| `POST /api/loans/{id}/due-date` | `{dueDate: "AAAA-MM-JJ" \| null}` : le prêteur repousse ou retire la date de retour |
+| `POST /api/loans/{id}/declare-return` | `{note?}` : l'emprunteur dit l'avoir rendu ; le prêteur confirme ensuite |
+| `POST /api/loans/{id}/confirm-return` | `{condition?, note?, room?, storage?, box?}` : le prêteur constate l'état (pire qu'au départ : `DAMAGE_REPORTED`) ; avec une pièce, l'objet est rangé là (déplacement tracé, raison `LOAN_RETURN`) |
+| `POST /api/loans/{id}/lost` | le prêteur déclare l'objet perdu : il passe `LOST` |
+| `POST /api/loans/{id}/cancel` | l'un ou l'autre annule, tant que l'objet n'a pas été remis |
+
+**Les règles.** On ne prête qu'à un ami ou à un profil de son compte, jamais à soi-même. Seul un objet disponible se prête : un objet prêté, perdu ou vendu ne se re-prête pas, ce qui interdit aussi le sous-prêt (seul le propriétaire prête, et l'emprunteur ne l'est pas). Un objet en vente ne se prête pas (409), un objet déjà promis ou déjà chez quelqu'un ne se promet pas à un second (409), et on ne demande pas deux fois le même objet (409). Un geste fait par la mauvaise partie répond 422.
+
+**Sur la fiche.** Un objet prêté porte `lentTo` {`loan`, `borrower`, `dueDate`, `overdue`} : « Chez Bruno, retour le 12 », pour son propriétaire seulement. L'emplacement habituel ne change pas pendant le prêt : au retour, l'objet retrouve sa place, ou celle que le prêteur choisit.
+
+**Profil enfant.** `LOAN_LEND` et `LOAN_BORROW` demandent l'accord du tuteur : tant que ce parcours n'est pas exposé, un enfant ne prête ni n'emprunte (403). Un adulte peut prêter au profil de son enfant (foyer).
+
+## Signaler un contenu
+
+`POST /api/reports` `{targetType, targetId, reason, description?}` : `targetType` vaut `PROFILE`, `ITEM`, `GARMENT`, `COMMENT`, `LISTING`, `COLLECTION` ou `POST` ; `reason` vaut `SPAM`, `INAPPROPRIATE`, `COUNTERFEIT`, `HARASSMENT` ou `OTHER`. On ne signale que ce qu'on voit (404 sinon), jamais son propre contenu ni celui de son compte (422), et une seule fois tant que le premier signalement n'est pas traité (409). Le signalement (`Report`, V2 du MDD) garde une référence souple à sa cible : il survit à la suppression du contenu. Il se traite dans le back-office.
+
+## Back-office
+
+Une interface web pour les administrateurs, à part de l'app mobile : **Twig + Stimulus + Tailwind**, servie par cette même application Symfony sous `/admin`. Elle suit la maquette Figma (section back-office de « Maquette v2 », lot 26 du plugin).
+
+- **Accès** : un compte `ROLE_ADMIN` seulement. Le pare-feu `admin` a une session et un formulaire de connexion (`/admin/connexion`, jeton CSRF) ; `AdminUserChecker` refuse les autres comptes dès le formulaire. Aucun écran ne donne ce rôle : `php bin/console app:admin:grant <email>` (et `--revoke` pour le retirer).
+- **Tableau de bord** (`/admin`) : quatre indicateurs de santé, chacun avec son évolution par rapport à la période précédente — **utilisateurs actifs** (venus dans l'app ces 30 jours, `Account::lastSeenAt`, sur le total des comptes ; nouveaux comptes de la semaine), **scans réussis** sur 30 jours (et échecs de la semaine), **prêts en cours** (en retard ; remis ce mois-ci), **objets ajoutés** sur 7 jours (à la place des ventes tant que la vente n'est pas lancée : elles ont leur écran) ; les inscriptions des 7 derniers jours ; « À traiter en priorité » (signalements, litiges ouverts, prêts en retard) ; les dernières commandes. Les chiffres sont calculés par `DashboardStats`, en requêtes agrégées. `lastSeenAt` est noté à la première requête authentifiée de l'API du jour (`AccountActivitySubscriber`, une écriture par jour au plus) ; pour les comptes existants, la migration l'estime d'après leurs jetons de rafraîchissement.
+- **Utilisateurs** (`/admin/utilisateurs`) : recherche (e-mail, identifiant, nom d'un profil), filtres (tous, actifs, suspendus, avec profil enfant), et la fiche d'un compte : ses profils (enfants, tuteur), son activité (objets, ventes et achats, litiges), le journal de modération. **Suspendre** écrit une `ModerationAction` BAN_ACCOUNT (journal en écriture seule) et suspend chaque profil : l'app refuse alors toute requête (`CurrentProfile`). **Réactiver** écrit RESTORE et lève les suspensions. Un motif est obligatoire ; on ne se suspend pas soi-même (`AccountModerator`). La suspension dure 7, 30 (par défaut) ou 90 jours, ou jusqu'à réactivation : échue, elle se lève toute seule à la première requête du compte (`CurrentProfile`), et la levée est journalisée. Pour mettre à jour le back-office des comptes qui ne reviennent pas, lancer chaque nuit `php bin/console app:moderation:lift-expired`.
+- **Ventes et transactions** (`/admin/ventes`) : les chiffres du mois (ventes, volume, paiements réussis, remboursements) et les commandes, filtrées (payées, en livraison, remboursées, en litige) ou cherchées par numéro. En lecture seule.
+- **Litiges** (`/admin/litiges`) : les litiges (ouverts d'abord) et les remboursements ; le détail d'un litige montre la chronologie de la commande et les deux parties. L'administrateur le **prend en charge**, puis le **clôt** avec une décision écrite (en faveur de l'acheteur, du vendeur, ou sans suite). Comme le dit le MDD, un litige « n'arbitre pas et ne déplace pas d'argent » : un remboursement passe par le prestataire de paiement.
+- **Signalements** (`/admin/signalements`) : trois onglets (objets, contenus, commentaires) et trois états (à traiter, en cours, traités). Le détail montre le contenu signalé, le contexte et l'auteur, et propose quatre décisions (`ReportDesk`) : classer sans suite ; masquer (un commentaire est masqué, une publication retirée, une annonce retirée de la vente) ; avertir l'auteur (une notification « Avertissement de la modération ») ; suspendre son compte 30 jours. Chaque décision écrit une `ModerationAction` qui pointe vers le signalement, et le clôt. Les signalements à traiter passent en tête de « À traiter en priorité ».
+- **Journal** (`/admin/journal/scans`, `/admin/journal/ia`) : deux journaux, sous le même onglet du menu.
+  - **Scans** : les scans analysés par l'IA (photo, étiquette), filtrés par état (échecs, partiels, tous), période, type et modèle. En tête : volume, part d'échecs, temps moyen, 95ᵉ centile et le plus long ; puis, par modèle, combien de fois il a répondu ou échoué, son taux d'échec et son temps moyen, et les erreurs regroupées par famille (quota 429, modèle retiré 404, panne 5xx, délai dépassé, réponse illisible, rien d'exploitable). Le détail d'un scan montre la chaîne de modèles dans l'ordre (erreur, code HTTP et durée de chacun), la taille et le format de l'image, la réponse brute. Le temps total est dans `Scan.durationMs` (colonne, pour la moyenne et le centile en SQL) ; le détail par modèle dans `Scan.rawData.attempts` (`OpenRouterVision` mesure chaque appel). Les scans d'avant ce journal n'ont pas de durée.
+  - **Modération IA** : chaque pré-analyse (`AiReview`), appliquée, à relire, tranchée par un admin, annulée ou en échec, avec, sur 30 jours, le taux d'accord des administrateurs (validées / tranchées) : le vrai taux de réussite de l'IA. Le détail montre le dossier exact envoyé au modèle, sa réponse brute et les appels.
+- **Pré-analyse IA des signalements et des litiges** (suggestion de l'enseignant) : un modèle de langage, via OpenRouter (même chaîne de secours que le scan, en texte seul : `OPENROUTER_MODERATION_MODELS`), relit le dossier et rend un pré-verdict structuré : verdict (signalement : sans suite, avertissement, sanction — masquer ou suspendre —, ne sait pas ; litige : en faveur de l'acheteur, du vendeur, sans suite, ne sait pas), confiance de 0 à 100, résumé, justification point par point, faits du dossier retenus, message proposé pour l'utilisateur. Le dossier (`CaseFile`) contient ce qu'un administrateur regarderait : contenu et motif, autres signalements sur le même contenu, passé de modération de l'auteur, fiabilité du signalant ; pour un litige, la commande, sa chronologie, la livraison et le passé des deux parties. Pas d'e-mail, pas de nom de famille, pas d'adresse.
+  - **Au-dessus du seuil** (`AI_MODERATION_THRESHOLD`, 95 par défaut), l'IA applique elle-même sa décision sur un signalement, par `ReportDesk`, au nom du compte technique « Modération IA » (`Account::AI_MODERATOR_ID`, créé par la migration, administrateur mais sans mot de passe utilisable et refusé à la connexion). **En dessous**, ou si la décision est réservée, elle résume la situation et sa proposition est présélectionnée dans le formulaire de décision ; `heldBecause` dit pourquoi elle n'a pas tranché.
+  - **Garde-fous** : la confiance annoncée par un modèle n'est pas une probabilité calibrée, donc l'IA n'applique seule que ce qu'un administrateur peut défaire (classer, avertir, masquer un commentaire, suspendre). Elle ne fait que proposer pour retirer une publication ou une annonce, pour tout litige (de l'argent est en jeu), pour un signalement déjà pris en charge par un humain, et pour un dossier qui contient des phrases qui s'adressent à elle (tentative de manipulation : « ignore tes consignes… »). Les textes des utilisateurs sont passés comme des données, entre balises, avec la consigne de n'obéir à aucune instruction qu'ils contiennent.
+  - **Tout est journalisé** : l'analyse (`AiReview`, même en échec : dossier envoyé, version de la consigne, modèle, appels échoués, durée, réponse brute, verdict) et l'action (`ModerationAction` au nom de « Modération IA », comme pour un humain). Un administrateur peut **valider** une décision appliquée, ou l'**annuler** avec sa raison : l'action est défaite (commentaire rétabli, avertissement retiré avec une notification à l'auteur, suspension levée, chacune par une action RESTORE), le signalement est rouvert à son nom, et il décide lui-même. Quand il tranche un dossier analysé, l'analyse est notée validée ou contredite.
+  - **Quand** : depuis la page d'un signalement ou d'un litige (« Analyser avec l'IA », jusqu'à 25 s), ou par la pipeline planifiée, à lancer toutes les quelques minutes (cron, planificateur) : `php bin/console app:moderation:ai-review` (`--limit=10` dossiers par passage, à cause du quota des modèles gratuits ; `--retry-failed` pour repasser les échecs). Hors requête web, chaque dossier dispose de 90 s, ce qui laisse finir les modèles lents.
+  - **Données personnelles** : les modèles gratuits d'OpenRouter peuvent apprendre de ce qu'on leur envoie. Le dossier est réduit au nécessaire, mais il contient les textes signalés : en production, il faudrait un modèle payant sans conservation des données, et le mentionner dans la politique de confidentialité.
+- **Catégories et marques** (`/admin/categories`, deux onglets). Tout administrateur consulte ; seul le **super administrateur** (`ROLE_SUPER_ADMIN`, qui hérite de `ROLE_ADMIN`) modifie, par `ReferenceAdmin`. Donner ce rôle : `php bin/console app:admin:grant <email> --super`, ou `--super --revoke` pour revenir à un administrateur simple.
+  - **Catégories** : celles de l'application, avec leurs sous-catégories et le nombre de biens rangés dessous, puis les styles et les états d'un objet. Le super administrateur peut ajouter une catégorie principale ou une sous-catégorie (pour un vêtement : chaleur et échelle de tailles), la renommer (le slug ne change pas) ou la supprimer si elle est vide. `app:reference-data:load` ne supprime jamais une catégorie ajoutée ici.
+  - **Marques** : celles que les utilisateurs proposent (« à valider ») ou toutes. Le super administrateur peut valider une marque, l'ajouter (vérifiée d'emblée), la renommer, fusionner un doublon dans une autre marque (ses vêtements passent sur l'autre) ou supprimer une marque qu'aucun vêtement ne porte.
+- Les actions (suspendre, réactiver, prendre en charge, clore, analyser, valider ou annuler une décision de l'IA) sont des POST protégés par un jeton CSRF.
+- **Langues** : le back-office existe en français (langue source), anglais et japonais (composant Translation de Symfony). La langue se choisit dans **Paramètres** (`/admin/parametres`) et reste en session ; sans choix, celle du navigateur, sinon le français (`AdminLocaleSubscriber`, pour les seules pages `/admin` : l'API garde sa langue par défaut et ses messages de validation ne changent pas). Les textes des gabarits sont dans `translations/admin+intl-icu.<langue>.yaml` (format ICU : `{nom}`, pluriels `{count, plural, …}`) ; les messages écrits en français dans le code (messages flash, erreurs métier) sont traduits à l'affichage depuis `translations/admin_flash.<langue>.yaml`, où la clé est le texte français. Les dates et les montants suivent la langue (`admin_date`, `admin_euros`). Ce qui est enregistré (motifs, décisions, journal) reste dans la langue où il a été écrit.
+- **Front** : AssetMapper (pas de Node côté API), Stimulus pour les comportements (le menu sur petit écran : `assets/controllers/sidebar_controller.js`), Tailwind 4 dont le thème reprend la charte de l'app (`assets/styles/app.css`, mêmes noms de couleurs, de rayons et de tailles).
+
+**Données de démonstration** (base de développement seulement) : `php bin/console app:demo:back-office` ajoute de l'activité à modérer, pour voir le back-office vivant : 8 comptes inscrits ces dernières semaines (`@demo-bo.penderie.fr`, mot de passe aléatoire : on ne s'y connecte pas), une trentaine d'objets et vêtements ajoutés, des scans sur 60 jours (réussis, partiels, ratés), des prêts en cours dont deux en retard, cinq ventes à différents stades, trois litiges (ouvert, pris en charge, résolu) et six signalements (à traiter, en cours, traités). Tout passe par les méthodes métier des entités ; seules les dates sont reculées, pour que les évolutions du tableau de bord aient une période de comparaison. Il faut un compte administrateur et les référentiels ; la commande ne recharge rien si le jeu est déjà là, et refuse de tourner en production.
+
+La feuille de style se compile avant d'ouvrir le back-office (sinon la page plante sur le CSS manquant) :
+
+```bash
+docker compose exec php make assets EXEC=          # une fois
+docker compose exec php make assets-watch EXEC=    # pendant le développement
+```
+
+**Double authentification** (maquette : « Double authentification obligatoire »). Après l'e-mail et le mot de passe, le back-office demande le code à 6 chiffres d'une application d'authentification (TOTP, `scheb/2fa-bundle`). À la première connexion, un administrateur sans double authentification est conduit vers `/admin/2fa/activer` (QR code et clé), et rien d'autre ne lui est ouvert tant qu'un premier code n'a pas été vérifié ; le secret n'est enregistré qu'à ce moment. Seul le pare-feu du back-office est concerné : l'app mobile ne change pas. Téléphone perdu : `php bin/console app:admin:grant <email> --reset-2fa` (retirer l'accès efface aussi le secret).
 
 ## Tests
 
