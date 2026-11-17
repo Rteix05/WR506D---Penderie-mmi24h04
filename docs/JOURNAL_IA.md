@@ -383,3 +383,248 @@ Règles suivies avec l'outil de développement :
   - PHPUnit, suite complète : 227 tests OK ;
   - PHPStan niveau 6 : 0 erreur ;
   - `composer audit` : aucune faille.
+
+### 09/11 (suite) — Prêt côté app, déplacements (PR #60 à #62)
+
+- **Prompt** : le même que l'entrée précédente (« on commence par le prêt d'objets , puis déplacement d'objet / carton »).
+- **Produit** :
+  - app, prêts (#60) : le parcours « Prêter » en 3 étapes (ami, date de retour et note, vérification), « Mes prêts » en deux onglets, la fiche d'un prêt avec les gestes de chaque partie et son historique, l'écran « Objet rendu ? » (état au retour, rangement), et sur les fiches « Prêter », « Demander à l'emprunter », « Chez Thomas » et l'historique des prêts. Le tout suit le lot 05 de la maquette ;
+  - API, déplacements (#61) : un objet, un carton avec son contenu, un meuble avec ses conteneurs. `LocationMover` existait, il ne manquait que les routes. L'historique des emplacements quittés est aussi exposé. 6 tests ;
+  - app, déplacements (#62) : un écran « Déplacer » commun (objet, vêtement, carton) qui réutilise le choix d'emplacement des parcours d'ajout, et le bloc « Emplacements précédents » sur les fiches.
+- **Choix de l'IA** :
+  - un conteneur ou un meuble ne se déplace que par son créateur : en colocation, on ne déménage pas les affaires des autres avec ;
+  - un objet prêté peut être déplacé : c'est sa place habituelle qui change ;
+  - « Demander à l'emprunter » part sans confirmation, puisque la demande se retire ensuite.
+- **Vérification dans l'app** : l'extension Chrome n'étant pas connectée, l'IA a piloté l'export web avec Cypress, dans un scénario jetable hors du dépôt, contre l'API locale et le compte de démo Thomas. Elle a joué :
+  - le prêt complet d'un jean à Scan (Scan reçoit et rend par l'API) ;
+  - le retour, confirmé en « Usé » ;
+  - le déplacement d'un sweat de la chambre à l'entrée.
+- **Trouvé en testant, corrigé** :
+  - `Alert.alert` ne fait rien sur le web, donc la demande d'emprunt restait muette ;
+  - le bloc « Date de retour » n'affichait pas la date ;
+  - « 23 nov.. » s'écrivait avec deux points.
+- **Vérifié** : API 233 tests OK et PHPStan 0 erreur ; app tsc et ESLint 0 erreur.
+
+### 09/11 (fin) — Back-office : KPI de la maquette, socle et tableau de bord (PR #63, #64)
+
+- **Prompts** (mot pour mot) :
+  - « je dois passer au back office , pour la maquette qu'on a fait sur figma le client m'a suggéré de changer les deux kpi du milieu dans le dashboard (signalement et litiges) » ;
+  - « d'ailleurs le back office n'est pas dans l'appli donc on le fera en twig stimulus tailwind » ;
+  - « relance » ;
+  - « c'est fait à la main, pousse la branche et commence a dev » ;
+  - « reprends ou tu t'étais arrété ».
+- **Choix de l'étudiant** (sur proposition de l'IA) : remplacer les deux KPI par « Scans réussis » et « Prêts en cours », dans la maquette seulement d'abord.
+- **Maquette (#63)** : l'IA a trouvé les deux cartes dans le fichier Figma, mais l'API Figma n'avait pas accès à la police Luciole et a refusé de modifier les textes. Rien n'a été changé dans le fichier. L'étudiant a fait la modification à la main. L'IA a mis à jour la source du plugin (lot 26), puis relu les cartes : sur « Scans réussis », le chiffre « 7 » et la majuscule de « Réussis » restent à reprendre.
+- **Back-office (#64)** :
+  - socle AssetMapper, Stimulus et Tailwind 4 dans l'API, avec le thème repris de la charte de l'app ;
+  - pare-feu `admin` (session, formulaire, CSRF) qui refuse les comptes non administrateurs dès la connexion, et commande `app:admin:grant` ;
+  - tableau de bord calculé sur les vraies données : 4 KPI, inscriptions de la semaine, priorités, dernières commandes.
+- **Choix de l'IA** :
+  - la branche part du correctif Symfony (#58), parce que l'audit aurait fait échouer la CI ;
+  - la double authentification et les autres écrans sont reportés ;
+  - « Utilisateurs actifs » compte tous les comptes, faute de date de dernière connexion. **À valider.**
+- **Trouvé en route, corrigé** :
+  - le nom de l'administrateur n'apparaissait pas quand son compte n'avait pas de profil « par défaut » ;
+  - sans `tailwind:build`, les pages admin plantent : l'étape est ajoutée à la CI, avec `make assets`.
+- **Vérifié** : 220 tests OK, `make quality` vert ; visite réelle avec Cypress (connexion refusée, tableau de bord, menu sur mobile).
+
+### 10/11 — SDK 58, lenteur de l'API sous Windows, écrans du back-office (PR #65, #66)
+
+- **Prompts** (mot pour mot) :
+  - « je test les prets en local sur mon tel et l'admin en meme temps lance tout » ;
+  - « le sdk du projet n'est plus compatible avec ma version de expo » ;
+  - « timeout sur back office et tel ca c'est lancé mais très lentement » ;
+  - « trouve la raison et répare ca » ;
+  - « le compte admin pour le back » ;
+  - « ca marche, continue les autres écrans du back office ».
+- **SDK 58 (#65)** : Expo Go ne lit qu'un SDK à la fois. L'IA a lu la documentation officielle de la migration, puis passé l'app en SDK 58 (React Native 0.88). Deux adaptations : `initialRouteName` devient `anchor`, et `null` n'est plus accepté dans les listes. Vérifié : expo-doctor, tsc, ESLint, export web.
+- **Lenteur** : environ 30 s par requête. L'IA a mesuré dans le conteneur : chaque fichier du code monté depuis Windows met 35 à 150 ms à être relu, et le mode debug revérifie tout `src/` à chaque requête (11 s). Une commande Symfony prend 13 s avec le mode debug, 0,3 s sans. Le contournement est `APP_DEBUG=0` dans `api/.env.local`. Il a fait apparaître un autre défaut : le CSS du back-office répondait 404 sans debug, réglé par `asset_mapper.server` en dev.
+- **Écrans du back-office (#66)** : utilisateurs (liste, fiche, suspension avec journal de modération), ventes, litiges (prise en charge, décision écrite, sans mouvement d'argent comme le veut le MDD) et catégories (lecture seule). 6 tests.
+- **Trouvé en essayant, corrigé** :
+  - la liste des utilisateurs plantait (`DISTINCT` impossible sur une ligne qui contient du JSON) ;
+  - la fiche de Thomas affichait l'identifiant de l'administrateur connecté (variable du gabarit écrasée).
+- **Erreur de l'IA** : en vérifiant `api/.env.local`, elle a affiché la clé OpenRouter dans le terminal. L'étudiant a été prévenu de la régénérer.
+- **Vérifié** : 226 tests OK, PHPStan 0 erreur ; visite réelle de chaque écran.
+
+### 10/11 (suite) — Les trois points restants du back-office (PR #67 à #69)
+
+- **Prompt** (mot pour mot) : « fais les 3 points pas encore fait ».
+- **Suspension d'une durée choisie (#67)** : 7, 30 ou 90 jours, ou jusqu'à réactivation. Une suspension échue se lève toute seule à la première requête du compte, ou par la commande nocturne `app:moderation:lift-expired`, et la levée est journalisée. Pour les tests, l'horloge est simulée (`MockClock`), parce que le journal refuse une date de fin dans le passé.
+- **Signalements (#68)** : l'entité `Report` du MDD (prévue en V2), la route `POST /api/reports` pour signaler depuis l'app (seulement ce qu'on voit, jamais son propre contenu), et l'écran du back-office avec quatre décisions : classer, masquer, avertir l'auteur, suspendre son compte. Chaque décision est inscrite au journal de modération et liée au signalement.
+- **Double authentification (#69)** : codes TOTP (scheb/2fa-bundle), activation obligatoire à la première connexion d'un administrateur (QR code), et `--reset-2fa` si le téléphone est perdu. L'app mobile n'est pas concernée.
+- **Trouvé par les tests, corrigé** :
+  - une tolérance TOTP de 30 s faisait planter OTPHP ;
+  - le secret généré était trop long pour sa colonne ;
+  - la règle d'accès posée sur la déconnexion empêchait de se déconnecter (403) ;
+  - un test des signalements, déjà poussé, ne passait pas PHPStan : corrigé sur sa branche.
+- **Erreurs de l'IA** : une remise de côté (`git stash`) a échoué sur le fichier `api/nul`, au nom réservé sous Windows. Rien n'a été perdu : le travail est resté dans le dossier, et la copie en double a été supprimée après vérification. Les patchs passés par le shell ont encore abîmé des antislashs et des apostrophes ; l'IA est repassée à l'éditeur.
+- **Vérifié** : 240 tests OK, PHPStan 0 erreur, migrations réversibles ; écrans vus dans le navigateur.
+
+### 15-16/11 — Indicateurs du back-office, l'app en trois langues (PR #70, #71)
+
+- **Prompts** (mot pour mot) :
+  - « est ce que les kpi affiché dans le back-office sont les plus cohérents à montrer en priorité ? (utilisateurs actifs , scans réussis, pret en cours et vente du mois) » ;
+  - « fait chaque recommendation , puis quand le back office c'est fait tu installe i8n sur le projet (l'équivalent react) et tu fais une version Anglaise et Japonaise (avec les kanji) » ;
+  - « ou est-ce qu'on en est » ;
+  - « faudra vérifier la mise en page avec les textes traduis notamment le japonais vu que c'est des kanji » ;
+  - « le back office il manque quoi dessus ? » ;
+  - « fais l'écran des marques et le bouton signaler après l'i18n , d'ailleurs il fonctionne sur le back office aussi le i18n ? » ;
+  - « ouais ».
+- **Indicateurs (#70)** : trois recommandations de l'IA, appliquées.
+  - Une vraie mesure d'activité : `Account::lastSeenAt`, noté une fois par jour à la première requête de l'app. Les comptes existants sont estimés à partir de leurs jetons de rafraîchissement. « Utilisateurs actifs » compte maintenant les comptes venus ces 30 derniers jours.
+  - « Objets ajoutés · 7 j » remplace « Ventes du mois », qui restait à 0 puisque le paiement n'est pas branché. **À valider avec le client.**
+  - L'évolution par rapport à la période précédente sous chaque chiffre.
+  - Vérifié : 242 tests OK, PHPStan 0 erreur, migration réversible.
+- **L'app en trois langues (#71)** : i18next, react-i18next et expo-localization.
+  - **Langue** : au démarrage, celle du téléphone ; un sélecteur dans « Mon profil » permet d'en changer.
+  - **Textes** : 1 224 textes, rangés par domaine.
+  - **Délégation** : l'extraction des textes a été confiée à OpenCode, en six lots. Chaque lot a été vérifié avant d'être appliqué : texte français identique, clés présentes, contrôle des types. L'IA a écrit elle-même les traductions anglaises et japonaises.
+  - **Nouveau script `npm run i18n:check`** : vérifie que chaque clé existe dans les trois langues et qu'il ne reste aucun texte en dur.
+- **Vérification de la mise en page** (demandée par l'étudiant) : captures au format téléphone, en français, anglais et japonais côte à côte, sur 20 écrans. Corrections faites :
+  - kanji dessinés en glyphes chinois sur le web, par manque de l'attribut `lang` ;
+  - onglet « プロフィール » coupé sur deux lignes, remplacé par « マイページ » ;
+  - nombres séparés de leur unité en fin de ligne ;
+  - initiale « 一 » qu'on prend pour un tiret.
+- **Le back office n'est pas traduit** : il est en Twig, à part de l'app. L'étudiant a demandé de le traduire aussi. Ce sera fait avant l'écran de validation des marques (qui manque : les marques ajoutées ne pouvaient jamais être validées) et le bouton « Signaler » de l'app.
+- **Erreurs et incidents** :
+  - l'IA a laissé dans le README une phrase devenue fausse sur « Utilisateurs actifs » ; corrigé sur la branche de #70 ;
+  - un commit local a embarqué des dossiers générés (`dist-e2e`, `cypress`) ; retirés avant de pousser ;
+  - le manque de mémoire a arrêté le suivi des sous-agents, qui ont fini leur travail quand même ;
+  - le conteneur PHP ne démarrait plus (cache à moitié supprimé) ; il a été nettoyé.
+
+
+### 16/11 (suite) — Le back-office en trois langues, la langue dans Paramètres (PR #72, #71)
+
+- **Prompts** (mot pour mot) :
+  - « ok continue » ;
+  - « met le bouton langue dans les settings , que ca soit sur l'app ou back office et quand tout est bon on testera » ;
+  - « envoi une notif quand ta fini j'ai activé le rc ».
+- **Back-office (#72)** : le composant Translation de Symfony, au format ICU. Deux domaines :
+  - `admin` pour les textes des gabarits ;
+  - `admin_flash` pour les messages écrits en français dans le code, où la clé est le texte français.
+  - La langue se choisit dans une page **Paramètres** (`/admin/parametres`) et reste en session ; sans choix, on prend celle du navigateur (`AdminLocaleSubscriber`). Dates et montants suivent la langue. Ce qui est enregistré (motifs, décisions) reste dans la langue où il a été écrit.
+- **App (#71)** : le sélecteur de langue quitte « Mon profil » pour l'écran **Paramètres**, comme demandé.
+
+### 16/11 (après-midi) — Essai sur téléphone, données de démonstration, « Mon activité » (PR #73, #74)
+
+- **Prompts** (mot pour mot) :
+  - « lance tout je teste sur mon tel ,back-office aussi » ;
+  - « j'arrive pas a obtenir de code pour se connecter au backoffice » ;
+  - « met des fixtures d'action pour le back office , des scans reussis pret en cours objet ajoutés , des signalements des litiges etc » ;
+  - « j'ai mis le partage de connexion gère l'ip pour expo » ;
+  - « ferme le poer 8081 je l'ouvre manuellement pour avoir le qr code » ;
+  - « deux problème ; j'ai un fetch failed de connection sur mobile alors qu'il fait le partage de connexion , et j'ai pas le back office user sur l'app avec ses stats perso » ;
+  - « ouais un écran Mon activité dans le profil » ;
+  - « donne moi la version de expo et react native » ;
+  - « comment je justifie les kpi ducoup à l'oral ? » ;
+  - « améliore l'UX de mon activité » ;
+  - une capture de l'iPhone, avec « corrige » ;
+  - « on a bien utilisé nexti18n pour la trad ».
+- **Code du back-office** : la double authentification demande le code d'une application d'authentification (TOTP), pas un e-mail. L'IA a expliqué comment l'activer au premier accès et comment l'effacer en cas de perte du téléphone.
+- **Données de démonstration (#73)** : commande `app:demo:back-office`, réservée au développement, qui ne fait rien si elle a déjà tourné. Elle crée 8 comptes, 31 objets et vêtements, 56 scans, 7 prêts (dont 2 en retard), 5 ventes, 3 litiges et 6 signalements, étalés sur plusieurs semaines pour que les évolutions des indicateurs aient un sens. Les tirages sont reproductibles et tout se fait dans une transaction.
+- **« fetch failed »** : Expo lisait encore l'ancienne adresse du PC. Avec le partage de connexion de l'iPhone, le PC est en 172.20.10.2. L'adresse est lue au démarrage d'Expo, d'où le redémarrage nécessaire.
+- **« Mon activité » (#74)** : un écran à part, dans le menu Profil, parce que les principes UX (§ 7) excluent un tableau de bord sur l'accueil. `GET /api/me/activity` renvoie des comptages agrégés pour le profil actif seulement :
+  - inventaire : objets, vêtements, ajoutés ce mois ;
+  - prêts : prêtés, en retard, empruntés, rendus ;
+  - ventes ;
+  - scans, avec la part de scans réussis.
+- **Expérience utilisateur** :
+  - chaque chiffre ouvre la liste qu'il compte ;
+  - les couleurs sont celles des statuts de la charte ;
+  - un retard passe en tête, en rouge ;
+  - un état vide propose de scanner ;
+  - les chiffres se mettent à jour en tirant vers le bas.
+- **Correction d'après la capture** : les chiffres en Typolio étaient coupés en haut sur iOS ; ils passent par le composant `Heading`. Les cartes ont été alignées.
+- **Questions** :
+  - Expo 58.0.23, React Native 0.88.1 ;
+  - les indicateurs du back-office se justifient par des questions d'administrateur (« l'app est-elle utilisée ? le scan tient-il sa promesse ? ») ;
+  - next-i18next est fait pour Next.js. Le projet utilise i18next et react-i18next, la même base, adaptée à React Native, et Symfony Translation pour le back-office.
+- **Erreurs de l'IA** :
+  - elle a d'abord donné un mauvais nom de commande (`app:grant-admin` au lieu de `app:admin:grant`), corrigé ;
+  - dans les données de démo, un même objet servait à la fois à un prêt et à une vente, corrigé.
+
+### 17/11 — Journal des scans, pré-analyse IA des signalements et des litiges (PR #75)
+
+- **Prompts** (mot pour mot) :
+  - « dans les fonctions métier qui utilise l'IA il nous manque quoi ? » ;
+  - « dans le back office , un journal d'erreurs pour les scans qui fail , savoir le temps de chargement , le modele qui a fail , etc... , et aussi une suggestion de mon prof , on fait une pipeline avec un llm qui aura pour travail , review les signalements et litige ( regarde les causes les avenants , il doit tout check et donner un pré-verdict entre pour les signalement ; sans suite / avertissement / sanction / ne sais pas , avec une réponse et une justification structuré , ainsi qu'un score de confiance , au dessus de 95% , il peut appliquer directement une sanction/avertissement/sans suite , en dessous , il résume la situation pour un admin. toute les décisions doivent etre logués , et peuvent etre reprise par un admin s'il considère qu'il y a eu une erreur commise ».
+- **Ce qui manquait** : l'IA a comparé les fonctions prévues avec le code. Le scan par photo et par étiquette est fait. Le **moteur de suggestion de tenues**, entré dans le MVP le 21/09, n'avait que ses entités. La détection automatique des vêtements sur la photo du look avait été retirée volontairement.
+- **Journal des scans** : le temps de chaque appel de modèle est maintenant mesuré. Une page du back-office affiche :
+  - volume, part d'échecs, temps moyen et 95ᵉ centile ;
+  - le bilan par modèle (réponses, échecs, temps) ;
+  - les erreurs par famille (quota, modèle retiré, délai…) ;
+  - le détail d'un scan, modèle par modèle.
+- **Pré-analyse IA** :
+  - **Le dossier** : un modèle de langage lit ce qu'un administrateur regarderait (contenu, motif, autres signalements, passé de l'auteur, fiabilité du signalant ; pour un litige, la chronologie de la commande et des deux parties). Il ne reçoit ni e-mail ni adresse.
+  - **Le pré-verdict** : verdict, confiance de 0 à 100, résumé, justification, faits retenus, message proposé.
+  - **Application** : à partir de 95 %, il l'applique lui-même au nom d'un compte technique « Modération IA » ; en dessous, il résume pour un administrateur.
+  - **Journal** : tout est journalisé (`AiReview`, `ModerationAction`). Un administrateur peut valider, ou annuler : l'action est défaite et le signalement rouvert à son nom.
+- **Choix de l'IA, à justifier à l'oral** : la confiance annoncée par un modèle n'est pas une probabilité fiable. L'IA n'applique donc seule que ce qu'un humain peut défaire. Les litiges (de l'argent est en jeu), le retrait d'une publication et les dossiers qui contiennent des phrases adressées à l'IA restent des propositions. Le seuil (95 %) est réglable.
+- **Essai réel** : quatre dossiers analysés en 9 à 21 s. Tous sont restés des propositions (« ne sait pas » 40 % et 65 %, avertissement 85 %, acheteur 95 % sur un litige). Un essai a échoué : les deux Gemma étaient à court de quota et le modèle de raisonnement trop lent pour les 24 s d'une requête web. La commande planifiée a désormais 90 s par dossier.
+- **Erreurs de l'IA** : les patchs passés par le shell ont encore perdu des antislashs et des apostrophes, ce qui a cassé une ligne de test et une description de migration. PHPStan les a repérées, puis elles ont été corrigées.
+- **Vérifié** : PHPStan 0 erreur, linters OK, migration jouée. Tests écrits, à lancer par l'étudiant.
+
+### 17/11 (suite) — Le moteur de suggestion de tenues (PR #76)
+
+- **Prompt** (mot pour mot) : « bien sur apres ca tu fais aussi les 3 propositions poue le moteur de suggestion "look du jour" ».
+- **Les trois volets proposés par l'IA, réalisés** :
+  1. **la météo** : Open-Meteo, gratuit et sans clé. On prend la position du téléphone si l'utilisateur l'accepte, sinon la ville du logement ;
+  2. **les règles** : chaleur selon la température, imperméable s'il pleut, occasion, goûts, pièces portées récemment, accord des couleurs. Elles retiennent quatre tenues candidates ;
+  3. **l'IA**, qui choisit la meilleure des quatre et explique pourquoi dans la langue de l'utilisateur. Si elle ne répond pas, ce sont les règles qui décident.
+- **App** : l'écran « Ta tenue », d'après la maquette : Remplacer, Je n'aime pas, J'aime cette tenue, Nouvelle tenue. Une carte sur l'accueil et un bouton dans le dressing y mènent. Textes en trois langues.
+- **Essai réel** : environ 8 s par tenue (Troyes, 16 °C, pluie annoncée). Il a fait corriger cinq propositions absurdes :
+  - une robe de soirée pour le travail ;
+  - une tenue sans chaussures après « Nouvelle tenue » ;
+  - une veste de ski au sport à 16 °C ;
+  - un jean au sport ;
+  - un short à 15 °C.
+
+  Chacune est devenue une règle ferme ou un test.
+- **Vérifié** : PHPStan, tsc, ESLint, `i18n:check` OK. Tests écrits, à lancer par l'étudiant.
+
+### 17/11 (fin) — « J'aime » et commentaires du fil (PR #77)
+
+- **Prompts** (mot pour mot) :
+  - « lance tout je teste sur mon tel » ;
+  - « j'ai vu les analyse , la j'ai posté un look , vérifie si tu l'as en db , et si oui met des fixtures de like / commentaire ».
+- **Constat avant d'agir** : le look et sa publication étaient bien en base. Mais les « j'aime » n'existaient pas (ni table, ni route, ni bouton), l'app n'affichait pas les commentaires, et une publication pour les abonnés refuse les commentaires (règle du MDD). Des données de démo seules n'auraient rien montré. L'IA a posé la question ; l'étudiant a choisi de construire les deux.
+- **Fait** :
+  - les « j'aime » : l'entité `PostLike`, les routes, et dans l'app un cœur avec son compteur ;
+  - les commentaires dans l'app, d'après la maquette (Répondre, Ton commentaire, Publier) ;
+  - une commande de démo `app:demo:social`. Pour accepter des commentaires, elle a fait passer la publication « en croco » des abonnés aux amis ;
+  - au passage, l'adresse de l'API pour Expo est revenue à celle du Wi-Fi.
+- **Erreur de l'IA** : encore des apostrophes perdues dans un patch passé par le shell (tests). Elles ont été repérées avant le commit.
+
+### 17/11 (fin, suite) — Super administrateur, catégories et marques ; bouton « Signaler » (PR #78, #79)
+
+- **Prompts** (mot pour mot) :
+  - « c'est bon pour moi , on changera l'UI et l'UX quand on aura tout les fonctionnalités » ;
+  - « fais le bouton signaler avec les raisons etc... les catégories et marque aussi on doit pouvoir en ajouter depuis le back office , mais seulement le super admin pas les admins simple ».
+- **Décision notée** : on termine d'abord toutes les fonctionnalités ; l'UI et l'UX seront reprises en une seule passe à la fin.
+- **Back-office (#78)** :
+  - un rôle `ROLE_SUPER_ADMIN`, qui hérite de `ROLE_ADMIN` et se donne par `app:admin:grant --super` ;
+  - pour les catégories : ajout (principale, ou sous-catégorie avec chaleur et tailles), changement de nom, suppression d'une catégorie vide ;
+  - pour les marques : validation des marques proposées par les utilisateurs (ce qui manquait), ajout, changement de nom, fusion d'un doublon (les vêtements suivent), suppression d'une marque qu'aucun vêtement ne porte ;
+  - un administrateur simple consulte seulement (403 sur chaque action).
+
+  L'IA a vérifié le rendu réel des deux onglets avec les deux rôles, dans une transaction annulée ensuite.
+- **App (#79)** : le lien « Signaler » ouvre un panneau avec cinq raisons et une précision, obligatoire pour « Autre ». Il apparaît sur les publications, les commentaires, les vêtements mentionnés et les profils des autres. La route d'API existait depuis #68.
+- **Erreur de l'IA** : sur un premier rendu, le bandeau « Consultation seulement » semblait absent. La page s'affichait simplement dans une autre langue, faute d'en-tête de langue dans la requête de test.
+
+### 17/11 (soir) — Les notifications, et le résultat des signalements (PR #80, #81)
+
+- **Prompts** (mot pour mot) :
+  - « fais les notifications » ;
+  - « met aussi les resultats de signalement ».
+- **Constat avant d'agir** :
+  - l'entité existait, et les prêts, les commentaires et la modération créaient déjà des notifications, mais rien ne les affichait ;
+  - le push est impossible sans identifiant de projet Expo (EAS), lié à un compte Expo ;
+  - les amis et les abonnements n'ont pas encore de route d'API.
+
+  D'après la maquette (lot 11), l'IA a donc fait des notifications dans l'app.
+- **#81** :
+  - l'API : liste, non lues, marquer lue, tout marquer lu ;
+  - de nouveaux événements : partage reçu, proposition de modification à valider, puis acceptée ou refusée ;
+  - dans l'app, l'écran Notifications (Aujourd'hui, Cette semaine, Plus tôt ; toucher ouvre le contenu) et une pastille du nombre de non lues sur le « ! » de l'accueil.
+- **#80** : quand un signalement est traité, par un administrateur ou par la modération IA, la personne qui l'a fait reçoit le résultat (examiné, contenu retiré, auteur averti ou suspendu), sans la note interne.
+- **Incident** : le terminal a refusé plusieurs commandes de suite, faute de verdict du contrôle de sécurité. L'IA a rédigé le code dans un dossier temporaire et l'a appliqué une fois le terminal revenu.
