@@ -8,6 +8,7 @@ import { Modal, Pressable, Text, View } from 'react-native';
 import { Illustration } from '@/components/inventory/PossessionCard';
 import { Dot, LookPhoto, type PhotoTag } from '@/components/look/LookPhoto';
 import { ProfileAvatar } from '@/components/profiles/ProfileCard';
+import { ReportLink } from '@/components/report/ReportSheet';
 import { Pill } from '@/components/ui/Banner';
 import { Button } from '@/components/ui/Button';
 import { E1 } from '@/components/ui/elevation';
@@ -42,6 +43,8 @@ export function PostCard({ post, linked = false }: { post: Post; linked?: boolea
           <Text className="font-luciole text-legend text-muted dark:text-muted-night">{since(post.publishedAt)}</Text>
         </View>
       </Pressable>
+      {/* Signaler la publication de quelqu'un d'autre. */}
+      {!post.canDelete && <ReportLink targetType="POST" targetId={post.id} className="absolute right-4 top-5" />}
       <View className="flex-row">
         <Pill label={audience} tone={post.audience === 'FRIENDS' ? 'main' : 'primary'} />
       </View>
@@ -187,6 +190,7 @@ function MentionSheet({ mention, post, onClose }: { mention: Mention | null; pos
           ) : (
             <Text className="font-luciole text-legend text-muted dark:text-muted-night">{t('postCard.privateGarment', { name: post.author.displayName })}</Text>
           )}
+          {!mine && <ReportLink targetType="GARMENT" targetId={garment.id} label={t('report.garment')} className="self-center" />}
           <Button label={t('postCard.close')} variant="ghost" onPress={onClose} />
         </View>
       )}

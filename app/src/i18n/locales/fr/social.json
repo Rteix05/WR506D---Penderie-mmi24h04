@@ -204,5 +204,51 @@
     "reply": "Répondre",
     "replyA11y": "Répondre à {{name}}",
     "delete": "Supprimer"
+  },
+  "report": {
+    "link": "Signaler",
+    "garment": "Signaler ce vêtement",
+    "profile": "Signaler ce profil",
+    "title": {
+      "POST": "Signaler la publication",
+      "COMMENT": "Signaler le commentaire",
+      "PROFILE": "Signaler le profil",
+      "GARMENT": "Signaler le vêtement",
+      "ITEM": "Signaler l'objet",
+      "LISTING": "Signaler l'annonce",
+      "COLLECTION": "Signaler la collection"
+    },
+    "question": "Pourquoi le signales-tu ?",
+    "reason": {
+      "INAPPROPRIATE": {
+        "title": "Contenu inapproprié",
+        "hint": "Choquant, sexuel, violent ou haineux"
+      },
+      "HARASSMENT": {
+        "title": "Harcèlement ou insulte",
+        "hint": "Moqueries, menaces, propos qui visent quelqu'un"
+      },
+      "SPAM": {
+        "title": "Spam ou publicité",
+        "hint": "Messages répétés, liens, démarchage"
+      },
+      "COUNTERFEIT": {
+        "title": "Contrefaçon ou arnaque",
+        "hint": "Faux produit, prix trompeur, vente douteuse"
+      },
+      "OTHER": {
+        "title": "Autre",
+        "hint": "Explique ce qui ne va pas"
+      }
+    },
+    "details": "Précisions (facultatif)",
+    "detailsRequired": "Précisions (obligatoire pour « Autre »)",
+    "placeholder": "Ce que la modération doit savoir…",
+    "send": "Envoyer le signalement",
+    "cancel": "Annuler",
+    "close": "Fermer",
+    "sent": "Merci. La modération va examiner ce signalement. La personne concernée ne saura pas que c'est toi.",
+    "error": "Le signalement n'a pas pu être envoyé.",
+    "note": "Un signalement abusif peut être sanctionné. En cas de danger immédiat, contacte les secours."
   }
 }
