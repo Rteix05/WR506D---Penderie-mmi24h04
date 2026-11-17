@@ -128,6 +128,8 @@ final class ScreensTest extends WebTestCase
         }
         self::assertSelectorTextContains('#journal + ol', 'Compte suspendu');
         self::assertSelectorTextContains('#journal + ol', '« Spam répété »');
+        $until = $this->em->getRepository(ModerationAction::class)->findOneBy(['targetId' => $mathis->getAccount()->getId()])?->getExpiresAt();
+        self::assertSame((new \DateTimeImmutable('+30 days'))->format('Y-m-d'), $until?->format('Y-m-d'), '30 jours par défaut, comme la maquette');
         self::assertSame(['Mathis'], $this->page('/admin/utilisateurs?filter=suspended')->filter('tbody tr td:first-child p:first-child')->each(static fn (Crawler $n) => $n->text()));
 
         $form = $this->page($url)->filter('form[action$="/reactiver"]')->form(['reason' => 'Erreur de ma part']);

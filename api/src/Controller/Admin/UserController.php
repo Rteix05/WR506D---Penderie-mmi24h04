@@ -48,10 +48,13 @@ final class UserController extends AbstractController
     public function show(string $id): Response
     {
         $account = $this->account($id);
+        $this->moderator->liftIfExpired($account);
 
         return $this->render('admin/users/show.html.twig', [
             'account' => $account,
             'suspended' => $this->moderator->isSuspended($account),
+            'suspension' => $this->moderator->currentSuspension($account),
+            'durations' => AccountModerator::DURATIONS,
             'history' => $this->moderator->history($account),
         ] + $this->directory->details($account));
     }
@@ -80,7 +83,11 @@ final class UserController extends AbstractController
         \assert($admin instanceof Account);
         try {
             $reason = (string) $request->request->get('reason', '');
-            'suspend' === $action ? $this->moderator->suspend($account, $admin, $reason) : $this->moderator->reinstate($account, $admin, $reason);
+            // Durée en jours (7, 30, 90) ; vide : jusqu'à réactivation.
+            $days = $request->request->get('days');
+            'suspend' === $action
+                ? $this->moderator->suspend($account, $admin, $reason, null === $days || '' === $days ? null : (int) $days)
+                : $this->moderator->reinstate($account, $admin, $reason);
             $this->addFlash('success', 'suspend' === $action ? 'Compte suspendu : ses profils ne peuvent plus utiliser l’application.' : 'Compte réactivé.');
         } catch (\DomainException $e) {
             $this->addFlash('error', $e->getMessage());
