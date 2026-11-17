@@ -108,6 +108,15 @@ Un objet ou un vêtement est rangé dans une cascade **pièce › rangement › 
 - À la **création** (`POST /api/items`, `POST /api/garments`), on peut donner `room`, `storage` et `box`. Le conteneur impose sa pièce et son rangement ; un rangement d'une autre pièce est refusé (422, `ValidLocation`) ; ranger dans la pièce de quelqu'un d'autre est refusé (403).
 - **Ensuite**, l'emplacement ne change que par un déplacement (`LocationMover`, qui écrit l'historique) : un `PATCH` ne le modifie pas.
 
+| Route | Rôle |
+| --- | --- |
+| `POST /api/items/{id}/move`, `POST /api/garments/{id}/move` | `{room, storage?, box?}` : range l'objet ailleurs. Un conteneur impose sa pièce et son rangement (`room` devient facultative) |
+| `POST /api/boxes/{id}/move` | `{room, storage?}` : déplace le conteneur et tout ce qu'il contient |
+| `POST /api/storages/{id}/move` | `{room}` : déplace le meuble, ses conteneurs et tout ce qui est rangé dessus ou dedans |
+| `GET /api/possessions/moves?possession=` | l'historique d'un objet (IRI) : les emplacements **quittés**, du plus récent au plus ancien, avec qui l'a déplacé et pourquoi (`MANUAL_MOVE`, `BOX_MOVED`, `LOAN_RETURN`) |
+
+Déplacer un objet demande de pouvoir le modifier (son propriétaire, son tuteur) et de pouvoir ranger dans la pièce d'arrivée (403 sinon). Un rangement d'une autre pièce est refusé (422). Un conteneur ou un meuble ne se déplace que par celui qui l'a créé : en colocation, on ne déménage pas les affaires des autres avec. Un objet prêté se déplace aussi : c'est sa place habituelle, il y revient au retour. Un vêtement « à compléter » se range en le complétant (422).
+
 ## Photos
 
 Une photo appartient à un objet ou à un vêtement (galerie : `ItemMedia`, `GarmentMedia`).
@@ -257,6 +266,32 @@ Le fil de Penderie (maquette, section « 16 — Fil d'actualité »), commencé 
 
 L'audience est vérifiée à chaque lecture : retirer un ami lui cache aussitôt les publications et les vêtements. La photo d'un look publié se lit par l'audience de la publication (`GET /api/media/{id}`). Un look publié ne repasse plus en préparation ; un look qui a été publié ne se supprime plus (sa photo est celle de la publication).
 
+## Prêt d'objets
+
+Un prêt (`Loan`) suit un cycle de vie porté par l'entité : `REQUESTED` › `ACCEPTED` › `ACTIVE` › `RETURNED`, avec les sorties `DECLINED`, `CANCELLED` et `LOST`. Chaque geste écrit une ligne du journal (`LoanEvent`) avec son auteur. Le retard n'est pas un statut : c'est un prêt `ACTIVE` dont la date de retour est passée (`overdue`), et repousser la date l'annule aussitôt.
+
+| Route | Rôle |
+| --- | --- |
+| `GET /api/loans?role=&open=` | mes prêts, du plus récent au plus ancien. `role` : `lender` (ce que je prête) ou `borrower` (ce que j'emprunte) ; `open=1` : en cours (demandés, acceptés, chez l'emprunteur), `open=0` : l'historique |
+| `GET /api/loans/{id}` | un prêt et son journal (`events`) ; seules les parties et leur tuteur l'ouvrent (404 sinon) |
+| `GET /api/loans/candidates` | à qui je peux prêter : mes amis et les autres profils de mon compte (`household`) |
+| `GET /api/possessions/loans?possession=` | l'historique des prêts d'un objet (IRI), pour son propriétaire |
+| `POST /api/loans` | `{possession, borrower, dueDate?, note?}` : le propriétaire prête de lui-même, le prêt naît `ACCEPTED` |
+| `POST /api/loans/request` | `{possession, note?}` : quelqu'un qui voit l'objet (partagé avec lui) demande à l'emprunter |
+| `POST /api/loans/{id}/accept` · `/decline` | le prêteur répond à une demande : `{dueDate?}` ou `{reason?}` |
+| `POST /api/loans/{id}/received` | l'emprunteur a l'objet en main : le prêt devient `ACTIVE`, l'objet `LENT`, et son état du moment est noté |
+| `POST /api/loans/{id}/due-date` | `{dueDate: "AAAA-MM-JJ" \| null}` : le prêteur repousse ou retire la date de retour |
+| `POST /api/loans/{id}/declare-return` | `{note?}` : l'emprunteur dit l'avoir rendu ; le prêteur confirme ensuite |
+| `POST /api/loans/{id}/confirm-return` | `{condition?, note?, room?, storage?, box?}` : le prêteur constate l'état (pire qu'au départ : `DAMAGE_REPORTED`) ; avec une pièce, l'objet est rangé là (déplacement tracé, raison `LOAN_RETURN`) |
+| `POST /api/loans/{id}/lost` | le prêteur déclare l'objet perdu : il passe `LOST` |
+| `POST /api/loans/{id}/cancel` | l'un ou l'autre annule, tant que l'objet n'a pas été remis |
+
+**Les règles.** On ne prête qu'à un ami ou à un profil de son compte, jamais à soi-même. Seul un objet disponible se prête : un objet prêté, perdu ou vendu ne se re-prête pas, ce qui interdit aussi le sous-prêt (seul le propriétaire prête, et l'emprunteur ne l'est pas). Un objet en vente ne se prête pas (409), un objet déjà promis ou déjà chez quelqu'un ne se promet pas à un second (409), et on ne demande pas deux fois le même objet (409). Un geste fait par la mauvaise partie répond 422.
+
+**Sur la fiche.** Un objet prêté porte `lentTo` {`loan`, `borrower`, `dueDate`, `overdue`} : « Chez Bruno, retour le 12 », pour son propriétaire seulement. L'emplacement habituel ne change pas pendant le prêt : au retour, l'objet retrouve sa place, ou celle que le prêteur choisit.
+
+**Profil enfant.** `LOAN_LEND` et `LOAN_BORROW` demandent l'accord du tuteur : tant que ce parcours n'est pas exposé, un enfant ne prête ni n'emprunte (403). Un adulte peut prêter au profil de son enfant (foyer).
+
 ## Signaler un contenu
 
 `POST /api/reports` `{targetType, targetId, reason, description?}` : `targetType` vaut `PROFILE`, `ITEM`, `GARMENT`, `COMMENT`, `LISTING`, `COLLECTION` ou `POST` ; `reason` vaut `SPAM`, `INAPPROPRIATE`, `COUNTERFEIT`, `HARASSMENT` ou `OTHER`. On ne signale que ce qu'on voit (404 sinon), jamais son propre contenu ni celui de son compte (422), et une seule fois tant que le premier signalement n'est pas traité (409). Le signalement (`Report`, V2 du MDD) garde une référence souple à sa cible : il survit à la suppression du contenu. Il se traite dans le back-office.
@@ -275,6 +310,8 @@ Une interface web pour les administrateurs, à part de l'app mobile : **Twig + S
 - Les actions (suspendre, réactiver, prendre en charge, clore) sont des POST protégés par un jeton CSRF.
 - **Langues** : le back-office existe en français (langue source), anglais et japonais (composant Translation de Symfony). La langue se choisit dans **Paramètres** (`/admin/parametres`) et reste en session ; sans choix, celle du navigateur, sinon le français (`AdminLocaleSubscriber`, pour les seules pages `/admin` : l'API garde sa langue par défaut et ses messages de validation ne changent pas). Les textes des gabarits sont dans `translations/admin+intl-icu.<langue>.yaml` (format ICU : `{nom}`, pluriels `{count, plural, …}`) ; les messages écrits en français dans le code (messages flash, erreurs métier) sont traduits à l'affichage depuis `translations/admin_flash.<langue>.yaml`, où la clé est le texte français. Les dates et les montants suivent la langue (`admin_date`, `admin_euros`). Ce qui est enregistré (motifs, décisions, journal) reste dans la langue où il a été écrit.
 - **Front** : AssetMapper (pas de Node côté API), Stimulus pour les comportements (le menu sur petit écran : `assets/controllers/sidebar_controller.js`), Tailwind 4 dont le thème reprend la charte de l'app (`assets/styles/app.css`, mêmes noms de couleurs, de rayons et de tailles).
+
+**Données de démonstration** (base de développement seulement) : `php bin/console app:demo:back-office` ajoute de l'activité à modérer, pour voir le back-office vivant : 8 comptes inscrits ces dernières semaines (`@demo-bo.penderie.fr`, mot de passe aléatoire : on ne s'y connecte pas), une trentaine d'objets et vêtements ajoutés, des scans sur 60 jours (réussis, partiels, ratés), des prêts en cours dont deux en retard, cinq ventes à différents stades, trois litiges (ouvert, pris en charge, résolu) et six signalements (à traiter, en cours, traités). Tout passe par les méthodes métier des entités ; seules les dates sont reculées, pour que les évolutions du tableau de bord aient une période de comparaison. Il faut un compte administrateur et les référentiels ; la commande ne recharge rien si le jeu est déjà là, et refuse de tourner en production.
 
 La feuille de style se compile avant d'ouvrir le back-office (sinon la page plante sur le CSS manquant) :
 
