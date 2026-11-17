@@ -12,6 +12,7 @@ import { ScreenTitle } from '@/components/ui/ScreenTitle';
 import {
   artOf,
   AVAILABILITY,
+  lentLine,
   normalize,
   rootCategory,
   roomName,
@@ -36,9 +37,7 @@ const plural = (n: number, one: string, many: string) => `${n} ${n > 1 ? many : 
  *  - la puce « Vêtements » n'y est pas : les vêtements ont leur page,
  *    « Mon dressing » ;
  *  - les puces de catégorie sont les catégories de premier niveau que tu
- *    utilises vraiment (la maquette en montre des exemples) ;
- *  - la ligne « Prêté à Thomas » attend les routes de prêt de l'API : la
- *    pastille dit déjà « Prêté ».
+ *    utilises vraiment (la maquette en montre des exemples).
  */
 export default function ItemsScreen() {
   const items = usePossessions('item');
@@ -146,6 +145,7 @@ export default function ItemsScreen() {
                           <PossessionCard
                             name={p.name}
                             meta={[categories.data?.find((c) => c.iri === p.category)?.name ?? rootOf(p)?.name, room ?? 'sans emplacement'].filter(Boolean).join(' · ')}
+                            extra={lentLine(p)}
                             photo={p.photos?.[0]}
                             art={artOf('item', p, categories.data)}
                             photoHeight={187}

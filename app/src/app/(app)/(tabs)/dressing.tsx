@@ -10,6 +10,7 @@ import { BackButton } from '@/components/ui/BackButton';
 import { ScreenTitle } from '@/components/ui/ScreenTitle';
 import {
   artOf,
+  lentLine,
   AVAILABILITY,
   normalize,
   rootCategory,
@@ -98,6 +99,7 @@ export default function DressingScreen() {
         key={p.id}
         name={p.name}
         meta={[name(p.brand), name(p.category), name(p.size) ?? p.sizeLabel].filter(Boolean).join(' · ')}
+        extra={lentLine(p)}
         photo={p.photos?.[0]}
         art={artOf('garment', p, categories.data)}
         photoHeight={height}

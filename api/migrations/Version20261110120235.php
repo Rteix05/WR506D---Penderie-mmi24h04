@@ -35,11 +35,12 @@ final class Version20261110120235 extends AbstractMigration
     public function down(Schema $schema): void
     {
         // this down() migration is auto-generated, please modify it to your needs
-        $this->addSql('ALTER TABLE report DROP CONSTRAINT FK_C42F7784E1CFE6F5');
-        $this->addSql('ALTER TABLE report DROP CONSTRAINT FK_C42F7784FE65AF40');
-        $this->addSql('DROP TABLE report');
+        // D'abord ce qui pointe vers report (moderation_action.report_id), puis la table.
         $this->addSql('ALTER TABLE moderation_action DROP CONSTRAINT FK_B05D81284BD2A4C0');
         $this->addSql('DROP INDEX IDX_B05D81284BD2A4C0');
         $this->addSql('ALTER TABLE moderation_action DROP report_id');
+        $this->addSql('ALTER TABLE report DROP CONSTRAINT FK_C42F7784E1CFE6F5');
+        $this->addSql('ALTER TABLE report DROP CONSTRAINT FK_C42F7784FE65AF40');
+        $this->addSql('DROP TABLE report');
     }
 }
