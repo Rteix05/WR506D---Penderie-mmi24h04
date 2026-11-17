@@ -7,6 +7,7 @@ import { ActivityIndicator, Alert, Pressable, Text, TextInput, View } from 'reac
 import { ActionBar, FlowScreen } from '@/components/add/FlowScreen';
 import { MentionList, PostCard } from '@/components/feed/PostCard';
 import { ProfileAvatar } from '@/components/profiles/ProfileCard';
+import { ReportLink } from '@/components/report/ReportSheet';
 import { BackButton } from '@/components/ui/BackButton';
 import { Button } from '@/components/ui/Button';
 import { E1 } from '@/components/ui/elevation';
@@ -189,7 +190,7 @@ function CommentCard({ comment, onReply, onDelete }: { comment: PostComment; onR
           <Text className="font-luciole text-legend text-muted dark:text-muted-night">{since(comment.createdAt)}</Text>
         </View>
         <Text className="font-luciole text-body text-ink dark:text-ink-night">{comment.body}</Text>
-        {(onReply || onDelete) && (
+        {(onReply || onDelete || !comment.mine) && (
           <View className="flex-row gap-5 pt-1">
             {onReply && (
               <Pressable accessibilityRole="button" accessibilityLabel={t('comments.replyA11y', { name: comment.author.displayName })} onPress={onReply} hitSlop={8} className="active:opacity-70">
@@ -201,6 +202,7 @@ function CommentCard({ comment, onReply, onDelete }: { comment: PostComment; onR
                 <Text className="font-luciole text-legend text-muted dark:text-muted-night">{t('comments.delete')}</Text>
               </Pressable>
             )}
+            {!comment.mine && <ReportLink targetType="COMMENT" targetId={comment.id} />}
           </View>
         )}
       </View>

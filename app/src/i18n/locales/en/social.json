@@ -204,5 +204,51 @@
     "reply": "Reply",
     "replyA11y": "Reply to {{name}}",
     "delete": "Delete"
+  },
+  "report": {
+    "link": "Report",
+    "garment": "Report this garment",
+    "profile": "Report this profile",
+    "title": {
+      "POST": "Report the post",
+      "COMMENT": "Report the comment",
+      "PROFILE": "Report the profile",
+      "GARMENT": "Report the garment",
+      "ITEM": "Report the item",
+      "LISTING": "Report the listing",
+      "COLLECTION": "Report the collection"
+    },
+    "question": "Why are you reporting it?",
+    "reason": {
+      "INAPPROPRIATE": {
+        "title": "Inappropriate content",
+        "hint": "Shocking, sexual, violent or hateful"
+      },
+      "HARASSMENT": {
+        "title": "Harassment or insult",
+        "hint": "Mockery, threats, remarks aimed at someone"
+      },
+      "SPAM": {
+        "title": "Spam or advertising",
+        "hint": "Repeated messages, links, solicitation"
+      },
+      "COUNTERFEIT": {
+        "title": "Counterfeit or scam",
+        "hint": "Fake product, misleading price, dubious sale"
+      },
+      "OTHER": {
+        "title": "Other",
+        "hint": "Explain what's wrong"
+      }
+    },
+    "details": "Details (optional)",
+    "detailsRequired": "Details (required for “Other”)",
+    "placeholder": "What moderators should know…",
+    "send": "Send the report",
+    "cancel": "Cancel",
+    "close": "Close",
+    "sent": "Thank you. Moderators will review this report. The person concerned won't know it was you.",
+    "error": "The report couldn't be sent.",
+    "note": "Abusive reports may be sanctioned. In immediate danger, contact emergency services."
   }
 }
