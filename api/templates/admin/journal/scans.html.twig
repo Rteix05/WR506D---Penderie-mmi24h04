@@ -1,0 +1,139 @@
+{% extends 'admin/base.html.twig' %}
+{% import 'admin/_ui.html.twig' as ui %}
+
+{% block title %}{{ 'journal.scans.title'|trans({}, 'admin') }}{% endblock %}
+{% block active %}journal{% endblock %}
+{% block heading %}{{ 'journal.heading'|trans({}, 'admin') }}{% endblock %}
+{% block subtitle %}{{ 'journal.scans.subtitle'|trans({days: days}, 'admin') }}{% endblock %}
+
+{% block body %}
+    {% set params = {filter: filter, days: days, kind: kind, model: model} %}
+    {% set statusPills = {SUCCESS: ['journal.scans.statusSuccess'|trans({}, 'admin'), 'green'], PARTIAL: ['journal.scans.statusPartial'|trans({}, 'admin'), 'pink'], FAILED: ['journal.scans.statusFailed'|trans({}, 'admin'), 'red']} %}
+    {% set kinds = {PHOTO: 'journal.scans.kindPhoto'|trans({}, 'admin'), LABEL_OCR: 'journal.scans.kindLabel'|trans({}, 'admin')} %}
+    {% set ms = 'journal.ms' %}
+
+    {{ include('admin/journal/_tabs.html.twig', {current: 'scans'}) }}
+
+    {# Les chiffres de la période : volume, échecs, temps de chargement. #}
+    <div class="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {{ ui.kpi('journal.scans.kpiTotal'|trans({}, 'admin'), stats.total, stats.partial ? 'journal.scans.kpiPartial'|trans({count: stats.partial}, 'admin') : null, 'pink') }}
+        {{ ui.kpi('journal.scans.kpiFailed'|trans({}, 'admin'), stats.failed, stats.failureRate is not null ? 'journal.scans.kpiRate'|trans({rate: stats.failureRate}, 'admin') : null, stats.failureRate is not null and stats.failureRate > 20 ? 'red' : 'green') }}
+        {{ ui.kpi('journal.scans.kpiAvg'|trans({}, 'admin'), stats.avgMs is not null ? ms|trans({ms: stats.avgMs}, 'admin') : '—', null, 'grey') }}
+        {{ ui.kpi('journal.scans.kpiP95'|trans({}, 'admin'), stats.p95Ms is not null ? ms|trans({ms: stats.p95Ms}, 'admin') : '—', stats.maxMs is not null ? 'journal.scans.kpiMax'|trans({max: ms|trans({ms: stats.maxMs}, 'admin')}, 'admin') : null, stats.p95Ms is not null and stats.p95Ms > 20000 ? 'red' : 'grey') }}
+    </div>
+
+    <div class="mb-6 grid gap-6 xl:grid-cols-[1fr_minmax(0,360px)]">
+        {# Par modèle : combien de fois il a répondu, combien il a échoué, en combien de temps. #}
+        <section class="{{ ui.card_class() }}" aria-labelledby="par-modele">
+            <h2 id="par-modele" class="text-legend font-bold text-muted">{{ 'journal.scans.modelsHeading'|trans({}, 'admin') }}</h2>
+            {% if stats.models is empty %}
+                <p class="mt-3 text-legend text-muted">{{ 'journal.scans.modelsEmpty'|trans({}, 'admin') }}</p>
+            {% else %}
+                <div class="mt-3 overflow-x-auto">
+                    <table class="w-full min-w-[520px] text-left text-legend">
+                        <thead><tr class="font-bold text-muted">
+                            <th scope="col" class="pb-2">{{ 'journal.scans.thModel'|trans({}, 'admin') }}</th>
+                            <th scope="col" class="pb-2 text-right">{{ 'journal.scans.thAnswered'|trans({}, 'admin') }}</th>
+                            <th scope="col" class="pb-2 text-right">{{ 'journal.scans.thFailedCalls'|trans({}, 'admin') }}</th>
+                            <th scope="col" class="pb-2 text-right">{{ 'journal.scans.thFailureRate'|trans({}, 'admin') }}</th>
+                            <th scope="col" class="pb-2 text-right">{{ 'journal.scans.thAvg'|trans({}, 'admin') }}</th>
+                        </tr></thead>
+                        <tbody>
+                        {% for m in stats.models %}
+                            <tr class="border-t border-ink/8">
+                                <td class="py-2"><a class="font-bold hover:underline" href="{{ path('admin_scan_log', params|merge({model: m.model, page: 1})) }}">{{ m.model }}</a></td>
+                                <td class="py-2 text-right">{{ m.ok }}</td>
+                                <td class="py-2 text-right">{{ m.failed }}</td>
+                                <td class="py-2 text-right">{% if m.failureRate is not null %}{{ ui.pill(m.failureRate ~ ' %', m.failureRate >= 50 ? 'red' : (m.failureRate >= 20 ? 'pink' : 'green')) }}{% endif %}</td>
+                                <td class="py-2 text-right">{{ m.avgMs is not null ? ms|trans({ms: m.avgMs}, 'admin') : '—' }}</td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endif %}
+        </section>
+
+        {# Les erreurs regroupées par famille : quota, modèle retiré, délai… #}
+        <section class="{{ ui.card_class() }}" aria-labelledby="erreurs">
+            <h2 id="erreurs" class="text-legend font-bold text-muted">{{ 'journal.scans.errorsHeading'|trans({}, 'admin') }}</h2>
+            {% if stats.errors is empty %}
+                <p class="mt-3 text-legend text-muted">{{ 'journal.scans.errorsEmpty'|trans({}, 'admin') }}</p>
+            {% else %}
+                <dl class="mt-3 flex flex-col gap-2 text-legend">
+                    {% for category, count in stats.errors %}
+                        <div class="flex justify-between gap-4"><dt>{{ ('journal.error.' ~ category)|trans({}, 'admin') }}</dt><dd class="font-bold">{{ count }}</dd></div>
+                    {% endfor %}
+                </dl>
+            {% endif %}
+        </section>
+    </div>
+
+    {{ ui.tabs([
+        {key: 'failed', label: 'journal.scans.filterFailed'|trans({}, 'admin')},
+        {key: 'partial', label: 'journal.scans.filterPartial'|trans({}, 'admin')},
+        {key: 'all', label: 'journal.scans.filterAll'|trans({}, 'admin')},
+    ], filter, 'admin_scan_log', {days: days, kind: kind, model: model}) }}
+
+    <form method="get" class="mb-6 flex flex-wrap items-end gap-3 text-legend">
+        <input type="hidden" name="filter" value="{{ filter }}">
+        <label class="flex flex-col gap-1">
+            <span class="font-bold text-muted">{{ 'journal.scans.period'|trans({}, 'admin') }}</span>
+            <select name="days" class="h-10 rounded-sm bg-surface px-3 shadow-[0_1px_3px_rgba(26,30,36,0.08)]">
+                {% for d in periods %}<option value="{{ d }}" {{ d == days ? 'selected' }}>{{ 'journal.scans.periodDays'|trans({days: d}, 'admin') }}</option>{% endfor %}
+            </select>
+        </label>
+        <label class="flex flex-col gap-1">
+            <span class="font-bold text-muted">{{ 'journal.scans.kind'|trans({}, 'admin') }}</span>
+            <select name="kind" class="h-10 rounded-sm bg-surface px-3 shadow-[0_1px_3px_rgba(26,30,36,0.08)]">
+                <option value="">{{ 'journal.scans.kindAll'|trans({}, 'admin') }}</option>
+                {% for value, label in kinds %}<option value="{{ value }}" {{ value == kind ? 'selected' }}>{{ label }}</option>{% endfor %}
+            </select>
+        </label>
+        <label class="flex flex-col gap-1">
+            <span class="font-bold text-muted">{{ 'journal.scans.model'|trans({}, 'admin') }}</span>
+            <select name="model" class="h-10 max-w-[280px] rounded-sm bg-surface px-3 shadow-[0_1px_3px_rgba(26,30,36,0.08)]">
+                <option value="">{{ 'journal.scans.modelAll'|trans({}, 'admin') }}</option>
+                {% for m in models %}<option value="{{ m }}" {{ m == model ? 'selected' }}>{{ m }}</option>{% endfor %}
+            </select>
+        </label>
+        <button type="submit" class="h-10 rounded-md bg-primary px-4 font-bold text-white hover:brightness-110">{{ 'journal.scans.apply'|trans({}, 'admin') }}</button>
+    </form>
+
+    <section class="{{ ui.card_class() }}" aria-label="{{ 'journal.scans.listAria'|trans({}, 'admin') }}">
+        {% if rows is empty %}
+            <p class="text-body text-muted">{{ 'journal.scans.empty'|trans({}, 'admin') }}</p>
+        {% else %}
+            <div class="overflow-x-auto">
+                <table class="w-full min-w-[900px] text-left">
+                    <thead><tr class="text-legend font-bold text-muted">
+                        <th scope="col" class="pb-3">{{ 'journal.scans.thWhen'|trans({}, 'admin') }}</th>
+                        <th scope="col" class="pb-3">{{ 'journal.scans.thKind'|trans({}, 'admin') }}</th>
+                        <th scope="col" class="pb-3">{{ 'journal.scans.thStatus'|trans({}, 'admin') }}</th>
+                        <th scope="col" class="pb-3 text-right">{{ 'journal.scans.thDuration'|trans({}, 'admin') }}</th>
+                        <th scope="col" class="pb-3">{{ 'journal.scans.thModelOk'|trans({}, 'admin') }}</th>
+                        <th scope="col" class="pb-3">{{ 'journal.scans.thError'|trans({}, 'admin') }}</th>
+                        <th scope="col" class="pb-3"><span class="sr-only">{{ 'journal.scans.thDetail'|trans({}, 'admin') }}</span></th>
+                    </tr></thead>
+                    <tbody>
+                    {% for scan in rows %}
+                        {% set raw = scan.rawData ?? {} %}
+                        {% set attempts = raw.attempts ?? [] %}
+                        {% set st = statusPills[scan.status.value] %}
+                        <tr class="border-t border-ink/8 align-top text-legend">
+                            <td class="py-3">{{ scan.createdAt|admin_date(true) }}<br><span class="text-muted">@{{ scan.profile.username }}</span></td>
+                            <td class="py-3">{{ kinds[scan.kind.value] ?? scan.kind.value }}</td>
+                            <td class="py-3">{{ ui.pill(st[0], st[1]) }}</td>
+                            <td class="py-3 text-right font-bold {{ scan.durationMs is not null and scan.durationMs > 20000 ? 'text-error' }}">{{ scan.durationMs is not null ? ms|trans({ms: scan.durationMs}, 'admin') : '—' }}</td>
+                            <td class="py-3">{{ raw.model ?? '—' }}{% if attempts|length %}<br><span class="text-muted">{{ 'journal.scans.failedBefore'|trans({count: attempts|length}, 'admin') }}</span>{% endif %}</td>
+                            <td class="max-w-[320px] py-3">{{ raw.error ?? (attempts|length ? (attempts|last).model ~ ' : ' ~ (attempts|last).error : '—') }}</td>
+                            <td class="py-3 text-right"><a class="font-bold text-primary hover:underline" href="{{ path('admin_scan_log_show', {id: scan.id}) }}">{{ 'journal.view'|trans({}, 'admin') }} ›</a></td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {{ ui.pager(page, perPage, total, 'admin_scan_log', params) }}
+        {% endif %}
+    </section>
+{% endblock %}

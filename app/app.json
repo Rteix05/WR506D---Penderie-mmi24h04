@@ -55,7 +55,14 @@
       "expo-image",
       "expo-status-bar",
       "expo-web-browser",
-      ["expo-localization", { "supportedLocales": ["fr", "en", "ja"] }]
+      ["expo-localization", { "supportedLocales": ["fr", "en", "ja"] }],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Penderie utilise ta position, une fois, pour la météo du jour et te proposer une tenue adaptée.",
+          "isAndroidBackgroundLocationEnabled": false
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

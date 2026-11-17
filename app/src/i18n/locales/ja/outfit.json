@@ -1,0 +1,91 @@
+{
+  "title": "今日のコーデ",
+  "legend": "天気・シーン・最近着た服をもとに",
+  "weatherLine": "{{temperature}}°C・{{weather}}",
+  "error": "コーデを提案できませんでした",
+  "occasion": {
+    "EVERYDAY": "普段",
+    "WORK": "仕事",
+    "SPORT": "スポーツ",
+    "EVENING": "夜のお出かけ"
+  },
+  "weather": {
+    "SUNNY": "晴れ",
+    "CLOUDY": "くもり",
+    "RAIN": "雨",
+    "SNOW": "雪",
+    "WIND": "強風"
+  },
+  "picker": {
+    "question": "どんなシーン？",
+    "hint": {
+      "EVERYDAY": "いつもの一日",
+      "WORK": "オフィス・授業・打ち合わせ",
+      "SPORT": "ジム・ランニング・散歩",
+      "EVENING": "ディナー・お出かけ・パーティー"
+    },
+    "go": "コーデを提案して",
+    "note": "位置情報は今日の天気にだけ使います。許可しない場合は、住まいの市区町村を使います。"
+  },
+  "composing": {
+    "title": "コーデを組み立て中…",
+    "text": "天気と着られる服をもとに、AIがいちばん良いものを選びます。数秒お待ちください。"
+  },
+  "empty": {
+    "title": "まだコーデを組めません",
+    "text": "トップスとボトムス、またはワンピースをワードローブに追加してください。",
+    "action": "服を追加"
+  },
+  "why": "このコーデの理由",
+  "pieces_other": "{{count}}点",
+  "swap": "入れ替える",
+  "swapA11y": "{{name}}を入れ替える",
+  "dislike": "好きじゃない",
+  "dislikeA11y": "好きじゃない：{{name}}を今後の提案から外す",
+  "accept": "このコーデにする",
+  "next": "別のコーデ",
+  "footer": "「好きじゃない」を選ぶと、再び有効にするまでそのアイテムは提案されません。",
+  "worn": {
+    "never": "まだルックに登場していません",
+    "today": "最後に着たのは今日",
+    "days_other": "最後に着たのは{{count}}日前"
+  },
+  "saved": {
+    "title": "コーデをワードローブに追加しました",
+    "text": "「{{name}}」はコーデ一覧にあります。",
+    "close": "閉じる"
+  },
+  "reason": {
+    "weather": {
+      "title": "{{temperature}}°C・{{weather}}",
+      "noLayer": "今日は上着はいりません。",
+      "layer": "{{outer}}で十分。コートはいりません。",
+      "coat": "寒いので{{outer}}が必要です。",
+      "wet": "雨の予報：{{outer}}があれば安心です。"
+    },
+    "noWeather": {
+      "title": "天気がわかりません",
+      "detail": "位置情報を許可するか、住まいの住所を追加すると天気を考慮できます。"
+    },
+    "occasion": {
+      "EVERYDAY": "いつもの一日",
+      "WORK": "仕事の日",
+      "SPORT": "運動の日",
+      "EVENING": "夜のお出かけ",
+      "styles": "スタイル：{{styles}}"
+    },
+    "notWorn": {
+      "title": "出番を待っていたアイテム",
+      "never": "「{{garment}}」はまだどのルックにもありません。",
+      "days_other": "「{{garment}}」：最後に着たのは{{count}}日前。"
+    },
+    "harmony": {
+      "neutral": { "title": "相性のいい組み合わせ", "detail": "合わせやすいニュートラルカラー。" },
+      "oneAccent": { "title": "相性のいい組み合わせ", "detail": "差し色はひとつ、あとはニュートラル。" },
+      "contrast": { "title": "大胆なコントラスト", "detail": "鮮やかな色が2つ。多すぎたら入れ替えてください。" },
+      "busy": { "title": "色が多め", "detail": "ひとつ入れ替えると落ち着きます。" }
+    },
+    "liked": { "title": "好きなスタイル" },
+    "ai": { "title": "AIスタイリストのひとこと" }
+  }
+}

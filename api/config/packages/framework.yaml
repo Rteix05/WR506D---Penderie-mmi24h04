@@ -3,7 +3,11 @@ framework:
     secret: '%env(APP_SECRET)%'
 
     # Note that the session will be started ONLY if you read or write from it.
+    # L'API n'en ouvre jamais (pare-feux sans état) ; le back-office, si.
     session: true
+
+    # Jetons CSRF du formulaire de connexion du back-office.
+    csrf_protection: true
 
     # Le scan par IA passe par OpenRouter (voir App\Service\Scan\OpenRouterVision).
     # Client dédié : la clé ne part que vers openrouter.ai.
@@ -25,6 +29,6 @@ when@test:
         test: true
         session:
             storage_factory_id: session.storage.factory.mock_file
-        # Aucun test n'appelle le vrai OpenRouter : réponses simulées.
+        # Aucun test n'appelle de vrai service (OpenRouter, Open-Meteo) : réponses simulées.
         http_client:
-            mock_response_factory: App\Tests\Support\OpenRouterMock
+            mock_response_factory: App\Tests\Support\HttpMock

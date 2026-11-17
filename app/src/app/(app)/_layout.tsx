@@ -39,6 +39,7 @@ export default function AppLayout() {
       <Stack.Screen name="parametres" />
       <Stack.Screen name="activite" />
       <Stack.Screen name="notifications" />
+      <Stack.Screen name="tenue" options={{ presentation: 'modal' }} />
     </Stack>
   );
 }

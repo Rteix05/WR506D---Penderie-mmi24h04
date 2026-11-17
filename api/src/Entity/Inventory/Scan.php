@@ -19,11 +19,17 @@ use Symfony\Component\Uid\Uuid;
  *
  * La technologie est imposée par le module et pas encore connue :
  * provider et rawData existent pour ne pas la figer dans le schéma.
+ *
+ * durationMs : le temps de l'analyse côté serveur (toute la chaîne de
+ * modèles), en colonne pour que le journal des scans du back-office en
+ * calcule la moyenne et le 95e centile en SQL. Le détail par modèle
+ * (modèle, erreur, code HTTP, durée) est dans rawData.attempts.
  */
 #[ORM\Entity(repositoryClass: ScanRepository::class)]
 #[ORM\HasLifecycleCallbacks]
 #[ORM\Index(name: 'idx_scan_profile_created', columns: ['profile_id', 'created_at'])]
 #[ORM\Index(name: 'idx_scan_kind_status', columns: ['kind', 'status'])]
+#[ORM\Index(name: 'idx_scan_status_created', columns: ['status', 'created_at'])]
 class Scan
 {
     use TimestampableTrait;
@@ -62,6 +68,10 @@ class Scan
     #[ORM\Column(type: Types::JSON, nullable: true, options: ['jsonb' => true])]
     private ?array $rawData = null;
 
+    /** Durée de l'analyse côté serveur, en millisecondes ; null pour un scan décodé dans l'app. */
+    #[ORM\Column(nullable: true)]
+    private ?int $durationMs = null;
+
     /** L'objet créé à partir du scan, s'il y en a un. Au plus un des deux. */
     #[ORM\ManyToOne(targetEntity: Item::class)]
     #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
@@ -80,6 +90,7 @@ class Scan
         ?Media $media = null,
         ?string $provider = null,
         ?array $rawData = null,
+        ?int $durationMs = null,
     ) {
         $this->id = Uuid::v7();
         $this->profile = $profile;
@@ -89,6 +100,7 @@ class Scan
         $this->media = $media;
         $this->provider = $provider;
         $this->rawData = $rawData;
+        $this->durationMs = $durationMs;
     }
 
     public function getId(): Uuid
@@ -130,6 +142,11 @@ class Scan
     public function getRawData(): ?array
     {
         return $this->rawData;
+    }
+
+    public function getDurationMs(): ?int
+    {
+        return $this->durationMs;
     }
 
     public function getResultingItem(): ?Item

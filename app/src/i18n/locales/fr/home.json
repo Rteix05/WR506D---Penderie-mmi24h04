@@ -32,5 +32,11 @@
     "toCheck_other": "{{count}} vêtements à vérifier",
     "allChecked": "Tout est vérifié : prépare le post",
     "accessibilityLabel": "Look du jour, {{text}}"
+  },
+  "outfit": {
+    "title": "Ta tenue du jour",
+    "empty": "Une tenue selon la météo et l'occasion",
+    "ready": "Prête : {{count}} pièces",
+    "accessibilityLabel": "Ta tenue du jour, {{text}}"
   }
 }
