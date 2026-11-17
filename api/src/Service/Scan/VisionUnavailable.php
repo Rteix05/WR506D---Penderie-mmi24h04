@@ -7,8 +7,8 @@ namespace App\Service\Scan;
  */
 final class VisionUnavailable extends \RuntimeException
 {
-    /** @param list<array{model: string, error: string}> $attempts */
-    public function __construct(string $message, public readonly array $attempts)
+    /** @param list<array{model: string, error: string, status?: ?int, ms?: int}> $attempts */
+    public function __construct(string $message, public readonly array $attempts, public readonly int $durationMs = 0)
     {
         parent::__construct($message);
     }

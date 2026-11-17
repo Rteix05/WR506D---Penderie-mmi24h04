@@ -276,8 +276,11 @@
       page(screen, "Tableau de bord", "Tableau de bord", "Samedi 13 septembre 2026", "Rechercher…", function (main) {
         addFill(main, rangee([
           kpi("Utilisateurs actifs", "12 480", "+312 cette semaine", "encours"),
-          kpi("Signalements à traiter", "7", "2 depuis plus de 24 h", "retard"),
-          kpi("Litiges ouverts", "3", "1 remboursement en attente", "arendre"),
+          // Demande du client (09/11) : signalements et litiges gardent leur menu,
+          // leurs pastilles et « À traiter en priorité » ; les KPI suivent le scan
+          // (fonctionnalité clé) et les prêts.
+          kpi("Scans réussis", "87 %", "64 échecs cette semaine", "neutre"),
+          kpi("Prêts en cours", "142", "9 en retard", "retard"),
           kpi("Ventes du mois", "1 284", "38 520 € via Stripe", "neutre")
         ]));
 

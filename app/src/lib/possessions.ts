@@ -32,6 +32,8 @@ export type Possession = {
   photos?: string[];
   /** Droits de celui qui regarde : ADMIN = propriétaire (modifier, supprimer). */
   access?: 'ADMIN' | 'EDIT' | 'VIEW';
+  /** Prêté (LENT) : chez qui et jusqu'à quand. Seulement pour le propriétaire. */
+  lentTo?: { loan: string; borrower: string; dueDate: string | null; overdue: boolean } | null;
   // Vêtement
   /** À compléter : créé d'un titre depuis le look du jour, sans catégorie ni pièce. */
   incomplete?: boolean;
@@ -103,6 +105,13 @@ export const AVAILABILITY: Record<Availability, { label: string; solid: string; 
   LOST: { label: 'Perdu', solid: 'bg-error', tint: 'bg-error/10', text: 'text-error dark:text-error-night' },
   SOLD: { label: 'Vendu', solid: 'bg-muted', tint: 'bg-muted/[0.12]', text: 'text-muted dark:text-muted-night' },
 };
+
+/** La ligne « Chez Thomas » sous la carte d'un bien prêté (maquette, « Card/Object »). */
+export function lentLine(p: Possession): { text: string; className: string } | undefined {
+  if (!p.lentTo) return undefined;
+
+  return { text: `Chez ${p.lentTo.borrower}${p.lentTo.overdue ? ' · en retard' : ''}`, className: p.lentTo.overdue ? 'text-error dark:text-error-night' : 'text-[#C21B5E] dark:text-primary-night' };
+}
 
 export const STATUS_FILTERS: { value: Availability | null; label: string }[] = [
   { value: null, label: 'tous' },
