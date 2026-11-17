@@ -1,0 +1,47 @@
+{% extends 'admin/base.html.twig' %}
+{% import 'admin/_ui.html.twig' as ui %}
+
+{% block title %}{{ 'journal.aiReview.title'|trans({}, 'admin') }}{% endblock %}
+{% block active %}journal{% endblock %}
+{% block heading %}{{ 'journal.aiReview.title'|trans({}, 'admin') }}{% endblock %}
+{% block subtitle %}<a class="hover:underline" href="{{ path('admin_ai_log') }}">{{ 'journal.tabAi'|trans({}, 'admin') }}</a> › {{ review.createdAt|admin_date(true) }}{% endblock %}
+
+{% block body %}
+    {% set ms = 'journal.ms' %}
+    <div class="grid gap-6 xl:grid-cols-[1fr_minmax(0,420px)]">
+        <div class="flex flex-col gap-6">
+            {# Ce que le modèle a reçu, exactement : on peut relire la décision après coup. #}
+            <section class="{{ ui.card_class() }}" aria-labelledby="dossier">
+                <h2 id="dossier" class="text-legend font-bold text-muted">{{ 'journal.aiReview.inputHeading'|trans({}, 'admin') }}</h2>
+                <pre class="mt-3 max-h-[520px] overflow-auto rounded-sm bg-ink/[0.04] p-4 text-[13px] leading-snug">{{ inputJson }}</pre>
+            </section>
+
+            {% if answerJson %}
+                <section class="{{ ui.card_class() }}" aria-labelledby="reponse-brute">
+                    <h2 id="reponse-brute" class="text-legend font-bold text-muted">{{ 'journal.aiReview.answerHeading'|trans({}, 'admin') }}</h2>
+                    <pre class="mt-3 max-h-[520px] overflow-auto rounded-sm bg-ink/[0.04] p-4 text-[13px] leading-snug">{{ answerJson }}</pre>
+                </section>
+            {% endif %}
+
+            <section class="{{ ui.card_class() }}" aria-labelledby="appels">
+                <h2 id="appels" class="text-legend font-bold text-muted">{{ 'journal.aiReview.callsHeading'|trans({}, 'admin') }}</h2>
+                <ol class="mt-3 flex flex-col gap-2 text-legend">
+                    {% for a in review.attempts %}
+                        <li class="rounded-sm bg-error/[0.06] px-4 py-3"><span class="font-bold">{{ a.model }}</span> · {{ a.error }}{% if (a.ms ?? null) is not null %} · {{ ms|trans({ms: a.ms}, 'admin') }}{% endif %}</li>
+                    {% endfor %}
+                    {% if review.model %}<li class="rounded-sm bg-main-tint px-4 py-3"><span class="font-bold">{{ review.model }}</span> · {{ 'journal.scan.answered'|trans({}, 'admin') }}</li>{% endif %}
+                </ol>
+                <p class="mt-3 text-legend text-muted">{{ 'ai.panel.meta'|trans({model: review.model ?? '—', ms: review.durationMs, version: review.promptVersion}, 'admin') }}</p>
+            </section>
+        </div>
+
+        <div class="flex flex-col gap-6 self-start">
+            {% set subjectId = review.report ? review.report.id : review.dispute.id %}
+            {{ include('admin/ai/_panel.html.twig', {review: review, count: 1, threshold: threshold, kind: review.report ? 'report' : 'dispute', subjectId: subjectId, pending: false}) }}
+            <p class="text-legend">
+                {% if review.report %}<a class="font-bold text-primary hover:underline" href="{{ path('admin_report', {id: review.report.id}) }}">{{ 'journal.aiReview.openReport'|trans({}, 'admin') }} ›</a>
+                {% else %}<a class="font-bold text-primary hover:underline" href="{{ path('admin_dispute', {id: review.dispute.id}) }}">{{ 'journal.aiReview.openDispute'|trans({}, 'admin') }} ›</a>{% endif %}
+            </p>
+        </div>
+    </div>
+{% endblock %}

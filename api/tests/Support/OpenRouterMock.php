@@ -11,10 +11,19 @@ use Symfony\Contracts\HttpClient\ResponseInterface;
  * scan par le fallback ; le suivant répond selon la consigne (photo ou
  * étiquette). Avec $down, tous les modèles
  * sont en panne.
+ *
+ * La pré-analyse IA (consigne qui contient « <<<DOSSIER ») reçoit
+ * $moderation, que chaque test règle : verdict, confiance, résumé…
  */
 final class OpenRouterMock
 {
     public static bool $down = false;
+
+    /** @var array<string, mixed> la réponse de la modération IA */
+    public static array $moderation = ['verdict' => 'DISMISS', 'confidence' => 98, 'summary' => 'Signalement infondé.', 'justification' => ['Rien d’offensant.'], 'evidence' => [], 'message' => null];
+
+    /** @var list<string> les consignes reçues, pour vérifier ce qui part au modèle */
+    public static array $prompts = [];
 
     /** @param array<string, mixed> $options */
     public function __invoke(string $method, string $url, array $options): ResponseInterface
@@ -25,7 +34,8 @@ final class OpenRouterMock
             return new MockResponse(json_encode(['error' => ['code' => 429, 'message' => 'Rate limit exceeded: free-models-per-min']]), ['http_code' => 429]);
         }
         $prompt = $request['messages'][0]['content'][0]['text'] ?? '';
-        $answer = $this->scanAnswer($prompt);
+        self::$prompts[] = $prompt;
+        $answer = str_contains($prompt, '<<<DOSSIER') ? self::$moderation : $this->scanAnswer($prompt);
 
         return new MockResponse(json_encode([
             'model' => $model,

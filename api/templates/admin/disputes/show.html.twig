@@ -1,0 +1,86 @@
+{% extends 'admin/base.html.twig' %}
+{% import 'admin/_ui.html.twig' as ui %}
+
+{% block title %}{{ 'disputes.showTitle'|trans({reference: order.reference}, 'admin') }}{% endblock %}
+{% block active %}disputes{% endblock %}
+{% block heading %}{{ 'disputes.showTitle'|trans({reference: order.reference}, 'admin') }}{% endblock %}
+{% block subtitle %}<a class="hover:underline" href="{{ path('admin_disputes') }}">{{ 'disputes.breadcrumbDisputes'|trans({}, 'admin') }}</a> › {{ 'disputes.showSubtitle'|trans({possessionName: order.listing.possession.name, amount: order.totalAmount|admin_euros}, 'admin') }}{% endblock %}
+
+{% block body %}
+    {% set reasons = {NOT_RECEIVED: 'disputes.reasonNotReceived'|trans({}, 'admin'), NOT_AS_DESCRIBED: 'disputes.reasonNotAsDescribed'|trans({}, 'admin'), DAMAGED: 'disputes.reasonDamaged'|trans({}, 'admin'), PAYMENT_ISSUE: 'disputes.reasonPaymentIssue'|trans({}, 'admin'), OTHER: 'disputes.reasonOther'|trans({}, 'admin')} %}
+    {% set events = {
+        CREATED: 'disputes.eventCreated'|trans({}, 'admin'), PAYMENT_AUTHORIZED: 'disputes.eventPaymentAuthorized'|trans({}, 'admin'), PAYMENT_CAPTURED: 'disputes.eventPaymentCaptured'|trans({}, 'admin'), PAYMENT_FAILED: 'disputes.eventPaymentFailed'|trans({}, 'admin'),
+        HANDOVER_SCHEDULED: 'disputes.eventHandoverScheduled'|trans({}, 'admin'), HANDOVER_CONFIRMED_BY_SELLER: 'disputes.eventHandoverConfirmedBySeller'|trans({}, 'admin'), HANDOVER_CONFIRMED_BY_BUYER: 'disputes.eventHandoverConfirmedByBuyer'|trans({}, 'admin'),
+        SHIPPED: 'disputes.eventShipped'|trans({}, 'admin'), DELIVERED: 'disputes.eventDelivered'|trans({}, 'admin'), RECEIVED: 'disputes.eventReceived'|trans({}, 'admin'), COMPLETED: 'disputes.eventCompleted'|trans({}, 'admin'), CANCELLED: 'disputes.eventCancelled'|trans({}, 'admin'),
+        REFUND_REQUESTED: 'disputes.eventRefundRequested'|trans({}, 'admin'), REFUND_ISSUED: 'disputes.eventRefundIssued'|trans({}, 'admin'), DISPUTE_OPENED: 'disputes.eventDisputeOpened'|trans({}, 'admin'),
+    } %}
+
+    <div class="grid gap-6 xl:grid-cols-[1fr_minmax(0,400px)]">
+        <div class="flex flex-col gap-6">
+            <section class="{{ ui.card_class() }}" aria-labelledby="chronologie">
+                <h2 id="chronologie" class="text-legend font-bold text-muted">{{ 'disputes.chronologyHeading'|trans({}, 'admin') }}</h2>
+                <ol class="mt-3 flex flex-col gap-3">
+                    {% for event in order.events %}
+                        {% set bad = event.type.value in ['DISPUTE_OPENED', 'PAYMENT_FAILED', 'CANCELLED', 'REFUND_REQUESTED'] %}
+                        <li class="flex items-start gap-3 text-legend">
+                            <span class="mt-1.5 size-2 shrink-0 rounded-full {{ bad ? 'bg-primary' : 'bg-main' }}" aria-hidden="true"></span>
+                            <span>
+                                <span class="text-body font-bold">{% if event.actor %}{{ 'disputes.chronologyEventBy'|trans({event: events[event.type.value] ?? event.type.value, name: event.actor.displayName}, 'admin') }}{% else %}{{ events[event.type.value] ?? event.type.value }}{% endif %}</span>
+                                <span class="text-muted">{{ event.occurredAt|admin_date(true) }}</span>
+                                {% if event.note %}<br>« {{ event.note }} »{% endif %}
+                                {% if event.type.value == 'DISPUTE_OPENED' %}<br>{{ reasons[dispute.reason.value] }} · « {{ dispute.description }} »{% endif %}
+                            </span>
+                        </li>
+                    {% endfor %}
+                </ol>
+            </section>
+
+            <section class="{{ ui.card_class() }}" aria-labelledby="parties">
+                <h2 id="parties" class="text-legend font-bold text-muted">{{ 'disputes.partiesHeading'|trans({}, 'admin') }}</h2>
+                <div class="mt-3 grid gap-4 sm:grid-cols-2">
+                    {% for role, party in {buyer: [order.buyer, buyerDisputes], seller: [order.seller, sellerDisputes]} %}
+                        <p class="text-legend">
+                            <a class="text-body font-bold hover:underline" href="{{ path('admin_user', {id: party[0].account.id}) }}">{{ party[0].displayName }}</a><br>
+                            <span class="text-muted">{{ role == 'buyer' ? 'disputes.partyBuyerWithDisputes'|trans({count: party[1]}, 'admin') : 'disputes.partySellerWithDisputes'|trans({count: party[1]}, 'admin') }}</span>
+                        </p>
+                    {% endfor %}
+                </div>
+            </section>
+        </div>
+
+        <div class="flex flex-col gap-6 self-start">
+        {{ include('admin/ai/_panel.html.twig', {review: aiReview, count: aiCount, threshold: aiThreshold, kind: 'dispute', subjectId: dispute.id, pending: open}) }}
+
+        <section class="{{ ui.card_class() }} flex flex-col gap-4" aria-labelledby="decision">
+            <h2 id="decision" class="text-legend font-bold text-muted">{{ 'disputes.decisionHeading'|trans({}, 'admin') }}</h2>
+            <dl class="flex flex-col gap-2 text-legend">
+                <div class="flex justify-between gap-4"><dt class="text-muted">{{ 'disputes.decisionAmountLabel'|trans({}, 'admin') }}</dt><dd class="text-body font-bold">{{ order.totalAmount|admin_euros }} €</dd></div>
+                <div class="flex justify-between gap-4"><dt class="text-muted">{{ 'disputes.decisionListingLabel'|trans({}, 'admin') }}</dt><dd class="text-body font-bold">« {{ order.listing.possession.name }} »</dd></div>
+                {% if dispute.handledBy %}<div class="flex justify-between gap-4"><dt class="text-muted">{{ 'disputes.decisionHandledByLabel'|trans({}, 'admin') }}</dt><dd>{{ dispute.handledBy.email }}</dd></div>{% endif %}
+            </dl>
+
+            {% if not open %}
+                <p class="rounded-sm bg-main-tint px-4 py-3 text-legend text-main"><span class="font-bold">{{ dispute.status.value == 'CLOSED' ? 'disputes.decisionClosedPrefix'|trans({}, 'admin') : 'disputes.decisionResolvedPrefix'|trans({}, 'admin') }}</span> {{ dispute.resolution }}</p>
+            {% else %}
+                {% if dispute.status.value == 'OPEN' %}
+                    <form method="post" action="{{ path('admin_dispute_take', {id: dispute.id}) }}">
+                        <input type="hidden" name="_token" value="{{ csrf_token('dispute-' ~ dispute.id) }}">
+                        <button type="submit" class="{{ ui.button_class('secondary') }}">{{ 'disputes.decisionTakeCharge'|trans({}, 'admin') }}</button>
+                    </form>
+                {% endif %}
+                <form method="post" action="{{ path('admin_dispute_resolve', {id: dispute.id}) }}" class="flex flex-col gap-3">
+                    <label class="flex flex-col gap-1">
+                        <span class="text-legend font-bold text-muted">{{ 'disputes.decisionNoteLabel'|trans({}, 'admin') }}</span>
+                        <textarea name="note" required maxlength="1000" rows="3" class="rounded-sm bg-bg px-4 py-3 text-body outline-none focus:ring-2 focus:ring-primary" placeholder="{{ 'disputes.decisionNotePlaceholder'|trans({}, 'admin') }}"></textarea>
+                    </label>
+                    <input type="hidden" name="_token" value="{{ csrf_token('dispute-' ~ dispute.id) }}">
+                    <button type="submit" name="outcome" value="buyer" class="{{ ui.button_class('primary') }}">{{ 'disputes.decisionGiveBuyer'|trans({}, 'admin') }}</button>
+                    <button type="submit" name="outcome" value="seller" class="{{ ui.button_class('secondary') }}">{{ 'disputes.decisionGiveSeller'|trans({}, 'admin') }}</button>
+                    <button type="submit" name="outcome" value="none" class="text-center text-body font-bold text-primary hover:underline">{{ 'disputes.decisionCloseNoAction'|trans({}, 'admin') }}</button>
+                </form>
+            {% endif %}
+            <p class="text-legend text-muted">{{ 'disputes.decisionNoteFooter'|trans({}, 'admin') }}</p>
+        </section>
+        </div>
+    </div>
+{% endblock %}
